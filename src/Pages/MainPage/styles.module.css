@@ -1,0 +1,18 @@
+.title {
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 63.3px;
+    color: #000000;
+}
+
+.containerMainPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.courses {
+    display: flex;
+    gap: 24px;
+}
