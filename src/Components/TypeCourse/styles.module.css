@@ -10,6 +10,13 @@
     border: 1px solid #7A5CFA;
     padding: 40px 25px 17px 34px;
     cursor: pointer;
+    text-decoration: none;
+}
+
+.courseCard:hover {
+    transform: translateY(-5px);
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .iconContainer {

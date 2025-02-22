@@ -1,0 +1,29 @@
+.menuContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #FFFFFF;
+    box-shadow: 0px 3px 45px 0px #7A5CFA4D;
+    border-radius: 30px;
+    /* width: 1440px; */
+    padding: 12px 70px;
+}
+
+.logoIcon {
+    width: 163px;
+    height: 97px;
+}
+
+.navigationContainer {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.navText {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+    text-decoration: none;
+}
