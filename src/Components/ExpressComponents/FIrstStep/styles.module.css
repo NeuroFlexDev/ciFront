@@ -1,0 +1,25 @@
+.expressCourseContainer {
+    padding-top: 70px;
+}
+
+.title {
+    font-weight: 700;
+    font-size: 48px;
+    line-height: 63.3px;
+    color: #000000;
+}
+
+.contCont {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.fieldContainer {
+    padding-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    width: 579px;
+}

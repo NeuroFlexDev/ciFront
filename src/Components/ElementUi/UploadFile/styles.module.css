@@ -1,0 +1,95 @@
+.container {
+    width: 100%;
+  }
+
+  .hiddenInput {
+    display: none;
+  }
+
+  .uploadArea {
+    border: 2px dashed #D7D5FF;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .uploadArea:hover {
+    border-color: #2196f3;
+    background-color: #f5f5f5;
+  }
+
+  .uploadContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .uploadIcon {
+    font-size: 2.5rem;
+  }
+
+  .uploadText {
+    margin: 0;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .uploadSubtext {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  .fileInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #fff;
+  }
+
+  .fileIcon {
+    font-size: 1.5rem;
+  }
+
+  .fileDetails {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .fileName {
+    font-weight: 500;
+    color: #333;
+  }
+
+  .fileSize {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .removeButton {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    line-height: 1;
+  }
+
+  .removeButton:hover {
+    color: #ff4444;
+  }
+
+  .errorMessage {
+    color: #ff4444;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+  }
