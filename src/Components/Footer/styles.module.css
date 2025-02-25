@@ -1,0 +1,28 @@
+.footerContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: none;
+    margin-top: 100px;
+    padding: 12px 70px;
+}
+
+.logoIcon {
+    width: 163px;
+    height: 97px;
+}
+
+.navigationContainer {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    text-align: left;
+}
+
+.navText {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #000000;
+    text-decoration: none;
+}

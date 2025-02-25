@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Menu from '@/Components/Menu/Menu';
 import { CourseInfoForm } from '@/Components/ExpressComponents/FIrstStep/CourseInfoForm';
 import { CourseStructureForm } from '@/Components/ExpressComponents/SecondStep/CourseStructureForm';
+import Footer from '@/Components/Footer/Footer';
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
@@ -31,6 +32,7 @@ const ExpressPage = () => {
           onNext={nextStep}
         />
       )}
+      <Footer />
     </>
   );
 };
