@@ -74,8 +74,10 @@
 
 .editorWrapper {
     min-height: 400px;
-    border: 0.5px solid #ddd;
-    border-radius: 15px;
+    max-height: 663px;
+    overflow-y: auto;
+    /* border: 0.5px solid #ddd; */
+    /* border-radius: 15px; */
     padding: 10px;
     font-family: Arial;
 }
@@ -149,15 +151,40 @@
     text-align: justify;
 }
 
+.divider {
+    width: 100%;
+    border: 1px solid #D7D5FF;
+}
+
 .editorWrapper :global(.ProseMirror) {
     border: none !important;
     outline: none !important;
-    padding: 0;
-  }
+    padding: 0 10px !important;
+}
 
-  /* Убираем границу при фокусе */
-  .editorWrapper :global(.ProseMirror-focused) {
+/* Убираем границу при фокусе */
+.editorWrapper :global(.ProseMirror-focused) {
     border: none !important;
     outline: none !important;
     box-shadow: none !important;
-  }
+}
+
+/* СКРОЛЛ */
+.editorWrapper::-webkit-scrollbar {
+    width: 15px;   /* Ширина вертикальной полосы прокрутки */
+}
+
+.editorWrapper::-webkit-scrollbar-track {
+    background-color: #EAE8FF; /* Цвет фона полосы прокрутки */
+    border-radius: 10px;        /* Радиус скругления фона */
+}
+
+.editorWrapper::-webkit-scrollbar-thumb {
+    background-color: #9988FD; /* Цвет самой полосы прокрутки */
+    border-radius: 10px;    /* Скругление полосы прокрутки */
+    border: 2px solid #EAE8FF; /* Белая рамка вокруг полосы прокрутки */
+}
+
+.editorWrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #7f6af5; /* Цвет полосы прокрутки при наведении */
+}

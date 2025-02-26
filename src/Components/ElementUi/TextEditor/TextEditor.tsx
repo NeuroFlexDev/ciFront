@@ -92,7 +92,6 @@ const TextEditor = () => {
     ],
     content: '<p></p>',
     onUpdate: () => {
-      // Обновление состояний на основе текущего форматирования
       if (editor?.isActive('heading-1')) setSelectedFormat('heading-1')
       else if (editor?.isActive('heading-2')) setSelectedFormat('heading-2')
       else setSelectedFormat('paragraph')
@@ -109,6 +108,14 @@ const TextEditor = () => {
     setShowColors(dropdown === 'colors' ? (prev) => !prev : false)
     setShowAlign(dropdown === 'align' ? (prev) => !prev : false)
   }, [])
+
+  const handleEditorWrapperClick = useCallback(() => {
+    editor?.commands.focus()
+  }, [editor])
+
+  if (!editor) {
+    return null
+  }
 
   const toggleInlineStyle = (style: string) => {
     switch (style) {
@@ -198,10 +205,10 @@ const TextEditor = () => {
     editor?.chain().focus().unsetLink().run()
   }, [editor])
 
-  const handleSave = () => {
-    const content = editor?.getJSON()
-    console.log(JSON.stringify(content, null, 2))
-  }
+  // const handleSave = () => {
+  //   const content = editor?.getJSON()
+  //   console.log(JSON.stringify(content, null, 2))
+  // }
 
   if (!editor) {
     return null
@@ -415,18 +422,20 @@ const TextEditor = () => {
         </div>
       </div>
 
-      <div className={styles.editorWrapper}>
+      <hr className={styles.divider} />
+
+      <div className={styles.editorWrapper} onClick={handleEditorWrapperClick}>
         <EditorContent editor={editor} />
       </div>
 
-      <button
+      {/* <button
         className={styles.saveButton}
         onClick={handleSave}
       >
         Сохранить
-      </button>
+      </button> */}
     </div>
   )
 }
 
-export default TextEditor
+export default TextEditor;
