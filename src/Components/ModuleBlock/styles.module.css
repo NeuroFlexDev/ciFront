@@ -1,0 +1,124 @@
+.moduleBlockContainer {
+    margin: auto;
+    background-color: #FFFFFF;
+    border: 1px solid #7A5CFA;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    width: 579px;
+}
+
+.headerModuleBlock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.moduleTitleInput {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+}
+
+.btnContainer {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.divider {
+    border: 1px solid #D7D5FF;
+}
+
+.btnHeaderModuleBlock {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.lessonHeader {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lessonTitle {
+    text-align: left;
+}
+
+.lessonDescription {
+    text-align: left;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #000000;
+}
+
+.contentTypeButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #7A5CFA;
+}
+
+/* Форма добавления */
+.addForm {
+    border: 1px solid #7A5CFA;
+    border-radius: 15px;
+    background-color: #FFFFFF;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.lessonInputContainer {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 12fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.lessonInput {
+    border: none;
+    text-align: left;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 21.1px;
+    color: #000000;
+    outline: none;
+}
+
+.addButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #7A5CFA;
+}
+
+.descriptionTextarea {
+    background: none;
+    border: none;
+    text-align: justify;
+    outline: none;
+    border: none;
+    text-align: left;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #000000;
+}
