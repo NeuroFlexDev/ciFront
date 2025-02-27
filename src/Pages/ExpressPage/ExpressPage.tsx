@@ -3,6 +3,7 @@ import Menu from '@/Components/Menu/Menu';
 import { CourseInfoForm } from '@/Components/ExpressComponents/FIrstStep/CourseInfoForm';
 import { CourseStructureForm } from '@/Components/ExpressComponents/SecondStep/CourseStructureForm';
 import Footer from '@/Components/Footer/Footer';
+import OverviewCourse from '@/Components/ExpressComponents/OverviewCourse/OverviewCourse';
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
@@ -14,7 +15,7 @@ const ExpressPage = () => {
     { id: 4, label: 'Интерактивные задания', checked: false },
   ]);
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   return (
@@ -22,7 +23,7 @@ const ExpressPage = () => {
       <Menu />
       {step === 1 ? (
         <CourseInfoForm onNext={nextStep} />
-      ) : (
+      ) : step === 2 ? (
         <CourseStructureForm
           selectedValue={selectedValue}
           items={items}
@@ -31,6 +32,8 @@ const ExpressPage = () => {
           onBack={prevStep}
           onNext={nextStep}
         />
+      ) : (
+        <OverviewCourse onBack={prevStep} onNext={nextStep} />
       )}
       <Footer />
     </>

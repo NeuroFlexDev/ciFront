@@ -1,0 +1,64 @@
+.title {
+    font-weight: 700;
+    font-size: 32px;
+    line-height: 42.2px;
+    color: #000000;
+}
+
+.conaiterModules {
+    width: 579px;
+    margin: auto;
+}
+
+.nameContainer {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.nameContainerDescription {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding-bottom: 30px;
+}
+
+.titleName {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+}
+
+.textName {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #101017;
+    background-color: #FFFFFF;
+    border-radius: 15px;
+    padding: 10px;
+    border: 1px solid #7A5CFA;
+}
+
+.headerOverviewCourse {
+    display: flex;
+    justify-content: center;
+}
+
+.backButton {
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.backButton img {
+    transform: rotate(90deg);
+}
