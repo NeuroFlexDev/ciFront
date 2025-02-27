@@ -9,10 +9,10 @@ const ExpressPage = () => {
   const [step, setStep] = useState(1);
   const [selectedValue, setSelectedValue] = useState('no');
   const [items, setItems] = useState([
-    { id: 1, label: 'Текст', checked: true },
-    { id: 2, label: 'Видео', checked: false },
-    { id: 3, label: 'Аудио', checked: false },
-    { id: 4, label: 'Интерактивные задания', checked: false },
+    { id: 1, value: 'text', label: 'Текст', checked: true },
+    { id: 2, value: 'video', label: 'Видео', checked: false },
+    { id: 3, value: 'audio', label: 'Аудио', checked: false },
+    { id: 4, value: 'interactive', label: 'Интерактивные задания', checked: false },
   ]);
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
