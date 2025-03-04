@@ -1,0 +1,85 @@
+.courseList {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    justify-content: left;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    width: 342px;
+    align-items: left;
+    border-radius: 15px;
+    background-color: #FFFFFF;
+}
+
+.cardContent {
+    padding: 20px;
+}
+
+.cardTitle {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+}
+
+.cardDescription {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #000000;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+}
+
+.cardActions {
+    display: block;
+    padding: 0 20px;
+}
+
+.button {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 21.1px;
+    color: #000000;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    display: block;
+    padding-bottom: 10px;
+}
+  
+/* Стили для кружков */
+.dotGreen {
+    background-color: #27D239;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 5px;
+    display: inline-block;
+}
+  
+.dotYellow {
+    background-color: #FFA000;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 5px;
+    display: inline-block;
+}
+  
+.dotRed {
+    background-color: #C92A2A;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    margin-right: 5px;
+    display: inline-block;
+}

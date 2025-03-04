@@ -1,0 +1,11 @@
+.containerCoursePage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    justify-content: left;
+}
+
+.newCourseLink {
+    text-decoration: none;
+}

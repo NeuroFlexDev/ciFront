@@ -8,7 +8,7 @@ const Menu = () => {
       <img src={logo} alt="logoSite" className={styles.logoIcon} />
 
       <div className={styles.navigationContainer}>
-        <Link className={styles.navText} to='#'>Мои курсы</Link>
+        <Link className={styles.navText} to='/courses'>Мои курсы</Link>
         <Link className={styles.navText} to='/'>Создать курс</Link>
         <Link className={styles.navText} to='#'>Помощь</Link>
       </div>

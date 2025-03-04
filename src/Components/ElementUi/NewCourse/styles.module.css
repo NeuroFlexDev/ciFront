@@ -1,0 +1,16 @@
+.newCourse {
+    background-color: #FFFFFF;
+    border: 1px dashed #7A5CFA;
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 20px;
+    width: 342px;
+    cursor: pointer;
+}
+
+.text {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 26.38px;
+    color: #000000;
+}
