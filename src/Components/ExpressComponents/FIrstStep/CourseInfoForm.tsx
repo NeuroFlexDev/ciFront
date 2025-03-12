@@ -6,9 +6,9 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// 🛠️ **Исправленный `DropdownItem`**
+// ✅ **Используем единый `DropdownItem`**
 export type DropdownItem = {
-  id: number; // ✅ Убедились, что `id` всегда `number`
+  id: number;
   name: string;
 };
 
@@ -42,12 +42,12 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
-  // 🛠️ **Фикс**: Гарантируем, что `id` - число, убираем `null`
-  const handleLevelChange = (selected: DropdownItem) => {
+  // ✅ **Фикс: `DropdownItem.id` всегда `number`**
+  const handleLevelChange = (selected: DropdownItem | null) => {
     setLevel(selected ? { id: Number(selected.id), name: selected.name } : null);
   };
 
-  const handleLanguageChange = (selected: DropdownItem) => {
+  const handleLanguageChange = (selected: DropdownItem | null) => {
     setLanguage(selected ? { id: Number(selected.id), name: selected.name } : null);
   };
 
@@ -106,13 +106,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
-          {/* 🛠️ Исправленный `Select` */}
+          {/* ✅ **Фикс `Select`** */}
           <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level ?? undefined}
-              onChange={handleLevelChange} // 🔥 Фикс
+              value={level}
+              onChange={handleLevelChange} // ✅ Исправлено
             />
           </FormField>
 
@@ -120,8 +120,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language ?? undefined}
-              onChange={handleLanguageChange} // 🔥 Фикс
+              value={language}
+              onChange={handleLanguageChange} // ✅ Исправлено
             />
           </FormField>
 
