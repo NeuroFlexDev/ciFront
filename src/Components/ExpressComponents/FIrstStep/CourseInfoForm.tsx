@@ -6,7 +6,7 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// ✅ Унифицируем `DropdownItem`
+// ✅ Фикс: теперь id всегда `number`
 interface DropdownItem {
   id: number;
   name: string;
@@ -42,6 +42,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
+  // ✅ Фикс: приведение id к числу
   const handleLevelChange = (selected?: DropdownItem) => {
     if (selected) {
       setLevel({ ...selected, id: Number(selected.id) });
@@ -113,12 +114,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
+          {/* ✅ Фикс: теперь value всегда строго соответствует Select */}
           <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={levels.find((item) => item.id === level?.id)} // ✅ Исправлено
-              onChange={(item) => handleLevelChange(item)} // ✅ Исправлено
+              value={levels.find((item) => item.id === level?.id) || undefined} // 🔥 Фикс
+              onChange={(item) => handleLevelChange(item)}
             />
           </FormField>
 
@@ -126,8 +128,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={languages.find((item) => item.id === language?.id)} // ✅ Исправлено
-              onChange={(item) => handleLanguageChange(item)} // ✅ Исправлено
+              value={languages.find((item) => item.id === language?.id) || undefined} // 🔥 Фикс
+              onChange={(item) => handleLanguageChange(item)}
             />
           </FormField>
 
