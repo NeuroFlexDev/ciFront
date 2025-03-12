@@ -6,7 +6,7 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// ✅ Фикс: теперь id всегда `number`
+// ✅ Убедимся, что этот `DropdownItem` используется везде
 interface DropdownItem {
   id: number;
   name: string;
@@ -17,8 +17,8 @@ interface CourseInfoFormProps {
 }
 
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [level, setLevel] = useState<DropdownItem | undefined>(undefined);
   const [language, setLanguage] = useState<DropdownItem | undefined>(undefined);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
@@ -42,18 +42,18 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
-  // ✅ Фикс: приведение id к числу
-  const handleLevelChange = (selected?: DropdownItem) => {
+  // ✅ Принудительно приводим `id` к числу, **и фиксируем тип**
+  const handleLevelChange = (selected: DropdownItem | null) => {
     if (selected) {
-      setLevel({ ...selected, id: Number(selected.id) });
+      setLevel({ id: Number(selected.id), name: selected.name });
     } else {
       setLevel(undefined);
     }
   };
 
-  const handleLanguageChange = (selected?: DropdownItem) => {
+  const handleLanguageChange = (selected: DropdownItem | null) => {
     if (selected) {
-      setLanguage({ ...selected, id: Number(selected.id) });
+      setLanguage({ id: Number(selected.id), name: selected.name });
     } else {
       setLanguage(undefined);
     }
@@ -114,13 +114,12 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
-          {/* ✅ Фикс: теперь value всегда строго соответствует Select */}
           <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={levels.find((item) => item.id === level?.id) || undefined} // 🔥 Фикс
-              onChange={(item) => handleLevelChange(item)}
+              value={level ?? undefined} // ✅ Фикс
+              onChange={handleLevelChange}
             />
           </FormField>
 
@@ -128,8 +127,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={languages.find((item) => item.id === language?.id) || undefined} // 🔥 Фикс
-              onChange={(item) => handleLanguageChange(item)}
+              value={language ?? undefined} // ✅ Фикс
+              onChange={handleLanguageChange}
             />
           </FormField>
 
