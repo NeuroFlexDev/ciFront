@@ -6,7 +6,7 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// Интерфейс для элементов выпадающего списка
+// ✅ Единый интерфейс для `DropdownItem`
 interface DropdownItem {
   id: number;
   name: string;
@@ -42,20 +42,12 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
-  const handleLevelChange = (selected?: DropdownItem) => {
-    if (selected) {
-      setLevel({ id: Number(selected.id), name: selected.name });
-    } else {
-      setLevel(undefined);
-    }
+  const handleLevelChange = (selected: DropdownItem) => {
+    setLevel(selected);
   };
 
-  const handleLanguageChange = (selected?: DropdownItem) => {
-    if (selected) {
-      setLanguage({ id: Number(selected.id), name: selected.name });
-    } else {
-      setLanguage(undefined);
-    }
+  const handleLanguageChange = (selected: DropdownItem) => {
+    setLanguage(selected);
   };
 
   const handleSubmit = async () => {
@@ -117,8 +109,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={levels.find((item) => item.id === level?.id)}
-              onChange={handleLevelChange}
+              value={level}
+              onChange={handleLevelChange} // ✅ Исправлено
             />
           </FormField>
 
@@ -126,8 +118,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={languages.find((item) => item.id === language?.id)}
-              onChange={handleLanguageChange}
+              value={language}
+              onChange={handleLanguageChange} // ✅ Исправлено
             />
           </FormField>
 
