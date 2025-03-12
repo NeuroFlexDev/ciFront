@@ -6,21 +6,21 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// ✅ **Используем единый `DropdownItem`**
-export type DropdownItem = {
+// ✅ **Локальный `DropdownItem`, который не конфликтует**
+interface DropdownItem {
   id: number;
   name: string;
-};
+}
 
 interface CourseInfoFormProps {
   onNext: () => void;
 }
 
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [level, setLevel] = useState<DropdownItem | null>(null);
-  const [language, setLanguage] = useState<DropdownItem | null>(null);
+  const [title, setTitle] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [level, setLevel] = useState<DropdownItem | undefined>(undefined);
+  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: DropdownItem[] = [
@@ -42,13 +42,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
-  // ✅ **Фикс: `DropdownItem.id` всегда `number`**
-  const handleLevelChange = (selected: DropdownItem | null) => {
-    setLevel(selected ? { id: Number(selected.id), name: selected.name } : null);
+  // ✅ **Используем `DropdownItem | undefined`, приводим `id` к `number`**
+  const handleLevelChange = (selected: DropdownItem | undefined) => {
+    setLevel(selected ? { id: Number(selected.id), name: selected.name } : undefined);
   };
 
-  const handleLanguageChange = (selected: DropdownItem | null) => {
-    setLanguage(selected ? { id: Number(selected.id), name: selected.name } : null);
+  const handleLanguageChange = (selected: DropdownItem | undefined) => {
+    setLanguage(selected ? { id: Number(selected.id), name: selected.name } : undefined);
   };
 
   const handleSubmit = async () => {
@@ -106,13 +106,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
-          {/* ✅ **Фикс `Select`** */}
+          {/* ✅ **Используем `undefined` вместо `null` в `Select`** */}
           <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level}
-              onChange={handleLevelChange} // ✅ Исправлено
+              value={level ?? undefined} // 🔥 Фикс: передаем `undefined`, а не `null`
+              onChange={handleLevelChange}
             />
           </FormField>
 
@@ -120,8 +120,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language}
-              onChange={handleLanguageChange} // ✅ Исправлено
+              value={language ?? undefined} // 🔥 Фикс: передаем `undefined`, а не `null`
+              onChange={handleLanguageChange}
             />
           </FormField>
 
