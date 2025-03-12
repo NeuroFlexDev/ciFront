@@ -34,14 +34,17 @@ interface Module {
   loadingLessons?: boolean;
 }
 
-// Пропсы, ожидаемые `ModuleBlock`
+// Пропсы для `ModuleBlock`
 interface ModuleComponentProps extends Module {
   index: number;
   onTitleChange: (index: number, title: string) => void;
   onLessonAdd: (index: number) => void;
   onLessonRemove: (index: number, lessonIndex: number) => void;
   onTestAdd: (index: number) => void;
+  onTestRemove: (index: number, testIndex: number) => void;
   onTaskAdd: (index: number) => void;
+  onTaskRemove: (index: number, taskIndex: number) => void;
+  onModuleRemove: (index: number) => void;
 }
 
 const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModules }) => {
@@ -203,13 +206,11 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
                 onLessonAdd={() => {}}
                 onLessonRemove={() => {}}
                 onTestAdd={() => {}}
+                onTestRemove={() => {}}
                 onTaskAdd={() => {}}
+                onTaskRemove={() => {}}
+                onModuleRemove={() => {}}
               />
-              {module.loadingLessons && (
-                <div className={styles.moduleLoader}>
-                  <Loader text="Загрузка уроков..." />
-                </div>
-              )}
             </div>
           ))
         )}

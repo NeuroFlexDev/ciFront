@@ -6,7 +6,7 @@ import Footer from "@/Components/Footer/Footer";
 import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/OverviewCourse";
 import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor";
 
-// 🛠️ Добавляем интерфейс для `Module`
+// 🛠️ Определяем интерфейсы
 interface Lesson {
   lesson: string;
   description: string;
@@ -30,7 +30,7 @@ interface Module {
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
-  const [modules, setModules] = useState<Module[]>([]); // ✅ Исправлено: указали `Module[]`
+  const [modules, setModules] = useState<Module[]>([]); // ✅ Исправлено: теперь `modules` типизирован правильно
 
   const nextStep = () => setStep((prev) => Math.min(prev + 1, 4)); // Увеличил до 4-х шагов
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
@@ -43,9 +43,9 @@ const ExpressPage = () => {
       ) : step === 2 ? (
         <CourseStructureForm onBack={prevStep} onNext={nextStep} />
       ) : step === 3 ? (
-        <OverviewCourse onBack={prevStep} onNext={nextStep} setModules={setModules} /> // ✅ Передаем `setModules` c правильным типом
+        <OverviewCourse onBack={prevStep} onNext={nextStep} setModules={setModules} /> // ✅ Передаем `setModules`
       ) : (
-        <FinalEditor modules={modules} onBack={prevStep} onFinish={() => console.log("Курс завершен!")} /> // ✅ Теперь `modules` передается правильно
+        <FinalEditor modules={modules} onBack={prevStep} onFinish={() => console.log("Курс завершен!")} /> // ✅ Передаем `modules`
       )}
       <Footer />
     </>

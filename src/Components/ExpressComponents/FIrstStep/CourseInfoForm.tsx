@@ -19,8 +19,8 @@ interface CourseInfoFormProps {
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<DropdownItem | null>(null);
-  const [language, setLanguage] = useState<DropdownItem | null>(null);
+  const [level, setLevel] = useState<DropdownItem | undefined>(undefined); // ✅ null → undefined
+  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined); // ✅ null → undefined
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: DropdownItem[] = [
@@ -34,26 +34,28 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     { id: 2, name: "English" },
   ];
 
-  // ✅ Исправлено: корректное обновление title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setTitle(e.target.value);
     console.log("Title:", e.target.value);
   };
 
-  // ✅ Исправлено: корректное обновление description
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setDescription(e.target.value);
     console.log("Description:", e.target.value);
   };
 
-  const handleLevelChange = (selected: DropdownItem) => {
-    setLevel(selected);
-    console.log("Level:", selected);
+  const handleLevelChange = (selected: DropdownItem | undefined) => {
+    if (selected) {
+      setLevel({ ...selected, id: Number(selected.id) }); // ✅ Приведение id к числу
+      console.log("Level:", selected);
+    }
   };
 
-  const handleLanguageChange = (selected: DropdownItem) => {
-    setLanguage(selected);
-    console.log("Language:", selected);
+  const handleLanguageChange = (selected: DropdownItem | undefined) => {
+    if (selected) {
+      setLanguage({ ...selected, id: Number(selected.id) }); // ✅ Приведение id к числу
+      console.log("Language:", selected);
+    }
   };
 
   const handleSubmit = async () => {
@@ -118,7 +120,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level}
+              value={levels.find((item) => item.id === level?.id)} // ✅ Исправлено
               onChange={handleLevelChange}
             />
           </FormField>
@@ -127,7 +129,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language}
+              value={languages.find((item) => item.id === language?.id)} // ✅ Исправлено
               onChange={handleLanguageChange}
             />
           </FormField>

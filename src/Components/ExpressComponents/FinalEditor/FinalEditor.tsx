@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import jsPDF from "jspdf";
 
+// Интерфейсы для модулей
 interface Lesson {
   lesson: string;
   description: string;
@@ -27,19 +28,19 @@ interface Module {
 }
 
 interface FinalEditorProps {
+  modules: Module[];
   onBack: () => void;
   onFinish: () => void;
 }
 
-const FinalEditor: React.FC<FinalEditorProps> = ({ onBack, onFinish }) => {
-  const [modules, setModules] = useState<Module[]>([]);
+const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBack, onFinish }) => {
+  const [modules, setModules] = useState<Module[]>(initialModules);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  // Инициализируем редактор
+  // **🎨 Инициализация редактора**
   const editor = useEditor({
     extensions: [StarterKit],
-    content: "<p></p>",
+    content: selectedLesson?.description || "<p></p>",
     onUpdate: ({ editor }) => {
       if (selectedLesson) {
         setModules((prevModules) =>
@@ -56,45 +57,19 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ onBack, onFinish }) => {
     },
   });
 
-  // Загружаем модули с API
+  // **🎯 Загружаем контент при изменении выбранного урока**
   useEffect(() => {
-    const loadModules = async () => {
-      try {
-        console.log("🔄 Загружаем модули с сервера...");
-        const response = await fetch("http://127.0.0.1:8000/api/load_modules");
-        if (!response.ok) throw new Error("Ошибка загрузки модулей");
-
-        const data = await response.json();
-        console.log("✅ Загруженные модули:", data.modules);
-
-        if (!data.modules || data.modules.length === 0) {
-          console.error("❌ Модули не найдены!");
-          return;
-        }
-
-        setModules(data.modules);
-        setLoading(false);
-      } catch (err) {
-        console.error("❌ Ошибка загрузки:", err);
-        setLoading(false);
-      }
-    };
-
-    loadModules();
-  }, []);
-
-  // Загружаем описание в редактор при выборе урока
-  useEffect(() => {
-    if (selectedLesson) {
-      editor?.commands.setContent(selectedLesson.description || "<p></p>");
+    if (selectedLesson && editor) {
+      editor.commands.setContent(selectedLesson.description || "<p></p>");
     }
   }, [selectedLesson, editor]);
 
+  // **📌 Выбор урока**
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
   };
 
-  // **📌 Сохраняем изменения на сервер**
+  // **💾 Сохранение изменений на сервер**
   const saveModulesToServer = async () => {
     try {
       console.log("🔄 Сохраняем изменения на сервер...");
@@ -105,14 +80,13 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ onBack, onFinish }) => {
       });
 
       if (!response.ok) throw new Error("Ошибка сохранения модулей");
-
       console.log("✅ Модули успешно сохранены!");
     } catch (err) {
       console.error("❌ Ошибка сохранения:", err);
     }
   };
 
-  // **📌 Экспорт в Markdown**
+  // **📄 Экспорт в Markdown**
   const exportToMarkdown = () => {
     let markdownContent = "";
 
@@ -139,7 +113,7 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ onBack, onFinish }) => {
     document.body.removeChild(a);
   };
 
-  // **📌 Экспорт в PDF**
+  // **📄 Экспорт в PDF**
   const exportToPDF = () => {
     const doc = new jsPDF();
     let y = 10;
@@ -184,39 +158,35 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ onBack, onFinish }) => {
     <div className={styles.container}>
       <h2>Редактирование курса</h2>
 
-      {loading ? (
-        <p>Загрузка модулей...</p>
-      ) : (
-        <div className={styles.content}>
-          <div className={styles.sidebar}>
-            {modules.map((module, moduleIndex) => (
-              <div key={moduleIndex} className={styles.module}>
-                <h3>{module.title}</h3>
-                {module.lessons.map((lesson, lessonIndex) => (
-                  <p
-                    key={lessonIndex}
-                    className={`${styles.lesson} ${selectedLesson?.lesson === lesson.lesson ? styles.activeLesson : ""}`}
-                    onClick={() => handleLessonClick(lesson)}
-                  >
-                    {lesson.lesson}
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          <div className={styles.editorContainer}>
-            {selectedLesson ? (
-              <>
-                <h3>{selectedLesson.lesson}</h3>
-                <EditorContent editor={editor} />
-              </>
-            ) : (
-              <p className={styles.placeholder}>Выберите урок для редактирования</p>
-            )}
-          </div>
+      <div className={styles.content}>
+        <div className={styles.sidebar}>
+          {modules.map((module, moduleIndex) => (
+            <div key={moduleIndex} className={styles.module}>
+              <h3>{module.title}</h3>
+              {module.lessons.map((lesson, lessonIndex) => (
+                <p
+                  key={lessonIndex}
+                  className={`${styles.lesson} ${selectedLesson?.lesson === lesson.lesson ? styles.activeLesson : ""}`}
+                  onClick={() => handleLessonClick(lesson)}
+                >
+                  {lesson.lesson}
+                </p>
+              ))}
+            </div>
+          ))}
         </div>
-      )}
+
+        <div className={styles.editorContainer}>
+          {selectedLesson ? (
+            <>
+              <h3>{selectedLesson.lesson}</h3>
+              <EditorContent editor={editor} />
+            </>
+          ) : (
+            <p className={styles.placeholder}>Выберите урок для редактирования</p>
+          )}
+        </div>
+      </div>
 
       <div className={styles.buttons}>
         <Button onClick={onBack} text="Назад" />
