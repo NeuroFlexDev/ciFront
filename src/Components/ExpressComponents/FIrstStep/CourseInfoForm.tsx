@@ -19,8 +19,8 @@ interface CourseInfoFormProps {
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<DropdownItem | undefined>(undefined); // ✅ null → undefined
-  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined); // ✅ null → undefined
+  const [level, setLevel] = useState<DropdownItem | undefined>(undefined);
+  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: DropdownItem[] = [
@@ -36,25 +36,25 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setTitle(e.target.value);
-    console.log("Title:", e.target.value);
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setDescription(e.target.value);
-    console.log("Description:", e.target.value);
   };
 
-  const handleLevelChange = (selected: DropdownItem | undefined) => {
+  const handleLevelChange = (selected?: DropdownItem) => {
     if (selected) {
-      setLevel({ ...selected, id: Number(selected.id) }); // ✅ Приведение id к числу
-      console.log("Level:", selected);
+      setLevel({ id: Number(selected.id), name: selected.name });
+    } else {
+      setLevel(undefined);
     }
   };
 
-  const handleLanguageChange = (selected: DropdownItem | undefined) => {
+  const handleLanguageChange = (selected?: DropdownItem) => {
     if (selected) {
-      setLanguage({ ...selected, id: Number(selected.id) }); // ✅ Приведение id к числу
-      console.log("Language:", selected);
+      setLanguage({ id: Number(selected.id), name: selected.name });
+    } else {
+      setLanguage(undefined);
     }
   };
 
@@ -62,7 +62,6 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     console.log("Перед отправкой:", { title, description, level, language });
 
     if (!title || !description || !level || !language) {
-      console.error("❌ Ошибка: все поля должны быть заполнены!");
       alert("Заполните все поля!");
       return;
     }
@@ -70,9 +69,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     try {
       const response = await fetch("http://127.0.0.1:8000/api/courses/", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
@@ -120,7 +117,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={levels.find((item) => item.id === level?.id)} // ✅ Исправлено
+              value={levels.find((item) => item.id === level?.id)}
               onChange={handleLevelChange}
             />
           </FormField>
@@ -129,7 +126,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={languages.find((item) => item.id === language?.id)} // ✅ Исправлено
+              value={languages.find((item) => item.id === language?.id)}
               onChange={handleLanguageChange}
             />
           </FormField>
