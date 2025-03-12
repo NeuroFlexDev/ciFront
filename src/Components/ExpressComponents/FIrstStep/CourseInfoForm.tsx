@@ -6,7 +6,7 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// ✅ Единый интерфейс для `DropdownItem`
+// ✅ Глобально задаем `DropdownItem`, избегаем конфликта с импортами
 interface DropdownItem {
   id: number;
   name: string;
@@ -19,8 +19,8 @@ interface CourseInfoFormProps {
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<DropdownItem | undefined>(undefined);
-  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined);
+  const [level, setLevel] = useState<DropdownItem | null>(null);
+  const [language, setLanguage] = useState<DropdownItem | null>(null);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: DropdownItem[] = [
@@ -43,11 +43,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   };
 
   const handleLevelChange = (selected: DropdownItem) => {
-    setLevel(selected);
+    // ✅ Приводим `id` к числу, если вдруг пришел `string`
+    setLevel({ ...selected, id: Number(selected.id) });
   };
 
   const handleLanguageChange = (selected: DropdownItem) => {
-    setLanguage(selected);
+    // ✅ Приводим `id` к числу, если вдруг пришел `string`
+    setLanguage({ ...selected, id: Number(selected.id) });
   };
 
   const handleSubmit = async () => {
@@ -109,7 +111,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level}
+              value={levels.find((item) => item.id === level?.id) || null} // ✅ Исправлено
               onChange={handleLevelChange} // ✅ Исправлено
             />
           </FormField>
@@ -118,7 +120,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language}
+              value={languages.find((item) => item.id === language?.id) || null} // ✅ Исправлено
               onChange={handleLanguageChange} // ✅ Исправлено
             />
           </FormField>
