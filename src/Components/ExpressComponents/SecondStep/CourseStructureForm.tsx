@@ -26,29 +26,38 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
 
   // Отправка формы на сервер
   // При нажатии на кнопку «Продолжить» → сохраняем структуру
-const handleSubmit = async () => {
-  const payload = {
-    sections: parseInt(sections, 10),
-    tests_per_section: parseInt(testsPerSection, 10),
-    lessons_per_section: parseInt(lessonsPerSection, 10),
-    questions_per_test: parseInt(questionsPerTest, 10),
-    final_test: finalTest === "yes",
-    content_types: contentTypes.filter((i) => i.checked).map((i) => i.label),
+  const handleSubmit = async () => {
+    const payload = {
+      sections: parseInt(sections, 10),
+      tests_per_section: parseInt(testsPerSection, 10),
+      lessons_per_section: parseInt(lessonsPerSection, 10),
+      questions_per_test: parseInt(questionsPerTest, 10),
+      final_test: finalTest === "yes",
+      content_types: contentTypes.filter((i) => i.checked).map((i) => i.label),
+    };
+  
+    console.log("📤 Отправка структуры курса:", payload); // ✅ Проверяем данные перед отправкой
+  
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/course-structure/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Ошибка при сохранении структуры", errorText);
+        throw new Error("Ошибка при сохранении структуры");
+      }
+  
+      console.log("✅ Структура курса сохранена!");
+      onNext();
+    } catch (error) {
+      console.error("❌ Ошибка отправки данных:", error);
+    }
   };
-
-  const response = await fetch("http://127.0.0.1:8000/api/course-structure/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка при сохранении структуры");
-  }
-
-  onNext(); // Переход к Overview
-};
-
+  
 
   return (
     <div className={styles.secontStepContainer}>

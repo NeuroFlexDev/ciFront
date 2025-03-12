@@ -1,21 +1,16 @@
-import { useState } from 'react';
-import Menu from '@/Components/Menu/Menu';
-import { CourseInfoForm } from '@/Components/ExpressComponents/FIrstStep/CourseInfoForm';
-import { CourseStructureForm } from '@/Components/ExpressComponents/SecondStep/CourseStructureForm';
-import Footer from '@/Components/Footer/Footer';
-import OverviewCourse from '@/Components/ExpressComponents/OverviewCourse/OverviewCourse';
+import { useState } from "react";
+import Menu from "@/Components/Menu/Menu";
+import { CourseInfoForm } from "@/Components/ExpressComponents/FIrstStep/CourseInfoForm";
+import { CourseStructureForm } from "@/Components/ExpressComponents/SecondStep/CourseStructureForm";
+import Footer from "@/Components/Footer/Footer";
+import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/OverviewCourse";
+import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor";
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
-  const [selectedValue, setSelectedValue] = useState('no');
-  const [items, setItems] = useState([
-    { id: 1, value: 'text', label: 'Текст', checked: true },
-    { id: 2, value: 'video', label: 'Видео', checked: false },
-    { id: 3, value: 'audio', label: 'Аудио', checked: false },
-    { id: 4, value: 'interactive', label: 'Интерактивные задания', checked: false },
-  ]);
+  const [modules, setModules] = useState([]); // <--- Добавил состояние для хранения модулей
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 4)); // Увеличил до 4-х шагов
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   return (
@@ -24,16 +19,11 @@ const ExpressPage = () => {
       {step === 1 ? (
         <CourseInfoForm onNext={nextStep} />
       ) : step === 2 ? (
-        <CourseStructureForm
-          selectedValue={selectedValue}
-          items={items}
-          onValueChange={setSelectedValue}
-          onItemsChange={setItems}
-          onBack={prevStep}
-          onNext={nextStep}
-        />
+        <CourseStructureForm onBack={prevStep} onNext={nextStep} />
+      ) : step === 3 ? (
+        <OverviewCourse onBack={prevStep} onNext={nextStep} setModules={setModules} /> // Передаем `setModules`
       ) : (
-        <OverviewCourse onBack={prevStep} onNext={nextStep} />
+        <FinalEditor modules={modules} onBack={prevStep} onFinish={() => console.log("Курс завершен!")} /> // Передаем модули в редактор
       )}
       <Footer />
     </>
