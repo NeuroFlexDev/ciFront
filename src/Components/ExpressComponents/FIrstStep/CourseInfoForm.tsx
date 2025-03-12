@@ -6,11 +6,11 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// ✅ Убедимся, что этот `DropdownItem` используется везде
-interface DropdownItem {
-  id: number;
+// 🛠️ **Исправленный `DropdownItem`**
+export type DropdownItem = {
+  id: number; // ✅ Убедились, что `id` всегда `number`
   name: string;
-}
+};
 
 interface CourseInfoFormProps {
   onNext: () => void;
@@ -19,8 +19,8 @@ interface CourseInfoFormProps {
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [level, setLevel] = useState<DropdownItem | undefined>(undefined);
-  const [language, setLanguage] = useState<DropdownItem | undefined>(undefined);
+  const [level, setLevel] = useState<DropdownItem | null>(null);
+  const [language, setLanguage] = useState<DropdownItem | null>(null);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: DropdownItem[] = [
@@ -42,21 +42,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setDescription(e.target.value);
   };
 
-  // ✅ Принудительно приводим `id` к числу, **и фиксируем тип**
-  const handleLevelChange = (selected: DropdownItem | null) => {
-    if (selected) {
-      setLevel({ id: Number(selected.id), name: selected.name });
-    } else {
-      setLevel(undefined);
-    }
+  // 🛠️ **Фикс**: Гарантируем, что `id` - число, убираем `null`
+  const handleLevelChange = (selected: DropdownItem) => {
+    setLevel(selected ? { id: Number(selected.id), name: selected.name } : null);
   };
 
-  const handleLanguageChange = (selected: DropdownItem | null) => {
-    if (selected) {
-      setLanguage({ id: Number(selected.id), name: selected.name });
-    } else {
-      setLanguage(undefined);
-    }
+  const handleLanguageChange = (selected: DropdownItem) => {
+    setLanguage(selected ? { id: Number(selected.id), name: selected.name } : null);
   };
 
   const handleSubmit = async () => {
@@ -114,12 +106,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
+          {/* 🛠️ Исправленный `Select` */}
           <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level ?? undefined} // ✅ Фикс
-              onChange={handleLevelChange}
+              value={level ?? undefined}
+              onChange={handleLevelChange} // 🔥 Фикс
             />
           </FormField>
 
@@ -127,8 +120,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language ?? undefined} // ✅ Фикс
-              onChange={handleLanguageChange}
+              value={language ?? undefined}
+              onChange={handleLanguageChange} // 🔥 Фикс
             />
           </FormField>
 
