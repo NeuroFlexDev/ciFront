@@ -6,6 +6,12 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
+// Интерфейс для элементов выпадающего списка
+interface DropdownItem {
+  id: number;
+  name: string;
+}
+
 interface CourseInfoFormProps {
   onNext: () => void;
 }
@@ -13,42 +19,41 @@ interface CourseInfoFormProps {
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<number | null>(null);
-  const [language, setLanguage] = useState<number | null>(null);
+  const [level, setLevel] = useState<DropdownItem | null>(null);
+  const [language, setLanguage] = useState<DropdownItem | null>(null);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
-  const levels = [
+  const levels: DropdownItem[] = [
     { id: 1, name: "Курс с нуля" },
     { id: 2, name: "Для начинающих" },
     { id: 3, name: "Мастер в программировании" },
   ];
 
-  const languages = [
+  const languages: DropdownItem[] = [
     { id: 1, name: "Русский" },
     { id: 2, name: "English" },
   ];
 
-  // ✅ Фикс: title и description теперь точно обновляются
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value || "";
-    setTitle(value);
-    console.log("Title:", value);
+  // ✅ Исправлено: корректное обновление title
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setTitle(e.target.value);
+    console.log("Title:", e.target.value);
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value || "";
-    setDescription(value);
-    console.log("Description:", value);
+  // ✅ Исправлено: корректное обновление description
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+    console.log("Description:", e.target.value);
   };
 
-  const handleLevelChange = (selected: { id: number; name: string }) => {
-    setLevel(selected.id);
-    console.log("Level:", selected.id);
+  const handleLevelChange = (selected: DropdownItem) => {
+    setLevel(selected);
+    console.log("Level:", selected);
   };
 
-  const handleLanguageChange = (selected: { id: number; name: string }) => {
-    setLanguage(selected.id);
-    console.log("Language:", selected.id);
+  const handleLanguageChange = (selected: DropdownItem) => {
+    setLanguage(selected);
+    console.log("Language:", selected);
   };
 
   const handleSubmit = async () => {
@@ -69,8 +74,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
         body: JSON.stringify({
           title,
           description,
-          level,
-          language,
+          level: level.id,
+          language: language.id,
         }),
       });
 
@@ -90,23 +95,21 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
       <p className={styles.title}>Давайте приступим!</p>
       <div className={styles.contCont}>
         <div className={styles.fieldContainer}>
-          {/* ✅ Проверено: Title работает */}
           <FormField label="Введите название вашего курса">
             <Input
               type="text"
               placeholder="“Курс по основам программирования на C#”"
-              text={title}
+              value={title}
               onChange={handleTitleChange}
             />
           </FormField>
 
-          {/* ✅ Проверено: Description работает */}
           <FormField label="Описание вашего курса">
             <Input
               type="textarea"
               placeholder="“Благодаря данному курсу вы сможете стать Junior C# разработчиком”"
               rows={10}
-              text={description}
+              value={description}
               onChange={handleDescriptionChange}
             />
           </FormField>
@@ -115,7 +118,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={levels.find((item) => item.id === level) || null}
+              value={level}
               onChange={handleLevelChange}
             />
           </FormField>
@@ -124,7 +127,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={languages.find((item) => item.id === language) || null}
+              value={language}
               onChange={handleLanguageChange}
             />
           </FormField>

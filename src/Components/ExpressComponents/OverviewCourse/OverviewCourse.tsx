@@ -34,6 +34,16 @@ interface Module {
   loadingLessons?: boolean;
 }
 
+// Пропсы, ожидаемые `ModuleBlock`
+interface ModuleComponentProps extends Module {
+  index: number;
+  onTitleChange: (index: number, title: string) => void;
+  onLessonAdd: (index: number) => void;
+  onLessonRemove: (index: number, lessonIndex: number) => void;
+  onTestAdd: (index: number) => void;
+  onTaskAdd: (index: number) => void;
+}
+
 const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModules }) => {
   const [modules, setLocalModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +114,7 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
               description: contentData.theory,
             };
 
-            newModule.tests = contentData.questions?.map((q) => ({
+            newModule.tests = contentData.questions?.map((q: { question: string; answers: string[]; correct: string }) => ({
               test: q.question,
               description: `Варианты: ${q.answers.join(", ")} (Правильный: ${q.correct})`,
             })) || [];
@@ -128,11 +138,11 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
         console.log("📦 Отправляемые модули:", JSON.stringify({ modules: generatedModules }, null, 2));
 
         saveModulesToServer(generatedModules);
-        setModules(generatedModules); // Передаём актуальные модули
+        setModules(generatedModules);
 
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("❌ Ошибка загрузки:", err);
+        if (err instanceof Error) {
+          console.error("❌ Ошибка загрузки:", err.message);
         }
       } finally {
         setLoading(false);
@@ -189,6 +199,11 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
                 lessons={module.lessons}
                 tests={module.tests}
                 tasks={module.tasks}
+                onTitleChange={() => {}}
+                onLessonAdd={() => {}}
+                onLessonRemove={() => {}}
+                onTestAdd={() => {}}
+                onTaskAdd={() => {}}
               />
               {module.loadingLessons && (
                 <div className={styles.moduleLoader}>

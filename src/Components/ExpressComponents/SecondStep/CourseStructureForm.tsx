@@ -25,7 +25,6 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
   ]);
 
   // Отправка формы на сервер
-  // При нажатии на кнопку «Продолжить» → сохраняем структуру
   const handleSubmit = async () => {
     const payload = {
       sections: parseInt(sections, 10),
@@ -57,7 +56,6 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
       console.error("❌ Ошибка отправки данных:", error);
     }
   };
-  
 
   return (
     <div className={styles.secontStepContainer}>
@@ -65,29 +63,61 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
       <div className={styles.structureDataCont}>
         <div className={styles.itemGridStructure}>
           <LabelField text="Введите количество секций" />
-          <Input type="number" value={sections} onChange={(e) => setSections(e.target.value)} />
+          <Input 
+            type="number" 
+            value={sections} 
+            placeholder="Количество секций" 
+            onChange={(e) => setSections(e.target.value)} 
+          />
         </div>
 
         <div className={styles.itemGridStructure}>
           <LabelField text="Количество тестов в секции" />
-          <Input type="number" value={testsPerSection} onChange={(e) => setTestsPerSection(e.target.value)} />
+          <Input 
+            type="number" 
+            value={testsPerSection} 
+            placeholder="Количество тестов в секции" 
+            onChange={(e) => setTestsPerSection(e.target.value)} 
+          />
         </div>
 
         <div className={styles.itemGridStructure}>
           <LabelField text="Количество уроков в секции" />
-          <Input type="number" value={lessonsPerSection} onChange={(e) => setLessonsPerSection(e.target.value)} />
+          <Input 
+            type="number" 
+            value={lessonsPerSection} 
+            placeholder="Количество уроков в секции" 
+            onChange={(e) => setLessonsPerSection(e.target.value)} 
+          />
         </div>
 
         <div className={styles.itemGridStructure}>
           <LabelField text="Количество вопросов в тесте" />
-          <Input type="number" value={questionsPerTest} onChange={(e) => setQuestionsPerTest(e.target.value)} />
+          <Input 
+            type="number" 
+            value={questionsPerTest} 
+            placeholder="Количество вопросов в тесте" 
+            onChange={(e) => setQuestionsPerTest(e.target.value)} 
+          />
         </div>
 
         <div className={styles.finalTest}>
           <LabelField text="Наличие финального теста" />
           <div className={styles.radioGroup}>
-            <RadioButton name="test-group" value="yes" label="Да" checked={finalTest === "yes"} onChange={() => setFinalTest("yes")} />
-            <RadioButton name="test-group" value="no" label="Нет" checked={finalTest === "no"} onChange={() => setFinalTest("no")} />
+            <RadioButton 
+              name="test-group" 
+              value="yes" 
+              label="Да" 
+              checked={finalTest === "yes"} 
+              onChange={() => setFinalTest("yes")} 
+            />
+            <RadioButton 
+              name="test-group" 
+              value="no" 
+              label="Нет" 
+              checked={finalTest === "no"} 
+              onChange={() => setFinalTest("no")} 
+            />
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './styles.module.css';
 
 interface Course {
+  id: number;  // <-- Добавляем id
   title: string;
   description: string;
   status: 0 | 1 | 2;

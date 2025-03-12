@@ -1,5 +1,5 @@
-import { FC, InputHTMLAttributes } from 'react';
-import styles from './styles.module.css';
+import { FC, InputHTMLAttributes, useRef, useEffect } from "react";
+import styles from "./styles.module.css";
 
 interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -10,15 +10,23 @@ interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
 const Checkbox: FC<CheckboxProps> = ({
   label,
   indeterminate = false,
-  containerClass = '',
+  containerClass = "",
   ...props
 }) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
+
   return (
     <label className={`${styles.checkboxLabel} ${containerClass}`}>
       <input
         type="checkbox"
         className={styles.hiddenCheckbox}
-        ref={(el) => el && (el.indeterminate = indeterminate)}
+        ref={inputRef} // <-- Используем useRef вместо инлайн-функции
         {...props}
       />
       <span className={styles.customCheckbox} aria-hidden="true">
