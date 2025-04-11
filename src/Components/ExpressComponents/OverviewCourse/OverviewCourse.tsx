@@ -3,30 +3,33 @@ import ModuleBlock from "@/Components/ModuleBlock/ModuleBlock";
 import styles from "./styles.module.css";
 import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 import Button from "@/Components/ElementUi/Button/Button";
-import Loader from "@/Components/ElementUi/Loader/Loader"; // Прелоадер
+import Loader from "@/Components/ElementUi/Loader/Loader";
 
+// Типы
 interface OverviewCourseProps {
-  onBack: () => void;
-  onNext?: () => void;
-  setModules: (modules: Module[]) => void;
+  courseId: number;              // ID курса (после создания)
+  csId: number;                  // ID структуры курса
+  onBack: () => void;            // Кнопка "Вернуться назад"
+  onNext?: () => void;           // Кнопка "Сохранить и продолжить"
+  setModules?: (modules: ModuleItem[]) => void; // Функция, чтобы передавать список модулей "наверх"
 }
 
-// Интерфейсы
+// Интерфейсы урока, теста, задачи, модуля
 interface Lesson {
-  lesson: string;
-  description: string;
+  id: number;
+  lesson: string;        // Название урока (для ModuleBlock)
+  description: string;   // Текст/HTML
 }
-
 interface Test {
   test: string;
   description: string;
 }
-
 interface Task {
   name: string;
+  description?: string;
 }
-
-interface Module {
+interface ModuleItem {
+  id: number;
   title: string;
   lessons: Lesson[];
   tests: Test[];
@@ -34,151 +37,114 @@ interface Module {
   loadingLessons?: boolean;
 }
 
-// Пропсы для `ModuleBlock`
-interface ModuleComponentProps extends Module {
-  index: number;
-  onTitleChange: (index: number, title: string) => void;
-  onLessonAdd: (index: number) => void;
-  onLessonRemove: (index: number, lessonIndex: number) => void;
-  onTestAdd: (index: number) => void;
-  onTestRemove: (index: number, testIndex: number) => void;
-  onTaskAdd: (index: number) => void;
-  onTaskRemove: (index: number, taskIndex: number) => void;
-  onModuleRemove: (index: number) => void;
-}
-
-const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModules }) => {
-  const [modules, setLocalModules] = useState<Module[]>([]);
+const OverviewCourse: React.FC<OverviewCourseProps> = ({
+  courseId,
+  csId,
+  onBack,
+  onNext,
+  setModules,
+}) => {
+  const [modules, setLocalModules] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const abortController = new AbortController();
+    let abort = false;
 
-    const fetchModules = async () => {
+    (async () => {
       try {
-        console.log("🔄 Запрашиваем список модулей...");
-        const modResp = await fetch("http://127.0.0.1:8000/api/generate_modules", {
-          signal: abortController.signal,
-        });
+        setLoading(true);
+        console.log("🔄 Генерация модулей (GET /generate_modules)...");
 
-        if (!modResp.ok) throw new Error("Ошибка генерации модулей");
-        const modData = await modResp.json();
-
-        console.log("✅ Получены модули:", modData.modules);
-
-        if (!modData.modules || modData.modules.length === 0) {
-          throw new Error("❌ API вернул пустой список модулей");
+        // 1) Генерация модулей
+        const generateUrl = `http://127.0.0.1:8000/api/courses/${courseId}/generate_modules?cs_id=${csId}`;
+        const genResp = await fetch(generateUrl);
+        if (!genResp.ok) {
+          throw new Error("Ошибка при генерации модулей");
         }
+        const genData = await genResp.json();
+        console.log("✅ generate_modules ответ:", genData);
 
-        let generatedModules: Module[] = [];
+        // 2) Загружаем реально созданные модули через CRUD
+        console.log("🔄 Загружаем список модулей (GET /courses/{courseId}/modules/)...");
+        const modsListResp = await fetch(
+          `http://127.0.0.1:8000/api/courses/${courseId}/modules/`
+        );
+        if (!modsListResp.ok) {
+          throw new Error("Ошибка при загрузке списка модулей");
+        }
+        const modsList = await modsListResp.json(); // [{ id, title, course_id }, ...]
 
-        for (const mod of modData.modules) {
-          let newModule: Module = {
-            title: mod.title,
-            lessons: [],
-            tests: [],
-            tasks: [],
-            loadingLessons: true,
-          };
+        // Преобразуем в local-стейт
+        let loadedModules: ModuleItem[] = modsList.map((mod: any) => ({
+          id: mod.id,
+          title: mod.title,
+          lessons: [],
+          tests: [],
+          tasks: [],
+        }));
 
-          setLocalModules((prev) => [...prev, newModule]);
+        // 3) Для каждого модуля: генерация уроков + загрузка уроков
+        for (const moduleItem of loadedModules) {
+          console.log(
+            `🔄 Генерация уроков для модуля ID=${moduleItem.id}, title=${moduleItem.title}`
+          );
 
-          console.log(`🔄 Генерируем уроки для модуля: ${mod.title}`);
-          const lessonResp = await fetch("http://127.0.0.1:8000/api/generate_module_lessons", {
+          // generate_module_lessons через query, т.к. backend = Depends()
+          const genLessonsUrl =
+            `http://127.0.0.1:8000/api/courses/${courseId}/generate_module_lessons?cs_id=${csId}` +
+            `&module_id=${moduleItem.id}&module_title=${encodeURIComponent(moduleItem.title)}`;
+          const genLessonsResp = await fetch(genLessonsUrl, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: mod.title }),
-            signal: abortController.signal,
           });
-
-          if (!lessonResp.ok) throw new Error("Ошибка генерации уроков");
-          const lessonData = await lessonResp.json();
-          newModule.lessons = lessonData.lessons || [];
-
-          setLocalModules((prev) =>
-            prev.map((m) => (m.title === newModule.title ? newModule : m))
-          );
-
-          for (let i = 0; i < newModule.lessons.length; i++) {
-            console.log(`🔄 Генерируем контент для урока: ${newModule.lessons[i].lesson}`);
-            const contentResp = await fetch("http://127.0.0.1:8000/api/generate_lesson_content", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ title: newModule.lessons[i].lesson }),
-              signal: abortController.signal,
-            });
-
-            if (!contentResp.ok) throw new Error("Ошибка генерации контента урока");
-            const contentData = await contentResp.json();
-
-            newModule.lessons[i] = {
-              ...newModule.lessons[i],
-              description: contentData.theory,
-            };
-
-            newModule.tests = contentData.questions?.map((q: { question: string; answers: string[]; correct: string }) => ({
-              test: q.question,
-              description: `Варианты: ${q.answers.join(", ")} (Правильный: ${q.correct})`,
-            })) || [];
-
-            newModule.tasks = contentData.tasks || [];
-
-            setLocalModules((prev) =>
-              prev.map((m) => (m.title === newModule.title ? newModule : m))
-            );
+          if (!genLessonsResp.ok) {
+            throw new Error("Ошибка генерации уроков");
           }
+          const genLessonsData = await genLessonsResp.json();
+          console.log("Уроки сгенерированы:", genLessonsData);
 
-          newModule.loadingLessons = false;
-          setLocalModules((prev) =>
-            prev.map((m) => (m.title === newModule.title ? newModule : m))
+          // 4) Теперь загружаем уроки (CRUD)
+          console.log(
+            `🔄 Загружаем уроки из /courses/${courseId}/modules/${moduleItem.id}/lessons/`
           );
+          const lessonsResp = await fetch(
+            `http://127.0.0.1:8000/api/courses/${courseId}/modules/${moduleItem.id}/lessons/`
+          );
+          if (!lessonsResp.ok) {
+            throw new Error("Ошибка при загрузке уроков");
+          }
+          const lessonsData = await lessonsResp.json(); // [{ id, title, description, module_id }, ...]
 
-          setCurrentIndex((prev) => prev + 1);
-          generatedModules.push(newModule);
+          const typedLessons = lessonsData.map((ls: any) => ({
+            id: ls.id,
+            lesson: ls.title,
+            description: ls.description,
+          }));
+
+          moduleItem.lessons = typedLessons;
         }
 
-        console.log("📦 Отправляемые модули:", JSON.stringify({ modules: generatedModules }, null, 2));
-
-        saveModulesToServer(generatedModules);
-        setModules(generatedModules);
-
-      } catch (err) {
-        if (err instanceof Error) {
-          console.error("❌ Ошибка загрузки:", err.message);
+        // Сохраняем модули в стейт
+        if (!abort) {
+          setLocalModules(loadedModules);
+          if (setModules) {
+            setModules(loadedModules); // если нужно поднять наверх
+          }
+        }
+      } catch (error) {
+        if (!abort) {
+          console.error("❌ Ошибка при генерации/загрузке модулей:", error);
         }
       } finally {
-        setLoading(false);
+        if (!abort) setLoading(false);
       }
+    })();
+
+    return () => {
+      abort = true;
     };
+  }, [courseId, csId, setModules]);
 
-    fetchModules();
-
-    return () => abortController.abort();
-  }, []);
-
-  const saveModulesToServer = async (modulesToSave: Module[]) => {
-    if (!modulesToSave || modulesToSave.length === 0) {
-      console.warn("🚨 Пустые модули! Отправка данных отменена.");
-      return;
-    }
-
-    console.log("📦 Отправляем на сервер:", JSON.stringify({ modules: modulesToSave }, null, 2));
-
-    const saveResponse = await fetch("http://127.0.0.1:8000/api/save_modules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ modules: modulesToSave }),
-    });
-
-    if (!saveResponse.ok) {
-      throw new Error("❌ Ошибка сохранения модулей на сервере");
-    }
-
-    console.log("✅ Модули успешно сохранены на сервере.");
-    setModules(modulesToSave);
-  };
-
+  // Рендер
   return (
     <>
       <p className={styles.title}>Обзор курса</p>
@@ -190,11 +156,11 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
       <div className={styles.containerModules}>
         {loading ? (
           <div className={styles.loaderWrapper}>
-            <Loader text="Генерация курса..." />
+            <Loader text="Генерация курса и загрузка модулей..." />
           </div>
         ) : (
           modules.map((module, index) => (
-            <div key={index} className={styles.moduleContainer}>
+            <div key={module.id} className={styles.moduleContainer}>
               <ModuleBlock
                 index={index}
                 height={400}
@@ -216,7 +182,11 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({ onBack, onNext, setModu
         )}
       </div>
 
-      <Button onClick={onNext} text="Сохранить и продолжить" disabled={loading || modules.length === 0} />
+      <Button
+        onClick={onNext}
+        text="Сохранить и продолжить"
+        disabled={loading || modules.length === 0}
+      />
     </>
   );
 };

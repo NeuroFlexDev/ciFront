@@ -6,21 +6,18 @@ import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
 import styles from "./styles.module.css";
 
-// Локальный тип для хранения данных нашего компонента
 interface LocalDropdownItem {
   id: number;
   name: string;
 }
 
-// Интерфейс для типа, который используется компонентом Select
-// (свойство id может быть string или number)
 interface SelectDropdownItem {
   id: string | number;
   name: string;
 }
 
 interface CourseInfoFormProps {
-  onNext: () => void;
+  onNext: (courseId: number) => void;
 }
 
 export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
@@ -41,15 +38,18 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     { id: 2, name: "English" },
   ];
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleTitleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setTitle(e.target.value);
   };
 
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleDescriptionChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setDescription(e.target.value);
   };
 
-  // Обработчики изменений принимают параметр типа SelectDropdownItem
   const handleLevelChange = (selected: SelectDropdownItem) => {
     setLevel({ id: Number(selected.id), name: selected.name });
   };
@@ -58,8 +58,13 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setLanguage({ id: Number(selected.id), name: selected.name });
   };
 
-  const handleSubmit = async () => {
-    console.log("Перед отправкой:", { title, description, level, language });
+  /**
+   * Логика двух запросов:
+   *  1) POST /api/courses/ для создания курса (JSON)
+   *  2) POST /api/courses/{id}/upload-description (multipart/form-data) — если есть файл
+   */
+const handleSubmit = async () => {
+    console.log("Перед отправкой:", { title, description, level, language, additionalFile });
 
     if (!title || !description || !level || !language) {
       alert("Заполните все поля!");
@@ -67,7 +72,8 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/courses/", {
+      // 1) СОЗДАЁМ КУРС
+      const resp = await fetch("http://127.0.0.1:8000/api/courses/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -78,16 +84,43 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Ошибка при сохранении курса");
+      if (!resp.ok) {
+        throw new Error(`Ошибка при сохранении курса: ${resp.statusText}`);
       }
 
-      console.log("✅ Курс успешно создан!");
-      onNext();
+      const createdCourse = await resp.json();
+      console.log("✅ Курс успешно создан:", createdCourse);
+
+      // 2) Если пользователь выбрал файл, отправляем его
+      if (additionalFile) {
+        const formData = new FormData();
+        formData.append("file", additionalFile);
+
+        const uploadResp = await fetch(
+          `http://127.0.0.1:8000/api/courses/${createdCourse.id}/upload-description`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (!uploadResp.ok) {
+          throw new Error(`Ошибка при загрузке файла: ${uploadResp.statusText}`);
+        }
+
+        const uploadResData = await uploadResp.json();
+        console.log("✅ Файл успешно загружен:", uploadResData);
+      }
+
+      // Передаем созданный courseId наверх
+      onNext(createdCourse.id);
+
     } catch (error) {
       console.error("Ошибка при отправке данных", error);
+      alert(`Ошибка: ${error}`);
     }
   };
+
 
   return (
     <div className={styles.expressCourseContainer}>
@@ -131,8 +164,11 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             />
           </FormField>
 
-          <FormField label="Дополнительные материалы">
-            <UploadFile onFileSelect={(file) => setAdditionalFile(file)} maxSize={10 * 1024 * 1024} />
+          <FormField label="Дополнительные материалы (необязательно)">
+            <UploadFile
+              onFileSelect={(file) => setAdditionalFile(file)}
+              maxSize={10 * 1024 * 1024}
+            />
           </FormField>
 
           <Button text="Продолжить" onClick={handleSubmit} variant="primary" />

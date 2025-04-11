@@ -1,26 +1,29 @@
-import React, { useEffect, useState } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import React, { useState } from "react";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import jsPDF from "jspdf";
 
-// Интерфейсы для модулей
+// 1) Импортируем ваш кастомный TextEditor
+import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+
+// Интерфейсы
 interface Lesson {
+  id: number;
   lesson: string;
   description: string;
 }
-
 interface Test {
+  id?: number;
   test: string;
   description: string;
 }
-
 interface Task {
+  id?: number;
   name: string;
+  description?: string;
 }
-
 interface Module {
+  id: number;
   title: string;
   lessons: Lesson[];
   tests: Test[];
@@ -33,72 +36,95 @@ interface FinalEditorProps {
   onFinish: () => void;
 }
 
-const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBack, onFinish }) => {
+const FinalEditor: React.FC<FinalEditorProps> = ({
+  modules: initialModules,
+  onBack,
+  onFinish,
+}) => {
   const [modules, setModules] = useState<Module[]>(initialModules);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
-  // **🎨 Инициализация редактора**
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: selectedLesson?.description || "<p></p>",
-    onUpdate: ({ editor }) => {
-      if (selectedLesson) {
-        setModules((prevModules) =>
-          prevModules.map((module) => ({
-            ...module,
-            lessons: module.lessons.map((lesson) =>
-              lesson.lesson === selectedLesson.lesson
-                ? { ...lesson, description: editor.getHTML() }
-                : lesson
-            ),
-          }))
-        );
-      }
-    },
-  });
-
-  // **🎯 Загружаем контент при изменении выбранного урока**
-  useEffect(() => {
-    if (selectedLesson && editor) {
-      editor.commands.setContent(selectedLesson.description || "<p></p>");
-    }
-  }, [selectedLesson, editor]);
-
-  // **📌 Выбор урока**
+  // Когда кликают урок в сайдбаре, выбираем его
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
   };
 
-  // **💾 Сохранение изменений на сервер**
+  // Когда ваш TextEditor меняет текст, обновляем description выбранного урока
+  const handleEditorChange = (newHTML: string) => {
+    if (!selectedLesson) return;
+
+    setModules((prev) =>
+      prev.map((mod) => ({
+        ...mod,
+        lessons: mod.lessons.map((ls) =>
+          ls.id === selectedLesson.id
+            ? { ...ls, description: newHTML }
+            : ls
+        ),
+      }))
+    );
+
+    // Обновляем local selectedLesson тоже
+    setSelectedLesson((prev) =>
+      prev ? { ...prev, description: newHTML } : null
+    );
+  };
+
+  // Сохранение на сервер (PUT /modules/{id}, PUT /lessons/{id}, ...)
   const saveModulesToServer = async () => {
     try {
       console.log("🔄 Сохраняем изменения на сервер...");
-      const response = await fetch("http://127.0.0.1:8000/api/save_modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ modules }),
-      });
 
-      if (!response.ok) throw new Error("Ошибка сохранения модулей");
-      console.log("✅ Модули успешно сохранены!");
+      for (const mod of modules) {
+        // PUT /modules/{mod.id}
+        const respMod = await fetch(`http://127.0.0.1:8000/api/modules/${mod.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: mod.title }),
+        });
+        if (!respMod.ok) {
+          throw new Error(`Ошибка при обновлении модуля ID=${mod.id}`);
+        }
+
+        for (const les of mod.lessons) {
+          // PUT /lessons/{les.id}
+          const respLes = await fetch(`http://127.0.0.1:8000/api/lessons/${les.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: les.lesson,
+              description: les.description,
+            }),
+          });
+          if (!respLes.ok) {
+            throw new Error(`Ошибка при обновлении урока ID=${les.id}`);
+          }
+        }
+
+        // Аналогично tests/tasks, если есть
+      }
+
+      console.log("✅ Все изменения успешно сохранены!");
+      alert("Изменения сохранены!");
     } catch (err) {
       console.error("❌ Ошибка сохранения:", err);
+      alert(String(err));
     }
   };
 
-  // **📄 Экспорт в Markdown**
+  // Экспорт MD
   const exportToMarkdown = () => {
     let markdownContent = "";
-
-    modules.forEach((module) => {
-      markdownContent += `# ${module.title}\n\n`;
-      module.lessons.forEach((lesson) => {
-        markdownContent += `## ${lesson.lesson}\n\n${lesson.description.replace(/<\/?[^>]+(>|$)/g, "")}\n\n`;
+    modules.forEach((mod) => {
+      markdownContent += `# ${mod.title}\n\n`;
+      mod.lessons.forEach((lesson) => {
+        const textOnly = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
+        markdownContent += `## ${lesson.lesson}\n\n${textOnly}\n\n`;
       });
-      module.tests.forEach((test) => {
+      mod.tests.forEach((test) => {
         markdownContent += `### Тест: ${test.test}\n\n${test.description}\n\n`;
       });
-      module.tasks.forEach((task) => {
+      mod.tasks.forEach((task) => {
         markdownContent += `### Задание: ${task.name}\n\n`;
       });
     });
@@ -113,27 +139,28 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBa
     document.body.removeChild(a);
   };
 
-  // **📄 Экспорт в PDF**
+  // Экспорт PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     let y = 10;
 
-    modules.forEach((module) => {
+    modules.forEach((mod) => {
       doc.setFontSize(16);
-      doc.text(module.title, 10, y);
+      doc.text(mod.title, 10, y);
       y += 8;
 
-      module.lessons.forEach((lesson) => {
+      mod.lessons.forEach((lesson) => {
         doc.setFontSize(14);
         doc.text(lesson.lesson, 10, y);
         y += 6;
         doc.setFontSize(12);
-        const splitText = doc.splitTextToSize(lesson.description.replace(/<\/?[^>]+(>|$)/g, ""), 180);
+        const textNoTags = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
+        const splitText = doc.splitTextToSize(textNoTags, 180);
         doc.text(splitText, 10, y);
         y += splitText.length * 6 + 4;
       });
 
-      module.tests.forEach((test) => {
+      mod.tests.forEach((test) => {
         doc.setFontSize(14);
         doc.text(`Тест: ${test.test}`, 10, y);
         y += 6;
@@ -142,7 +169,7 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBa
         y += 8;
       });
 
-      module.tasks.forEach((task) => {
+      mod.tasks.forEach((task) => {
         doc.setFontSize(14);
         doc.text(`Задание: ${task.name}`, 10, y);
         y += 8;
@@ -160,13 +187,15 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBa
 
       <div className={styles.content}>
         <div className={styles.sidebar}>
-          {modules.map((module, moduleIndex) => (
-            <div key={moduleIndex} className={styles.module}>
-              <h3>{module.title}</h3>
-              {module.lessons.map((lesson, lessonIndex) => (
+          {modules.map((mod) => (
+            <div key={mod.id} className={styles.module}>
+              <h3>{mod.title}</h3>
+              {mod.lessons.map((lesson) => (
                 <p
-                  key={lessonIndex}
-                  className={`${styles.lesson} ${selectedLesson?.lesson === lesson.lesson ? styles.activeLesson : ""}`}
+                  key={lesson.id}
+                  className={`${styles.lesson} ${
+                    selectedLesson?.id === lesson.id ? styles.activeLesson : ""
+                  }`}
                   onClick={() => handleLessonClick(lesson)}
                 >
                   {lesson.lesson}
@@ -180,7 +209,8 @@ const FinalEditor: React.FC<FinalEditorProps> = ({ modules: initialModules, onBa
           {selectedLesson ? (
             <>
               <h3>{selectedLesson.lesson}</h3>
-              <EditorContent editor={editor} />
+              {/* TextEditor со значением description */}
+              <TextEditor value={selectedLesson.description} onChange={handleEditorChange} />
             </>
           ) : (
             <p className={styles.placeholder}>Выберите урок для редактирования</p>
