@@ -1,0 +1,145 @@
+.chatContainer {
+    padding-top: 50px;
+}
+
+.messagesContainer {
+    height: 60vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+  
+.message {
+    margin-bottom: 15px;
+    display: flex;
+}
+  
+.messageContent {
+    max-width: 70%;
+    padding: 8px 16px;
+    border-radius: 15px;
+}
+  
+.userMessage {
+    justify-content: flex-end;
+}
+  
+.userMessage .messageContent {
+    background-color: #D7D5FF;
+    color: black;
+    font-size: 16px;
+    font-weight: 400;
+}
+  
+.botMessage {
+    justify-content: flex-start;
+}
+  
+.botMessage .messageContent {
+    background-color: #ffffff;
+    color: #333;
+    border: 1px solid #e0e0e0;
+}
+  
+.courseCard {
+    margin-top: 10px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+}
+  
+.courseCard h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+  
+.courseCard ul {
+    padding-left: 20px;
+    margin: 0;
+}
+  
+.courseCard li {
+    margin-bottom: 5px;
+    color: #666;
+}
+  
+.inputForm {
+    display: flex;
+    padding: 20px;
+    background-color: white;
+    border-top: 1px solid #eee;
+    border-radius: 12px;
+}
+  
+.inputForm input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-right: 10px;
+    font-size: 16px;
+    font-weight: 400;
+    border-color: #A590FB;
+}
+
+.inputForm input:focus {
+    outline: none;
+    border-color: #A590FB;
+}
+  
+.inputForm button {
+    padding: 12px 24px;
+    background: none;
+    border: 1px solid #A590FB !important;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+  
+.inputForm button:hover {
+    background-color: #A590FB;
+}
+  
+.typingIndicator {
+    display: flex;
+    padding: 10px;
+}
+  
+.typingIndicator span {
+    width: 8px;
+    height: 8px;
+    margin: 0 3px;
+    background-color: #A590FB;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+  
+.typingIndicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+  
+.typingIndicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+  
+@keyframes typing {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.createButton {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s;
+}
+  
+.createButton:hover {
+    background-color: #45a049;
+}

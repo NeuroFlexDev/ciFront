@@ -1,5 +1,4 @@
-import ImageEditor from "@/Components/ElementUi/ImageEditor/ImageEditor";
-import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+import AiChat from "@/Components/AiHelperPage/Chat/Chat";
 import Menu from "@/Components/Menu/Menu";
 
 
@@ -8,9 +7,7 @@ function AiHelperPage() {
   return (
     <>
       <Menu />
-      <h1>AI-Помощник</h1>
-      <TextEditor />
-      <ImageEditor />
+      <AiChat />
     </>
   )
 }
