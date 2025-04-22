@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { FormField } from "@/Components/ExpressComponents/FormField/FormField";
 import Input from "@/Components/ElementUi/Input/Input";
 import Select from "@/Components/ElementUi/Select/Select";
@@ -58,12 +59,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     setLanguage({ id: Number(selected.id), name: selected.name });
   };
 
-  /**
-   * Логика двух запросов:
-   *  1) POST /api/courses/ для создания курса (JSON)
-   *  2) POST /api/courses/{id}/upload-description (multipart/form-data) — если есть файл
-   */
-const handleSubmit = async () => {
+  const handleSubmit = async () => {
     console.log("Перед отправкой:", { title, description, level, language, additionalFile });
 
     if (!title || !description || !level || !language) {
@@ -72,23 +68,17 @@ const handleSubmit = async () => {
     }
 
     try {
-      // 1) СОЗДАЁМ КУРС
-      const resp = await fetch("http://127.0.0.1:8000/api/courses/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      // 1) СОЗДАЁМ КУРС через axios
+      const courseResponse = await axios.post("http://127.0.0.1:8000/api/courses/",
+        {
           title,
           description,
           level: level.id,
           language: language.id,
-        }),
-      });
+        }
+      );
 
-      if (!resp.ok) {
-        throw new Error(`Ошибка при сохранении курса: ${resp.statusText}`);
-      }
-
-      const createdCourse = await resp.json();
+      const createdCourse = courseResponse.data;
       console.log("✅ Курс успешно создан:", createdCourse);
 
       // 2) Если пользователь выбрал файл, отправляем его
@@ -96,31 +86,25 @@ const handleSubmit = async () => {
         const formData = new FormData();
         formData.append("file", additionalFile);
 
-        const uploadResp = await fetch(
-          `http://127.0.0.1:8000/api/courses/${createdCourse.id}/upload-description`,
+        const uploadResponse = await axios.post(`http://127.0.0.1:8000/api/courses/${createdCourse.id}/upload-description`,
+          formData,
           {
-            method: "POST",
-            body: formData,
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           }
         );
 
-        if (!uploadResp.ok) {
-          throw new Error(`Ошибка при загрузке файла: ${uploadResp.statusText}`);
-        }
-
-        const uploadResData = await uploadResp.json();
-        console.log("✅ Файл успешно загружен:", uploadResData);
+        console.log("✅ Файл успешно загружен:", uploadResponse.data);
       }
 
       // Передаем созданный courseId наверх
       onNext(createdCourse.id);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ошибка при отправке данных", error);
-      alert(`Ошибка: ${error}`);
+      alert(`Ошибка: ${error.message || error}`);
     }
   };
-
 
   return (
     <div className={styles.expressCourseContainer}>

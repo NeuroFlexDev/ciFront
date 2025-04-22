@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import ModuleBlock from "@/Components/ModuleBlock/ModuleBlock";
 import styles from "./styles.module.css";
 import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
@@ -7,18 +8,17 @@ import Loader from "@/Components/ElementUi/Loader/Loader";
 
 // Типы
 interface OverviewCourseProps {
-  courseId: number;              // ID курса (после создания)
-  csId: number;                  // ID структуры курса
-  onBack: () => void;            // Кнопка "Вернуться назад"
-  onNext?: () => void;           // Кнопка "Сохранить и продолжить"
-  setModules?: (modules: ModuleItem[]) => void; // Функция, чтобы передавать список модулей "наверх"
+  courseId: number;
+  csId: number;
+  onBack: () => void;
+  onNext?: () => void;
+  setModules?: (modules: ModuleItem[]) => void;
 }
 
-// Интерфейсы урока, теста, задачи, модуля
 interface Lesson {
   id: number;
-  lesson: string;        // Название урока (для ModuleBlock)
-  description: string;   // Текст/HTML
+  lesson: string;
+  description: string;
 }
 interface Test {
   test: string;
@@ -48,7 +48,8 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let abort = false;
+    const controller = new AbortController();
+    const { signal } = controller;
 
     (async () => {
       try {
@@ -57,24 +58,17 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
 
         // 1) Генерация модулей
         const generateUrl = `http://127.0.0.1:8000/api/courses/${courseId}/generate_modules?cs_id=${csId}`;
-        const genResp = await fetch(generateUrl);
-        if (!genResp.ok) {
-          throw new Error("Ошибка при генерации модулей");
-        }
-        const genData = await genResp.json();
+        const { data: genData } = await axios.get(generateUrl, { signal });
         console.log("✅ generate_modules ответ:", genData);
 
-        // 2) Загружаем реально созданные модули через CRUD
-        console.log("🔄 Загружаем список модулей (GET /courses/{courseId}/modules/)...");
-        const modsListResp = await fetch(
-          `http://127.0.0.1:8000/api/courses/${courseId}/modules/`
+        // 2) Загрузка списка модулей
+        console.log("🔄 Загружаем список модулей...");
+        const { data: modsList } = await axios.get(
+          `http://127.0.0.1:8000/api/courses/${courseId}/modules/`,
+          { signal }
         );
-        if (!modsListResp.ok) {
-          throw new Error("Ошибка при загрузке списка модулей");
-        }
-        const modsList = await modsListResp.json(); // [{ id, title, course_id }, ...]
 
-        // Преобразуем в local-стейт
+        // Преобразование в local-стейт
         let loadedModules: ModuleItem[] = modsList.map((mod: any) => ({
           id: mod.id,
           title: mod.title,
@@ -83,36 +77,19 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
           tasks: [],
         }));
 
-        // 3) Для каждого модуля: генерация уроков + загрузка уроков
+        // 3) Генерация и загрузка уроков для каждого модуля
         for (const moduleItem of loadedModules) {
-          console.log(
-            `🔄 Генерация уроков для модуля ID=${moduleItem.id}, title=${moduleItem.title}`
-          );
+          console.log(`🔄 Генерация уроков для модуля ID=${moduleItem.id}`);
 
-          // generate_module_lessons через query, т.к. backend = Depends()
-          const genLessonsUrl =
-            `http://127.0.0.1:8000/api/courses/${courseId}/generate_module_lessons?cs_id=${csId}` +
-            `&module_id=${moduleItem.id}&module_title=${encodeURIComponent(moduleItem.title)}`;
-          const genLessonsResp = await fetch(genLessonsUrl, {
-            method: "POST",
-          });
-          if (!genLessonsResp.ok) {
-            throw new Error("Ошибка генерации уроков");
-          }
-          const genLessonsData = await genLessonsResp.json();
-          console.log("Уроки сгенерированы:", genLessonsData);
+          const genLessonsUrl = 
+          `http://127.0.0.1:8000/api/courses/${courseId}/generate_module_lessons?cs_id=${csId}&module_id=${moduleItem.id}&module_title=${encodeURIComponent(moduleItem.title)}`;
+          await axios.post(genLessonsUrl, { signal });
 
-          // 4) Теперь загружаем уроки (CRUD)
-          console.log(
-            `🔄 Загружаем уроки из /courses/${courseId}/modules/${moduleItem.id}/lessons/`
+          // 4) Загрузка уроков модуля
+          const { data: lessonsData } = await axios.get(
+            `http://127.0.0.1:8000/api/courses/${courseId}/modules/${moduleItem.id}/lessons/`,
+            { signal }
           );
-          const lessonsResp = await fetch(
-            `http://127.0.0.1:8000/api/courses/${courseId}/modules/${moduleItem.id}/lessons/`
-          );
-          if (!lessonsResp.ok) {
-            throw new Error("Ошибка при загрузке уроков");
-          }
-          const lessonsData = await lessonsResp.json(); // [{ id, title, description, module_id }, ...]
 
           const typedLessons = lessonsData.map((ls: any) => ({
             id: ls.id,
@@ -124,24 +101,20 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
         }
 
         // Сохраняем модули в стейт
-        if (!abort) {
+        if (!signal.aborted) {
           setLocalModules(loadedModules);
-          if (setModules) {
-            setModules(loadedModules); // если нужно поднять наверх
-          }
+          setModules?.(loadedModules);
         }
       } catch (error) {
-        if (!abort) {
-          console.error("❌ Ошибка при генерации/загрузке модулей:", error);
+        if (!axios.isCancel(error) && !signal.aborted) {
+          console.error("❌ Ошибка при загрузке данных:", error);
         }
       } finally {
-        if (!abort) setLoading(false);
+        if (!signal.aborted) setLoading(false);
       }
     })();
 
-    return () => {
-      abort = true;
-    };
+    return () => controller.abort();
   }, [courseId, csId, setModules]);
 
   // Рендер

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import jsPDF from "jspdf";
+import axios from "axios";
 
 // 1) Импортируем ваш кастомный TextEditor
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
@@ -74,41 +75,39 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
   const saveModulesToServer = async () => {
     try {
       console.log("🔄 Сохраняем изменения на сервер...");
+      const requests = [];
 
+      // Собираем все запросы
       for (const mod of modules) {
-        // PUT /modules/{mod.id}
-        const respMod = await fetch(`http://127.0.0.1:8000/api/modules/${mod.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: mod.title }),
-        });
-        if (!respMod.ok) {
-          throw new Error(`Ошибка при обновлении модуля ID=${mod.id}`);
-        }
+        // Обновление модуля
+        requests.push(
+          axios.put(`http://127.0.0.1:8000/api/modules/${mod.id}`, {
+            title: mod.title
+          })
+        );
 
+        // Обновление уроков
         for (const les of mod.lessons) {
-          // PUT /lessons/{les.id}
-          const respLes = await fetch(`http://127.0.0.1:8000/api/lessons/${les.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+          requests.push(
+            axios.put(`http://127.0.0.1:8000/api/lessons/${les.id}`, {
               title: les.lesson,
-              description: les.description,
-            }),
-          });
-          if (!respLes.ok) {
-            throw new Error(`Ошибка при обновлении урока ID=${les.id}`);
-          }
+              description: les.description
+            })
+          );
         }
-
-        // Аналогично tests/tasks, если есть
       }
 
+      // Выполняем все запросы параллельно
+      await Promise.all(requests);
+      
       console.log("✅ Все изменения успешно сохранены!");
       alert("Изменения сохранены!");
     } catch (err) {
       console.error("❌ Ошибка сохранения:", err);
-      alert(String(err));
+      const message = axios.isAxiosError(err) 
+        ? err.response?.data?.message || err.message
+        : "Неизвестная ошибка";
+      alert(`Ошибка сохранения: ${message}`);
     }
   };
 

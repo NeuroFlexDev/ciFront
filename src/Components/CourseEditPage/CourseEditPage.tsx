@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import jsPDF from "jspdf";
+import axios from "axios";
 
 // Импортируем ваш кастомный TextEditor
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
@@ -43,29 +44,18 @@ const CourseEditPage: React.FC = () => {
   // === 1) Загрузка модулей и уроков ===
   useEffect(() => {
     if (!id) return;
+    const source = axios.CancelToken.source();
 
     (async () => {
       try {
         setLoading(true);
-        // Пример: GET /courses/{id}/modules + для каждого модуля уроки
-        // или если бэкенд возвращает сразу modules со списком lessons/tests/tasks.
-        // Предположим, у вас есть GET /courses/{id}/load_modules, который возвращает:
-        // { "modules": [ { "title": ..., "lessons": [...], "tests": [...], "tasks": [...] }, ... ] }
+        const { data } = await axios.get(
+          `http://127.0.0.1:8000/api/courses/${id}/load_modules`,
+          { cancelToken: source.token }
+        );
 
-        const resp = await fetch(`http://127.0.0.1:8000/api/courses/${id}/load_modules`);
-        if (!resp.ok) {
-          throw new Error(`Ошибка при загрузке модулей: ${resp.statusText}`);
-        }
-        const data = await resp.json();
-
-        // data.modules => [{title: string, lessons: [{lesson, description}], tests, tasks}]
-        // Нужно преобразовать к типу Module (c id, ...).
-        // Допустим, ваш load_modules не возвращает module.id — тогда
-        // можно генерировать искусственные id, или доработать бэкенд.
-
-        // Пример (упрощённо):
         const loadedModules = data.modules.map((m: any, index: number) => ({
-          id: index + 100, // искусственно, если нет ID
+          id: index + 100,
           title: m.title,
           lessons: m.lessons.map((ls: any, i: number) => ({
             id: i + 1000,
@@ -85,11 +75,15 @@ const CourseEditPage: React.FC = () => {
         setModules(loadedModules);
         console.log("Модули загружены:", loadedModules);
       } catch (err) {
-        console.error("Ошибка загрузки модулей:", err);
+        if (!axios.isCancel(err)) {
+          console.error("Ошибка загрузки модулей:", err);
+        }
       } finally {
         setLoading(false);
       }
     })();
+
+    return () => source.cancel("Запрос отменен при размонтировании компонента");
   }, [id]);
 
   // === 2) Клик по уроку => выбираем, чтобы редактировать
@@ -119,10 +113,6 @@ const CourseEditPage: React.FC = () => {
   const saveModulesToServer = async () => {
     try {
       console.log("Сохраняем изменения на сервер...");
-
-      // Если у вас на бэкенде есть save_modules: POST /courses/{id}/save_modules
-      // и принимает {modules: [...]}, можно просто отправить новые данные:
-
       const body = {
         modules: modules.map((m) => ({
           title: m.title,
@@ -135,20 +125,19 @@ const CourseEditPage: React.FC = () => {
         })),
       };
 
-      const resp = await fetch(`http://127.0.0.1:8000/api/courses/${id}/save_modules`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) {
-        throw new Error("Ошибка сохранения модулей");
-      }
+      await axios.post(
+        `http://127.0.0.1:8000/api/courses/${id}/save_modules`,
+        body
+      );
 
       console.log("✅ Все изменения успешно сохранены!");
       alert("Изменения сохранены!");
     } catch (err) {
       console.error("Ошибка сохранения:", err);
-      alert(String(err));
+      const errorMessage = axios.isAxiosError(err)
+        ? err.response?.data?.message || err.message
+        : "Неизвестная ошибка";
+      alert(`Ошибка сохранения: ${errorMessage}`);
     }
   };
 

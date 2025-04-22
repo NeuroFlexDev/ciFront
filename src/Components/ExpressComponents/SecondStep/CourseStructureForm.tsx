@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import Input from "@/Components/ElementUi/Input/Input";
 import RadioButton from "@/Components/ElementUi/RadioButton/RadioButton";
 import Checkbox from "@/Components/ElementUi/Checkbox/Checkbox";
@@ -11,8 +12,6 @@ interface CourseStructureFormProps {
   onNext: (csId: number) => void; // теперь передаем структуре ID наверх
 }
 
-
-// Для удобства если нужен id + label
 interface ContentTypeOption {
   id: number;
   label: string;
@@ -20,7 +19,6 @@ interface ContentTypeOption {
 }
 
 export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps) => {
-  // Состояние формы
   const [sections, setSections] = useState("10");
   const [testsPerSection, setTestsPerSection] = useState("10");
   const [lessonsPerSection, setLessonsPerSection] = useState("10");
@@ -32,42 +30,32 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
     { id: 3, label: "Практические задания", checked: false },
   ]);
 
-  // Функция отправки формы на сервер
   const handleSubmit = async () => {
     const payload = {
       sections: parseInt(sections, 10),
       tests_per_section: parseInt(testsPerSection, 10),
       lessons_per_section: parseInt(lessonsPerSection, 10),
       questions_per_test: parseInt(questionsPerTest, 10),
-      final_test: finalTest === "yes", // true/false
+      final_test: finalTest === "yes",
       content_types: contentTypes
-        .filter((item) => item.checked)
-        .map((item) => item.label),
+        .filter(item => item.checked)
+        .map(item => item.label),
     };
 
     console.log("📤 Отправка структуры курса:", payload);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/course-structure/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/course-structure/",
+        payload
+      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Ошибка при сохранении структуры", errorText);
-        throw new Error("Ошибка при сохранении структуры");
-      }
-
-      const savedStruct = await response.json();
+      const savedStruct = response.data;
       console.log("✅ Структура курса сохранена!", savedStruct);
-
-      // Переходим дальше
       onNext(savedStruct.id);
-    } catch (error) {
-      console.error("❌ Ошибка отправки данных:", error);
-      alert("Ошибка при сохранении структуры курса");
+    } catch (error: any) {
+      console.error("❌ Ошибка при сохранении структуры", error);
+      alert(`Ошибка: ${error.message || error}`);
     }
   };
 
@@ -75,14 +63,13 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
     <div className={styles.secontStepContainer}>
       <p className={styles.title}>Структура курса</p>
       <div className={styles.structureDataCont}>
-
         <div className={styles.itemGridStructure}>
           <LabelField text="Введите количество секций" />
           <Input
             type="number"
             value={sections}
             placeholder="Количество секций"
-            onChange={(e) => setSections(e.target.value)}
+            onChange={e => setSections(e.target.value)}
           />
         </div>
 
@@ -92,7 +79,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={testsPerSection}
             placeholder="Количество тестов в секции"
-            onChange={(e) => setTestsPerSection(e.target.value)}
+            onChange={e => setTestsPerSection(e.target.value)}
           />
         </div>
 
@@ -102,7 +89,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={lessonsPerSection}
             placeholder="Количество уроков в секции"
-            onChange={(e) => setLessonsPerSection(e.target.value)}
+            onChange={e => setLessonsPerSection(e.target.value)}
           />
         </div>
 
@@ -112,7 +99,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={questionsPerTest}
             placeholder="Количество вопросов в тесте"
-            onChange={(e) => setQuestionsPerTest(e.target.value)}
+            onChange={e => setQuestionsPerTest(e.target.value)}
           />
         </div>
 
@@ -139,18 +126,19 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
         <div className={styles.finalTest}>
           <LabelField text="Тип контента в курсе" />
           <div className={styles.checkboxGroup}>
-            {contentTypes.map((item) => (
+            {contentTypes.map(item => (
               <Checkbox
                 key={item.id}
                 label={item.label}
                 checked={item.checked}
-                onChange={(e) => {
-                  const newItems = contentTypes.map((el) =>
-                    el.id === item.id
-                      ? { ...el, checked: e.target.checked }
-                      : el
+                onChange={e => {
+                  setContentTypes(prev =>
+                    prev.map(el =>
+                      el.id === item.id
+                        ? { ...el, checked: e.target.checked }
+                        : el
+                    )
                   );
-                  setContentTypes(newItems);
                 }}
               />
             ))}
