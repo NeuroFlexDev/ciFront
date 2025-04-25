@@ -11,7 +11,7 @@ function App() {
 
   return (
     <>
-    <BrowserRouter>
+    <BrowserRouter basename='/learn/'>
       <Routes>
         <Route path="/" element={<MainPage/>} />
         <Route path="/ai-helper" element={<AiHelperPage />} />

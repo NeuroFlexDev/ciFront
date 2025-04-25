@@ -50,7 +50,7 @@ const CourseEditPage: React.FC = () => {
       try {
         setLoading(true);
         const { data } = await axios.get(
-          `http://127.0.0.1:8000/api/courses/${id}/load_modules`,
+          `/courses/${id}/load_modules`,
           { cancelToken: source.token }
         );
 
@@ -126,7 +126,7 @@ const CourseEditPage: React.FC = () => {
       };
 
       await axios.post(
-        `http://127.0.0.1:8000/api/courses/${id}/save_modules`,
+        `/courses/${id}/save_modules`,
         body
       );
 

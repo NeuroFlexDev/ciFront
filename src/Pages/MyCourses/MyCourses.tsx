@@ -1,8 +1,7 @@
-// MyCoursesPage.tsx
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '@/shared/api';
+
 import Menu from '@/Components/Menu/Menu';
 import Footer from '@/Components/Footer/Footer';
 import CardCourse from '@/Components/ElementUi/CardCourse/CardCourse';
@@ -36,17 +35,17 @@ const MyCoursesPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const source = axios.CancelToken.source();
+    const controller = new AbortController();
+    const { signal } = controller;
 
     (async () => {
       try {
         setLoading(true);
-        console.log("🔄 Загружаем курсы из бэкенда...");
-        
-        const { data } = await axios.get<CourseApiResponse[]>(
-          "http://127.0.0.1:8000/api/courses/",
-          { cancelToken: source.token }
-        );
+        console.log('🔄 Загружаем курсы из бэкенда...');
+
+        // Используем api вместо axios
+        const res = await api.get<CourseApiResponse[]>('/courses/', { signal });
+        const data = res.data;
 
         const mappedCourses: CourseCard[] = data.map((course) => {
           let statusVal: 0 | 1 | 2 = 0;
@@ -54,20 +53,16 @@ const MyCoursesPage: React.FC = () => {
 
           switch (course.level) {
             case 1:
-              imgVal = pythonCourse;
               statusVal = 0;
+              imgVal = pythonCourse;
               break;
             case 2:
-              imgVal = marketingCourse;
               statusVal = 1;
+              imgVal = marketingCourse;
               break;
             case 3:
-              imgVal = artCourse;
               statusVal = 2;
-              break;
-            default:
-              imgVal = pythonCourse;
-              statusVal = 0;
+              imgVal = artCourse;
               break;
           }
 
@@ -80,31 +75,34 @@ const MyCoursesPage: React.FC = () => {
           };
         });
 
-        setCourses(mappedCourses);
-        console.log("✅ Курсы загружены:", mappedCourses);
-      } catch (error) {
-        if (!axios.isCancel(error)) {
-          console.error("❌ Ошибка при загрузке курсов:", error);
+        if (!signal.aborted) {
+          setCourses(mappedCourses);
+          console.log('✅ Курсы загружены:', mappedCourses);
+        }
+      } catch (err: any) {
+        if (!signal.aborted) {
+          console.error('❌ Ошибка при загрузке курсов:', err);
         }
       } finally {
-        setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       }
     })();
 
-    return () => {
-      source.cancel("Запрос отменен при размонтировании компонента");
-    };
+    return () => controller.abort();
   }, []);
 
   const handleDeleteCourse = async (courseId: number) => {
     try {
-      console.log("🔄 Удаляем курс ID=", courseId);
-      await axios.delete(`http://127.0.0.1:8000/api/courses/${courseId}`);
+      console.log('🔄 Удаляем курс ID=', courseId);
+      await api.delete(`/courses/${courseId}`);
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
-      console.log("✅ Курс удалён:", courseId);
-    } catch (error) {
-      console.error("❌ Ошибка при удалении курса:", error);
-      alert(axios.isAxiosError(error) ? error.message : String(error));
+      console.log('✅ Курс удалён:', courseId);
+    } catch (err: any) {
+      console.error('❌ Ошибка при удалении курса:', err);
+      const message = err.response?.data?.message || err.message || String(err);
+      alert(message);
     }
   };
 
@@ -122,7 +120,6 @@ const MyCoursesPage: React.FC = () => {
         {loading ? (
           <p>Загрузка...</p>
         ) : (
-          // Передаём onDelete={handleDeleteCourse}, onEdit={handleEditCourse} в CardCourse
           <CardCourse
             courses={courses}
             onDelete={handleDeleteCourse}
@@ -130,7 +127,6 @@ const MyCoursesPage: React.FC = () => {
           />
         )}
 
-        {/* Ссылка на создание нового курса */}
         <Link className={styles.newCourseLink} to="/create-course">
           <NewCourse />
         </Link>

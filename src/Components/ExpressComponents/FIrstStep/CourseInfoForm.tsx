@@ -1,10 +1,12 @@
+// src/Components/ExpressComponents/FIrstStep/CourseInfoForm.tsx
+
 import React, { useState } from "react";
-import axios from "axios";
 import { FormField } from "@/Components/ExpressComponents/FormField/FormField";
 import Input from "@/Components/ElementUi/Input/Input";
 import Select from "@/Components/ElementUi/Select/Select";
 import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
+import { api } from "@/shared/api";
 import styles from "./styles.module.css";
 
 interface LocalDropdownItem {
@@ -21,11 +23,11 @@ interface CourseInfoFormProps {
   onNext: (courseId: number) => void;
 }
 
-export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
+export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<LocalDropdownItem | undefined>(undefined);
-  const [language, setLanguage] = useState<LocalDropdownItem | undefined>(undefined);
+  const [level, setLevel] = useState<LocalDropdownItem | undefined>();
+  const [language, setLanguage] = useState<LocalDropdownItem | undefined>();
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
 
   const levels: LocalDropdownItem[] = [
@@ -41,15 +43,11 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
 
   const handleTitleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setTitle(e.target.value);
-  };
+  ) => setTitle(e.target.value);
 
   const handleDescriptionChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setDescription(e.target.value);
-  };
+  ) => setDescription(e.target.value);
 
   const handleLevelChange = (selected: SelectDropdownItem) => {
     setLevel({ id: Number(selected.id), name: selected.name });
@@ -68,25 +66,23 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
     }
 
     try {
-      // 1) СОЗДАЁМ КУРС через axios
-      const courseResponse = await axios.post("http://127.0.0.1:8000/api/courses/",
-        {
-          title,
-          description,
-          level: level.id,
-          language: language.id,
-        }
-      );
-
+      // 1) Создаем курс
+      const courseResponse = await api.post("/courses/", {
+        title,
+        description,
+        level: level.id,
+        language: language.id,
+      });
       const createdCourse = courseResponse.data;
       console.log("✅ Курс успешно создан:", createdCourse);
 
-      // 2) Если пользователь выбрал файл, отправляем его
+      // 2) Если есть файл — загружаем
       if (additionalFile) {
         const formData = new FormData();
         formData.append("file", additionalFile);
 
-        const uploadResponse = await axios.post(`http://127.0.0.1:8000/api/courses/${createdCourse.id}/upload-description`,
+        const uploadResponse = await api.post(
+          `/courses/${createdCourse.id}/upload-description`,
           formData,
           {
             headers: {
@@ -94,15 +90,14 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             },
           }
         );
-
         console.log("✅ Файл успешно загружен:", uploadResponse.data);
       }
 
-      // Передаем созданный courseId наверх
       onNext(createdCourse.id);
-    } catch (error: any) {
-      console.error("Ошибка при отправке данных", error);
-      alert(`Ошибка: ${error.message || error}`);
+    } catch (err: any) {
+      console.error("Ошибка при отправке данных", err);
+      const message = err.response?.data?.message || err.message || "Неизвестная ошибка";
+      alert(`Ошибка: ${message}`);
     }
   };
 
@@ -114,7 +109,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
           <FormField label="Введите название вашего курса">
             <Input
               type="text"
-              placeholder="“Курс по основам программирования на C#”"
+              placeholder="Курс по основам программирования на C#"
               value={title}
               onChange={handleTitleChange}
             />
@@ -123,7 +118,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
           <FormField label="Описание вашего курса">
             <Input
               type="textarea"
-              placeholder="“Благодаря данному курсу вы сможете стать Junior C# разработчиком”"
+              placeholder="Благодаря данному курсу вы сможете стать Junior C# разработчиком"
               rows={10}
               value={description}
               onChange={handleDescriptionChange}
@@ -134,7 +129,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level ?? undefined}
+              value={level}
               onChange={handleLevelChange}
             />
           </FormField>
@@ -143,7 +138,7 @@ export const CourseInfoForm = ({ onNext }: CourseInfoFormProps) => {
             <Select
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language ?? undefined}
+              value={language}
               onChange={handleLanguageChange}
             />
           </FormField>

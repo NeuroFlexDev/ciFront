@@ -1,8 +1,10 @@
+// src/Components/ExpressComponents/FinalEditor/FinalEditor.tsx
+
 import React, { useState } from "react";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import jsPDF from "jspdf";
-import axios from "axios";
+import { api } from "@/shared/api";
 
 // 1) Импортируем ваш кастомный TextEditor
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
@@ -75,23 +77,23 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
   const saveModulesToServer = async () => {
     try {
       console.log("🔄 Сохраняем изменения на сервер...");
-      const requests = [];
+      const requests: Promise<any>[] = [];
 
       // Собираем все запросы
       for (const mod of modules) {
         // Обновление модуля
         requests.push(
-          axios.put(`http://127.0.0.1:8000/api/modules/${mod.id}`, {
-            title: mod.title
+          api.put(`/modules/${mod.id}`, {
+            title: mod.title,
           })
         );
 
         // Обновление уроков
         for (const les of mod.lessons) {
           requests.push(
-            axios.put(`http://127.0.0.1:8000/api/lessons/${les.id}`, {
+            api.put(`/lessons/${les.id}`, {
               title: les.lesson,
-              description: les.description
+              description: les.description,
             })
           );
         }
@@ -99,14 +101,13 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
 
       // Выполняем все запросы параллельно
       await Promise.all(requests);
-      
+
       console.log("✅ Все изменения успешно сохранены!");
       alert("Изменения сохранены!");
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ Ошибка сохранения:", err);
-      const message = axios.isAxiosError(err) 
-        ? err.response?.data?.message || err.message
-        : "Неизвестная ошибка";
+      const message =
+        err.response?.data?.message ?? err.message ?? "Неизвестная ошибка";
       alert(`Ошибка сохранения: ${message}`);
     }
   };
@@ -209,10 +210,15 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
             <>
               <h3>{selectedLesson.lesson}</h3>
               {/* TextEditor со значением description */}
-              <TextEditor value={selectedLesson.description} onChange={handleEditorChange} />
+              <TextEditor
+                value={selectedLesson.description}
+                onChange={handleEditorChange}
+              />
             </>
           ) : (
-            <p className={styles.placeholder}>Выберите урок для редактирования</p>
+            <p className={styles.placeholder}>
+              Выберите урок для редактирования
+            </p>
           )}
         </div>
       </div>
@@ -225,7 +231,7 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
         <Button onClick={onFinish} text="Готово" />
       </div>
     </div>
-  );
+);
 };
 
 export default FinalEditor;

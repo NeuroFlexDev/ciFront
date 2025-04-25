@@ -1,12 +1,13 @@
+// src/Components/ExpressComponents/OverviewCourse/OverviewCourse.tsx
+
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { api } from "@/shared/api";
 import ModuleBlock from "@/Components/ModuleBlock/ModuleBlock";
 import styles from "./styles.module.css";
 import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 import Button from "@/Components/ElementUi/Button/Button";
 import Loader from "@/Components/ElementUi/Loader/Loader";
 
-// Типы
 interface OverviewCourseProps {
   courseId: number;
   csId: number;
@@ -57,19 +58,19 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
         console.log("🔄 Генерация модулей (GET /generate_modules)...");
 
         // 1) Генерация модулей
-        const generateUrl = `http://127.0.0.1:8000/api/courses/${courseId}/generate_modules?cs_id=${csId}`;
-        const { data: genData } = await axios.get(generateUrl, { signal });
-        console.log("✅ generate_modules ответ:", genData);
+        const genRes = await api.get(
+          `/courses/${courseId}/generate_modules`,
+          { signal, params: { cs_id: csId } }
+        );
+        console.log("✅ generate_modules ответ:", genRes.data);
 
         // 2) Загрузка списка модулей
         console.log("🔄 Загружаем список модулей...");
-        const { data: modsList } = await axios.get(
-          `http://127.0.0.1:8000/api/courses/${courseId}/modules/`,
+        const modsListRes = await api.get<ModuleItem[]>(
+          `/courses/${courseId}/modules/`,
           { signal }
         );
-
-        // Преобразование в local-стейт
-        let loadedModules: ModuleItem[] = modsList.map((mod: any) => ({
+        const loadedModules: ModuleItem[] = modsListRes.data.map((mod) => ({
           id: mod.id,
           title: mod.title,
           lessons: [],
@@ -81,43 +82,45 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
         for (const moduleItem of loadedModules) {
           console.log(`🔄 Генерация уроков для модуля ID=${moduleItem.id}`);
 
-          const genLessonsUrl = 
-          `http://127.0.0.1:8000/api/courses/${courseId}/generate_module_lessons?cs_id=${csId}&module_id=${moduleItem.id}&module_title=${encodeURIComponent(moduleItem.title)}`;
-          await axios.post(genLessonsUrl, { signal });
-
-          // 4) Загрузка уроков модуля
-          const { data: lessonsData } = await axios.get(
-            `http://127.0.0.1:8000/api/courses/${courseId}/modules/${moduleItem.id}/lessons/`,
-            { signal }
+          await api.post(
+            `/courses/${courseId}/generate_module_lessons`,
+            null,
+            {
+              signal,
+              params: { cs_id: csId, module_id: moduleItem.id, module_title: moduleItem.title },
+            }
           );
 
-          const typedLessons = lessonsData.map((ls: any) => ({
+          console.log(`🔄 Загружаем уроки модуля ID=${moduleItem.id}`);
+          const lessonsRes = await api.get<Lesson[]>(
+            `/courses/${courseId}/modules/${moduleItem.id}/lessons/`,
+            { signal }
+          );
+          moduleItem.lessons = lessonsRes.data.map((ls) => ({
             id: ls.id,
-            lesson: ls.title,
+            lesson: ls.lesson,
             description: ls.description,
           }));
-
-          moduleItem.lessons = typedLessons;
         }
 
-        // Сохраняем модули в стейт
         if (!signal.aborted) {
           setLocalModules(loadedModules);
           setModules?.(loadedModules);
         }
-      } catch (error) {
-        if (!axios.isCancel(error) && !signal.aborted) {
-          console.error("❌ Ошибка при загрузке данных:", error);
+      } catch (err: any) {
+        if (!signal.aborted) {
+          console.error("❌ Ошибка при загрузке данных:", err);
         }
       } finally {
-        if (!signal.aborted) setLoading(false);
+        if (!signal.aborted) {
+          setLoading(false);
+        }
       }
     })();
 
     return () => controller.abort();
   }, [courseId, csId, setModules]);
 
-  // Рендер
   return (
     <>
       <p className={styles.title}>Обзор курса</p>

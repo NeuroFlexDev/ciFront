@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Input from "@/Components/ElementUi/Input/Input";
 import RadioButton from "@/Components/ElementUi/RadioButton/RadioButton";
 import Checkbox from "@/Components/ElementUi/Checkbox/Checkbox";
 import Button from "@/Components/ElementUi/Button/Button";
 import LabelField from "@/Components/ElementUi/LabelField/LabelField";
+import { api } from "@/shared/api";
 import styles from "./styles.module.css";
 
 interface CourseStructureFormProps {
   onBack: () => void;
-  onNext: (csId: number) => void; // теперь передаем структуре ID наверх
+  onNext: (csId: number) => void;
 }
 
 interface ContentTypeOption {
@@ -18,7 +18,7 @@ interface ContentTypeOption {
   checked: boolean;
 }
 
-export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps) => {
+export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack, onNext }) => {
   const [sections, setSections] = useState("10");
   const [testsPerSection, setTestsPerSection] = useState("10");
   const [lessonsPerSection, setLessonsPerSection] = useState("10");
@@ -38,24 +38,23 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
       questions_per_test: parseInt(questionsPerTest, 10),
       final_test: finalTest === "yes",
       content_types: contentTypes
-        .filter(item => item.checked)
-        .map(item => item.label),
+        .filter((item) => item.checked)
+        .map((item) => item.label),
     };
 
     console.log("📤 Отправка структуры курса:", payload);
 
     try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/course-structure/",
+      const response = await api.post(
+        "/course-structure/",
         payload
       );
-
       const savedStruct = response.data;
       console.log("✅ Структура курса сохранена!", savedStruct);
       onNext(savedStruct.id);
     } catch (error: any) {
       console.error("❌ Ошибка при сохранении структуры", error);
-      alert(`Ошибка: ${error.message || error}`);
+      alert(`Ошибка: ${error.response?.data?.message || error.message || error}`);
     }
   };
 
@@ -69,7 +68,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={sections}
             placeholder="Количество секций"
-            onChange={e => setSections(e.target.value)}
+            onChange={(e) => setSections(e.target.value)}
           />
         </div>
 
@@ -79,7 +78,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={testsPerSection}
             placeholder="Количество тестов в секции"
-            onChange={e => setTestsPerSection(e.target.value)}
+            onChange={(e) => setTestsPerSection(e.target.value)}
           />
         </div>
 
@@ -89,7 +88,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={lessonsPerSection}
             placeholder="Количество уроков в секции"
-            onChange={e => setLessonsPerSection(e.target.value)}
+            onChange={(e) => setLessonsPerSection(e.target.value)}
           />
         </div>
 
@@ -99,7 +98,7 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
             type="number"
             value={questionsPerTest}
             placeholder="Количество вопросов в тесте"
-            onChange={e => setQuestionsPerTest(e.target.value)}
+            onChange={(e) => setQuestionsPerTest(e.target.value)}
           />
         </div>
 
@@ -126,20 +125,20 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
         <div className={styles.finalTest}>
           <LabelField text="Тип контента в курсе" />
           <div className={styles.checkboxGroup}>
-            {contentTypes.map(item => (
+            {contentTypes.map((item) => (
               <Checkbox
                 key={item.id}
                 label={item.label}
                 checked={item.checked}
-                onChange={e => {
-                  setContentTypes(prev =>
-                    prev.map(el =>
+                onChange={(e) =>
+                  setContentTypes((prev) =>
+                    prev.map((el) =>
                       el.id === item.id
                         ? { ...el, checked: e.target.checked }
                         : el
                     )
-                  );
-                }}
+                  )
+                }
               />
             ))}
           </div>
