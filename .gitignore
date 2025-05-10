@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 node_modules
+
+venv
+__pycache__
