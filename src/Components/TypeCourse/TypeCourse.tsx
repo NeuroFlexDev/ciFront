@@ -17,9 +17,11 @@ const TypeCourse = ({ srcIcon, title, description, path }: TypeCourseProps) => {
             alt={title}
             className={styles.icon}
         />
-        <p className={styles.title}>{title}</p>
       </div>
-      <p className={styles.description}>{description}</p>
+      <div className={styles.textContainer}>
+        <p className={styles.title}>{title}</p>
+        <p className={styles.description}>{description}</p>
+      </div>
     </Link>
   );
 };
