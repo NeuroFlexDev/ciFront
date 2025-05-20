@@ -2,6 +2,7 @@ import styles from './styles.module.css';
 import aiHelperIcon from '@/assets/icons/mainPageIcon/aiHelperIcons.svg';
 import expressIcon from '@/assets/icons/mainPageIcon/expressIcon.svg';
 import tempalateIcon from '@/assets/icons/mainPageIcon/tempalateIcon.svg';
+import Menu from '@/Components/Menu/Menu';
 import TypeCourse from '@/Components/TypeCourse/TypeCourse';
 
 function MainPage() {
@@ -28,8 +29,10 @@ function MainPage() {
 
   return (
     <>
+    <Menu />
+    <div className={styles.background}></div>
       <div className={styles.containerMainPage}>
-        <p className={styles.title}>Давайте приступим к созданию вашего персонального курса</p>
+        <h1 className={styles.title}>Давайте приступим к созданию вашего персонального курса</h1>
         <div className={styles.courses}>
           {courses.map((course, index) => (
             <TypeCourse

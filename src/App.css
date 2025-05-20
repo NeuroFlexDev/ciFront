@@ -3,7 +3,14 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-  font-family: 'Roboto Mono';
+  font-family: 'Inter';
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope';
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
 }
 
 .logo {

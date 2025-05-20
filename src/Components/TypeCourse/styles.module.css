@@ -6,9 +6,9 @@
     width: 342px;
     /* height: 100%; */
     max-height: 560px;
-    background-color: none;
+    background-color: #FFFFFF;
     border-radius: 30px;
-    border: 1px solid #7A5CFA;
+    border: none;
     padding: 40px 25px 17px 34px;
     cursor: pointer;
     text-decoration: none;
@@ -35,7 +35,8 @@
 }
 
 .title {
-    font-weight: 500;
+    font-family: 'Manrope';
+    font-weight: 600;
     font-size: 32px;
     line-height: 42.2px;
     color: #000000;

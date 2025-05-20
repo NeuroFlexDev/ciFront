@@ -1,0 +1,54 @@
+[data-theme="light"] {
+  --background: #F4F4F4;
+  --text: #000000; /* Цвет текста для светлой темы */
+}
+
+[data-theme="dark"] {
+  --background: #1E1E1E;
+  --text: #ffffff; /* Цвет текста для тёмной темы */
+}
+
+/* Небольшую анимацию добавил при смене темы */
+body {
+  background-color: var(--background);
+  color: var(--text);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Кнопка переключателя */
+.themeSwitcher {
+  position: relative;
+  width: 64px;
+  height: 35px;
+  border-radius: 26px;
+  cursor: pointer;
+  padding: 0;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+/* Кружок */
+.toggleCircle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 27px;
+  height: 27px;
+  background-color: white;
+  border-radius: 50%;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: left 0.3s ease;
+}
+
+.icon {
+    width: 15px;
+    height: 15px;
+}

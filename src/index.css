@@ -3,12 +3,20 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: 'Roboto Mono';
-    src: url('./assets/fonts/RobotoMono-VariableFont_wght.ttf');
+    font-family: 'Manrope';
+    src: url('./assets/fonts/Manrope-VariableFont_wght.ttf');
+    font-weight: 400;
+    font-size: normal;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('./assets//fonts/Inter-VariableFont_opsz\,wght.ttf');
     font-weight: 400;
     font-size: normal;
 }
 
 body {
-    background-color: #F8F9FA;
+  background-color: var(--background);
+  color: var(--text);
 }
