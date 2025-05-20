@@ -14,13 +14,15 @@
   }
 
   .primary {
-    background-color: #D7D5FF;
-    color: #101017;
+    background: none;
+    border: 3px solid #7A5CFA;
+    color: #7A5CFA;
+    border-radius: 30px;
   }
 
-  .primary:hover {
+  /* .primary:hover {
     background-color: #c8c6ea;
-  }
+  } */
 
   .secondary {
     background-color: #e0e0e0;

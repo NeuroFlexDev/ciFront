@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './styles.module.css';
+import arrowIcon from '@/assets/icons/common/arrowIcon.svg';
 
 interface DropdownItem {
   id: number | string;
@@ -11,9 +12,10 @@ interface DropdownProps {
   value?: DropdownItem;
   onChange?: (item: DropdownItem) => void;
   placeholder?: string;
+  label?: string;
 }
 
-const Select = ({ items, value, onChange, placeholder = 'Select...' }: DropdownProps) => {
+const Select = ({ items, value, onChange, placeholder = 'Select...', label }: DropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<DropdownItem | null>(value || null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,13 +39,21 @@ const Select = ({ items, value, onChange, placeholder = 'Select...' }: DropdownP
 
   return (
     <div className={styles.dropdownContainer} ref={dropdownRef}>
+      {label && <label className={styles.inputLabel}>{label}</label>}
       <button
         className={`${styles.dropdownToggle} ${isOpen ? styles.isOpen : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"
       >
-        {selectedItem ? selectedItem.name : placeholder}
-        {/* Добавляем стрелку через псевдоэлемент в CSS */}
+        <span className={styles.dropdownText}>
+          {selectedItem ? selectedItem.name : placeholder}
+        </span>
+          <img
+            src={arrowIcon}
+            alt="arrow"
+            className={styles.arrowIcon}
+            style={{ transform: `translateY(-50%) rotate(${isOpen ? 180 : 0}deg)` }}
+          />
       </button>
 
       {isOpen && (

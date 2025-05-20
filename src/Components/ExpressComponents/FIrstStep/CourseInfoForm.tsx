@@ -103,52 +103,57 @@ export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
 
   return (
     <div className={styles.expressCourseContainer}>
-      <p className={styles.title}>Давайте приступим!</p>
+      <h1 className={styles.title}>Шаг 1 : Основная информация о курсе</h1>
       <div className={styles.contCont}>
         <div className={styles.fieldContainer}>
-          <FormField label="Введите название вашего курса">
+          {/* <FormField label="Введите название вашего курса"> */}
             <Input
+              label="Введите название вашего курса"
               type="text"
-              placeholder="Курс по основам программирования на C#"
+              placeholder="Курс по основам веб-разработки"
               value={title}
               onChange={handleTitleChange}
             />
-          </FormField>
+          {/* </FormField> */}
 
-          <FormField label="Описание вашего курса">
+          {/* <FormField label="Описание вашего курса"> */}
             <Input
               type="textarea"
               placeholder="Благодаря данному курсу вы сможете стать Junior C# разработчиком"
               rows={10}
               value={description}
+              label="Придумайте описание вашего курса"
               onChange={handleDescriptionChange}
             />
-          </FormField>
+          {/* </FormField> */}
 
-          <FormField label="Уровень курса">
+          {/* <FormField label="Уровень курса"> */}
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
               value={level}
+              label="Выберите уровень сложности вашего курса"
               onChange={handleLevelChange}
             />
-          </FormField>
+          {/* </FormField> */}
 
-          <FormField label="Язык курса">
+          {/* <FormField label="Язык курса"> */}
             <Select
+              label="Язык, на котором будет создан курс"
               items={languages}
               placeholder="Выберите язык обучения"
               value={language}
               onChange={handleLanguageChange}
             />
-          </FormField>
+          {/* </FormField> */}
 
-          <FormField label="Дополнительные материалы (необязательно)">
+          {/* <FormField label="Дополнительные материалы (необязательно)"> */}
             <UploadFile
+              label="Если необходимо - прикрепите дополнительные материалы"
               onFileSelect={(file) => setAdditionalFile(file)}
               maxSize={10 * 1024 * 1024}
             />
-          </FormField>
+          {/* </FormField> */}
 
           <Button text="Продолжить" onClick={handleSubmit} variant="primary" />
         </div>

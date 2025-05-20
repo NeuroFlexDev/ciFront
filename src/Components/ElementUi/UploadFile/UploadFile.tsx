@@ -5,6 +5,7 @@ interface FileUploaderProps {
   onFileSelect: (file: File) => void;
   allowedTypes?: string[];
   maxSize?: number;
+  label?: string; // Добавлен параметр label
 }
 
 const UploadFile = ({
@@ -14,7 +15,8 @@ const UploadFile = ({
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
   ],
-  maxSize = 5 * 1024 * 1024
+  maxSize = 5 * 1024 * 1024,
+  label
 }: FileUploaderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -60,6 +62,9 @@ const UploadFile = ({
 
   return (
     <div className={styles.container}>
+      {/* Отображаем label, если он передан */}
+      {label && <label className={styles.fileLabel}>{label}</label>}
+
       <input
         type="file"
         ref={fileInputRef}
