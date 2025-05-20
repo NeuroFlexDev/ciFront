@@ -5,10 +5,12 @@ import Menu from "@/Components/Menu/Menu";
 function AiHelperPage() {
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '90vh' }}>
       <Menu />
-      <AiChat />
-    </>
+      <div style={{ flex: 1 }}>
+        <AiChat />
+      </div>
+    </div>
   )
 }
 
