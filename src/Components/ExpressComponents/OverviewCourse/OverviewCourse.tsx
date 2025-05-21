@@ -123,7 +123,7 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
 
   return (
     <>
-      <p className={styles.title}>Обзор курса</p>
+      <h1 className={styles.title}>Шаг 3 : Предварительная структура курса</h1>
       <button className={styles.backButton} onClick={onBack}>
         <img src={arrowIcon} alt="<" />
         Вернуться назад

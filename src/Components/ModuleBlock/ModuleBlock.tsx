@@ -80,7 +80,7 @@ const ModuleBlock: React.FC<ModuleComponentProps> = ({
   return (
     <div className={styles.moduleBlockContainer}>
       <div className={styles.headerModuleBlock}>
-        <p className={styles.moduleTitleInput}>{moduleTitle}</p>
+        <h1 className={styles.moduleTitleInput}>{moduleTitle}</h1>
         <div className={styles.btnContainer}>
           <button 
             className={styles.btnHeaderModuleBlock}
@@ -106,7 +106,7 @@ const ModuleBlock: React.FC<ModuleComponentProps> = ({
             {lessons.map((lesson, idx) => (
               <div key={idx} className={styles.lessonItem}>
                 <div className={styles.lessonHeader}>
-                  <h3 className={styles.lessonTitle}>{lesson.lesson}</h3>
+                  <p className={styles.lessonTitle}>{lesson.lesson}</p>
                   <button 
                     onClick={() => onLessonRemove(idx)}
                     className={styles.btnHeaderModuleBlock}
@@ -127,7 +127,7 @@ const ModuleBlock: React.FC<ModuleComponentProps> = ({
                 {tests.map((test, idx) => (
                   <div key={idx} className={styles.lessonItem}>
                     <div className={styles.lessonHeader}>
-                      <h3>{test.test}</h3>
+                      <p className={styles.lessonTitle}>{test.test}</p>
                       <button 
                         onClick={() => onTestRemove(idx)}
                         className={styles.btnHeaderModuleBlock}
@@ -150,7 +150,7 @@ const ModuleBlock: React.FC<ModuleComponentProps> = ({
                 {tasks.map((task, idx) => (
                   <div key={idx} className={styles.lessonItem}>
                     <div className={styles.lessonHeader}>
-                      <h3>{task.name}</h3>
+                      <p className={styles.lessonTitle}>{task.name}</p>
                       <button 
                         onClick={() => onTaskRemove(idx)}
                         className={styles.btnHeaderModuleBlock}

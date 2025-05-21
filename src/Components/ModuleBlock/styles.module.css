@@ -1,7 +1,8 @@
 .moduleBlockContainer {
     margin: auto;
     background-color: #FFFFFF;
-    border: 1px solid #7A5CFA;
+    /* border: 1px solid #7A5CFA; */
+    border: 1px solid #D7D5FF;;
     border-radius: 15px;
     padding: 25px;
     margin-bottom: 20px;
@@ -15,7 +16,7 @@
 
 .moduleTitleInput {
     font-weight: 600;
-    font-size: 20px;
+    font-size: 30px;
     line-height: 26.38px;
     color: #000000;
 }
@@ -45,6 +46,8 @@
 
 .lessonTitle {
     text-align: left;
+    font-size: 24px;
+    font-weight: 500;
 }
 
 .lessonDescription {
@@ -53,6 +56,7 @@
     font-size: 16px;
     line-height: 21.1px;
     color: #000000;
+    letter-spacing: 0.05em;
 }
 
 .contentTypeButton {
@@ -70,7 +74,8 @@
 
 /* Форма добавления */
 .addForm {
-    border: 1px solid #7A5CFA;
+    /* border: 1px solid #7A5CFA; */
+    border: 1px solid #D7D5FF;
     border-radius: 15px;
     background-color: #FFFFFF;
     padding: 10px;

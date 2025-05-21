@@ -1,8 +1,9 @@
 .title {
-    font-weight: 700;
-    font-size: 32px;
+    font-weight: 600;
+    font-size: 40px;
     line-height: 42.2px;
-    color: #000000;
+    color: var(--text);
+    padding-top: 50px;
 }
 
 .conaiterModules {
