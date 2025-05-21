@@ -121,7 +121,7 @@ export const AiChat: React.FC = () => {
 
       // Запускаем анимацию печати через 1.5 секунды
       timersRef.current['typing'] = window.setTimeout(() => {
-        const fullText = 'Я пока не подключен к серверу, поэтому не смогу тебе помочь, но скоро в скором времени можешь рассчитывать на меня :)';
+        const fullText = 'Я пока не подключен к серверу, поэтому не смогу тебе помочь, но в скором времени можешь рассчитывать на меня :)';
         let index = 0;
 
         intervalsRef.current[botMsgId] = window.setInterval(() => {
