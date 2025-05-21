@@ -1,15 +1,26 @@
+.secontStepContainer {
+    padding-top: 70px;
+    text-align: left;
+}
+
 .structureDataCont {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 40px;
     padding-left: 40px;
+    justify-content: center;
+    align-items: center;
+    padding-top: 20px;
 }
 
 .itemGridStructure {
-    display: grid;
-    grid-template-columns: 340px 50px;
-    align-items: center;
+    display: flex;
+    flex-direction: column;
     gap: 40px;
+}
+
+.inputContainerParent {
+    width: 104px;
 }
 
 .finalTest {
@@ -35,11 +46,19 @@
     justify-content: center;
     align-items: center;
     margin: auto;
+    gap: 20px;
 }
 
 .title {
-    font-weight: 700;
-    font-size: 48px;
+    font-weight: 600;
+    font-size: 40px;
     line-height: 63.3px;
-    color: #000000;
+    color: var(--text);
+}
+
+.labelTitle {
+    font-weight: 500;
+    font-size: 24px;
+    line-height: 33.6px;
+    color: var(--text);
 }

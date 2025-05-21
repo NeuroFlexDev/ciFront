@@ -60,50 +60,58 @@ export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack
 
   return (
     <div className={styles.secontStepContainer}>
-      <p className={styles.title}>Структура курса</p>
+      <h1 className={styles.title}>Шаг 2 : Дополнительные настройки курса</h1>
       <div className={styles.structureDataCont}>
         <div className={styles.itemGridStructure}>
-          <LabelField text="Введите количество секций" />
-          <Input
-            type="number"
-            value={sections}
-            placeholder="Количество секций"
-            onChange={(e) => setSections(e.target.value)}
-          />
+          <h1 className={styles.labelTitle}>Введите количество секций</h1>
+          <div className={styles.inputContainerParent}>
+            <Input
+              type="number"
+              value={sections}
+              placeholder="Количество секций"
+              onChange={(e) => setSections(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className={styles.itemGridStructure}>
-          <LabelField text="Количество тестов в секции" />
-          <Input
-            type="number"
-            value={testsPerSection}
-            placeholder="Количество тестов в секции"
-            onChange={(e) => setTestsPerSection(e.target.value)}
-          />
+          <h1 className={styles.labelTitle}>Количество тестов в секции</h1>
+          <div className={styles.inputContainerParent}>
+            <Input
+              type="number"
+              value={testsPerSection}
+              placeholder="Количество тестов в секции"
+              onChange={(e) => setTestsPerSection(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className={styles.itemGridStructure}>
-          <LabelField text="Количество уроков в секции" />
-          <Input
-            type="number"
-            value={lessonsPerSection}
-            placeholder="Количество уроков в секции"
-            onChange={(e) => setLessonsPerSection(e.target.value)}
-          />
+          <h1 className={styles.labelTitle}>Количество уроков в секции</h1>
+          <div className={styles.inputContainerParent}>
+            <Input
+              type="number"
+              value={lessonsPerSection}
+              placeholder="Количество уроков в секции"
+              onChange={(e) => setLessonsPerSection(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className={styles.itemGridStructure}>
-          <LabelField text="Количество вопросов в тесте" />
-          <Input
-            type="number"
-            value={questionsPerTest}
-            placeholder="Количество вопросов в тесте"
-            onChange={(e) => setQuestionsPerTest(e.target.value)}
-          />
+          <h1 className={styles.labelTitle}>Количество вопросов в тесте</h1>
+          <div className={styles.inputContainerParent}>
+            <Input
+              type="number"
+              value={questionsPerTest}
+              placeholder="Количество вопросов в тесте"
+              onChange={(e) => setQuestionsPerTest(e.target.value)}
+            />
+          </div>
         </div>
 
         <div className={styles.finalTest}>
-          <LabelField text="Наличие финального теста" />
+          <h1 className={styles.labelTitle}>Наличие финального теста</h1>
           <div className={styles.radioGroup}>
             <RadioButton
               name="test-group"
@@ -123,7 +131,7 @@ export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack
         </div>
 
         <div className={styles.finalTest}>
-          <LabelField text="Тип контента в курсе" />
+          <h1 className={styles.labelTitle}>Тип контента в курсе</h1>
           <div className={styles.checkboxGroup}>
             {contentTypes.map((item) => (
               <Checkbox
