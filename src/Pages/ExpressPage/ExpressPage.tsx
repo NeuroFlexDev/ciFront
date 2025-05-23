@@ -32,7 +32,7 @@ interface Module {
 }
 
 const ExpressPage = () => {
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
 
   // Храним массив модулей в стейте (изначально пуст)
   const [modules, setModules] = useState<Module[]>([]);
