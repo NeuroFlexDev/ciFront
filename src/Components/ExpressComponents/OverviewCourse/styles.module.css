@@ -4,6 +4,8 @@
     line-height: 42.2px;
     color: var(--text);
     padding-top: 50px;
+    text-align: left;
+    padding-bottom: 10px;
 }
 
 .conaiterModules {
@@ -55,7 +57,7 @@
     font-weight: 500;
     font-size: 20px;
     line-height: 26.38px;
-    color: #000000;
+    color: var(--text);
     gap: 20px;
     cursor: pointer;
 }

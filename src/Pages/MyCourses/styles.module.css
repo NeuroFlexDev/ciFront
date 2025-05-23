@@ -6,6 +6,14 @@
     justify-content: left;
 }
 
+.title {
+    font-weight: 600;
+    font-size: 42px;
+    color: var(--text);
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
 .newCourseLink {
     text-decoration: none;
 }

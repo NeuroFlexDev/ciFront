@@ -115,7 +115,7 @@ const MyCoursesPage: React.FC = () => {
       <Menu />
 
       <div className={styles.containerCoursePage}>
-        <h1 className="text-3xl font-bold mb-8">Ваши курсы</h1>
+        <h1 className={styles.title}>Ваши курсы</h1>
 
         {loading ? (
           <p>Загрузка...</p>

@@ -1,12 +1,12 @@
 import React from 'react';
 import styles from './styles.module.css';
-import addIcon from '@/assets/icons/common/addImageIcon.svg';
+import addCourse from '@/assets/icons/common/personComp.svg';
 
 const NewCourse: React.FC = () => {
   return (
     <div className={styles.newCourse}>
-      <img src={addIcon} alt="+" />
-      <p className={styles.text}>Создать новый курс</p>
+      <img src={addCourse} alt="+" />
+      <h3 className={styles.text}>Создать новый курс</h3>
     </div>
   );
 };

@@ -20,9 +20,10 @@
     border-radius: 30px;
   }
 
-  /* .primary:hover {
-    background-color: #c8c6ea;
-  } */
+  .primary:hover {
+    background-color: #7A5CFA;
+    color: #FFFFFF;
+  }
 
   .secondary {
     background-color: #e0e0e0;

@@ -3,9 +3,10 @@ import Input from "@/Components/ElementUi/Input/Input";
 import RadioButton from "@/Components/ElementUi/RadioButton/RadioButton";
 import Checkbox from "@/Components/ElementUi/Checkbox/Checkbox";
 import Button from "@/Components/ElementUi/Button/Button";
-import LabelField from "@/Components/ElementUi/LabelField/LabelField";
+// import LabelField from "@/Components/ElementUi/LabelField/LabelField";
 import { api } from "@/shared/api";
 import styles from "./styles.module.css";
+import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 
 interface CourseStructureFormProps {
   onBack: () => void;
@@ -61,6 +62,10 @@ export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack
   return (
     <div className={styles.secontStepContainer}>
       <h1 className={styles.title}>Шаг 2 : Дополнительные настройки курса</h1>
+      <button className={styles.backButton} onClick={onBack}>
+        <img src={arrowIcon} alt="<" />
+        Вернуться назад
+      </button>
       <div className={styles.structureDataCont}>
         <div className={styles.itemGridStructure}>
           <h1 className={styles.labelTitle}>Введите количество секций</h1>
@@ -154,7 +159,7 @@ export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack
       </div>
 
       <div className={styles.buttonContainer}>
-        <Button text="Назад" onClick={onBack} variant="secondary" />
+        {/* <Button text="Назад" onClick={onBack} variant="secondary" /> */}
         <Button text="Продолжить" onClick={handleSubmit} variant="primary" />
       </div>
     </div>
