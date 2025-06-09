@@ -8,6 +8,8 @@ import MyCoursesPage from './Pages/MyCourses/MyCourses';
 import CourseEditPage from './Components/CourseEditPage/CourseEditPage';
 import NotFoundPage from './Pages/NotFound/NotFound';
 import ServerError from './Pages/ServerError/ServerError';
+import AuthPage from './Pages/AuthPage/AuthPage';
+import MainLayout from './Pages/MainLayot/MainLayot';
 
 function App() {
 
@@ -15,14 +17,18 @@ function App() {
     <>
     <BrowserRouter basename='/'>
       <Routes>
-        <Route path="/" element={<MainPage/>} />
-        <Route path="/ai-helper" element={<AiHelperPage />} />
-        <Route path="/templates" element={<TemplatesPage />} />
-        <Route path="/express" element={<ExpressPage />} />
-        <Route path="/courses" element={<MyCoursesPage />} />
-        <Route path="/courses/:id/edit" element={<CourseEditPage />} />
-        <Route path="/500" element={<ServerError />} />
-        <Route path="*" element={<NotFoundPage />} />
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<MainPage />} />
+          <Route path="/ai-helper" element={<AiHelperPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/express" element={<ExpressPage />} />
+          <Route path="/courses" element={<MyCoursesPage />} />
+          <Route path="/courses/:id/edit" element={<CourseEditPage />} />
+          <Route path="/500" element={<ServerError />} />
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+        
+        <Route path="/auth" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
     </>

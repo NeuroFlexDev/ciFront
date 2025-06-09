@@ -1,9 +1,10 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-  font-family: 'Inter';
+  height: 100%;
+}
+
+body, html {
+  height: 100%;
+  margin: 0;
 }
 
 h1, h2, h3, h4, h5, h6 {
