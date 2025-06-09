@@ -10,6 +10,7 @@ import NotFoundPage from './Pages/NotFound/NotFound';
 import ServerError from './Pages/ServerError/ServerError';
 import AuthPage from './Pages/AuthPage/AuthPage';
 import MainLayout from './Pages/MainLayot/MainLayot';
+import RegistrationPage from './Pages/RegistrationPage/RegistrationPage';
 
 function App() {
 
@@ -27,8 +28,9 @@ function App() {
           <Route path="/500" element={<ServerError />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
-        
+
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/registration" element={<RegistrationPage />} />
       </Routes>
     </BrowserRouter>
     </>

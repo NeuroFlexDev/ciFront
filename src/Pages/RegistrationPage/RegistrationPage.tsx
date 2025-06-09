@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Input from '@/Components/ElementUi/Input/Input';
-import styles from './AuthPage.module.css';
-import authImage from '@/assets/icons/auth/auth.svg';
+import styles from './registration.module.css';
+import regIcon from '@/assets/icons/auth/reg.svg';
 import { Link } from 'react-router-dom';
 import Button from '@/Components/ElementUi/Button/Button';
 import whatsapp from '@/assets/icons/auth/WA.svg';
@@ -9,10 +9,12 @@ import telegram from '@/assets/icons/auth/tg.svg';
 import vk from '@/assets/icons/auth/vk.svg';
 import appleIcon from '@/assets/icons/auth/apple.svg';
 
-const AuthPage = () => {
+const RegistrationPage = () => {
   // Состояния для полей ввода
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<boolean>(false);
 
   // Обработчики изменений
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,11 +25,26 @@ const AuthPage = () => {
     setPassword(e.target.value);
   };
 
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value);
+  };
+
   // Обработчик отправки формы
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика авторизации
+
+    // Проверка совпадения паролей
+    if (password !== confirmPassword) {
+      setError(true);
+      return;
+    }
+
+    // Сброс ошибки при успешной проверке
+    setError(false);
+
+    // Здесь будет логика регистрации
     console.log('Отправка данных:', { email, password });
+
     // Дальнейшие действия (например, вызов API)
   };
 
@@ -35,11 +52,11 @@ const AuthPage = () => {
     <div className={styles.container}>
       <div className={styles.constCard}>
         <div className={styles.constCardImage}>
-          <img src={authImage} alt="Hello" />
+          <img src={regIcon} alt="Hello" />
         </div>
 
         <form className={styles.contForm} onSubmit={handleSubmit}>
-          <h1 className={styles.title}>С возвращением!</h1>
+          <h1 className={styles.title}>Добро пожаловать!</h1>
           <h3 className={styles.subtitle}>Создавайте и изучайте курсы с помощью AI</h3>
 
           <Input
@@ -58,6 +75,20 @@ const AuthPage = () => {
             onChange={handlePasswordChange}
           />
 
+          <Input
+            label="Повторите пароль"
+            type="password"
+            placeholder="**********"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
+          />
+
+          {error && (
+            <p style={{ color: 'red', fontSize: '14px' }}>
+              Пароли не совпадают
+            </p>
+          )}
+
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -65,11 +96,11 @@ const AuthPage = () => {
             gap: '5px',
             marginTop: '20px'
           }}>
-            <p>Еще нет аккаунта?</p>
-            <Link className={styles.link} to="/registration">Создать</Link>
+            <p>Уже есть аккаунт?</p>
+            <Link className={styles.link} to='/auth'>Войти</Link>
           </div>
 
-          <Button text="Войти" onClick={handleSubmit} variant="primary" />
+          <Button text="Создать аккаунт" onClick={handleSubmit} variant="primary" />
 
           <p>Или войдите с помощью</p>
 
@@ -93,4 +124,4 @@ const AuthPage = () => {
   );
 };
 
-export default AuthPage;
+export default RegistrationPage;
