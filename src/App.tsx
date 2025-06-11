@@ -11,6 +11,7 @@ import ServerError from './Pages/ServerError/ServerError';
 import AuthPage from './Pages/AuthPage/AuthPage';
 import MainLayout from './Pages/MainLayot/MainLayot';
 import RegistrationPage from './Pages/RegistrationPage/RegistrationPage';
+import LandPage from './Pages/LandingPage/LandPage';
 
 function App() {
 
@@ -19,7 +20,7 @@ function App() {
     <BrowserRouter basename='/'>
       <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<MainPage />} />
+          <Route path="/main" element={<MainPage />} />
           <Route path="/ai-helper" element={<AiHelperPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
           <Route path="/express" element={<ExpressPage />} />
@@ -29,6 +30,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        <Route path="/" element={<LandPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/registration" element={<RegistrationPage />} />
       </Routes>

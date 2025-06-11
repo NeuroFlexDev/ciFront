@@ -1,0 +1,34 @@
+.secondBlockContAdvan {
+  padding-top: 50px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.titleCont {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.title {
+    font-weight: 600;
+    font-size: 40px;
+    color: #7A5CFA;
+    padding-bottom: 10px;
+}
+
+.image {
+    width: 342px;
+    height: 342px;
+}
+
+@media (max-width: 510px) {
+  .titleCont {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+}

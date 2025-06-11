@@ -15,7 +15,7 @@ const NotFoundPage = () => {
     <div className={styles.notFound}>
       <img src={notFound} alt="Страница не найдена" />
       <h1 className={styles.title}>Ой... Похоже, этой страницы вообще не существовало</h1>
-      <Link className={styles.link} to="/">Вернуться на главную</Link>
+      <Link className={styles.link} to="/main">Вернуться на главную</Link>
     </div>
   );
 };
