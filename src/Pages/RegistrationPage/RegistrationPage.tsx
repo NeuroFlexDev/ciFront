@@ -1,70 +1,86 @@
+// src/Pages/RegistrationPage/RegistrationPage.tsx
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import Input from '@/Components/ElementUi/Input/Input';
-import styles from './registration.module.css';
-import regIcon from '@/assets/icons/auth/reg.svg';
-import { Link } from 'react-router-dom';
 import Button from '@/Components/ElementUi/Button/Button';
+import { register as apiRegister, login, getMe } from '@/features/auth/api';
+import { useAuth } from '@/hooks/useAuth';
+import styles from './registration.module.css';
+
+import regIcon from '@/assets/icons/auth/reg.svg';
 import whatsapp from '@/assets/icons/auth/WA.svg';
 import telegram from '@/assets/icons/auth/tg.svg';
 import vk from '@/assets/icons/auth/vk.svg';
 import appleIcon from '@/assets/icons/auth/apple.svg';
 
 const RegistrationPage = () => {
-  // Состояния для полей ввода
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirmPassword, setConfirmPassword] = useState<string>('');
-  const [error, setError] = useState<boolean>(false);
+  const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [password, setPassword] = useState('');
+  const [repeatPassword, setRepeatPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Обработчики изменений
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
+  const navigate = useNavigate();
+  const { setUser } = useAuth(); // если в хуке нет setUser — просто убери эти строки
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConfirmPassword(e.target.value);
-  };
-
-  // Обработчик отправки формы
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    // Проверка совпадения паролей
-    if (password !== confirmPassword) {
-      setError(true);
+    if (password !== repeatPassword) {
+      setError('Пароли не совпадают');
       return;
     }
 
-    // Сброс ошибки при успешной проверке
-    setError(false);
+    try {
+      setLoading(true);
+      // Регистрация
+      await apiRegister({ email, password, full_name: fullName });
 
-    // Здесь будет логика регистрации
-    console.log('Отправка данных:', { email, password });
+      // Авто-логин
+      await login(email, password);
 
-    // Дальнейшие действия (например, вызов API)
+      // Подтягиваем профиль, чтобы PrivateRoute не редиректил назад
+      const me = await getMe().catch(() => null);
+      if (me && setUser) setUser(me);
+
+      // Редирект
+      navigate('/courses', { replace: true });
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Ошибка регистрации');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.constCard}>
         <div className={styles.constCardImage}>
-          <img src={regIcon} alt="Hello" />
+          <img src={regIcon} alt="Регистрация" />
         </div>
 
         <form className={styles.contForm} onSubmit={handleSubmit}>
           <h1 className={styles.title}>Добро пожаловать!</h1>
           <h3 className={styles.subtitle}>Создавайте и изучайте курсы с помощью AI</h3>
 
+          {error && <p className={styles.error}>{error}</p>}
+
+          <Input
+            label="Имя"
+            type="text"
+            placeholder="Иван Иванов"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
+
           <Input
             label="Введите E-mail"
             type="email"
             placeholder="company@example.com"
             value={email}
-            onChange={handleEmailChange}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           <Input
@@ -72,50 +88,38 @@ const RegistrationPage = () => {
             type="password"
             placeholder="**********"
             value={password}
-            onChange={handlePasswordChange}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <Input
             label="Повторите пароль"
             type="password"
             placeholder="**********"
-            value={confirmPassword}
-            onChange={handleConfirmPasswordChange}
+            value={repeatPassword}
+            onChange={(e) => setRepeatPassword(e.target.value)}
           />
 
-          {error && (
-            <p style={{ color: 'red', fontSize: '14px' }}>
-              Пароли не совпадают
-            </p>
-          )}
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '5px',
-            marginTop: '20px'
-          }}>
+          <div className={styles.row}>
             <p>Уже есть аккаунт?</p>
-            <Link className={styles.link} to='/auth'>Войти</Link>
+            <Link className={styles.link} to="/auth">Войти</Link>
           </div>
 
-          <Button text="Создать аккаунт" onClick={handleSubmit} variant="primary" />
+          {/* ВАЖНО: кнопка отправляет форму, не дублируем onClick */}
+          <Button type="submit" text={loading ? '...' : 'Создать аккаунт'} disabled={loading} variant="primary" />
 
-          <p>Или войдите с помощью</p>
-
+          <p className={styles.socialTitle}>Или войдите с помощью</p>
           <div className={styles.contSocial}>
-            <button className={styles.contSocialButton}>
-                <img src={whatsapp} alt="whatsapp" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={whatsapp} alt="whatsapp" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={vk} alt="vk" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={vk} alt="vk" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={telegram} alt="tg" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={telegram} alt="telegram" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={appleIcon} alt="appleId" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={appleIcon} alt="appleId" />
             </button>
           </div>
         </form>

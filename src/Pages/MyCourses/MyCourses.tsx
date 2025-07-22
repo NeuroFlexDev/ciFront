@@ -127,7 +127,7 @@ const MyCoursesPage: React.FC = () => {
           />
         )}
 
-        <Link className={styles.newCourseLink} to="/create-course">
+        <Link className={styles.newCourseLink} to="/express">
           <NewCourse />
         </Link>
       </div>

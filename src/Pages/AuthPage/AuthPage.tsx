@@ -1,53 +1,62 @@
+// src/Pages/AuthPage/AuthPage.tsx
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import Input from '@/Components/ElementUi/Input/Input';
+import Button from '@/Components/ElementUi/Button/Button'; // см. примечание ниже
+import { login, getMe } from '@/features/auth/api';
+import { useAuth } from '@/hooks/useAuth';
 import styles from './AuthPage.module.css';
+
 import authImage from '@/assets/icons/auth/auth.svg';
-import { Link } from 'react-router-dom';
-import Button from '@/Components/ElementUi/Button/Button';
 import whatsapp from '@/assets/icons/auth/WA.svg';
 import telegram from '@/assets/icons/auth/tg.svg';
 import vk from '@/assets/icons/auth/vk.svg';
 import appleIcon from '@/assets/icons/auth/apple.svg';
 
 const AuthPage = () => {
-  // Состояния для полей ввода
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { setUser } = useAuth(); // если в хуке возвращаешь setUser
 
-  // Обработчики изменений
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-  };
-
-  // Обработчик отправки формы
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Здесь будет логика авторизации
-    console.log('Отправка данных:', { email, password });
-    // Дальнейшие действия (например, вызов API)
+    setError(null);
+    try {
+      await login(email, password);
+      // подтянем профиль, чтобы PrivateRoute не выкинул назад
+      const me = await getMe().catch(() => null);
+      if (me && setUser) setUser(me);
+
+      navigate('/courses', { replace: true });
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || 'Ошибка авторизации');
+    }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.constCard}>
         <div className={styles.constCardImage}>
-          <img src={authImage} alt="Hello" />
+          <img src={authImage} alt="Welcome" />
         </div>
 
         <form className={styles.contForm} onSubmit={handleSubmit}>
           <h1 className={styles.title}>С возвращением!</h1>
           <h3 className={styles.subtitle}>Создавайте и изучайте курсы с помощью AI</h3>
 
+          {error && <div className={styles.error}>{error}</div>}
+
           <Input
             label="Введите E-mail"
             type="email"
             placeholder="company@example.com"
             value={email}
-            onChange={handleEmailChange}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (error) setError(null);
+            }}
           />
 
           <Input
@@ -55,36 +64,33 @@ const AuthPage = () => {
             type="password"
             placeholder="**********"
             value={password}
-            onChange={handlePasswordChange}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError(null);
+            }}
           />
 
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: '5px',
-            marginTop: '20px'
-          }}>
+          <div className={styles.row}>
             <p>Еще нет аккаунта?</p>
             <Link className={styles.link} to="/registration">Создать</Link>
           </div>
 
-          <Button text="Войти" onClick={handleSubmit} variant="primary" />
+          {/* Если ваш Button НЕ пробрасывает type, замените на нативный <button> */}
+          <Button type="submit" text="Войти" variant="primary" />
 
-          <p>Или войдите с помощью</p>
-
+          <p className={styles.socialTitle}>Или войдите с помощью</p>
           <div className={styles.contSocial}>
-            <button className={styles.contSocialButton}>
-                <img src={whatsapp} alt="whatsapp" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={whatsapp} alt="whatsapp" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={vk} alt="vk" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={vk} alt="vk" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={telegram} alt="tg" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={telegram} alt="telegram" />
             </button>
-            <button className={styles.contSocialButton}>
-                <img src={appleIcon} alt="appleId" />
+            <button type="button" className={styles.contSocialButton}>
+              <img src={appleIcon} alt="apple" />
             </button>
           </div>
         </form>

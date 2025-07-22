@@ -15,13 +15,13 @@ const Menu = () => {
         <Link className={styles.navText} to='/courses'>
           <h3 className={styles.navTextH}>Мои курсы</h3>
         </Link>
-        <Link className={styles.navText} to='#'>
+        <Link className={styles.navText} to='/templates'>
           <h3 className={styles.navTextH}>Шаблоны</h3>
         </Link>
-        <Link className={styles.navText} to='#'>
+        <Link className={styles.navText} to='/ai-helper'>
           <h3 className={styles.navTextH}>Помощь</h3>
         </Link>
-        <Link className={styles.navText} to="#">
+        <Link className={styles.navText} to="/account">
           <h3 className={styles.navTextH}>Личный кабинет</h3>
         </Link>
       </div>

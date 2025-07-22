@@ -1,32 +1,28 @@
+// src/Components/ElementUi/Button/Button.tsx
+import React from 'react';
 import styles from './styles.module.css';
 
-interface ButtonProps {
-  text: string;
-  onClick?: () => void;
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
-  className?: string;
-  variant?: 'primary' | 'secondary';
-}
+type Variant = 'primary' | 'secondary';
 
-const Button = ({
-  text,
-  onClick,
-  type = 'button',
-  disabled = false,
-  className = '',
-  variant = 'primary'
-}: ButtonProps) => {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={`${styles.button} ${styles[variant]} ${className}`.trim()}
-    >
-      {text}
-    </button>
-  );
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  text: string;
+  variant?: Variant;
+  className?: string;
 };
 
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ text, variant = 'primary', className = '', ...rest }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={`${styles.button} ${styles[variant]} ${className}`.trim()}
+        {...rest}
+      >
+        {text}
+      </button>
+    );
+  }
+);
+
+Button.displayName = 'Button';
 export default Button;
