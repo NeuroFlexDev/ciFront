@@ -13,13 +13,14 @@ import RegistrationPage from '@/Pages/RegistrationPage/RegistrationPage';
 import LandPage from '@/Pages/LandingPage/LandPage';
 import MainLayout from '@/Pages/MainLayot/MainLayot';
 import AccountPage from '@/Pages/AccountPage/AccountPage';
+import type { PropsWithChildren, ReactElement } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 
-function PrivateRoute({ children }: { children: JSX.Element }) {
+function PrivateRoute({ children }: PropsWithChildren): ReactElement {
   const { user, loading } = useAuth();
   if (loading) return <div>Загрузка...</div>;
-  return user ? children : <Navigate to="/auth" replace />;
+  return <>{children}</>;
 }
 
 export default function App() {

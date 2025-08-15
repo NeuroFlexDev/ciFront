@@ -28,6 +28,9 @@ import {
   deleteChat as apiDeleteChat,
 } from '@/features/chat/api';
 
+// Сервер может вернуть либо массив сообщений, либо объект с полем messages
+type ChatResponse = Message[] | { messages: Message[] };
+
 const AiChat: React.FC = () => {
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
@@ -44,7 +47,17 @@ const AiChat: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // ----- helpers -----
+  // --- helpers ---
+  const loadMessages = useCallback(async (chatId: number) => {
+    try {
+      const msgs = await getMessages(chatId);
+      setMessages(msgs);
+    } catch (e) {
+      console.error('Load messages error', e);
+      setMessages([]);
+    }
+  }, []);
+
   const loadChatsAndInit = useCallback(async () => {
     try {
       const ms = await getModels().catch(() => []);
@@ -59,29 +72,19 @@ const AiChat: React.FC = () => {
         setMessages([]);
       } else {
         setChats(data);
-        setSelectedChatId(data[0].id);
-        setCurrentModel(data[0].model || undefined);
-        const msgs = await getMessages(data[0].id);
-        setMessages(msgs);
+        const first = data[0];
+        setSelectedChatId(first.id);
+        setCurrentModel(first.model || undefined);
+        await loadMessages(first.id);
       }
     } catch (e) {
       console.error('Init error', e);
       setChats([]);
       setMessages([]);
     }
-  }, []);
+  }, [loadMessages]);
 
-  const loadMessages = useCallback(async (chatId: number) => {
-    try {
-      const msgs = await getMessages(chatId);
-      setMessages(msgs);
-    } catch (e) {
-      console.error('Load messages error', e);
-      setMessages([]);
-    }
-  }, []);
-
-  // ----- init -----
+  // --- init ---
   useEffect(() => {
     loadChatsAndInit();
   }, [loadChatsAndInit]);
@@ -94,20 +97,22 @@ const AiChat: React.FC = () => {
     loadMessages(selectedChatId);
   }, [selectedChatId, chats, loadMessages]);
 
-  // autoscroll
+  // автоскролл вниз
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, sending]);
 
-  const filteredChats = chats.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredChats = chats.filter(c =>
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
-  // ----- handlers -----
+  // --- handlers ---
   const handleAddChat = async () => {
     try {
       const newChat = await createChat('Новый чат');
-      setChats(prev => [...prev, newChat]);
+      setChats(prev => [newChat, ...prev]);
       setSelectedChatId(newChat.id);
       setCurrentModel(newChat.model || undefined);
       setMessages([]);
@@ -118,20 +123,16 @@ const AiChat: React.FC = () => {
 
   const handleDeleteChat = async (id: number) => {
     try {
-      await apiDeleteChat(id); // если API нет — оставьте только локальное удаление
+      await apiDeleteChat(id);
     } catch {
-      // ignore
+      // ignore API ошибки — всё равно удалим локально
     }
-    const updated = chats.filter(c => c.id !== id);
-    setChats(updated);
+    setChats(prev => prev.filter(c => c.id !== id));
     if (selectedChatId === id) {
-      const next = updated[0]?.id ?? null;
+      const next = chats.find(c => c.id !== id)?.id ?? null;
       setSelectedChatId(next);
-      if (next) {
-        loadMessages(next);
-      } else {
-        setMessages([]);
-      }
+      if (next) await loadMessages(next);
+      else setMessages([]);
     }
   };
 
@@ -142,8 +143,10 @@ const AiChat: React.FC = () => {
 
   const saveName = async (id: number) => {
     try {
-      await renameChat(id, newName);
-      setChats(cs => cs.map(c => (c.id === id ? { ...c, name: newName } : c)));
+      if (newName.trim()) {
+        await renameChat(id, newName.trim());
+        setChats(cs => cs.map(c => (c.id === id ? { ...c, name: newName.trim() } : c)));
+      }
     } catch (e) {
       console.error('Rename chat error', e);
     } finally {
@@ -166,19 +169,28 @@ const AiChat: React.FC = () => {
     setSending(true);
 
     try {
-      const resp = await sendMessage(selectedChatId, toSend, currentModel);
-      // ожидаем, что бэкенд возвращает { messages: Message[] }
+      const resp = (await sendMessage(
+        selectedChatId,
+        toSend,
+        currentModel,
+      )) as ChatResponse;
+
       const newMsgs = Array.isArray(resp) ? resp : resp.messages;
       if (Array.isArray(newMsgs)) {
-        setMessages(newMsgs);
+        // Если бэкенд вернул только новые сообщения — добавим их,
+        // если вернул всю историю — просто заменим.
+        const hasOnlyNew =
+          newMsgs.length > 0 && messages.some(m => m.id === newMsgs[0]?.id) === false;
+
+        setMessages(prev =>
+          hasOnlyNew ? [...prev.filter(m => m.id !== userMsg.id), ...newMsgs] : newMsgs,
+        );
       } else {
-        // fallback: перезагрузить историю
         await loadMessages(selectedChatId);
       }
     } catch (e) {
       console.error('Send error', e);
       alert('Не удалось отправить сообщение');
-      // откатим последнее сообщение пользователя?
       setMessages(prev => prev.filter(m => m.id !== userMsg.id));
     } finally {
       setSending(false);
@@ -186,30 +198,32 @@ const AiChat: React.FC = () => {
   };
 
   const handleModelChange = async (m: string) => {
-    setCurrentModel(m || undefined);
+    const value = m || undefined;
+    setCurrentModel(value);
     if (selectedChatId != null) {
       try {
         await changeChatModel(selectedChatId, m);
-        setChats(cs => cs.map(c => (c.id === selectedChatId ? { ...c, model: m } : c)));
+        setChats(cs =>
+          cs.map(c => (c.id === selectedChatId ? { ...c, model: value } : c)),
+        );
       } catch (e) {
         console.error('Change model error', e);
       }
     }
   };
 
-  // ----- render -----
+  // --- render ---
   return (
     <div className={styles.container}>
       <main className={styles.chatWindow}>
         <div className={styles.modelBar}>
           <label>Модель:</label>
-          <select
-            value={currentModel || ''}
-            onChange={(e) => handleModelChange(e.target.value)}
-          >
+          <select value={currentModel || ''} onChange={e => handleModelChange(e.target.value)}>
             <option value="">(по умолчанию)</option>
             {models.map(m => (
-              <option key={m} value={m}>{m}</option>
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
           </select>
         </div>
@@ -258,7 +272,7 @@ const AiChat: React.FC = () => {
       <aside className={styles.sidebar}>
         <div className={styles.searchBar}>
           <button
-            onClick={() => setIsSearchVisible(!isSearchVisible)}
+            onClick={() => setIsSearchVisible(s => !s)}
             aria-label="Показать/скрыть поиск"
             className={styles.searchButton}
           >
@@ -275,41 +289,58 @@ const AiChat: React.FC = () => {
             className={styles.search}
             placeholder="Поиск..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             autoFocus
           />
         )}
 
         <ul className={styles.chatList}>
-        {filteredChats.map(chat => (
-          <li
-            key={chat.id}                               // <-- уже есть
-            onClick={() => setSelectedChatId(chat.id)}
-            className={chat.id === selectedChatId ? styles.activeChat : styles.disActiveChat}
-          >
-            {editingChat === chat.id ? (
-              // оборачиваем в фрагмент с key
-              <React.Fragment key={`edit-${chat.id}`}>
-                <div className={styles.renameForm}>
-                  <input
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                  />
-                  <button style={{ padding: '0 5px' }} onClick={() => saveName(chat.id)}>
-                    <img src={saveicon} alt="Сохранить" />
-                  </button>
-                </div>
-              </React.Fragment>
-            ) : (
-              <React.Fragment key={`view-${chat.id}`}>
-                <div className={styles.chatItem}>
-                  {/* ... */}
-                </div>
-              </React.Fragment>
-            )}
-          </li>
-        ))}
-
+          {filteredChats.map(chat => {
+            const isActive = chat.id === selectedChatId;
+            return (
+              <li
+                key={chat.id}
+                onClick={() => setSelectedChatId(chat.id)}
+                className={isActive ? styles.activeChat : styles.disActiveChat}
+              >
+                {editingChat === chat.id ? (
+                  <div className={styles.renameForm} onClick={e => e.stopPropagation()}>
+                    <input
+                      value={newName}
+                      onChange={e => setNewName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && saveName(chat.id)}
+                    />
+                    <button style={{ padding: '0 5px' }} onClick={() => saveName(chat.id)}>
+                      <img src={saveicon} alt="Сохранить" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.chatItem}>
+                    <div className={styles.chatTitle}>
+                      <img src={isActive ? chatActive : chatIcon} alt="" />
+                      <span className={styles.chatName}>{chat.name}</span>
+                    </div>
+                    <div className={styles.chatActions} onClick={e => e.stopPropagation()}>
+                      <button
+                        className={styles.iconBtn}
+                        title="Переименовать"
+                        onClick={() => handleRename(chat)}
+                      >
+                        <img src={isActive ? editActive : edit} alt="Переименовать" />
+                      </button>
+                      <button
+                        className={styles.iconBtn}
+                        title="Удалить"
+                        onClick={() => handleDeleteChat(chat.id)}
+                      >
+                        <img src={isActive ? deleteActive : deleteIcon} alt="Удалить" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </aside>
     </div>
