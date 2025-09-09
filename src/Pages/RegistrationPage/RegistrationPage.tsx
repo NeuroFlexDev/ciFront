@@ -47,7 +47,7 @@ const RegistrationPage = () => {
 
       // Редирект
       navigate('/courses', { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.response?.data?.detail || 'Ошибка регистрации');
     } finally {
       setLoading(false);

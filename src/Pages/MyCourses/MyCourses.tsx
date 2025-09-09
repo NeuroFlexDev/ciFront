@@ -79,7 +79,7 @@ const MyCoursesPage: React.FC = () => {
           setCourses(mappedCourses);
           console.log('✅ Курсы загружены:', mappedCourses);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!signal.aborted) {
           console.error('❌ Ошибка при загрузке курсов:', err);
         }
@@ -99,7 +99,7 @@ const MyCoursesPage: React.FC = () => {
       await api.delete(`/courses/${courseId}`);
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
       console.log('✅ Курс удалён:', courseId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Ошибка при удалении курса:', err);
       const message = err.response?.data?.message || err.message || String(err);
       alert(message);

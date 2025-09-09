@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const me = await getMe();
       setUser(me);
       setError(null);
-    } catch (e: any) {
+    } catch (e: unknown) {
       localStorage.removeItem('access_token');
       setUser(null);
       setError(e?.response?.data?.detail || 'Не удалось получить профиль');

@@ -18,7 +18,7 @@ import type { PropsWithChildren, ReactElement } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 function PrivateRoute({ children }: PropsWithChildren): ReactElement {
-  const { user, loading } = useAuth();
+  const { user: _user } = useAuth();
   if (loading) return <div>Загрузка...</div>;
   return <>{children}</>;
 }

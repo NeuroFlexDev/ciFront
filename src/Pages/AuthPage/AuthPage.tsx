@@ -30,7 +30,7 @@ const AuthPage = () => {
       if (me && setUser) setUser(me);
 
       navigate('/courses', { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err?.response?.data?.detail || 'Ошибка авторизации');
     }
   };

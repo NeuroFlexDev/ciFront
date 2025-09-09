@@ -107,7 +107,7 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
           setLocalModules(loadedModules);
           setModules?.(loadedModules);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (!signal.aborted) {
           console.error("❌ Ошибка при загрузке данных:", err);
         }

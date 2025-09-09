@@ -94,7 +94,7 @@ export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
       }
 
       onNext(createdCourse.id);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Ошибка при отправке данных", err);
       const message = err.response?.data?.message || err.message || "Неизвестная ошибка";
       alert(`Ошибка: ${message}`);

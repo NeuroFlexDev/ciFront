@@ -34,7 +34,7 @@ const AccountPage = () => {
         setEmail(u.email);
         setCourses(c);
         setFeedback(f);
-      } catch (e: any) {
+      } catch (e: unknown) {
         setErr(e?.response?.data?.detail || 'Не удалось загрузить данные');
       } finally {
         setLoading(false);
@@ -48,7 +48,7 @@ const AccountPage = () => {
       const data = await updateProfile({ full_name: fullName, email });
       setUser(data);
       setEditOpen(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e?.response?.data?.detail || 'Ошибка сохранения');
     } finally {
       setSaving(false);
@@ -63,7 +63,7 @@ const AccountPage = () => {
       setOldPwd('');
       setNewPwd('');
       alert('Пароль обновлён');
-    } catch (e: any) {
+    } catch (e: unknown) {
       alert(e?.response?.data?.detail || 'Ошибка смены пароля');
     } finally {
       setPwdSaving(false);

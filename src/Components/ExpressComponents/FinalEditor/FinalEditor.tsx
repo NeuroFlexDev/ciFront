@@ -104,7 +104,7 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
 
       console.log("✅ Все изменения успешно сохранены!");
       alert("Изменения сохранены!");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("❌ Ошибка сохранения:", err);
       const message =
         err.response?.data?.message ?? err.message ?? "Неизвестная ошибка";

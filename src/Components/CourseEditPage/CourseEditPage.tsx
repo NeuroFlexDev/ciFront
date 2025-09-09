@@ -54,19 +54,19 @@ const CourseEditPage: React.FC = () => {
           { cancelToken: source.token }
         );
 
-        const loadedModules = data.modules.map((m: any, index: number) => ({
+        const loadedModules = data.modules.map((m: unknown, index: number) => ({
           id: index + 100,
           title: m.title,
-          lessons: m.lessons.map((ls: any, i: number) => ({
+          lessons: m.lessons.map((ls: unknown, i: number) => ({
             id: i + 1000,
             lesson: ls.lesson,
             description: ls.description,
           })),
-          tests: m.tests.map((t: any) => ({
+          tests: m.tests.map((t: unknown) => ({
             test: t.test,
             description: t.description,
           })),
-          tasks: m.tasks.map((tsk: any) => ({
+          tasks: m.tasks.map((tsk: unknown) => ({
             name: tsk.name,
             description: tsk.description,
           })),

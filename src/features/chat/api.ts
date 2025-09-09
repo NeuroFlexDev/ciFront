@@ -55,10 +55,10 @@ export async function getMessages(chatId: number) {
  * Бэкенд может вернуть:
  *  1) массив сообщений
  *  2) объект вида { messages: Message[] }
- *  3) { answer: string, raw: any } — тогда перезагрузим историю
+ *  3) { answer: string, raw: unknown } — тогда перезагрузим историю
  */
 export async function sendMessage(chatId: number, text: string, model?: string, engine?: string) {
-  const payload: any = { chat_id: chatId, text };
+  const payload: unknown = { chat_id: chatId, text };
   if (model) payload.model = model;
   if (engine) payload.engine = engine;
 

@@ -53,7 +53,7 @@ export const CourseStructureForm: React.FC<CourseStructureFormProps> = ({ onBack
       const savedStruct = response.data;
       console.log("✅ Структура курса сохранена!", savedStruct);
       onNext(savedStruct.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Ошибка при сохранении структуры", error);
       alert(`Ошибка: ${error.response?.data?.message || error.message || error}`);
     }

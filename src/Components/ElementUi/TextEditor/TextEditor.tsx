@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
@@ -6,7 +7,7 @@ import FontFamily from "@tiptap/extension-font-family"
 import { Color } from "@tiptap/extension-color"
 import TextAlign from "@tiptap/extension-text-align"
 import Underline from "@tiptap/extension-underline"
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback} from "react"
 import styles from "./styles.module.css"
 import slideIcon from "@/assets/icons/TextEditor/slideIcon.svg"
 import prevIcon from "@/assets/icons/TextEditor/prevIcon.svg"

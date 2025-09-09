@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {  } from 'react';
 import styles from './firstBlock.module.css';
 import { Link } from 'react-router-dom';
 import imageLand from '@/assets/icons/landing/imgLand.svg';
