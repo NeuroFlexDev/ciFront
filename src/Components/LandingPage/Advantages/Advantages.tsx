@@ -7,7 +7,7 @@ import templatePlus from '@/assets/icons/landing/templatePlus.svg';
 import integrationPlus from '@/assets/icons/landing/integrationPlus.svg';
 
 const Advantages = () => {
-  const steps = [
+  const _steps = [
     {
       title: "Оставьте заявку",
       description: "Заполните простую форму или свяжитесь с нами по телефону"

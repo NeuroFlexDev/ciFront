@@ -26,7 +26,7 @@ interface ModuleComponentProps {
   lessons: Lesson[];
   tests: Test[];
   tasks: Task[];
-  onTitleChange: (newTitle: string) => void;
+  _onTitleChange: (newTitle: string) => void;
   onLessonAdd: (lesson: Lesson) => void;
   onLessonRemove: (index: number) => void;
   onTestAdd: (test: Test) => void;
@@ -42,7 +42,7 @@ const ModuleBlock: React.FC<ModuleComponentProps> = ({
   lessons,
   tests,
   tasks,
-  onTitleChange,
+  _onTitleChange,
   onLessonAdd,
   onLessonRemove,
   onTestAdd,

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route} from 'react-router-dom';
 import './App.css';
 import MainPage from '@/Pages/MainPage/MainPage';
 import AiHelperPage from '@/Pages/AiHelperPage/AiHelperPage';
@@ -18,7 +18,7 @@ import type { PropsWithChildren, ReactElement } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 
 function PrivateRoute({ children }: PropsWithChildren): ReactElement {
-  const { user: _user } = useAuth();
+  const { user: _user: _user } = useAuth();
   if (loading) return <div>Загрузка...</div>;
   return <>{children}</>;
 }
