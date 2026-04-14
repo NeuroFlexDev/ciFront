@@ -21,6 +21,10 @@ const Select = ({ items, value, onChange, placeholder = 'Select...', label }: Dr
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setSelectedItem(value || null);
+  }, [value]);
+
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -41,6 +45,7 @@ const Select = ({ items, value, onChange, placeholder = 'Select...', label }: Dr
     <div className={styles.dropdownContainer} ref={dropdownRef}>
       {label && <label className={styles.inputLabel}>{label}</label>}
       <button
+        type="button"
         className={`${styles.dropdownToggle} ${isOpen ? styles.isOpen : ''}`}
         onClick={() => setIsOpen(!isOpen)}
         aria-haspopup="listbox"

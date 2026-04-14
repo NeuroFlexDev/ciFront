@@ -1,18 +1,15 @@
+// MyCoursesPage.tsx
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api } from '@/shared/api';
 
 import Menu from '@/Components/Menu/Menu';
 import Footer from '@/Components/Footer/Footer';
 import CardCourse from '@/Components/ElementUi/CardCourse/CardCourse';
 import NewCourse from '@/Components/ElementUi/NewCourse/NewCourseCard';
-
-import pythonCourse from '@/assets/icons/course/programmingCourse.svg';
-import marketingCourse from '@/assets/icons/course/marketingCourse.svg';
-import artCourse from '@/assets/icons/course/drawCourse.svg';
+import { apiFetch } from '@/shared/api';
 
 import styles from './styles.module.css';
-
 interface CourseApiResponse {
   id: number;
   title: string;
@@ -25,8 +22,8 @@ interface CourseCard {
   id: number;
   title: string;
   description: string;
-  status: 0 | 1 | 2;
-  img: string;
+  status: 0 | 1 | 2;  
+  visual: 'code' | 'business' | 'creative';
 }
 
 const MyCoursesPage: React.FC = () => {
@@ -35,34 +32,38 @@ const MyCoursesPage: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    let abort = false;
 
     (async () => {
       try {
         setLoading(true);
-        console.log('🔄 Загружаем курсы из бэкенда...');
-
-        // Используем api вместо axios
-        const res = await api.get<CourseApiResponse[]>('/courses/', { signal });
-        const data = res.data;
+        const resp = await apiFetch("/courses/");
+        if (!resp.ok) {
+          throw new Error(`Ошибка при загрузке курсов: ${resp.statusText}`);
+        }
+        const data: CourseApiResponse[] = await resp.json();
+        if (abort) return;
 
         const mappedCourses: CourseCard[] = data.map((course) => {
           let statusVal: 0 | 1 | 2 = 0;
-          let imgVal = pythonCourse;
+          let visual: 'code' | 'business' | 'creative' = 'code';
 
           switch (course.level) {
             case 1:
               statusVal = 0;
-              imgVal = pythonCourse;
+              visual = 'code';
               break;
             case 2:
               statusVal = 1;
-              imgVal = marketingCourse;
+              visual = 'business';
               break;
             case 3:
               statusVal = 2;
-              imgVal = artCourse;
+              visual = 'creative';
+              break;
+            default:
+              statusVal = 0;
+              visual = 'code';
               break;
           }
 
@@ -71,38 +72,35 @@ const MyCoursesPage: React.FC = () => {
             title: course.title,
             description: course.description,
             status: statusVal,
-            img: imgVal,
+            visual,
           };
         });
 
-        if (!signal.aborted) {
-          setCourses(mappedCourses);
-          console.log('✅ Курсы загружены:', mappedCourses);
-        }
-      } catch (err: unknown) {
-        if (!signal.aborted) {
-          console.error('❌ Ошибка при загрузке курсов:', err);
-        }
+        setCourses(mappedCourses);
+      } catch (error) {
+        console.error("Ошибка при загрузке курсов:", error);
       } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
+        if (!abort) setLoading(false);
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      abort = true;
+    };
   }, []);
 
   const handleDeleteCourse = async (courseId: number) => {
     try {
-      console.log('🔄 Удаляем курс ID=', courseId);
-      await api.delete(`/courses/${courseId}`);
+      const resp = await apiFetch(`/courses/${courseId}`, {
+        method: "DELETE",
+      });
+      if (!resp.ok) {
+        throw new Error(`Ошибка при удалении курса ID=${courseId}`);
+      }
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
-      console.log('✅ Курс удалён:', courseId);
-    } catch (err: unknown) {
-      console.error('❌ Ошибка при удалении курса:', err);
-      const message = err.response?.data?.message || err.message || String(err);
-      alert(message);
+    } catch (error) {
+      console.error("Ошибка при удалении курса:", error);
+      alert(String(error));
     }
   };
 
@@ -110,27 +108,59 @@ const MyCoursesPage: React.FC = () => {
     navigate(`/courses/${id}/edit`);
   };
 
+  const handleOpenCanvas = (id: number) => {
+    navigate(`/courses/${id}/canvas`);
+  };
+
   return (
     <>
       <Menu />
 
-      <div className={styles.containerCoursePage}>
-        <h1 className={styles.title}>Ваши курсы</h1>
+      <main className={styles.page}>
+        <section className={styles.hero}>
+          <div>
+            <p className={styles.kicker}>Рабочая зона</p>
+            <h1 className={styles.title}>Курсы и проекты</h1>
+            <p className={styles.lead}>
+              Здесь собраны ваши курсы, входы в генерацию и прямой путь в канву. Один интерфейс, один рабочий контур.
+            </p>
+          </div>
+        </section>
 
-        {loading ? (
-          <p>Загрузка...</p>
-        ) : (
-          <CardCourse
-            courses={courses}
-            onDelete={handleDeleteCourse}
-            onEdit={handleEditCourse}
-          />
-        )}
+        <div className={styles.quickStartGrid}>
+          <Link className={styles.newCourseLink} to="/express?flow=generate">
+            <NewCourse
+              title="Создать курс через генерацию"
+              description="Собрать структуру по вводным, пройти генерацию и перейти к редактированию."
+            />
+          </Link>
 
-        <Link className={styles.newCourseLink} to="/express">
-          <NewCourse />
-        </Link>
-      </div>
+          <Link className={styles.newCourseLink} to="/express?flow=canvas">
+            <NewCourse
+              title="Создать проект и сразу открыть канву"
+              description="Создать пустой проект и начать собирать логику курса вручную на канве."
+            />
+          </Link>
+        </div>
+
+        <section className={styles.listSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Ваши материалы</h2>
+            <p className={styles.sectionText}>Все проекты, которые уже можно открыть, редактировать или продолжить в канве.</p>
+          </div>
+
+          {loading ? (
+            <p className={styles.loading}>Загрузка курсов...</p>
+          ) : (
+            <CardCourse
+              courses={courses}
+              onDelete={handleDeleteCourse}
+              onEdit={handleEditCourse}
+              onOpenCanvas={handleOpenCanvas}
+            />
+          )}
+        </section>
+      </main>
 
       <Footer />
     </>

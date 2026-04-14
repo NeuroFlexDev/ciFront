@@ -1,34 +1,47 @@
-import styles from './styles.module.css';
+import { Link, useNavigate } from 'react-router-dom';
+
+import { useAuth } from '@/auth/useAuth';
 import logo from '../../assets/icons/logoIcon.svg';
-import { Link } from 'react-router-dom';
-import { ThemeSwitcher } from '../Switcher/Switcher';
+import styles from './styles.module.css';
 
 const Menu = () => {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  function handleLogout() {
+    logout();
+    navigate('/auth', { replace: true });
+  }
+
   return (
-    <div className={styles.menuContainer}>
-      <img src={logo} alt="logoSite" className={styles.logoIcon} />
+    <header className={styles.menuContainer}>
+      <Link to="/courses" className={styles.brand}>
+        <img src={logo} alt="Логотип Lernium" className={styles.logoIcon} />
+        <div className={styles.brandCopy}>
+          <span className={styles.brandTitle}>Lernium</span>
+          <span className={styles.brandNote}>Платформа курсов</span>
+        </div>
+      </Link>
 
-      <div className={styles.navigationContainer}>
-        <Link className={styles.navText} to='/main'>
-          <h3 className={styles.navTextH}>Главная</h3>
+      <nav className={styles.navigationContainer}>
+        <Link className={styles.navText} to="/courses">
+          Курсы
         </Link>
-        <Link className={styles.navText} to='/courses'>
-          <h3 className={styles.navTextH}>Мои курсы</h3>
+        <Link className={styles.navText} to="/express">
+          Новый курс
         </Link>
-        <Link className={styles.navText} to='/templates'>
-          <h3 className={styles.navTextH}>Шаблоны</h3>
+        <Link className={styles.navText} to="/ai-helper">
+          AI-контур
         </Link>
-        <Link className={styles.navText} to='/ai-helper'>
-          <h3 className={styles.navTextH}>Помощь</h3>
-        </Link>
-        <Link className={styles.navText} to="/account">
-          <h3 className={styles.navTextH}>Личный кабинет</h3>
-        </Link>
+      </nav>
+
+      <div className={styles.accountBlock}>
+        <span className={styles.accountText}>{user?.email ?? 'Аккаунт'}</span>
+        <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+          Выйти
+        </button>
       </div>
-
-      {/* <Link className={styles.navText} to="#">Личный кабинет</Link> */}
-      <ThemeSwitcher />
-    </div>
+    </header>
   );
 };
 

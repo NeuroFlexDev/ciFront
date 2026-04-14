@@ -1,4 +1,4 @@
-import React, {  } from 'react';
+import React from 'react';
 import Menu from '@/Components/Menu/Menu';
 // import Footer from '@/Components/Footer/Footer';
 

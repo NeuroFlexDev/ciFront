@@ -16,7 +16,7 @@ export type Message = {
 
 /** --------- MODELS ---------- */
 export async function getModels(): Promise<string[]> {
-  const { data } = await api.get('/chat/models');
+  const { data } = await api.get<string[]>('/chat/models');
   return data;
 }
 
@@ -58,14 +58,16 @@ export async function getMessages(chatId: number) {
  *  3) { answer: string, raw: unknown } — тогда перезагрузим историю
  */
 export async function sendMessage(chatId: number, text: string, model?: string, engine?: string) {
-  const payload: unknown = { chat_id: chatId, text };
+  const payload: { chat_id: number; text: string; model?: string; engine?: string } = { chat_id: chatId, text };
   if (model) payload.model = model;
   if (engine) payload.engine = engine;
 
-  const { data } = await api.post('/chat/send', payload);
+  const { data } = await api.post<Message[] | { messages?: Message[] }>('/chat/send', payload);
 
   if (Array.isArray(data)) return data as Message[];
-  if (Array.isArray(data?.messages)) return data.messages as Message[];
+  if (typeof data === 'object' && data !== null && 'messages' in data && Array.isArray(data.messages)) {
+    return data.messages;
+  }
 
   // fallback: если вернули объект без списка — просто перегрузи историю
   const msgs = await getMessages(chatId);

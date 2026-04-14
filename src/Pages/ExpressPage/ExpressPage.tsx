@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionStorage } from "@/hooks/useSessionStorage";
 import Menu from "@/Components/Menu/Menu";
 import { CourseInfoForm } from "@/Components/ExpressComponents/FIrstStep/CourseInfoForm";
@@ -6,6 +7,7 @@ import { CourseStructureForm } from "@/Components/ExpressComponents/SecondStep/C
 import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/OverviewCourse";
 import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor";
 import Footer from "@/Components/Footer/Footer";
+import styles from "./styles.module.css";
 
 // --- Интерфейсы (совпадают с FinalEditor/OverviewCourse) ---
 interface Lesson {
@@ -33,6 +35,9 @@ interface Module {
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preferredFlow = searchParams.get("flow") === "canvas" ? "canvas" : "generate";
 
   // Храним массив модулей в стейте (изначально пуст)
   const [modules, setModules] = useState<Module[]>([]);
@@ -53,6 +58,11 @@ const ExpressPage = () => {
     nextStep();
   };
 
+  const handleCanvasProjectCreated = (createdCourseId: number) => {
+    setCourseId(createdCourseId);
+    navigate(`/courses/${createdCourseId}/canvas`, { replace: true });
+  };
+
   /**
    * 2) Когда пользователь создаёт структуру (CourseStructureForm), бэкенд возвращает {id: ...}.
    * Сохраняем csId (useSessionStorage).
@@ -67,30 +77,49 @@ const ExpressPage = () => {
     <>
       <Menu />
 
-      {step === 1 ? (
-        // Шаг 1: создание курса
-        <CourseInfoForm onNext={handleCourseCreated} />
-      ) : step === 2 ? (
-        // Шаг 2: структура курса
-        <CourseStructureForm onBack={prevStep} onNext={handleStructureCreated} />
-      ) : step === 3 ? (
-        // Шаг 3: генерация + загрузка модулей/уроков
-        // Передаём setModules, чтобы OverviewCourse после генерации мог заполнить modules
-        <OverviewCourse
-          courseId={courseId!}
-          csId={csId!}
-          onBack={prevStep}
-          onNext={nextStep}
-          setModules={setModules}
-        />
-      ) : (
-        // Шаг 4: редактор (FinalEditor)
-        <FinalEditor
-          modules={modules}
-          onBack={prevStep}
-          onFinish={() => console.log("Курс завершен!")}
-        />
-      )}
+      <main className={styles.page}>
+        <section className={styles.headerBlock}>
+          <p className={styles.kicker}>Новый проект</p>
+          <h1 className={styles.title}>Создание курса</h1>
+          <p className={styles.lead}>
+            Последовательный путь: карточка проекта, структура, генерация и финальная редактура.
+          </p>
+
+          <div className={styles.steps}>
+            {[1, 2, 3, 4].map((item) => (
+              <span key={item} className={item === step ? styles.stepActive : styles.step}>
+                Шаг {item}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.content}>
+          {step === 1 ? (
+            <CourseInfoForm
+              onNext={handleCourseCreated}
+              onOpenCanvas={handleCanvasProjectCreated}
+              preferredFlow={preferredFlow}
+            />
+          ) : step === 2 ? (
+            <CourseStructureForm onBack={prevStep} onNext={handleStructureCreated} />
+          ) : step === 3 ? (
+            <OverviewCourse
+              courseId={courseId!}
+              csId={csId!}
+              onBack={prevStep}
+              onNext={nextStep}
+              setModules={setModules}
+            />
+          ) : (
+            <FinalEditor
+              modules={modules}
+              onBack={prevStep}
+              onFinish={() => console.log("Курс завершен!")}
+            />
+          )}
+        </section>
+      </main>
 
       <Footer />
     </>

@@ -1,85 +1,152 @@
 .courseList {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
-    justify-content: left;
+    width: 100%;
 }
 
 .card {
     display: flex;
     flex-direction: column;
     text-align: left;
-    width: 342px;
-    align-items: left;
-    border-radius: 15px;
-    background-color: #FFFFFF;
+    min-height: 100%;
+    border-radius: 28px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--ui-surface-strong) 90%, transparent);
+    box-shadow: var(--ui-shadow);
+}
+
+.cardMedia {
+    aspect-ratio: 16 / 8;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(143, 183, 218, 0.16), transparent 32%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%);
+}
+
+.cardIcon {
+    width: 92px;
+    height: 92px;
+    display: grid;
+    place-items: center;
+    border-radius: 28px;
+    color: var(--ui-text);
+    background: color-mix(in srgb, var(--ui-surface) 88%, transparent);
+    box-shadow: inset 0 0 0 1px var(--ui-line);
 }
 
 .cardContent {
-    padding: 20px;
+    padding: 22px 22px 10px;
+    display: grid;
+    gap: 14px;
+}
+
+.cardHeader {
+    display: grid;
+    gap: 10px;
 }
 
 .cardTitle {
-    font-weight: 700;
-    font-size: 20px;
-    line-height: 26.38px;
-    color: #000000;
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.2rem;
+    line-height: 1.3;
+    color: var(--ui-text);
 }
 
 .cardDescription {
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #000000;
+    margin: 0;
+    font-size: 0.94rem;
+    line-height: 1.7;
+    color: var(--ui-muted);
 }
 
 .status {
     display: flex;
     align-items: center;
+    gap: 8px;
+    width: fit-content;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--ui-surface-soft) 100%, transparent);
+    color: var(--ui-text);
+    font-size: 0.8rem;
 }
 
 .cardActions {
-    display: block;
-    padding: 0 20px;
+    display: grid;
+    gap: 12px;
+    padding: 0 22px 22px;
+    margin-top: auto;
+}
+
+.primaryAction,
+.button {
+    border: none;
+    border-radius: 999px;
+    min-height: 46px;
+    padding: 0 16px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.primaryAction {
+    background: var(--ui-text);
+    color: var(--ui-bg);
+}
+
+.secondaryActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .button {
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #000000;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-decoration: underline;
-    display: block;
-    padding-bottom: 10px;
+    background: color-mix(in srgb, var(--ui-surface) 92%, transparent);
+    color: var(--ui-text);
+    box-shadow: inset 0 0 0 1px var(--ui-line);
 }
   
-/* Стили для кружков */
+.statusDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
 .dotGreen {
     background-color: #27D239;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    margin-right: 5px;
-    display: inline-block;
 }
   
 .dotYellow {
     background-color: #FFA000;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    margin-right: 5px;
-    display: inline-block;
 }
   
 .dotRed {
     background-color: #C92A2A;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-    margin-right: 5px;
-    display: inline-block;
+}
+
+.emptyState {
+    width: 100%;
+    padding: 38px 32px;
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--ui-surface-strong) 90%, transparent);
+    box-shadow: var(--ui-shadow);
+}
+
+.emptyTitle {
+    margin: 0;
+    font-size: 1.45rem;
+}
+
+.emptyText {
+    margin: 12px 0 0;
+    color: var(--ui-muted);
+    line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+    .secondaryActions {
+        grid-template-columns: 1fr;
+    }
 }

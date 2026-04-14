@@ -1,10 +1,7 @@
-// src/Components/ExpressComponents/FinalEditor/FinalEditor.tsx
-
 import React, { useState } from "react";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
-import jsPDF from "jspdf";
-import { api } from "@/shared/api";
+import { apiFetch } from "@/shared/api";
 
 // 1) Импортируем ваш кастомный TextEditor
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
@@ -76,39 +73,33 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
   // Сохранение на сервер (PUT /modules/{id}, PUT /lessons/{id}, ...)
   const saveModulesToServer = async () => {
     try {
-      console.log("🔄 Сохраняем изменения на сервер...");
-      const requests: Promise<any>[] = [];
-
-      // Собираем все запросы
       for (const mod of modules) {
-        // Обновление модуля
-        requests.push(
-          api.put(`/modules/${mod.id}`, {
-            title: mod.title,
-          })
-        );
+        const respMod = await apiFetch(`/modules/${mod.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ title: mod.title }),
+        });
+        if (!respMod.ok) {
+          throw new Error(`Ошибка при обновлении модуля ID=${mod.id}`);
+        }
 
-        // Обновление уроков
         for (const les of mod.lessons) {
-          requests.push(
-            api.put(`/lessons/${les.id}`, {
+          const respLes = await apiFetch(`/lessons/${les.id}`, {
+            method: "PUT",
+            body: JSON.stringify({
               title: les.lesson,
               description: les.description,
-            })
-          );
+            }),
+          });
+          if (!respLes.ok) {
+            throw new Error(`Ошибка при обновлении урока ID=${les.id}`);
+          }
         }
       }
 
-      // Выполняем все запросы параллельно
-      await Promise.all(requests);
-
-      console.log("✅ Все изменения успешно сохранены!");
       alert("Изменения сохранены!");
-    } catch (err: unknown) {
-      console.error("❌ Ошибка сохранения:", err);
-      const message =
-        err.response?.data?.message ?? err.message ?? "Неизвестная ошибка";
-      alert(`Ошибка сохранения: ${message}`);
+    } catch (err) {
+      console.error("Ошибка сохранения:", err);
+      alert(String(err));
     }
   };
 
@@ -140,7 +131,8 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
   };
 
   // Экспорт PDF
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     let y = 10;
 
@@ -183,7 +175,12 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
 
   return (
     <div className={styles.container}>
-      <h2>Редактирование курса</h2>
+      <div className={styles.header}>
+        <h2 className={styles.title}>Редактор курса</h2>
+        <p className={styles.description}>
+          Выберите урок слева, отредактируйте содержание справа и сохраните изменения.
+        </p>
+      </div>
 
       <div className={styles.content}>
         <div className={styles.sidebar}>
@@ -208,30 +205,24 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
         <div className={styles.editorContainer}>
           {selectedLesson ? (
             <>
-              <h3>{selectedLesson.lesson}</h3>
-              {/* TextEditor со значением description */}
-              <TextEditor
-                value={selectedLesson.description}
-                onChange={handleEditorChange}
-              />
+              <h3 className={styles.lessonHeading}>{selectedLesson.lesson}</h3>
+              <TextEditor value={selectedLesson.description} onChange={handleEditorChange} />
             </>
           ) : (
-            <p className={styles.placeholder}>
-              Выберите урок для редактирования
-            </p>
+            <p className={styles.placeholder}>Выберите урок для редактирования</p>
           )}
         </div>
       </div>
 
       <div className={styles.buttons}>
         <Button onClick={onBack} text="Назад" />
-        <Button onClick={saveModulesToServer} text="💾 Сохранить" />
-        <Button onClick={exportToMarkdown} text="📄 Экспорт в MD" />
-        <Button onClick={exportToPDF} text="📄 Экспорт в PDF" />
+        <Button onClick={saveModulesToServer} text="Сохранить" />
+        <Button onClick={exportToMarkdown} text="Экспорт в MD" />
+        <Button onClick={exportToPDF} text="Экспорт в PDF" />
         <Button onClick={onFinish} text="Готово" />
       </div>
     </div>
-);
+  );
 };
 
 export default FinalEditor;

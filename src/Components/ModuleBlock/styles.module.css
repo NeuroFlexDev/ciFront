@@ -1,11 +1,10 @@
 .moduleBlockContainer {
     margin: auto;
-    background-color: #FFFFFF;
-    /* border: 1px solid #7A5CFA; */
-    border: 1px solid #D7D5FF;;
-    border-radius: 15px;
+    background: color-mix(in srgb, var(--ui-surface) 92%, transparent);
+    border-radius: 24px;
     padding: 25px;
     margin-bottom: 20px;
+    box-shadow: inset 0 0 0 1px var(--ui-line);
 }
 
 .headerModuleBlock {
@@ -16,9 +15,9 @@
 
 .moduleTitleInput {
     font-weight: 600;
-    font-size: 30px;
-    line-height: 26.38px;
-    color: #000000;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    color: var(--ui-text);
 }
 
 .btnContainer {
@@ -28,7 +27,7 @@
 }
 
 .divider {
-    border: 1px solid #D7D5FF;
+    border: 1px solid var(--ui-line);
 }
 
 .btnHeaderModuleBlock {
@@ -46,17 +45,14 @@
 
 .lessonTitle {
     text-align: left;
-    font-size: 24px;
-    font-weight: 500;
 }
 
 .lessonDescription {
     text-align: left;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #000000;
-    letter-spacing: 0.05em;
+    font-size: 0.94rem;
+    line-height: 1.7;
+    color: var(--ui-muted);
 }
 
 .contentTypeButton {
@@ -67,20 +63,19 @@
     gap: 10px;
     align-items: center;
     font-weight: 500;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #7A5CFA;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ui-accent);
 }
 
 /* Форма добавления */
 .addForm {
-    /* border: 1px solid #7A5CFA; */
-    border: 1px solid #D7D5FF;
-    border-radius: 15px;
-    background-color: #FFFFFF;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--ui-surface-strong) 90%, transparent);
     padding: 10px;
     display: flex;
     flex-direction: column;
+    box-shadow: inset 0 0 0 1px var(--ui-line);
 }
 
 .lessonInputContainer {
@@ -97,8 +92,9 @@
     font-weight: 600;
     font-size: 18px;
     line-height: 21.1px;
-    color: #000000;
+    color: var(--ui-text);
     outline: none;
+    background: transparent;
 }
 
 .addButton {
@@ -109,9 +105,9 @@
     gap: 10px;
     align-items: center;
     font-weight: 500;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #7A5CFA;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: var(--ui-accent);
 }
 
 .descriptionTextarea {
@@ -122,7 +118,7 @@
     border: none;
     text-align: left;
     font-weight: 400;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #000000;
+    font-size: 0.94rem;
+    line-height: 1.7;
+    color: var(--ui-text);
 }

@@ -13,6 +13,25 @@ import telegram from '@/assets/icons/auth/tg.svg';
 import vk from '@/assets/icons/auth/vk.svg';
 import appleIcon from '@/assets/icons/auth/apple.svg';
 
+function readErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: { data?: unknown } }).response?.data &&
+    typeof (error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail === 'string'
+  ) {
+    return (error as { response: { data: { detail: string } } }).response.data.detail;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 const RegistrationPage = () => {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
@@ -48,7 +67,7 @@ const RegistrationPage = () => {
       // Редирект
       navigate('/courses', { replace: true });
     } catch (err: unknown) {
-      setError(err?.response?.data?.detail || 'Ошибка регистрации');
+      setError(readErrorMessage(err, 'Ошибка регистрации'));
     } finally {
       setLoading(false);
     }

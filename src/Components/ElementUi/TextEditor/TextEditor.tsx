@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
@@ -7,7 +6,7 @@ import FontFamily from "@tiptap/extension-font-family"
 import { Color } from "@tiptap/extension-color"
 import TextAlign from "@tiptap/extension-text-align"
 import Underline from "@tiptap/extension-underline"
-import React, { useState, useCallback} from "react"
+import React, { useState, useCallback } from "react"
 import styles from "./styles.module.css"
 import slideIcon from "@/assets/icons/TextEditor/slideIcon.svg"
 import prevIcon from "@/assets/icons/TextEditor/prevIcon.svg"
@@ -205,7 +204,8 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
       .run()
   }
 
-  const promptForLink = useCallback(() => {
+  const promptForLink = () => {
+    if (!editor) return
     const previousUrl = editor.getAttributes("link").href
     const url = window.prompt("Введите URL", previousUrl)
     if (url === null) return
@@ -214,11 +214,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
       return
     }
     editor.chain().focus().setLink({ href: url }).run()
-  }, [editor])
+  }
 
-  const removeLink = useCallback(() => {
+  const removeLink = () => {
+    if (!editor) return
     editor.chain().focus().unsetLink().run()
-  }, [editor])
+  }
 
   return (
     <div className={styles.container}>

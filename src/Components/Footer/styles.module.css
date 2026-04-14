@@ -1,28 +1,74 @@
 .footerContainer {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    background-color: none;
-    margin-top: 100px;
-    padding: 12px 70px;
+    align-items: flex-start;
+    gap: 28px;
+    width: min(calc(100% - 32px), 1360px);
+    margin: 48px auto 24px;
+    padding: 24px 28px 28px;
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--ui-surface-strong) 90%, transparent);
+    box-shadow: var(--ui-shadow);
+    backdrop-filter: blur(20px);
 }
 
 .logoIcon {
-    width: 163px;
-    height: 97px;
+    width: 48px;
+    height: auto;
 }
 
 .navigationContainer {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(3, minmax(160px, 1fr));
+    gap: 24px;
     text-align: left;
 }
 
+.brandBlock {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    max-width: 360px;
+}
+
+.brandTitle,
+.columnTitle {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    color: var(--ui-accent);
+}
+
+.brandText {
+    margin: 10px 0 0;
+    line-height: 1.7;
+    color: var(--ui-muted);
+}
+
+.column {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+}
+
 .navText {
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 21.1px;
-    color: #000000;
+    font-size: 0.94rem;
+    line-height: 1.6;
+    color: var(--ui-muted);
     text-decoration: none;
+}
+
+.navText:hover {
+    color: var(--ui-text);
+}
+
+@media (max-width: 900px) {
+    .footerContainer {
+        flex-direction: column;
+    }
+
+    .navigationContainer {
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
 }

@@ -3,20 +3,62 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: 'Manrope';
-    src: url('./assets/fonts/Manrope-VariableFont_wght.ttf');
+    font-family: 'Roboto Mono';
+    src: url('./assets/fonts/RobotoMono-VariableFont_wght.ttf');
     font-weight: 400;
     font-size: normal;
 }
 
-@font-face {
-    font-family: 'Inter';
-    src: url('./assets//fonts/Inter-VariableFont_opsz\,wght.ttf');
-    font-weight: 400;
-    font-size: normal;
+:root {
+    --ui-bg: #07111d;
+    --ui-bg-secondary: #0d1829;
+    --ui-surface: rgba(12, 20, 32, 0.84);
+    --ui-surface-strong: rgba(14, 24, 36, 0.94);
+    --ui-surface-soft: rgba(145, 176, 206, 0.08);
+    --ui-line: rgba(145, 176, 206, 0.14);
+    --ui-line-strong: rgba(145, 176, 206, 0.24);
+    --ui-text: #eef2f7;
+    --ui-muted: rgba(238, 242, 247, 0.68);
+    --ui-accent: #d7a97f;
+    --ui-danger: #f0897d;
+    --ui-success: #83c7a3;
+    --ui-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+}
+
+html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 120px;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--text);
+    min-height: 100%;
+    margin: 0;
+    color: var(--ui-text);
+    background:
+        radial-gradient(circle at 14% 18%, rgba(143, 183, 218, 0.16), transparent 22%),
+        radial-gradient(circle at 84% 8%, rgba(215, 169, 127, 0.1), transparent 18%),
+        linear-gradient(180deg, var(--ui-bg-secondary), var(--ui-bg) 38%, #050d16 100%);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+::selection {
+    background: rgba(215, 169, 127, 0.28);
+    color: var(--ui-text);
 }

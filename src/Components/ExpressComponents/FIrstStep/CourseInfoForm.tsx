@@ -1,13 +1,11 @@
-// src/Components/ExpressComponents/FIrstStep/CourseInfoForm.tsx
-
 import React, { useState } from "react";
 import { FormField } from "@/Components/ExpressComponents/FormField/FormField";
 import Input from "@/Components/ElementUi/Input/Input";
 import Select from "@/Components/ElementUi/Select/Select";
 import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import Button from "@/Components/ElementUi/Button/Button";
-import { api } from "@/shared/api";
 import styles from "./styles.module.css";
+import { apiFetch } from "@/shared/api";
 
 interface LocalDropdownItem {
   id: number;
@@ -21,14 +19,17 @@ interface SelectDropdownItem {
 
 interface CourseInfoFormProps {
   onNext: (courseId: number) => void;
+  onOpenCanvas: (courseId: number) => void;
+  preferredFlow?: "generate" | "canvas";
 }
 
-export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
+export const CourseInfoForm = ({ onNext, onOpenCanvas, preferredFlow = "generate" }: CourseInfoFormProps) => {
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [level, setLevel] = useState<LocalDropdownItem | undefined>();
-  const [language, setLanguage] = useState<LocalDropdownItem | undefined>();
+  const [level, setLevel] = useState<LocalDropdownItem | undefined>(undefined);
+  const [language, setLanguage] = useState<LocalDropdownItem | undefined>(undefined);
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const levels: LocalDropdownItem[] = [
     { id: 1, name: "Курс с нуля" },
@@ -43,11 +44,15 @@ export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
 
   const handleTitleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setTitle(e.target.value);
+  ) => {
+    setTitle(e.target.value);
+  };
 
   const handleDescriptionChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setDescription(e.target.value);
+  ) => {
+    setDescription(e.target.value);
+  };
 
   const handleLevelChange = (selected: SelectDropdownItem) => {
     setLevel({ id: Number(selected.id), name: selected.name });
@@ -57,105 +62,133 @@ export const CourseInfoForm: React.FC<CourseInfoFormProps> = ({ onNext }) => {
     setLanguage({ id: Number(selected.id), name: selected.name });
   };
 
-  const handleSubmit = async () => {
-    console.log("Перед отправкой:", { title, description, level, language, additionalFile });
-
+  /**
+   * Логика двух запросов:
+   *  1) POST /api/courses/ для создания курса (JSON)
+   *  2) POST /api/courses/{id}/upload-description (multipart/form-data) — если есть файл
+   */
+const submitCourse = async (flow: "generate" | "canvas") => {
     if (!title || !description || !level || !language) {
       alert("Заполните все поля!");
       return;
     }
 
     try {
-      // 1) Создаем курс
-      const courseResponse = await api.post("/courses/", {
-        title,
-        description,
-        level: level.id,
-        language: language.id,
+      setIsSubmitting(true);
+      // 1) СОЗДАЁМ КУРС
+      const resp = await apiFetch("/courses/", {
+        method: "POST",
+        body: JSON.stringify({
+          title,
+          description,
+          level: level.id,
+          language: language.id,
+        }),
       });
-      const createdCourse = courseResponse.data;
-      console.log("✅ Курс успешно создан:", createdCourse);
 
-      // 2) Если есть файл — загружаем
+      if (!resp.ok) {
+        throw new Error(`Ошибка при сохранении курса: ${resp.statusText}`);
+      }
+
+      const createdCourse = await resp.json();
+
       if (additionalFile) {
         const formData = new FormData();
         formData.append("file", additionalFile);
 
-        const uploadResponse = await api.post(
-          `/courses/${createdCourse.id}/upload-description`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        console.log("✅ Файл успешно загружен:", uploadResponse.data);
+        const uploadResp = await apiFetch(`/courses/${createdCourse.id}/upload-description`, {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadResp.ok) {
+          throw new Error(`Ошибка при загрузке файла: ${uploadResp.statusText}`);
+        }
+
+        await uploadResp.json();
       }
 
-      onNext(createdCourse.id);
-    } catch (err: unknown) {
-      console.error("Ошибка при отправке данных", err);
-      const message = err.response?.data?.message || err.message || "Неизвестная ошибка";
-      alert(`Ошибка: ${message}`);
+      if (flow === "canvas") {
+        onOpenCanvas(createdCourse.id);
+      } else {
+        onNext(createdCourse.id);
+      }
+
+    } catch (error) {
+      console.error("Ошибка при отправке данных", error);
+      alert(`Ошибка: ${error}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+
   return (
     <div className={styles.expressCourseContainer}>
-      <h1 className={styles.title}>Шаг 1 : Основная информация о курсе</h1>
+      <p className={styles.title}>Карточка проекта</p>
+      <p className={styles.flowDescription}>
+        Сначала создайте проект. После этого можно продолжить в генерацию или сразу перейти в канву.
+      </p>
       <div className={styles.contCont}>
         <div className={styles.fieldContainer}>
-          {/* <FormField label="Введите название вашего курса"> */}
+          <FormField label="Введите название вашего курса">
             <Input
-              label="Введите название вашего курса"
               type="text"
-              placeholder="Курс по основам веб-разработки"
+              placeholder="“Курс по основам программирования на C#”"
               value={title}
               onChange={handleTitleChange}
             />
-          {/* </FormField> */}
+          </FormField>
 
-          {/* <FormField label="Описание вашего курса"> */}
+          <FormField label="Описание вашего курса">
             <Input
               type="textarea"
-              placeholder="Благодаря данному курсу вы сможете стать Junior C# разработчиком"
+              placeholder="“Благодаря данному курсу вы сможете стать Junior C# разработчиком”"
               rows={10}
               value={description}
-              label="Придумайте описание вашего курса"
               onChange={handleDescriptionChange}
             />
-          {/* </FormField> */}
+          </FormField>
 
-          {/* <FormField label="Уровень курса"> */}
+          <FormField label="Уровень курса">
             <Select
               items={levels}
               placeholder="Выберите уровень курса"
-              value={level}
-              label="Выберите уровень сложности вашего курса"
+              value={level ?? undefined}
               onChange={handleLevelChange}
             />
-          {/* </FormField> */}
+          </FormField>
 
-          {/* <FormField label="Язык курса"> */}
+          <FormField label="Язык курса">
             <Select
-              label="Язык, на котором будет создан курс"
               items={languages}
               placeholder="Выберите язык обучения"
-              value={language}
+              value={language ?? undefined}
               onChange={handleLanguageChange}
             />
-          {/* </FormField> */}
+          </FormField>
 
-          {/* <FormField label="Дополнительные материалы (необязательно)"> */}
+          <FormField label="Дополнительные материалы (необязательно)">
             <UploadFile
-              label="Если необходимо - прикрепите дополнительные материалы"
               onFileSelect={(file) => setAdditionalFile(file)}
               maxSize={10 * 1024 * 1024}
             />
-          {/* </FormField> */}
+          </FormField>
 
-          <Button text="Продолжить" onClick={handleSubmit} variant="primary" />
+          <div className={styles.actionsRow}>
+            <Button
+              text={isSubmitting ? "Создание..." : "Продолжить к генерации"}
+              onClick={() => { void submitCourse("generate"); }}
+              variant={preferredFlow === "generate" ? "primary" : "secondary"}
+              disabled={isSubmitting}
+            />
+            <Button
+              text={isSubmitting ? "Создание..." : "Создать проект и открыть канву"}
+              onClick={() => { void submitCourse("canvas"); }}
+              variant={preferredFlow === "canvas" ? "primary" : "secondary"}
+              disabled={isSubmitting}
+            />
+          </div>
         </div>
       </div>
     </div>

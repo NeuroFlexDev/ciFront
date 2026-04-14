@@ -7,21 +7,6 @@ import templatePlus from '@/assets/icons/landing/templatePlus.svg';
 import integrationPlus from '@/assets/icons/landing/integrationPlus.svg';
 
 const Advantages = () => {
-  const _steps = [
-    {
-      title: "Оставьте заявку",
-      description: "Заполните простую форму или свяжитесь с нами по телефону"
-    },
-    {
-      title: "Получите консультацию",
-      description: "Наши специалисты бесплатно проконсультируют вас по всем вопросам"
-    },
-    {
-      title: "Получите решение",
-      description: "Мы подготовим индивидуальное предложение и поможем с реализацией"
-    }
-  ];
-
   return (
     <div className={styles.secondBlockContAdvan}>
         <div className={styles.titleCont}>

@@ -1,12 +1,21 @@
 import React from 'react';
 import styles from './styles.module.css';
-import addCourse from '@/assets/icons/common/personComp.svg';
+import addIcon from '@/assets/icons/common/addImageIcon.svg';
 
-const NewCourse: React.FC = () => {
+interface NewCourseProps {
+  title?: string;
+  description?: string;
+}
+
+const NewCourse: React.FC<NewCourseProps> = ({
+  title = 'Создать новый курс',
+  description = 'Пошаговый путь: описание, структура, генерация и редактура.',
+}) => {
   return (
     <div className={styles.newCourse}>
-      <img src={addCourse} alt="+" />
-      <h3 className={styles.text}>Создать новый курс</h3>
+      <img src={addIcon} alt="+" />
+      <p className={styles.text}>{title}</p>
+      <p className={styles.description}>{description}</p>
     </div>
   );
 };

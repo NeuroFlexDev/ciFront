@@ -1,14 +1,20 @@
-import Menu from '@/Components/Menu/Menu';
-import AiChat from '@/Components/AiHelperPage/Chat/Chat';
+import { useState } from "react";
+import ImageEditor from "@/Components/ElementUi/ImageEditor/ImageEditor";
+import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+import Menu from "@/Components/Menu/Menu";
+
 
 function AiHelperPage() {
+  const [content, setContent] = useState("");
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <>
       <Menu />
-      <div style={{ flex: 1 }}>
-        <AiChat />
-      </div>
-    </div>
-  );
+      <h1>AI-Помощник</h1>
+      <TextEditor value={content} onChange={setContent} />
+      <ImageEditor />
+    </>
+  )
 }
+
 export default AiHelperPage;

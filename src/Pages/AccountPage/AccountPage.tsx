@@ -1,14 +1,34 @@
 // src/Pages/AccountPage/AccountPage.tsx
 import { useEffect, useState } from 'react';
 import { getProfile, getMyCourses, getMyFeedback, User, updateProfile, changePassword } from '@/features/user/api';
+import type { CourseSummary, FeedbackItem } from '@/features/user/api';
 import { useAuth } from '@/hooks/useAuth';
 import Menu from '@/Components/Menu/Menu';
 import styles from './AccountPage.module.css';
 
+function readErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as { response?: unknown }).response === 'object' &&
+    (error as { response?: { data?: unknown } }).response?.data &&
+    typeof (error as { response?: { data?: { detail?: unknown } } }).response?.data?.detail === 'string'
+  ) {
+    return (error as { response: { data: { detail: string } } }).response.data.detail;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
 const AccountPage = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [courses, setCourses] = useState<any[]>([]);
-  const [feedback, setFeedback] = useState<any[]>([]);
+  const [courses, setCourses] = useState<CourseSummary[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
@@ -35,7 +55,7 @@ const AccountPage = () => {
         setCourses(c);
         setFeedback(f);
       } catch (e: unknown) {
-        setErr(e?.response?.data?.detail || 'Не удалось загрузить данные');
+        setErr(readErrorMessage(e, 'Не удалось загрузить данные'));
       } finally {
         setLoading(false);
       }
@@ -49,7 +69,7 @@ const AccountPage = () => {
       setUser(data);
       setEditOpen(false);
     } catch (e: unknown) {
-      alert(e?.response?.data?.detail || 'Ошибка сохранения');
+      alert(readErrorMessage(e, 'Ошибка сохранения'));
     } finally {
       setSaving(false);
     }
@@ -64,7 +84,7 @@ const AccountPage = () => {
       setNewPwd('');
       alert('Пароль обновлён');
     } catch (e: unknown) {
-      alert(e?.response?.data?.detail || 'Ошибка смены пароля');
+      alert(readErrorMessage(e, 'Ошибка смены пароля'));
     } finally {
       setPwdSaving(false);
     }

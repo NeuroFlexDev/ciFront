@@ -1,0 +1,58 @@
+.page {
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 26%),
+    linear-gradient(135deg, #f3ede5, #e7ddd1);
+  color: #191512;
+}
+
+.card {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px;
+  border-radius: 32px;
+  border: 1px solid rgba(25, 21, 18, 0.08);
+  background: rgba(255, 255, 255, 0.64);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 80px rgba(66, 49, 36, 0.08);
+}
+
+.backLink {
+  display: inline-flex;
+  margin-bottom: 28px;
+  color: rgba(25, 21, 18, 0.72);
+  text-decoration: none;
+}
+
+.kicker {
+  margin: 0 0 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.74rem;
+  color: #9a6649;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.2rem, 6vw, 4rem);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+  font-weight: 500;
+}
+
+.content {
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+  color: rgba(25, 21, 18, 0.74);
+  line-height: 1.8;
+}
+
+.content p {
+  margin: 0;
+}
+
+.content a {
+  color: inherit;
+}

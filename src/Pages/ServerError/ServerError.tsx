@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import styles from './serverError.module.css';
 import serverError from '@/assets/icons/errorsPage/serverError.svg';
 

@@ -1,0 +1,258 @@
+.page {
+  min-height: 100vh;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, #f3ede5, #e7ddd1);
+  color: #191512;
+}
+
+.shell {
+  max-width: 1280px;
+  min-height: calc(100vh - 56px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(420px, 0.88fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.copy,
+.card {
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 24px 80px rgba(66, 49, 36, 0.08);
+}
+
+.copy {
+  padding: 36px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 28px;
+}
+
+.copyTop,
+.copyBody,
+.copyPanel,
+.cardHeader {
+  display: grid;
+  gap: 16px;
+}
+
+.copyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(25, 21, 18, 0.05);
+  color: rgba(25, 21, 18, 0.72);
+  font-size: 0.84rem;
+}
+
+.brand {
+  text-decoration: none;
+  color: #191512;
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.82rem;
+}
+
+.kicker {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9a6649;
+}
+
+.title {
+  margin: 0;
+  max-width: 10ch;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1;
+  letter-spacing: -0.05em;
+  font-weight: 500;
+}
+
+.lead {
+  margin: 0;
+  max-width: 520px;
+  color: rgba(25, 21, 18, 0.72);
+  line-height: 1.8;
+}
+
+.copyPanel {
+  align-self: end;
+  padding: 22px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.54);
+  box-shadow: inset 0 0 0 1px rgba(25, 21, 18, 0.06);
+}
+
+.copyPanelHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+
+.benefits {
+  display: grid;
+  gap: 12px;
+}
+
+.benefitItem {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.6;
+}
+
+.card {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardKicker {
+  margin: 0;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9a6649;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 500;
+}
+
+.cardNote,
+.cardFooter {
+  margin: 0;
+  color: rgba(25, 21, 18, 0.64);
+  line-height: 1.6;
+}
+
+.modeSwitch {
+  display: inline-flex;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(25, 21, 18, 0.06);
+  margin-bottom: 24px;
+}
+
+.modeButton,
+.modeButtonActive {
+  border: 0;
+  background: transparent;
+  color: rgba(25, 21, 18, 0.6);
+  font: inherit;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+.modeButtonActive {
+  background: #191512;
+  color: #f7f1eb;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 10px;
+  text-align: left;
+  color: rgba(25, 21, 18, 0.82);
+}
+
+.field input {
+  height: 56px;
+  border-radius: 18px;
+  border: 1px solid rgba(25, 21, 18, 0.12);
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0 16px;
+  font: inherit;
+  color: #191512;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #9a6649;
+  box-shadow: 0 0 0 4px rgba(154, 102, 73, 0.12);
+}
+
+.submit {
+  margin-top: 8px;
+  height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: #191512;
+  color: #f7f1eb;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.error {
+  margin: 0;
+  color: #a12020;
+  line-height: 1.6;
+}
+
+.passwordRules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ruleOk,
+.ruleMuted {
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.ruleOk {
+  background: rgba(51, 124, 85, 0.12);
+  color: #256246;
+}
+
+.ruleMuted {
+  background: rgba(25, 21, 18, 0.06);
+  color: rgba(25, 21, 18, 0.58);
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 18px;
+  }
+
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: clamp(2.2rem, 11vw, 3.8rem);
+  }
+}

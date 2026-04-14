@@ -1,25 +1,25 @@
-// src/Components/ExpressComponents/OverviewCourse/OverviewCourse.tsx
-
 import React, { useState, useEffect } from "react";
-import { api } from "@/shared/api";
 import ModuleBlock from "@/Components/ModuleBlock/ModuleBlock";
 import styles from "./styles.module.css";
 import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 import Button from "@/Components/ElementUi/Button/Button";
 import Loader from "@/Components/ElementUi/Loader/Loader";
+import { apiFetch } from "@/shared/api";
 
+// Типы
 interface OverviewCourseProps {
-  courseId: number;
-  csId: number;
-  onBack: () => void;
-  onNext?: () => void;
-  setModules?: (modules: ModuleItem[]) => void;
+  courseId: number;              // ID курса (после создания)
+  csId: number;                  // ID структуры курса
+  onBack: () => void;            // Кнопка "Вернуться назад"
+  onNext?: () => void;           // Кнопка "Сохранить и продолжить"
+  setModules?: (modules: ModuleItem[]) => void; // Функция, чтобы передавать список модулей "наверх"
 }
 
+// Интерфейсы урока, теста, задачи, модуля
 interface Lesson {
   id: number;
-  lesson: string;
-  description: string;
+  lesson: string;        // Название урока (для ModuleBlock)
+  description: string;   // Текст/HTML
 }
 interface Test {
   test: string;
@@ -38,6 +38,19 @@ interface ModuleItem {
   loadingLessons?: boolean;
 }
 
+interface ModuleListItem {
+  id: number;
+  title: string;
+  course_id: number;
+}
+
+interface LessonListItem {
+  id: number;
+  title: string;
+  description: string;
+  module_id: number;
+}
+
 const OverviewCourse: React.FC<OverviewCourseProps> = ({
   courseId,
   csId,
@@ -49,28 +62,24 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
+    let abort = false;
 
     (async () => {
       try {
         setLoading(true);
-        console.log("🔄 Генерация модулей (GET /generate_modules)...");
+        const genResp = await apiFetch(`/courses/${courseId}/generate_modules?cs_id=${csId}`);
+        if (!genResp.ok) {
+          throw new Error("Ошибка при генерации модулей");
+        }
+        await genResp.json();
 
-        // 1) Генерация модулей
-        const genRes = await api.get(
-          `/courses/${courseId}/generate_modules`,
-          { signal, params: { cs_id: csId } }
-        );
-        console.log("✅ generate_modules ответ:", genRes.data);
+        const modsListResp = await apiFetch(`/courses/${courseId}/modules/`);
+        if (!modsListResp.ok) {
+          throw new Error("Ошибка при загрузке списка модулей");
+        }
+        const modsList: ModuleListItem[] = await modsListResp.json();
 
-        // 2) Загрузка списка модулей
-        console.log("🔄 Загружаем список модулей...");
-        const modsListRes = await api.get<ModuleItem[]>(
-          `/courses/${courseId}/modules/`,
-          { signal }
-        );
-        const loadedModules: ModuleItem[] = modsListRes.data.map((mod) => ({
+        const loadedModules: ModuleItem[] = modsList.map((mod) => ({
           id: mod.id,
           title: mod.title,
           lessons: [],
@@ -78,52 +87,61 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
           tasks: [],
         }));
 
-        // 3) Генерация и загрузка уроков для каждого модуля
         for (const moduleItem of loadedModules) {
-          console.log(`🔄 Генерация уроков для модуля ID=${moduleItem.id}`);
+          const genLessonsUrl =
+            `/courses/${courseId}/generate_module_lessons?cs_id=${csId}` +
+            `&module_id=${moduleItem.id}&module_title=${encodeURIComponent(moduleItem.title)}`;
+          const genLessonsResp = await apiFetch(genLessonsUrl, {
+            method: "POST",
+          });
+          if (!genLessonsResp.ok) {
+            throw new Error("Ошибка генерации уроков");
+          }
+          await genLessonsResp.json();
 
-          await api.post(
-            `/courses/${courseId}/generate_module_lessons`,
-            null,
-            {
-              signal,
-              params: { cs_id: csId, module_id: moduleItem.id, module_title: moduleItem.title },
-            }
-          );
+          const lessonsResp = await apiFetch(`/courses/${courseId}/modules/${moduleItem.id}/lessons/`);
+          if (!lessonsResp.ok) {
+            throw new Error("Ошибка при загрузке уроков");
+          }
+          const lessonsData: LessonListItem[] = await lessonsResp.json();
 
-          console.log(`🔄 Загружаем уроки модуля ID=${moduleItem.id}`);
-          const lessonsRes = await api.get<Lesson[]>(
-            `/courses/${courseId}/modules/${moduleItem.id}/lessons/`,
-            { signal }
-          );
-          moduleItem.lessons = lessonsRes.data.map((ls) => ({
+          const typedLessons = lessonsData.map((ls) => ({
             id: ls.id,
-            lesson: ls.lesson,
+            lesson: ls.title,
             description: ls.description,
           }));
+
+          moduleItem.lessons = typedLessons;
         }
 
-        if (!signal.aborted) {
+        // Сохраняем модули в стейт
+        if (!abort) {
           setLocalModules(loadedModules);
-          setModules?.(loadedModules);
+          if (setModules) {
+            setModules(loadedModules); // если нужно поднять наверх
+          }
         }
-      } catch (err: unknown) {
-        if (!signal.aborted) {
-          console.error("❌ Ошибка при загрузке данных:", err);
+      } catch (error) {
+        if (!abort) {
+          console.error("Ошибка при генерации или загрузке модулей:", error);
         }
       } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
+        if (!abort) setLoading(false);
       }
     })();
 
-    return () => controller.abort();
+    return () => {
+      abort = true;
+    };
   }, [courseId, csId, setModules]);
 
+  // Рендер
   return (
-    <>
-      <h1 className={styles.title}>Шаг 3 : Предварительная структура курса</h1>
+    <div className={styles.page}>
+      <p className={styles.title}>Обзор курса</p>
+      <p className={styles.description}>
+        Система собирает модули и уроки. Ниже можно проверить результат перед переходом в редактор.
+      </p>
       <button className={styles.backButton} onClick={onBack}>
         <img src={arrowIcon} alt="<" />
         Вернуться назад
@@ -163,7 +181,7 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
         text="Сохранить и продолжить"
         disabled={loading || modules.length === 0}
       />
-    </>
+    </div>
   );
 };
 

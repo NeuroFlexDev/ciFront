@@ -24,17 +24,17 @@
   }
 
   .uploadArea {
-    border: 2px dashed #D7D5FF;
-    border-radius: 8px;
-    padding: 2rem;
+    border-radius: 24px;
+    padding: 1.5rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
+    background: color-mix(in srgb, var(--ui-surface) 92%, transparent);
+    box-shadow: inset 0 0 0 1px var(--ui-line);
   }
 
   .uploadArea:hover {
-    border-color: #2196f3;
-    background-color: #f5f5f5;
+    box-shadow: inset 0 0 0 1px var(--ui-line-strong);
   }
 
   .uploadContent {
@@ -51,13 +51,13 @@
   .uploadText {
     margin: 0;
     font-weight: 500;
-    color: #333;
+    color: var(--ui-text);
   }
 
   .uploadSubtext {
     margin: 0;
     font-size: 0.9rem;
-    color: #666;
+    color: var(--ui-muted);
   }
 
   .fileInfo {
@@ -65,9 +65,9 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background-color: #fff;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--ui-surface) 92%, transparent);
+    box-shadow: inset 0 0 0 1px var(--ui-line);
   }
 
   .fileIcon {
@@ -83,30 +83,30 @@
 
   .fileName {
     font-weight: 500;
-    color: #333;
+    color: var(--ui-text);
   }
 
   .fileSize {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--ui-muted);
   }
 
   .removeButton {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #666;
+    color: var(--ui-muted);
     cursor: pointer;
     padding: 0 0.5rem;
     line-height: 1;
   }
 
   .removeButton:hover {
-    color: #ff4444;
+    color: var(--ui-danger);
   }
 
   .errorMessage {
-    color: #ff4444;
+    color: var(--ui-danger);
     margin-top: 0.5rem;
     font-size: 0.9rem;
   }
