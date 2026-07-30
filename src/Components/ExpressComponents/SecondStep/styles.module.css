@@ -5,8 +5,7 @@
 }
 
 .structureDataCont {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 22px 32px;
 }
 
@@ -33,9 +32,8 @@
 
 .buttonContainer {
     padding-top: 32px;
-    width: min(100%, 580px);
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     margin: auto;
     gap: 12px;
@@ -57,10 +55,6 @@
 }
 
 @media (max-width: 900px) {
-    .structureDataCont {
-        grid-template-columns: 1fr;
-    }
-
     .buttonContainer {
         width: 100%;
         flex-direction: column;
