@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSessionStorage } from "@/hooks/useSessionStorage";
 import Menu from "@/Components/Menu/Menu";
+import Stepper from "@/Components/Stepper/Stepper";
 import { CourseInfoForm } from "@/Components/ExpressComponents/FIrstStep/CourseInfoForm";
 import { CourseStructureForm } from "@/Components/ExpressComponents/SecondStep/CourseStructureForm";
 import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/OverviewCourse";
@@ -9,7 +10,6 @@ import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor"
 import Footer from "@/Components/Footer/Footer";
 import styles from "./styles.module.css";
 
-// --- Интерфейсы (совпадают с FinalEditor/OverviewCourse) ---
 interface Lesson {
   id: number;
   lesson: string;
@@ -46,7 +46,7 @@ const ExpressPage = () => {
   const [courseId, setCourseId] = useSessionStorage<number | null>("courseId", null);
   const [csId, setCsId] = useSessionStorage<number | null>("csId", null);
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 4));
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 5));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   /**
@@ -79,19 +79,7 @@ const ExpressPage = () => {
 
       <main className={styles.page}>
         <section className={styles.headerBlock}>
-          <p className={styles.kicker}>Новый проект</p>
-          <h1 className={styles.title}>Создание курса</h1>
-          <p className={styles.lead}>
-            Последовательный путь: карточка проекта, структура, генерация и финальная редактура.
-          </p>
-
-          <div className={styles.steps}>
-            {[1, 2, 3, 4].map((item) => (
-              <span key={item} className={item === step ? styles.stepActive : styles.step}>
-                Шаг {item}
-              </span>
-            ))}
-          </div>
+          <Stepper currentStep={step} />
         </section>
 
         <section className={styles.content}>
@@ -111,6 +99,14 @@ const ExpressPage = () => {
               onNext={nextStep}
               setModules={setModules}
             />
+          ) : step === 4 ? (
+            <OverviewCourse
+              courseId={courseId!}
+              csId={csId!}
+              onBack={prevStep}
+              onNext={nextStep}
+              setModules={setModules}
+            />
           ) : (
             <FinalEditor
               modules={modules}
@@ -121,7 +117,7 @@ const ExpressPage = () => {
         </section>
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };

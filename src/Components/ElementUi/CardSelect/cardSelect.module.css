@@ -1,0 +1,102 @@
+.modeSelectionContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  margin-bottom: 30px;
+}
+
+.modeCard {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 32px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.modeCard:hover {
+  border-color: #333;
+}
+
+.modeCard.selected {
+  border-color: #C6F135;
+}
+
+.cardHeader {
+  margin-bottom: 16px;
+}
+
+.cardTitle {
+  font-family: 'Days';
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.cardDescription {
+  font-family: 'Golos Text';
+  font-size: 18px;
+  line-height: 1.6;
+  color: #b0b0b0;
+  margin-bottom: 24px;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-family: 'Ubuntu';
+  font-size: 14px;
+  color: #6D6D6D;
+}
+
+.featureItem:last-child {
+  margin-bottom: 0;
+}
+
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #C6F135;
+  flex-shrink: 0;
+}
+
+.featureText {
+  flex: 1;
+}
+
+.checkboxContainer {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+}
+
+.checkbox {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background: transparent;
+}
+
+.checkbox.checked {
+  border-color: #C6F135;
+  background: rgba(198, 241, 53, 0.1);
+}

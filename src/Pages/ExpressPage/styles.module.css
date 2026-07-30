@@ -2,18 +2,7 @@
     width: min(calc(100% - 32px), 1360px);
     margin: 28px auto 0;
     display: grid;
-    gap: 24px;
-}
-
-.headerBlock,
-.content {
-    border-radius: 32px;
-    background: color-mix(in srgb, var(--ui-surface-strong) 90%, transparent);
-    box-shadow: var(--ui-shadow);
-}
-
-.headerBlock {
-    padding: 30px 32px;
+    gap: 0;
 }
 
 .content {

@@ -1,0 +1,81 @@
+.wrapper {
+  display: flex;
+  width: 100%;
+  margin-bottom: 40px;
+  gap: 10px;
+}
+
+.step {
+  position: relative;
+  flex: 1;
+  height: 72px;
+  color: #6D6D6D;
+  border-radius: 4px;
+
+  display: flex;
+  align-items: center;
+  padding-left: 34px;
+
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  z-index: 1;
+}
+
+.step:not(:first-child) {
+  margin-left: -18px;
+}
+
+.active {
+  color: #0C0D12;
+  z-index: 10;
+}
+
+.completed {
+  color: #ffffff;
+}
+
+.activeStep {
+  background-image: url('../../assets/icons/step/activeStep.svg');
+}
+
+.notActiveStep {
+  background-image: url('../../assets/icons/step/notActiveStep.svg');
+}
+
+.notActiveLastStep {
+  background-image: url('../../assets/icons/step/notActiveLastStep.svg');
+}
+
+.notActiveFirstStep {
+  background-image: url('../../assets/icons/step/notActiveFirstStep.svg');
+}
+
+.activeStepCenter {
+  background-image: url('../../assets/icons/step/activeStepCenter.svg');
+}
+
+.activeLastStep {
+  background-image: url('../../assets/icons/step/activeLastStep.svg');
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-family: 'Golos Text';
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-family: 'Golos Text';
+  font-size: 16px;
+  font-weight: 500;
+}

@@ -3,10 +3,34 @@
 @tailwind utilities;
 
 @font-face {
-    font-family: 'Roboto Mono';
-    src: url('./assets/fonts/RobotoMono-VariableFont_wght.ttf');
+    font-family: 'Ubuntu';
+    src: url('./assets/fonts/Ubuntu-Regular.ttf');
     font-weight: 400;
     font-size: normal;
+}
+
+@font-face {
+    font-family: 'GolosText';
+    src: url('./assets/fonts/GolosText-VariableFont_wght.ttf');
+    font-weight: 400;
+    font-size: normal;
+}
+
+@font-face {
+    font-family: 'Days';
+    src: url('./assets/fonts/DaysOne-Regular.ttf');
+    font-weight: 400;
+    font-size: normal;
+}
+
+h1, h2, h3, h4 {
+    font-family: 'GolosText';
+    font-weight: 400;
+    font-size: normal;
+}
+
+p {
+    font-family: 'Ubuntu';
 }
 
 :root {
@@ -35,10 +59,7 @@ body {
     min-height: 100%;
     margin: 0;
     color: var(--ui-text);
-    background:
-        radial-gradient(circle at 14% 18%, rgba(143, 183, 218, 0.16), transparent 22%),
-        radial-gradient(circle at 84% 8%, rgba(215, 169, 127, 0.1), transparent 18%),
-        linear-gradient(180deg, var(--ui-bg-secondary), var(--ui-bg) 38%, #050d16 100%);
+    background: #0C0D12;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
 }

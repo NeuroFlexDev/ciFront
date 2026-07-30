@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
-import { ProtectedRoute } from './auth/ProtectedRoute';
 
 const MainPage = lazy(() => import('./Pages/MainPage/MainPage'));
 const AuthPage = lazy(() => import('./Pages/AuthPage/AuthPage'));
@@ -42,24 +41,22 @@ function AppFallback() {
 
 function App() {
   return (
-    <>
     <BrowserRouter>
       <Suspense fallback={<AppFallback />}>
         <Routes>
-          <Route path="/" element={<MainPage/>} />
+          <Route path="/" element={<MainPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/ai-helper" element={<ProtectedRoute><AiHelperPage /></ProtectedRoute>} />
-          <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
-          <Route path="/express" element={<ProtectedRoute><ExpressPage /></ProtectedRoute>} />
-          <Route path="/courses" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />
-          <Route path="/courses/:id/edit" element={<ProtectedRoute><CourseEditPage /></ProtectedRoute>} />
-          <Route path="/courses/:id/canvas" element={<ProtectedRoute><LerniumCanvasPage /></ProtectedRoute>} />
+          <Route path="/ai-helper" element={<AiHelperPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/express" element={<ExpressPage />} />
+          <Route path="/courses" element={<MyCoursesPage />} />
+          <Route path="/courses/:id/edit" element={<CourseEditPage />} />
+          <Route path="/courses/:id/canvas" element={<LerniumCanvasPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
-    </>
-  )
+  );
 }
 
-export default App
+export default App;
