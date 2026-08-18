@@ -1,0 +1,69 @@
+.sliderField {
+  margin-bottom: 32px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 16px;
+  font-family: 'GolosText';
+  line-height: 18.56px;
+  color: #FFFFFF;
+}
+
+.value {
+  font-weight: 600;
+  font-size: 18px;
+  font-family: 'GolosText';
+  line-height: 23.74px;
+  color: #FFFFFF;
+  background: #141414;
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+.sliderWrapper {
+  position: relative;
+}
+
+.slider {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.track {
+  height: 4px;
+  background: #2A2A2A;
+  border-radius: 2px;
+  position: relative;
+}
+
+.progress {
+  height: 100%;
+  background: #C6F135;
+  border-radius: 2px;
+  position: relative;
+}
+
+.progress::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background: #C6F135;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(198, 241, 53, 0.5);
+}

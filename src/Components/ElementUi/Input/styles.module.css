@@ -1,21 +1,53 @@
-.inputFieldClassic {
-    background: color-mix(in srgb, var(--ui-surface) 94%, transparent);
-    border-radius: 20px;
-    padding: 16px 18px;
-    color: var(--ui-text);
-    font-weight: 400;
-    font-size: 0.96rem;
-    border: 0;
-    outline: none;
+.inputContainer {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    box-shadow: inset 0 0 0 1px var(--ui-line);
-    transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.inputFieldClassic::placeholder {
-    color: var(--ui-muted);
+.inputLabel {
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #FFFFFF;
+    font-family: 'GolosText';
+    font-size: 16px;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.inputFieldClassic {
+    background: #141414;
+    border-radius: 14px;
+    padding: 16px 18px;
+    color: #FFFFFF;
+    font-weight: 400;
+    font-size: 18px;
+    font-family: 'GolosText';
+    border: 1px solid transparent; 
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .inputFieldClassic:focus {
-    box-shadow: inset 0 0 0 1px var(--ui-line-strong), 0 0 0 4px rgba(151, 175, 201, 0.08);
+    border: 1px solid #C6F135;
+}
+
+.withIcon {
+    padding-right: 48px; 
+}
+
+.iconWrapper {
+    position: absolute;
+    right: 18px;
+    top: 10px;
+    transform: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; 
+    color: #FFFFFF;
 }

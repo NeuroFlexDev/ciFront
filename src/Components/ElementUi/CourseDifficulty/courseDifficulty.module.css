@@ -1,0 +1,56 @@
+.difficultyField {
+  margin-bottom: 32px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-family: 'GolosText';
+  font-size: 16px;
+  line-height: 18.56px;
+  color: #FFFFFF;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.option {
+  background: #141414;
+  border: 1px solid #2A2A2A;
+  border-radius: 14px;
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  border: none;
+}
+
+.option:hover {
+  border: 1px solid #C6F135;
+}
+
+.option.active {
+  background: #141414;
+  border: 1px solid #C6F135;
+}
+
+.optionTitle {
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 23.74px;
+  color: #FFFFFF;
+  font-family: 'GolosText';
+  margin-bottom: 4px;
+}
+
+.optionSubtitle {
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 15.83px;
+  color: #6D6D6D;
+  font-family: 'GolosText';
+}

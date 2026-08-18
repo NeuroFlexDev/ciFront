@@ -34,7 +34,7 @@ interface Module {
 }
 
 const ExpressPage = () => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(3);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preferredFlow = searchParams.get("flow") === "canvas" ? "canvas" : "generate";

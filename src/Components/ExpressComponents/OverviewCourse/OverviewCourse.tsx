@@ -5,30 +5,39 @@ import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 import Button from "@/Components/ElementUi/Button/Button";
 import Loader from "@/Components/ElementUi/Loader/Loader";
 import { apiFetch } from "@/shared/api";
+import Input from "@/Components/ElementUi/Input/Input";
+import CourseDifficulty from "@/Components/ElementUi/CourseDifficulty/CourseDifficulty";
+import LanguageSelect from "@/Components/ElementUi/LanguageSelect/LanguageSelect";
+import LessonCountSlider from "@/Components/ElementUi/LessonCountSlider/LessonCountSlider";
+import ToggleField from "@/Components/ElementUi/ToggleField/ToggleField";
+import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
+import arrowRight from '../../../assets/icons/common/arrowRight.svg';
 
 // Типы
 interface OverviewCourseProps {
-  courseId: number;              // ID курса (после создания)
-  csId: number;                  // ID структуры курса
-  onBack: () => void;            // Кнопка "Вернуться назад"
-  onNext?: () => void;           // Кнопка "Сохранить и продолжить"
-  setModules?: (modules: ModuleItem[]) => void; // Функция, чтобы передавать список модулей "наверх"
+  courseId: number;
+  csId: number;
+  onBack: () => void;
+  onNext?: () => void;
+  setModules?: (modules: ModuleItem[]) => void;
 }
 
-// Интерфейсы урока, теста, задачи, модуля
 interface Lesson {
   id: number;
-  lesson: string;        // Название урока (для ModuleBlock)
-  description: string;   // Текст/HTML
+  lesson: string;
+  description: string;
 }
+
 interface Test {
   test: string;
   description: string;
 }
+
 interface Task {
   name: string;
   description?: string;
 }
+
 interface ModuleItem {
   id: number;
   title: string;
@@ -51,6 +60,8 @@ interface LessonListItem {
   module_id: number;
 }
 
+type DifficultyLevel = "internship" | "basic" | "intermediate" | "advanced";
+
 const OverviewCourse: React.FC<OverviewCourseProps> = ({
   courseId,
   csId,
@@ -60,6 +71,16 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
 }) => {
   const [modules, setLocalModules] = useState<ModuleItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Состояния для полей формы
+  const [courseName, setCourseName] = useState("Онбординг отдела продаж");
+  const [courseGoal, setCourseGoal] = useState("Сотрудник должен знать продукт, воронку продаж и уметь работать с возражениями клиентов.");
+  const [courseAudience, setCourseAudience] = useState("Новые менеджеры по продажам");
+  const [difficulty, setDifficulty] = useState<DifficultyLevel | undefined>();
+  const [language, setLanguage] = useState("ru");
+  const [lessonCount, setLessonCount] = useState(14);
+  const [moduleTests, setModuleTests] = useState(false);
+  const [finalTest, setFinalTest] = useState(false);
 
   useEffect(() => {
     let abort = false;
@@ -114,11 +135,10 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
           moduleItem.lessons = typedLessons;
         }
 
-        // Сохраняем модули в стейт
         if (!abort) {
           setLocalModules(loadedModules);
           if (setModules) {
-            setModules(loadedModules); // если нужно поднять наверх
+            setModules(loadedModules);
           }
         }
       } catch (error) {
@@ -135,17 +155,61 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
     };
   }, [courseId, csId, setModules]);
 
-  // Рендер
   return (
     <div className={styles.page}>
-      <p className={styles.title}>Обзор курса</p>
-      <p className={styles.description}>
-        Система собирает модули и уроки. Ниже можно проверить результат перед переходом в редактор.
-      </p>
-      <button className={styles.backButton} onClick={onBack}>
-        <img src={arrowIcon} alt="<" />
-        Вернуться назад
-      </button>
+      <div className={styles.form}>
+        <Input
+          type="text"
+          placeholder="Онбординг отдела продаж"
+          label="Название курса"
+          value={courseName}
+          onChange={(e) => setCourseName(e.target.value)}
+          icon
+        />
+
+        <Input
+          type="textarea"
+          placeholder="Сотрудник должен знать продукт, воронку продаж и уметь работать с возражениями клиентов."
+          label="Цель курса"
+          value={courseGoal}
+          onChange={(e) => setCourseGoal(e.target.value)}
+          rows={3}
+          icon
+        />
+
+        <Input
+          type="text"
+          placeholder="Новые менеджеры по продажам"
+          label="Для кого курс"
+          value={courseAudience}
+          onChange={(e) => setCourseAudience(e.target.value)}
+          icon
+        />
+
+        <CourseDifficulty value={difficulty} onChange={setDifficulty} />
+
+        <div className={styles.row}>
+          <LanguageSelect value={language} onChange={setLanguage} />
+          <LessonCountSlider 
+            value={lessonCount} 
+            onChange={setLessonCount}
+            max={100}
+          />
+        </div>
+
+        <div className={styles.toggles}>
+          <ToggleField
+            label="Тесты после каждого модуля"
+            checked={moduleTests}
+            onChange={setModuleTests}
+          />
+          <ToggleField
+            label="Финальный тест"
+            checked={finalTest}
+            onChange={setFinalTest}
+          />
+        </div>
+      </div>
 
       <div className={styles.containerModules}>
         {loading ? (
@@ -176,11 +240,27 @@ const OverviewCourse: React.FC<OverviewCourseProps> = ({
         )}
       </div>
 
-      <Button
-        onClick={onNext}
-        text="Сохранить и продолжить"
-        disabled={loading || modules.length === 0}
-      />
+      <div className={styles.actions}>
+        <div style={{ maxWidth: '145px' }}>
+          <Button
+            text="Назад"
+            onClick={onBack}
+            variant="secondary"
+            icon={<img src={arrowLeft} alt="back" />}
+            iconPosition="left"
+          />
+        </div>
+        <div style={{ maxWidth: '145px' }}>
+          <Button
+            onClick={onNext}
+            variant="primary"
+            text="Далее"
+            disabled={loading}
+            iconPosition="right"
+            icon={<img src={arrowRight} alt="next" />}
+          />
+        </div>
+      </div>
     </div>
   );
 };

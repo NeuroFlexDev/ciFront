@@ -73,7 +73,7 @@
 
 .uploadText {
   margin: 0;
-  font-family: 'Golos Text';
+  font-family: 'GolosText';
   font-size: 18px;
   color: #ffffff;
   max-width: 450px;
@@ -88,7 +88,7 @@
   background: #C6F135;
   border: none;
   border-radius: 32px;
-  font-family: 'Golos Text';
+  font-family: 'GolosText';
   font-weight: 600;
   font-size: 18px;
   color: #0C0D12;
@@ -142,7 +142,7 @@
 }
 
 .fileName {
-  font-family: 'Golos Text';
+  font-family: 'GolosText';
   font-weight: 500;
   font-size: 16px;
   color: #ffffff;
@@ -152,7 +152,7 @@
 }
 
 .fileSize {
-  font-family: 'Golos Text';
+  font-family: 'GolosText';
   font-size: 12px;
   color: #6D6D6D;
 }

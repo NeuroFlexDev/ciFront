@@ -1,0 +1,47 @@
+.toggleField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #141414;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.toggleLabel {
+  font-weight: 600;
+  font-family: 'GolosText';
+  font-size: 16px;
+  line-height: 21.1px;
+  color: #FFFFFF;
+}
+
+.toggle {
+  width: 52px;
+  height: 28px;
+  background: #2A2A2A;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease;
+  padding: 0;
+}
+
+.toggle.checked {
+  background: #C6F135;
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.toggle.checked .toggleThumb {
+  transform: translateX(24px);
+}
