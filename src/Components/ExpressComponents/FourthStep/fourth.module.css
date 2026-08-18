@@ -1,0 +1,162 @@
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  max-width: 640px;
+  height: 250px;
+  margin: 0 auto 32px;
+  background: #141414;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.placeholderContent {
+  font-size: 80px;
+  opacity: 0.3;
+}
+
+.title {
+  font-weight: 400;
+  font-family: 'Days';
+  font-size: 32px;
+  line-height: 1.2;
+  color: #FFFFFF;
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  font-weight: 500;
+  font-family: 'GolosText';
+  font-size: 18px;
+  line-height: 1.5;
+  color: #6D6D6D;
+  margin: 0 0 24px;
+}
+
+.progressBar {
+  width: 100%;
+  max-width: 640px;
+  height: 4px;
+  background: #2A2A2A;
+  border-radius: 2px;
+  margin: 0 auto 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: #C6F135;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-weight: 500;
+  font-size: 14px;
+  font-family: 'GolosText';
+  line-height: 1.4;
+  color: #C6F135;
+  margin: 0;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.step {
+  background: #141414;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.stepContent {
+  flex: 1;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 18px;
+  font-family: 'GolosText';
+  line-height: 1.4;
+  color: #FFFFFF;
+  margin-bottom: 4px;
+}
+
+.stepDescription {
+  font-weight: 400;
+  font-family: 'GolosText';
+  font-size: 14px;
+  line-height: 1.4;
+  color: #6D6D6D;
+}
+
+.stepStatus {
+  font-weight: 400;
+  font-family: 'Days';
+  font-size: 18px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.statusCompleted {
+  color: #C6F135;
+}
+
+.statusProcessing {
+  color: #FF5733;
+}
+
+.statusPending {
+  color: #6D6D6D;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 20px 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .imagePlaceholder {
+    height: 200px;
+  }
+
+  .step {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .stepStatus {
+    align-self: flex-end;
+  }
+}

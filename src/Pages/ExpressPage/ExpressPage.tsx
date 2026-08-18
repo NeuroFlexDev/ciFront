@@ -9,6 +9,7 @@ import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/Overvi
 import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor";
 import Footer from "@/Components/Footer/Footer";
 import styles from "./styles.module.css";
+import FourthStep from "@/Components/ExpressComponents/FourthStep/FourthStep";
 
 interface Lesson {
   id: number;
@@ -34,7 +35,7 @@ interface Module {
 }
 
 const ExpressPage = () => {
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preferredFlow = searchParams.get("flow") === "canvas" ? "canvas" : "generate";
@@ -100,12 +101,11 @@ const ExpressPage = () => {
               setModules={setModules}
             />
           ) : step === 4 ? (
-            <OverviewCourse
+            <FourthStep 
               courseId={courseId!}
               csId={csId!}
               onBack={prevStep}
               onNext={nextStep}
-              setModules={setModules}
             />
           ) : (
             <FinalEditor
