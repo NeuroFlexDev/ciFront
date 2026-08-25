@@ -35,7 +35,7 @@ const textFormats = [
 ]
 
 const textColors = [
-  { value: "black", label: "Black" },
+  { value: "white", label: "White" },
   { value: "red", label: "Red" },
   { value: "blue", label: "Blue" },
   { value: "green", label: "Green" },
@@ -62,7 +62,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
   const [showAlign, setShowAlign] = useState(false)
   const [selectedFormat, setSelectedFormat] = useState("paragraph")
   const [selectedFont, setSelectedFont] = useState("Arial")
-  const [selectedColor, setSelectedColor] = useState("black")
+  const [selectedColor, setSelectedColor] = useState("white")
   const [selectedAlignment, setSelectedAlignment] = useState("left")
 
   // Инициализируем editor с content = value
@@ -204,6 +204,12 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
       .run()
   }
 
+  const textFormats = [
+  { value: "paragraph", label: "Normal text" },
+  { value: "heading-1", label: "Heading" },
+  { value: "heading-2", label: "Subheading" },
+]
+
   const promptForLink = () => {
     if (!editor) return
     const previousUrl = editor.getAttributes("link").href
@@ -223,13 +229,9 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.titleContainer}>
-        <img src={slideIcon} alt="" />
-        <p className={styles.title}>Текстовый редактор</p>
-      </div>
-
       <div className={styles.toolbar}>
-        {/* Undo/Redo */}
+        <img src={slideIcon} alt="" />
+
         <div className={styles.buttonGroup}>
           <button
             className={styles.buttonArrow}
@@ -250,15 +252,15 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
         {/* Форматы текста */}
         <div className={styles.dropdownContainer}>
           <button className={styles.button} onClick={() => toggleDropdown("formats")}>
-            {textFormats.find((f) => f.value === selectedFormat)?.label}
-            <img src={dropdownArrowIcon} alt="▼" />
+            <span>{textFormats.find((f) => f.value === selectedFormat)?.label}</span>
+            <img src={dropdownArrowIcon} alt="▼" className={styles.icon} />
           </button>
           {showFormats && (
             <div className={styles.dropdown}>
               {textFormats.map((format) => (
                 <div
                   key={format.value}
-                  className={styles.dropdownItem}
+                  className={`${styles.dropdownItem} ${selectedFormat === format.value ? styles.active : ''}`}
                   onClick={() => toggleBlockType(format.value)}
                 >
                   {format.label}
@@ -272,7 +274,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
         <div className={styles.dropdownContainer}>
           <button className={styles.button} onClick={() => toggleDropdown("fonts")}>
             {selectedFont}
-            <img src={dropdownArrowIcon} alt="▼" />
+            <img src={dropdownArrowIcon} alt="▼" className={styles.icon} />
           </button>
           {showFonts && (
             <div className={styles.dropdown}>
@@ -293,7 +295,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
         <div className={styles.dropdownContainer}>
           <button className={styles.button} onClick={() => toggleDropdown("colors")}>
             <div className={styles.colorSquare} style={{ backgroundColor: selectedColor }} />
-            <img src={dropdownArrowIcon} alt="▼" />
+            <img src={dropdownArrowIcon} alt="▼" className={styles.icon} />
           </button>
           {showColors && (
             <div className={styles.dropdown}>
@@ -318,7 +320,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
               alt={selectedAlignment}
               className={styles.icon}
             />
-            <img src={dropdownArrowIcon} alt="▼" />
+            <img src={dropdownArrowIcon} alt="▼" className={styles.icon} />
           </button>
           {showAlign && (
             <div className={styles.dropdown}>
