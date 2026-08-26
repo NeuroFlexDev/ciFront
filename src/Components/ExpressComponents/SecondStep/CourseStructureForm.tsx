@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Button from "@/Components/ElementUi/Button/Button";
 import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
 import styles from "./styles.module.css";
-import { apiFetch } from "@/shared/api";
 import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
 import arrowRight from '../../../assets/icons/common/arrowRight.svg';
 
@@ -18,38 +17,16 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
     setSelectedFile(file);
   };
 
-  const handleSubmit = async () => {
-    // Блокируем отправку, если файл не выбран
+  const handleSubmit = () => {
     if (!selectedFile) {
       alert("Пожалуйста, выберите файл для загрузки");
       return;
     }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
+    // TODO: Здесь будет вызов API. 
+    const mockCsId = 0; 
     
-    // Если будут какие то доп поля, их можно добавить так:
-    // formData.append("course_id", "123");
-
-    try {
-      const response = await apiFetch("/course-structure/", {
-        method: "POST",
-        body: formData, 
-        // короче тут сделал пока что через форм дата
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Ошибка при сохранении структуры", errorText);
-        throw new Error("Ошибка при сохранении структуры");
-      }
-
-      const savedStruct = await response.json();
-      onNext(savedStruct.id);
-    } catch (error) {
-      console.error("Ошибка отправки данных:", error);
-      alert("Ошибка при сохранении структуры курса");
-    }
+    console.log("Файл готов к загрузке:", selectedFile.name);
+    onNext(mockCsId);
   };
 
   return (
