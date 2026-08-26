@@ -10,6 +10,9 @@ import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor"
 import Footer from "@/Components/Footer/Footer";
 import styles from "./styles.module.css";
 import FourthStep from "@/Components/ExpressComponents/FourthStep/FourthStep";
+// мок днных
+import { mockModules } from "../../Components/ExpressComponents/FinalEditor/Components/mockModules";
+import type { Module } from "../../Components/ExpressComponents/FinalEditor/Components/types/types";
 
 interface Lesson {
   id: number;
@@ -109,7 +112,7 @@ const ExpressPage = () => {
             />
           ) : (
             <FinalEditor
-              modules={modules}
+              modules={mockModules}
               onBack={prevStep}
               onFinish={() => console.log("Курс завершен!")}
             />

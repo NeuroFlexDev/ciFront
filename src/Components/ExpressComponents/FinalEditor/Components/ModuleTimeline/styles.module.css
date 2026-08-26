@@ -1,0 +1,130 @@
+.timelineWrapper {
+  width: 100%;
+  margin-top: 60px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 25px;
+  scrollbar-width: thin;
+}
+
+.draggable {
+  cursor: grab;
+  user-select: none;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.draggable::-webkit-scrollbar {
+  display: none;
+}
+
+.draggable.dragging {
+  cursor: grabbing;
+}
+
+.draggable.dragging * {
+  cursor: grabbing !important;
+}
+
+.timeline {
+  position: relative;
+  min-width: 1280px;
+  height: 500px;
+  display: flex;
+  align-items: center;
+  padding: 0 45px;
+  box-sizing: border-box;
+  touch-action: pan-y;
+}
+
+.line {
+  position: absolute;
+  left: 45px;
+  right: 105px;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  border-radius: 10px;
+  background: #777;
+  z-index: 1;
+}
+
+.item {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  min-width: 220px;
+  z-index: 2;
+}
+
+.item.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.item.bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.point {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 12px);
+  width: 24px;
+  height: 24px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #777;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.point span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.addButton {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+  margin-left: 12px;
+  align-self: center;
+  border: none;
+  border-radius: 50%;
+  background: #151515;
+  color: #c2ff23;
+  font-size: 52px;
+  font-weight: 200;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.addButton:hover {
+  transform: scale(1.06);
+  background: #1d1d1d;
+}
+
+.draggable .timeline {
+  min-width: max-content;
+}
+
+@media (max-width: 900px) {
+  .timelineWrapper {
+    margin-top: 40px;
+  }
+
+  .timeline {
+    min-width: 1100px;
+  }
+}

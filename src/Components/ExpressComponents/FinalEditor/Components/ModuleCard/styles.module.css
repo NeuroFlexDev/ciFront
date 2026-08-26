@@ -1,0 +1,91 @@
+.wrapper {
+  position: relative;
+  width: 273px;
+  height: 196px;
+  flex-shrink: 0;
+}
+
+.card {
+  position: relative;
+  width: 273px;
+  height: 196px;
+  padding: 20px;
+  border-radius: 20px;
+  background: #171717;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.moduleTitle {
+  color: #ffffff;
+  font-family: "Days";
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.description {
+  margin-top: 20px;
+  color: #ffffff;
+  font-family: "Days";
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metrics {
+  display: flex;
+  gap: 38px;
+  margin-top: 22px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric span {
+  color: #c2ff23;
+  font-family: "GolosText";
+  font-size: 14px;
+  line-height: 1;
+}
+
+.metric strong {
+  color: #ffffff;
+  font-family: "Days";
+  font-size: 48px;
+  line-height: 0.9;
+  font-weight: 400;
+}
+
+.arrow {
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #c2ff23;
+  color: #101010;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.arrow:hover {
+  transform: scale(1.08);
+  background: #d0ff50;
+}

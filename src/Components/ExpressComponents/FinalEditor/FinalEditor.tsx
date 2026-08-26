@@ -1,27 +1,31 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import styles from "./styles.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
-import { apiFetch } from "@/shared/api";
-
-// 1) Импортируем ваш кастомный TextEditor
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+import { apiFetch } from "@/shared/api";
+import CourseStats from "./Components/CourseStats/CourseStats";
+import ModuleTimeline from "./Components/ModuleTimeline/ModuleTimeline";
+import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
+import arrowRight from '../../../assets/icons/common/arrowRight.svg';
 
-// Интерфейсы
 interface Lesson {
   id: number;
   lesson: string;
   description: string;
 }
+
 interface Test {
   id?: number;
   test: string;
   description: string;
 }
+
 interface Task {
   id?: number;
   name: string;
   description?: string;
 }
+
 interface Module {
   id: number;
   title: string;
@@ -41,185 +45,194 @@ const FinalEditor: React.FC<FinalEditorProps> = ({
   onBack,
   onFinish,
 }) => {
-  const [modules, setModules] = useState<Module[]>(initialModules);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [modules, setModules] =
+    useState<Module[]>(initialModules);
 
-  // Когда кликают урок в сайдбаре, выбираем его
+  const [selectedModule, setSelectedModule] =
+    useState<Module | null>(null);
+
+  const [selectedLesson, setSelectedLesson] =
+    useState<Lesson | null>(null);
+
+  const lessonsCount = useMemo(() => {
+    return modules.reduce(
+      (total, module) =>
+        total + module.lessons.length,
+      0
+    );
+  }, [modules]);
+
+  const duration = useMemo(() => {
+    const hours = Math.max(
+      1,
+      Math.round(lessonsCount * 2)
+    );
+
+    return `~${hours} часа`;
+  }, [lessonsCount]);
+
+  const handleModuleClick = (module: Module) => {
+    setSelectedModule(module);
+
+    if (module.lessons.length > 0) {
+      setSelectedLesson(module.lessons[0]);
+    } else {
+      setSelectedLesson(null);
+    }
+  };
+
   const handleLessonClick = (lesson: Lesson) => {
     setSelectedLesson(lesson);
   };
 
-  // Когда ваш TextEditor меняет текст, обновляем description выбранного урока
   const handleEditorChange = (newHTML: string) => {
-    if (!selectedLesson) return;
+    if (!selectedLesson) {
+      return;
+    }
 
     setModules((prev) =>
-      prev.map((mod) => ({
-        ...mod,
-        lessons: mod.lessons.map((ls) =>
-          ls.id === selectedLesson.id
-            ? { ...ls, description: newHTML }
-            : ls
+      prev.map((module) => ({
+        ...module,
+
+        lessons: module.lessons.map((lesson) =>
+          lesson.id === selectedLesson.id
+            ? {
+                ...lesson,
+                description: newHTML,
+              }
+            : lesson
         ),
       }))
     );
 
-    // Обновляем local selectedLesson тоже
     setSelectedLesson((prev) =>
-      prev ? { ...prev, description: newHTML } : null
+      prev
+        ? {
+            ...prev,
+            description: newHTML,
+          }
+        : null
     );
   };
 
-  // Сохранение на сервер (PUT /modules/{id}, PUT /lessons/{id}, ...)
-  const saveModulesToServer = async () => {
-    try {
-      for (const mod of modules) {
-        const respMod = await apiFetch(`/modules/${mod.id}`, {
-          method: "PUT",
-          body: JSON.stringify({ title: mod.title }),
-        });
-        if (!respMod.ok) {
-          throw new Error(`Ошибка при обновлении модуля ID=${mod.id}`);
-        }
-
-        for (const les of mod.lessons) {
-          const respLes = await apiFetch(`/lessons/${les.id}`, {
-            method: "PUT",
-            body: JSON.stringify({
-              title: les.lesson,
-              description: les.description,
-            }),
-          });
-          if (!respLes.ok) {
-            throw new Error(`Ошибка при обновлении урока ID=${les.id}`);
-          }
-        }
-      }
-
-      alert("Изменения сохранены!");
-    } catch (err) {
-      console.error("Ошибка сохранения:", err);
-      alert(String(err));
-    }
-  };
-
-  // Экспорт MD
-  const exportToMarkdown = () => {
-    let markdownContent = "";
-    modules.forEach((mod) => {
-      markdownContent += `# ${mod.title}\n\n`;
-      mod.lessons.forEach((lesson) => {
-        const textOnly = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
-        markdownContent += `## ${lesson.lesson}\n\n${textOnly}\n\n`;
-      });
-      mod.tests.forEach((test) => {
-        markdownContent += `### Тест: ${test.test}\n\n${test.description}\n\n`;
-      });
-      mod.tasks.forEach((task) => {
-        markdownContent += `### Задание: ${task.name}\n\n`;
-      });
-    });
-
-    const blob = new Blob([markdownContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "course.md";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  // Экспорт PDF
-  const exportToPDF = async () => {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-    let y = 10;
-
-    modules.forEach((mod) => {
-      doc.setFontSize(16);
-      doc.text(mod.title, 10, y);
-      y += 8;
-
-      mod.lessons.forEach((lesson) => {
-        doc.setFontSize(14);
-        doc.text(lesson.lesson, 10, y);
-        y += 6;
-        doc.setFontSize(12);
-        const textNoTags = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
-        const splitText = doc.splitTextToSize(textNoTags, 180);
-        doc.text(splitText, 10, y);
-        y += splitText.length * 6 + 4;
-      });
-
-      mod.tests.forEach((test) => {
-        doc.setFontSize(14);
-        doc.text(`Тест: ${test.test}`, 10, y);
-        y += 6;
-        doc.setFontSize(12);
-        doc.text(test.description, 10, y);
-        y += 8;
-      });
-
-      mod.tasks.forEach((task) => {
-        doc.setFontSize(14);
-        doc.text(`Задание: ${task.name}`, 10, y);
-        y += 8;
-      });
-
-      y += 10;
-    });
-
-    doc.save("course.pdf");
+  const handleAddModule = () => {
+    console.log("Добавить новый модуль");
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Редактор курса</h2>
-        <p className={styles.description}>
-          Выберите урок слева, отредактируйте содержание справа и сохраните изменения.
-        </p>
-      </div>
+      <header className={styles.header}>
+        <h1 className={styles.title}>
+          Онбординг отдела продаж
+        </h1>
+      </header>
 
-      <div className={styles.content}>
-        <div className={styles.sidebar}>
-          {modules.map((mod) => (
-            <div key={mod.id} className={styles.module}>
-              <h3>{mod.title}</h3>
-              {mod.lessons.map((lesson) => (
-                <p
-                  key={lesson.id}
-                  className={`${styles.lesson} ${
-                    selectedLesson?.id === lesson.id ? styles.activeLesson : ""
-                  }`}
-                  onClick={() => handleLessonClick(lesson)}
-                >
-                  {lesson.lesson}
-                </p>
-              ))}
+      <CourseStats
+        modulesCount={modules.length}
+        lessonsCount={lessonsCount}
+        duration={duration}
+      />
+
+      <ModuleTimeline
+        modules={modules}
+        onModuleClick={handleModuleClick}
+        onAddModule={handleAddModule}
+      />
+
+      {selectedModule && (
+        <div className={styles.editorSection}>
+          <div className={styles.editorHeader}>
+            <div>
+              <span className={styles.editorOverline}>
+                Редактирование
+              </span>
+
+              <h2>
+                {selectedModule.title}
+              </h2>
             </div>
-          ))}
-        </div>
 
-        <div className={styles.editorContainer}>
-          {selectedLesson ? (
-            <>
-              <h3 className={styles.lessonHeading}>{selectedLesson.lesson}</h3>
-              <TextEditor value={selectedLesson.description} onChange={handleEditorChange} />
-            </>
-          ) : (
-            <p className={styles.placeholder}>Выберите урок для редактирования</p>
-          )}
+            <button
+              type="button"
+              className={styles.closeButton}
+              onClick={() => {
+                setSelectedModule(null);
+                setSelectedLesson(null);
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div className={styles.editorContent}>
+            <div className={styles.lessons}>
+              {selectedModule.lessons.map(
+                (lesson) => (
+                  <button
+                    key={lesson.id}
+                    type="button"
+                    className={
+                      selectedLesson?.id ===
+                      lesson.id
+                        ? styles.lessonActive
+                        : styles.lesson
+                    }
+                    onClick={() =>
+                      handleLessonClick(
+                        lesson
+                      )
+                    }
+                  >
+                    {lesson.lesson}
+                  </button>
+                )
+              )}
+            </div>
+
+            <div className={styles.editor}>
+              {selectedLesson ? (
+                <>
+                  <h3>
+                    {selectedLesson.lesson}
+                  </h3>
+
+                  <TextEditor
+                    value={
+                      selectedLesson.description
+                    }
+                    onChange={
+                      handleEditorChange
+                    }
+                  />
+                </>
+              ) : (
+                <div className={styles.empty}>
+                  В модуле нет уроков
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className={styles.buttons}>
-        <Button onClick={onBack} text="Назад" />
-        <Button onClick={saveModulesToServer} text="Сохранить" />
-        <Button onClick={exportToMarkdown} text="Экспорт в MD" />
-        <Button onClick={exportToPDF} text="Экспорт в PDF" />
-        <Button onClick={onFinish} text="Готово" />
+        <div style={{ maxWidth: '145px' }}>
+          <Button
+            onClick={onBack}
+            text="Назад"
+            icon={<img src={arrowLeft} alt="back" />}
+            iconPosition="left"
+          />
+        </div>
+
+        <div style={{ maxWidth: '220px' }}>
+          <Button
+            onClick={onFinish}
+            text="Опубликовать"
+            iconPosition="right"
+            icon={<img src={arrowRight} alt="next" />}
+          />
+        </div>
       </div>
     </div>
   );
