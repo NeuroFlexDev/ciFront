@@ -1,9 +1,8 @@
 .container {
     padding: 20px 30px;
-    border: 1px solid #2a2a2a;
     max-width: 1078px;
     margin: 0 auto;
-    border-radius: 15px;
+    border-radius: 24px;
     background-color: #1a1a1a;
 }
 
@@ -145,7 +144,7 @@
 
 .divider {
     width: 100%;
-    border: 1px solid #2a2a2a;
+    border: 1px solid #FFFFFF;
     margin: 15px 0;
 }
 
@@ -166,7 +165,7 @@
 
 .editorWrapper :global(.ProseMirror p) {
     margin: 0 0 1em 0;
-    color: #d0d0d0;
+    color: #FFFFFF;
 }
 
 .editorWrapper :global(.ProseMirror h1) {
