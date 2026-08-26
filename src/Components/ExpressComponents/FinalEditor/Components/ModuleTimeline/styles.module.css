@@ -1,10 +1,16 @@
 .timelineWrapper {
-  width: 100%;
-  margin-top: 60px;
+  width: calc(100dvw - 10px);
+  margin-left: calc(50% - 50dvw);
   overflow-x: auto;
   overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  margin-top: 60px;
   padding: 0 0 25px;
-  scrollbar-width: thin;
+  box-sizing: border-box;
+}
+.timelineWrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .draggable {
