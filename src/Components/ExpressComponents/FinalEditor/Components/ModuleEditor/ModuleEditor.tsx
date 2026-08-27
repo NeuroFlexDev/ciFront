@@ -2,6 +2,7 @@ import React from "react";
 import trash from "@/assets/icons/common/deleteIcon.svg";
 import ai from "@/assets/icons/common/ai.svg";
 import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+import AddLessonMenu from "../AddLessonMenu/AddLessonMenu";
 
 import type {
   Lesson,
@@ -35,6 +36,9 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
   onAddLesson,
   onDeleteLesson,
 }) => {
+  const [isAddMenuOpen, setIsAddMenuOpen] =
+    React.useState(false);
+
   return (
     <section className={styles.container}>
       <header className={styles.header}>
@@ -148,11 +152,42 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
             <button
               type="button"
               className={styles.addLesson}
-              onClick={onAddLesson}
+              onClick={() =>
+                setIsAddMenuOpen((prev) => !prev)
+              }
             >
               <span>+</span>
               Добавить
             </button>
+
+            {isAddMenuOpen && (
+                <AddLessonMenu
+                    onClose={() =>
+                    setIsAddMenuOpen(false)
+                    }
+
+                    onAddLesson={() => {
+                    setIsAddMenuOpen(false);
+                    onAddLesson?.();
+                    }}
+
+                    onAddTest={() => {
+                    setIsAddMenuOpen(false);
+
+                    console.log(
+                        "Добавить тест"
+                    );
+                    }}
+
+                    onAddHomework={() => {
+                    setIsAddMenuOpen(false);
+
+                    console.log(
+                        "Добавить домашнее задание"
+                    );
+                    }}
+                />
+            )}
 
             <button
               type="button"
