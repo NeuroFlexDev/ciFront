@@ -31,6 +31,14 @@ const ModuleTimeline: React.FC<ModuleTimelineProps> = ({
   const handlePointerDown = (
     event: React.PointerEvent<HTMLDivElement>
   ) => {
+    if (
+      (event.target as HTMLElement).closest(
+        "button"
+      )
+    ) {
+      return;
+    }
+
     if (!hasHorizontalScroll) {
       return;
     }
