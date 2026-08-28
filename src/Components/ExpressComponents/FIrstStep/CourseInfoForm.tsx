@@ -9,6 +9,7 @@ import edit from '../../../assets/icons/step/stepFirst/edit.svg';
 import document from '../../../assets/icons/step/stepFirst/document.svg';
 import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
 import arrowRight from '../../../assets/icons/common/arrowRight.svg';
+import { apiFetch } from '@/shared/api';
 
 const StepByStepIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,25 +59,45 @@ const modes: ModeItem[] = [
 ];
 
 interface CourseInfoFormProps {
-  onNext: (courseId?: number) => void;
-  onOpenCanvas: (courseId?: number) => void;
+  onNext: (courseId: number) => void;
+  onOpenCanvas: (courseId: number) => void;
   onBack?: () => void;
+  preferredFlow?: "generate" | "canvas";
 }
 
 export const CourseInfoForm = ({ 
   onNext, 
   onOpenCanvas, 
-  onBack
+  onBack,
+  preferredFlow = "generate"
 }: CourseInfoFormProps) => {
-  const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = useState<string | null>(() => (
+    preferredFlow === "canvas" ? "chat-consultant" : "step-by-step"
+  ));
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNext = () => {
-    if (!selectedMode) return;
+  const handleNext = async () => {
+    if (!selectedMode || isSubmitting) return;
 
-    if (selectedMode === "chat-consultant") {
-      onOpenCanvas();
-    } else {
-      onNext();
+    setIsSubmitting(true);
+
+    try {
+      const response = await apiFetch('/courses/drafts', { method: 'POST' });
+      if (!response.ok) {
+        throw new Error('Не удалось создать черновик курса');
+      }
+
+      const draft = (await response.json()) as { id: number };
+      if (selectedMode === "chat-consultant") {
+        onOpenCanvas(draft.id);
+      } else {
+        onNext(draft.id);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Не удалось создать черновик курса';
+      alert(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -102,11 +123,11 @@ export const CourseInfoForm = ({
         <div style={{ maxWidth: '145px' }}>
           <Button
             text="Далее"
-            onClick={handleNext}
+            onClick={() => void handleNext()}
             variant="primary"
             icon={<img src={arrowRight} alt="next" />}
             iconPosition="right"
-            disabled={!selectedMode}
+            disabled={!selectedMode || isSubmitting}
           />
         </div>
       </div>

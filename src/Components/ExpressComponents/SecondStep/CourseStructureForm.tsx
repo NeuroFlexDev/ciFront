@@ -13,8 +13,8 @@ interface CourseStructureFormProps {
 export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
+  const handleFileSelect = (files: File[]) => {
+    setSelectedFile(files[0] ?? null);
   };
 
   const handleSubmit = () => {

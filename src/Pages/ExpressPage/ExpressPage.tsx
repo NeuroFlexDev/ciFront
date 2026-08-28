@@ -7,35 +7,11 @@ import { CourseInfoForm } from "@/Components/ExpressComponents/FIrstStep/CourseI
 import { CourseStructureForm } from "@/Components/ExpressComponents/SecondStep/CourseStructureForm";
 import OverviewCourse from "@/Components/ExpressComponents/OverviewCourse/OverviewCourse";
 import FinalEditor from "@/Components/ExpressComponents/FinalEditor/FinalEditor";
-import Footer from "@/Components/Footer/Footer";
 import styles from "./styles.module.css";
 import FourthStep from "@/Components/ExpressComponents/FourthStep/FourthStep";
 // мок днных
 import { mockModules } from "../../Components/ExpressComponents/FinalEditor/Components/mockModules";
 import type { Module } from "../../Components/ExpressComponents/FinalEditor/Components/types/types";
-
-interface Lesson {
-  id: number;
-  lesson: string;
-  description: string;
-}
-interface Test {
-  id?: number;
-  test: string;
-  description: string;
-}
-interface Task {
-  id?: number;
-  name: string;
-  description?: string;
-}
-interface Module {
-  id: number;
-  title: string;
-  lessons: Lesson[];
-  tests: Test[];
-  tasks: Task[];
-}
 
 const ExpressPage = () => {
   const [step, setStep] = useState(1);
@@ -44,7 +20,7 @@ const ExpressPage = () => {
   const preferredFlow = searchParams.get("flow") === "canvas" ? "canvas" : "generate";
 
   // Храним массив модулей в стейте (изначально пуст)
-  const [modules, setModules] = useState<Module[]>([]);
+  const [, setModules] = useState<Module[]>([]);
 
   // Храним courseId и csId в sessionStorage (useSessionStorage)
   const [courseId, setCourseId] = useSessionStorage<number | null>("courseId", null);

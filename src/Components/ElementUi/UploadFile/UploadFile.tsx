@@ -161,14 +161,14 @@ const getFileIcon = (type: string, fileName: string) => {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     if (files) {
       validateAndProcessFiles(files);
     }
-  }, [allowedTypes, maxSize, onFileSelect]);
+  };
 
   const handleRemoveFile = (id: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
@@ -182,7 +182,7 @@ const getFileIcon = (type: string, fileName: string) => {
 
   return (
     <div className={styles.container}>
-      {/* {label && <label className={styles.fileLabel}>{label}</label>} */}
+      {label && <label className={styles.fileLabel}>{label}</label>}
 
       <input
         type="file"

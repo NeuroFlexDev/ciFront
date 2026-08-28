@@ -28,12 +28,6 @@ import clearFormatIcon from "@/assets/icons/TextEditor/clear.svg"
 import linkIcon from "@/assets/icons/TextEditor/link.svg"
 
 const fontFamilies = ["Arial", "Times New Roman", "Courier New", "Georgia", "Verdana"]
-const textFormats = [
-  { value: "paragraph", label: "Обычный текст" },
-  { value: "heading-1", label: "Заголовок" },
-  { value: "heading-2", label: "Подзаголовок" },
-]
-
 const textColors = [
   { value: "white", label: "White" },
   { value: "red", label: "Red" },

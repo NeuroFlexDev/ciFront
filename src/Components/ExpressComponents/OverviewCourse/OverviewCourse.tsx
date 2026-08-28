@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ModuleBlock from "@/Components/ModuleBlock/ModuleBlock";
 import styles from "./styles.module.css";
-import arrowIcon from "@/assets/icons/common/arrowIcon.svg";
 import Button from "@/Components/ElementUi/Button/Button";
 import Loader from "@/Components/ElementUi/Loader/Loader";
 import { apiFetch } from "@/shared/api";

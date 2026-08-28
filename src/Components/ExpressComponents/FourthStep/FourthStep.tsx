@@ -21,8 +21,6 @@ interface GenerationStep {
 }
 
 const FourthStep: React.FC<FourthStepProps> = ({
-  courseId,
-  csId,
   onBack,
   onNext,
 }) => {

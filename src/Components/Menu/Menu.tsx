@@ -45,8 +45,8 @@ const Menu = () => {
 
         <div className={styles.containerUserInfo}>
           <div className={styles.userInfo}>
-            <span className={styles.userName}>{user?.name ?? 'Пашковский Руслан'}</span>
-            <span className={styles.userRole}>{user?.role ?? 'Администратор'}</span>
+            <span className={styles.userName}>{user?.email ?? 'Пашковский Руслан'}</span>
+            <span className={styles.userRole}>Администратор</span>
           </div>
 
           <button type="button" className={styles.logoutButton} onClick={handleLogout}>
