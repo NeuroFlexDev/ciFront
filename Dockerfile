@@ -1,5 +1,5 @@
 # ---- Шаг 1: Сборка (Builder) ----
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 
 # Установим рабочую директорию
 WORKDIR /app
