@@ -18,7 +18,7 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 RUN npm run build
 
 # ---- Шаг 2: Production-контейнер ----
-FROM nginx:1.28-alpine
+FROM nginx:1.31-alpine
 
 # Копируем готовую сборку из builder-а
 COPY --from=builder /app/dist /usr/share/nginx/html
