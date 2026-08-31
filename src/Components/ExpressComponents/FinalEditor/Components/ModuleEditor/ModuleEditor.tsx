@@ -7,8 +7,10 @@ import AddLessonMenu from "../AddLessonMenu/AddLessonMenu";
 import type {
   Lesson,
   Module,
+  Test,
 } from "../types/types";
 import styles from "./styles.module.css";
+import TestEditor from "../TestEdidor/TestEditor";
 
 interface ModuleEditorProps {
   module: Module;
@@ -38,6 +40,8 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
 }) => {
   const [isAddMenuOpen, setIsAddMenuOpen] =
     React.useState(false);
+  const [selectedTest, setSelectedTest] =
+    React.useState<Test | null>(null);
 
   return (
     <section className={styles.container}>
@@ -84,18 +88,29 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
 
       <div className={styles.content}>
         <div className={styles.editorSide}>
-          {selectedLesson ? (
-            <>
-              <div className={styles.editor}>
-                <TextEditor
-                  value={selectedLesson.description}
-                  onChange={onEditorChange}
-                />
-              </div>
-            </>
+          {selectedTest ? (
+            <TestEditor
+              test={selectedTest}
+              onClose={() => {
+                setSelectedTest(null);
+              }}
+              onChange={(updatedTest) => {
+                console.log(
+                  "Updated test:",
+                  updatedTest
+                );
+              }}
+            />
+          ) : selectedLesson ? (
+            <div className={styles.editor}>
+              <TextEditor
+                value={selectedLesson.description}
+                onChange={onEditorChange}
+              />
+            </div>
           ) : (
             <div className={styles.empty}>
-              В этом модуле нет уроков
+              Выберите урок или тест
             </div>
           )}
         </div>
@@ -113,8 +128,10 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
                 className={`${styles.lesson} ${
                     isActive ? styles.lessonActive : ""
                 }`}
-                onClick={() => onLessonSelect(lesson)}
-                >
+                onClick={() => { 
+                  setSelectedTest(null); 
+                  onLessonSelect(lesson);
+                }}>
                 <span className={styles.lessonNumber}>
                     {index + 1}
                 </span>
@@ -127,24 +144,37 @@ const ModuleEditor: React.FC<ModuleEditorProps> = ({
             })}
 
             {module.tests.map((test, index) => {
-            const number =
-                module.lessons.length + index + 1;
+              const number =
+                module.lessons.length +
+                index +
+                1;
 
-            return (
+              return (
                 <button
-                key={`test-${test.id ?? index}`}
-                type="button"
-                className={styles.lesson}
+                  key={`test-${test.id ?? index}`}
+                  type="button"
+                  className={`${styles.lesson} ${
+                    selectedTest?.id === test.id
+                      ? styles.lessonActive
+                      : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedTest(test);
+                  }}
                 >
-                <span className={styles.lessonNumber}>
+                  <span
+                    className={styles.lessonNumber}
+                  >
                     {number}
-                </span>
+                  </span>
 
-                <span className={styles.lessonName}>
+                  <span
+                    className={styles.lessonName}
+                  >
                     Тест {index + 1}. {test.test}
-                </span>
+                  </span>
                 </button>
-            );
+              );
             })}
           </div>
 

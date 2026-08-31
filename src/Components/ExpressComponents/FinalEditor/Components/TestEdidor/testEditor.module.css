@@ -1,0 +1,60 @@
+.container {
+    background-color: #141414;
+    brorder-radius: 24px;
+    padding: 20px;
+}
+
+.addQuestion {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.generateButton,
+.manualButton {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 10px;
+  font-family: "GolosText";
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.generateButton {
+  border: none;
+  background: #c6f135;
+  color: #0C0D12;
+}
+
+.manualButton {
+  border: 1px dashed #6D6D6D;
+  background: transparent;
+  color: #6D6D6D;
+}
+
+.manualButton:hover {
+  border-color: #888;
+  color: #aaa;
+}
+
+@media (max-width: 700px) {
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .headerActions {
+    width: 100%;
+  }
+
+  .addQuestion {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,253 @@
+.question {
+  width: 100%;
+  padding: 0 0 22px;
+  box-sizing: border-box;
+  color: #fff;
+}
+
+.questionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.questionMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "GolosText";
+  font-size: 18px;
+  color: #fff;
+}
+
+.typeSelect {
+  height: 28px;
+  padding: 0 25px 0 8px;
+  border: none;
+  border-radius: 8px;
+  outline: none;
+  background: transparent;
+  color: #aaa;
+  font-family: "GolosText";
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.typeSelect option {
+  background: #171717;
+  color: #fff;
+}
+
+.aiButton {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 20px;
+  background: #C6F135;
+  color: #0C0D12;
+  font-family: "GolosText";
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.aiButton img {
+  width: 20px;
+  height: 20px;
+}
+
+.questionTitle {
+  width: 100%;
+  display: block;
+  padding: 0;
+  border: none;
+  outline: none;
+  resize: vertical;
+  overflow: hidden;
+  background: transparent;
+  color: #fff;
+  font-family: "GolosText";
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  box-sizing: border-box;
+}
+
+.questionTitle::placeholder {
+  color: #555;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.option {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: #0c0d12;
+  box-sizing: border-box;
+}
+
+.optionCorrect {
+  border-color: #c6f135;
+}
+
+.optionCheck {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid #666;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font-family: 'GolosText';
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.optionCorrect .optionCheck {
+  border-color: #C6F135;
+  background: #C6F135;
+}
+
+.optionCheckSingle {
+  border-radius: 50%;
+}
+
+.option input {
+  min-width: 0;
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #fff;
+  font-family: 'GolosText';
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.deleteOption {
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: #444;
+  cursor: pointer;
+}
+
+.deleteOption:hover {
+  color: #fff;
+}
+
+.addOption {
+  align-self: flex-start;
+  padding: 3px 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-family: "GolosText";
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.openAnswer {
+  margin-top: 12px;
+}
+
+.openLabel,
+.verificationTitle {
+  margin-bottom: 8px;
+  color: #fff;
+  font-family: "GolosText";
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.openAnswer textarea {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-left: 2px solid #c6f135;
+  outline: none;
+  resize: vertical;
+  background: #151515;
+  color: #fff;
+  font-family: "GolosText";
+  font-size: 14px;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.verificationTitle {
+  margin-top: 16px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.verification {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.verification button {
+  width: 100%;
+  min-height: 122px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #0c0d12;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.verification button strong {
+  color: #fff;
+  font-family: "GolosText";
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.verification button span {
+  font-family: "GolosText";
+  font-size: 12px;
+  color: #6D6D6D;
+}
+
+.verificationActive {
+  border-color: #c6f135 !important;
+}
+
+.deleteQuestion {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  color: #ff4d4d;
+  font-family: "GolosText";
+  font-size: 14px;
+  cursor: pointer;
+}
