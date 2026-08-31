@@ -28,7 +28,7 @@
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "@uiw/react-codemirror": "^4.23.8",
-    "@xyflow/react": "^12.10.2",
+    "@xyflow/react": "^12.11.5",
     "codemirror": "^6.0.1",
     "daisyui": "^4.12.23",
     "jspdf": "^4.2.1",
