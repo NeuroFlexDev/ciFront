@@ -31,12 +31,14 @@ const QuestionEditor: React.FC<
   onDelete,
   onImproveWithAI,
 }) => {
+  const options = question.options ?? [];
+
   const handleQuestionChange = (
     value: string
   ) => {
     onChange({
       ...question,
-      title: value,
+      question: value,
     });
   };
 
@@ -47,7 +49,7 @@ const QuestionEditor: React.FC<
     onChange({
       ...question,
 
-      options: question.options.map(
+      options: options.map(
         (option) =>
           option.id === optionId
             ? {
@@ -66,7 +68,7 @@ const QuestionEditor: React.FC<
       onChange({
         ...question,
 
-        options: question.options.map(
+        options: options.map(
           (option) => ({
             ...option,
             isCorrect:
@@ -81,7 +83,7 @@ const QuestionEditor: React.FC<
     onChange({
       ...question,
 
-      options: question.options.map(
+      options: options.map(
         (option) =>
           option.id === optionId
             ? {
@@ -105,7 +107,7 @@ const QuestionEditor: React.FC<
       ...question,
 
       options: [
-        ...question.options,
+        ...options,
         newOption,
       ],
     });
@@ -117,7 +119,7 @@ const QuestionEditor: React.FC<
     onChange({
       ...question,
 
-      options: question.options.filter(
+      options: options.filter(
         (option) =>
           option.id !== optionId
       ),
@@ -173,7 +175,7 @@ const QuestionEditor: React.FC<
 
       <textarea
         className={styles.questionTitle}
-        value={question.title}
+        value={question.question}
         onChange={(event) =>
           handleQuestionChange(
             event.target.value
@@ -275,7 +277,7 @@ const QuestionEditor: React.FC<
         </div>
       ) : (
         <div className={styles.options}>
-          {question.options.map(
+          {options.map(
             (option) => (
               <div
                 key={option.id}

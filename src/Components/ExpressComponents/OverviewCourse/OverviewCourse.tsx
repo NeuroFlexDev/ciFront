@@ -11,6 +11,7 @@ import LessonCountSlider from "@/Components/ElementUi/LessonCountSlider/LessonCo
 import ToggleField from "@/Components/ElementUi/ToggleField/ToggleField";
 import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
 import arrowRight from '../../../assets/icons/common/arrowRight.svg';
+import type { Module } from "../FinalEditor/Components/types/types";
 
 // Типы
 interface OverviewCourseProps {
@@ -21,28 +22,7 @@ interface OverviewCourseProps {
   setModules?: (modules: ModuleItem[]) => void;
 }
 
-interface Lesson {
-  id: number;
-  lesson: string;
-  description: string;
-}
-
-interface Test {
-  test: string;
-  description: string;
-}
-
-interface Task {
-  name: string;
-  description?: string;
-}
-
-interface ModuleItem {
-  id: number;
-  title: string;
-  lessons: Lesson[];
-  tests: Test[];
-  tasks: Task[];
+interface ModuleItem extends Module {
   loadingLessons?: boolean;
 }
 

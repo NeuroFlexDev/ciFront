@@ -22,7 +22,6 @@ const TestEditor: React.FC<
 > = ({
   test,
   onChange,
-  onClose,
 }) => {
   const [questions, setQuestions] =
     useState<TestQuestion[]>(
@@ -67,7 +66,7 @@ const TestEditor: React.FC<
     const newQuestion: TestQuestion = {
       id: Date.now(),
 
-      title:
+      question:
         "Новый вопрос",
 
       type: "single",
