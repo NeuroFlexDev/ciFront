@@ -27,5 +27,8 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Открываем порт 80
 EXPOSE 80
 
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://127.0.0.1/ || exit 1
+
 # Запускаем Nginx в форграунде
 CMD ["nginx", "-g", "daemon off;"]

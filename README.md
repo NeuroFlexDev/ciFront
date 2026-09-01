@@ -115,3 +115,18 @@ npm run test
 * `ciBack/` содержит бэкенд и документацию по запуску и деплою
 * `ciFront/` содержит фронтенд с Docker и CI/CD
 * `mlcourse/` игнорируется и не мешает линтерам и коммитам.
+
+## CI/CD
+
+`.github/workflows/ci.yml` запускает lint, tests, dependency audit и production
+build на каждом PR. Push в `main` публикует образ
+`ghcr.io/neuroflexdev/cifront:sha-<commit>`, проверяет его на HIGH/CRITICAL
+уязвимости, сохраняет SPDX SBOM и только после успешной проверки деплоит staging
+с pinned commit image.
+
+Для production используйте ручной workflow
+`.github/workflows/promote.yml`. В Environment `production` задайте required
+reviewers, `PRODUCTION_HOST`, `PRODUCTION_USER`, при необходимости пару
+`PRODUCTION_BASTION_HOST`/`PRODUCTION_BASTION_USER`, а также секреты
+`PRODUCTION_SSH_KEY` и `PRODUCTION_KNOWN_HOSTS`. В workflow передаётся SHA-тег
+успешной сборки и HTTPS origin для health-check.
