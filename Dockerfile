@@ -20,6 +20,9 @@ RUN npm run build
 # ---- Шаг 2: Production-контейнер ----
 FROM nginx:1.31-alpine
 
+# Apply security updates available for the Alpine base image.
+RUN apk upgrade --no-cache
+
 # Копируем готовую сборку из builder-а
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
