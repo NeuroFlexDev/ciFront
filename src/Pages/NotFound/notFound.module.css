@@ -1,4 +1,3 @@
-/* notFound.module.css */
 .notFound {
     position: fixed;
     top: 0;
@@ -8,41 +7,67 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: start;
     background: var(--background);
     padding: 20px;
     overflow: auto;
 }
 
+.numberError {
+    font-family: 'Days';
+    font-weight: 400;
+    font-size: 560px;
+    margin: 0;
+
+    background: linear-gradient(
+        to bottom,
+        rgba(54, 55, 59, 1) 0%,
+        rgba(54, 55, 59, 0.9) 35%,
+        rgba(54, 55, 59, 0.55) 65%,
+        rgba(54, 55, 59, 0.15) 90%,
+        rgba(54, 55, 59, 0) 100%
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+}
+
 .title {
-    font-weight: 500;
-    font-size: 24px;
-    color: var(--text);
-    padding: 40px 0;
+    font-weight: 400;
+    font-family: 'Days';
+    font-size: 64px;
+    color: #F0F0EC;
+    padding: 20px 0;
     text-align: center;
     max-width: 90%;
+    margin-top: -230px;
+}
+
+.text {
+    font-family: 'GolosText';
+    font-size: 20px;
+    color: #F0F0EC;
+    text-align: center;
+    margin-block-start: 0;
+    margin-block-end: 0;
 }
 
 .link {
     text-decoration: none;
-    color: #7A5CFA;
-    border: 2px solid #7A5CFA;
-    padding: 20px;
+    color: #C6F135;
+    border: none;
     border-radius: 15px;
     letter-spacing: 0.05em;
     width: 100%;
     font-size: 20px;
-    max-width: 700px;
+    max-width: 500px;
     text-align: center;
     transition: all 0.3s ease;
+    font-family: 'GolosText';
 }
 
-.link:hover {
-    background: #7A5CFA;
-    color: white;
-}
-
-/* Для мобильных устройств */
 @media (max-width: 768px) {
     .title {
         font-size: 20px;

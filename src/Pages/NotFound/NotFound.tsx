@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './notFound.module.css';
-import notFound from '@/assets/icons/errorsPage/notFound.svg';
 
 const NotFoundPage = () => {
   useEffect(() => {
@@ -13,9 +12,10 @@ const NotFoundPage = () => {
 
   return (
     <div className={styles.notFound}>
-      <img src={notFound} alt="Страница не найдена" />
-      <h1 className={styles.title}>Ой... Похоже, этой страницы вообще не существовало</h1>
-      <Link className={styles.link} to="/main">Вернуться на главную</Link>
+      <h1 className={styles.numberError}>404</h1>
+      <h1 className={styles.title}>Ууупс, страница не была найдена</h1>
+      <p className={styles.text}>Страница, на которую вы хотели зайти, не была найдена,</p>
+      <p className={styles.text}>вернитесь назад или <Link className={styles.link} to="/main">на главную</Link> </p>
     </div>
   );
 };
