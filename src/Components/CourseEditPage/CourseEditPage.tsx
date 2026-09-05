@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import styles from "./styles.module.css";
+import styles from "./courseEditPage.module.css";
 import Button from "@/Components/ElementUi/Button/Button";
 import { apiFetch } from "@/shared/api";
 

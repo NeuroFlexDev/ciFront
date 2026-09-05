@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Button from "@/Components/ElementUi/Button/Button";
 import UploadFile from "@/Components/ElementUi/UploadFile/UploadFile";
-import styles from "./styles.module.css";
+import styles from "./courseStructureForm.module.css";
 import arrowLeft from '../../../assets/icons/common/arrowleft.svg';
 import arrowRight from '../../../assets/icons/common/arrowRight.svg';
 
@@ -33,7 +33,6 @@ export const CourseStructureForm = ({ onBack, onNext }: CourseStructureFormProps
     <div className={styles.secontStepContainer}>
       <div className={styles.structureDataCont}>
         <UploadFile 
-          label="Загрузите файл со структурой курса"
           onFileSelect={handleFileSelect} 
         />
       </div>
