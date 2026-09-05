@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Menu from '@/Components/Menu/Menu';
 import Footer from '@/Components/Footer/Footer';
 import CardCourse from '@/Components/ElementUi/CardCourse/CardCourse';
+import { Employee } from '@/Components/ElementUi/CardCourse/AssignModal/AssignModal';
 import styles from './myCourses.module.css';
 
 export interface CourseCard {
@@ -65,6 +66,105 @@ const mockCourses: CourseCard[] = [
   },
 ];
 
+const mockEmployees: Employee[] = [
+  {
+    id: 1,
+    name: 'Васильев Игорь',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 3,
+  },
+  {
+    id: 2,
+    name: 'Куликов Василий',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 2,
+  },
+  {
+    id: 3,
+    name: 'Голубев Павел',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 1,
+  },
+  {
+    id: 4,
+    name: 'Голубев Сергей',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 4,
+  },
+  {
+    id: 5,
+    name: 'Макаров Алексей',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 2,
+  },
+  {
+    id: 6,
+    name: 'Беляев Алексей',
+    position: 'Менеджер по продажам',
+    department: 'sales',
+    avatar: null,
+    assignedCourses: 1,
+  },
+  {
+    id: 7,
+    name: 'Степанов Павел',
+    position: 'Менеджер по продажам',
+    department: 'support',
+    avatar: null,
+    assignedCourses: 3,
+  },
+  {
+    id: 8,
+    name: 'Степанов Анатолий',
+    position: 'Менеджер по продажам',
+    department: 'support',
+    avatar: null,
+    assignedCourses: 0,
+  },
+  {
+    id: 9,
+    name: 'Петрова Мария',
+    position: 'Маркетолог',
+    department: 'marketing',
+    avatar: null,
+    assignedCourses: 2,
+  },
+  {
+    id: 10,
+    name: 'Сидоров Алексей',
+    position: 'Маркетолог',
+    department: 'marketing',
+    avatar: null,
+    assignedCourses: 1,
+  },
+  {
+    id: 11,
+    name: 'Козлов Дмитрий',
+    position: 'Frontend-разработчик',
+    department: 'development',
+    avatar: null,
+    assignedCourses: 5,
+  },
+  {
+    id: 12,
+    name: 'Новикова Анна',
+    position: 'Специалист поддержки',
+    department: 'support',
+    avatar: null,
+    assignedCourses: 3,
+  },
+];
+
 const MyCoursesPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -80,6 +180,10 @@ const MyCoursesPage: React.FC = () => {
     navigate(`/courses/${id}`);
   };
 
+  const handleAssign = (courseId: number, employeeIds: number[]) => {
+    console.log(`Курс ${courseId}: назначены сотрудники`, employeeIds);
+  };
+
   return (
     <>
       <Menu />
@@ -87,9 +191,11 @@ const MyCoursesPage: React.FC = () => {
       <main className={styles.page}>
         <CardCourse
           courses={mockCourses}
+          employees={mockEmployees}
           onEdit={handleEditCourse}
           onOpenCanvas={handleOpenCanvas}
           onOpenCourse={handleOpenCourse}
+          onAssign={handleAssign}
         />
       </main>
     </>
