@@ -1,0 +1,18 @@
+.page {
+    width: min(calc(100% - 30px), 1360px);
+    margin: 40px auto 0;
+}
+
+@media (max-width: 900px) {
+    .page {
+        width: min(calc(100% - 24px), 700px);
+        margin-top: 20px;
+    }
+}
+
+@media (max-width: 520px) {
+    .page {
+        width: calc(100% - 20px);
+        margin-top: 16px;
+    }
+}

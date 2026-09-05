@@ -1,72 +1,36 @@
-// CardCourse.tsx
-
 import React from 'react';
-import { BriefcaseBusiness, Code2, PenTool } from 'lucide-react';
-import styles from './styles.module.css';
+import info from '@/assets/icons/course/info.svg';
+import addPeople from '@/assets/icons/course/addPeople.svg';
+import styles from './cardCourse.module.css';
 
-interface Course {
+export interface Course {
   id: number;
+  author: string;
   title: string;
-  description: string;
-  status: 0 | 1 | 2;
-  visual: 'code' | 'business' | 'creative';
+  lessons: number;
+  tests: number;
+  tags: string[];
 }
 
 interface CardCourseProps {
   courses: Course[];
-  onDelete?: (id: number) => void; // callback удаления
-  onEdit?: (id: number) => void;   // callback редактирования
+  onDelete?: (id: number) => void;
+  onEdit?: (id: number) => void;
   onOpenCanvas?: (id: number) => void;
+  onOpenCourse?: (id: number) => void;
 }
 
 const CardCourse: React.FC<CardCourseProps> = ({
   courses,
-  onDelete,
   onEdit,
-  onOpenCanvas,
+  onOpenCourse,
 }) => {
-  const getStatusInfo = (status: number) => {
-    switch(status) {
-      case 0:
-        return { text: 'Опубликован', style: styles.statusPublished, dotColor: styles.dotGreen };
-      case 1:
-        return { text: 'Черновик', style: styles.statusDraft, dotColor: styles.dotYellow };
-      case 2:
-        return { text: 'Архив', style: styles.statusArchived, dotColor: styles.dotRed };
-      default:
-        return { text: '', style: '', dotColor: '' };
-    }
-  };
-
-  const handleEditClick = (id: number) => {
-    if (onEdit) onEdit(id);
-  };
-
-  const handleDeleteClick = (id: number) => {
-    if (onDelete) onDelete(id);
-  };
-
-  const handleCanvasClick = (id: number) => {
-    if (onOpenCanvas) onOpenCanvas(id);
-  };
-
-  const renderVisual = (visual: Course['visual']) => {
-    switch (visual) {
-      case 'business':
-        return <BriefcaseBusiness size={44} />;
-      case 'creative':
-        return <PenTool size={44} />;
-      default:
-        return <Code2 size={44} />;
-    }
-  };
-
   if (courses.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <h2 className={styles.emptyTitle}>Курсов пока нет</h2>
-        <p className={styles.emptyText}>
-          Создайте проект с генерацией или сразу откройте канву и начните собирать структуру вручную.
+        <h2>Курсов пока нет</h2>
+        <p>
+          Создайте первый курс, чтобы он появился в этом разделе.
         </p>
       </div>
     );
@@ -75,48 +39,87 @@ const CardCourse: React.FC<CardCourseProps> = ({
   return (
     <div className={styles.courseList}>
       {courses.map((course) => (
-        <div key={course.id} className={styles.card}>
-          <div className={styles.cardMedia}>
-            <div className={styles.cardIcon} aria-hidden="true">
-              {renderVisual(course.visual)}
-            </div>
-          </div>
-          <div className={styles.cardContent}>
-            <div className={styles.cardHeader}>
-              <p className={styles.cardTitle}>{course.title}</p>
-              <span className={`${styles.status} ${getStatusInfo(course.status).style}`}>
-                <span 
-                  className={`${styles.statusDot} ${getStatusInfo(course.status).dotColor}`}
-                ></span>
-                {getStatusInfo(course.status).text}
-              </span>
-            </div>
-            <p className={styles.cardDescription}>{course.description}</p>
+        <article
+          key={course.id}
+          className={styles.card}
+          onClick={() => onOpenCourse?.(course.id)}
+        >
+          <div className={styles.author}>
+            <span className={styles.authorLabel}>
+              Автор курса
+            </span>
+
+            <span className={styles.authorName}>
+              {course.author}
+            </span>
           </div>
 
           <div className={styles.cardActions}>
             <button
-              className={styles.primaryAction}
-              onClick={() => handleCanvasClick(course.id)}
+              type="button"
+              className={styles.iconButton}
+              aria-label="Информация о курсе"
+              onClick={(event) => {
+                event.stopPropagation();
+                onEdit?.(course.id);
+              }}
             >
-              Открыть канву
+              <img src={info} alt="Информация о курсе" />
             </button>
-            <div className={styles.secondaryActions}>
-              <button
-                className={styles.button}
-                onClick={() => handleEditClick(course.id)}
-              >
-                Редактировать
-              </button>
-              <button
-                className={styles.button}
-                onClick={() => handleDeleteClick(course.id)}
-              >
-                Удалить
-              </button>
+
+            <button
+              type="button"
+              className={styles.iconButton}
+              aria-label="Открыть курс"
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenCourse?.(course.id);
+              }}
+            >
+              <img src={addPeople} alt="Открыть курс" />
+            </button>
+          </div>
+
+          {/* Контент */}
+          <div className={styles.cardContent}>
+            <h2 className={styles.cardTitle}>
+              {course.title}
+            </h2>
+
+            <div className={styles.statistics}>
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>
+                  Уроков
+                </span>
+
+                <span className={styles.statValue}>
+                  {course.lessons}
+                </span>
+              </div>
+
+              <div className={styles.stat}>
+                <span className={styles.statLabel}>
+                  Тестов
+                </span>
+
+                <span className={styles.statValue}>
+                  {course.tests}
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.tags}>
+              {course.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className={styles.tag}
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
-        </div>
+        </article>
       ))}
     </div>
   );
