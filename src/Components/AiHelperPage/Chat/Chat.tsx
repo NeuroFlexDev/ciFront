@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styles from './styles.module.css';
 
 import sendIcon from '@/assets/icons/aiChat/sendIcon.svg';
-import addDocument from '@/assets/icons/aiChat/addDocumentBtn.svg';
 import searchInChat from '@/assets/icons/aiChat/searchInChat.svg';
 import edit from '@/assets/icons/aiChat/edit.svg';
 import deleteIcon from '@/assets/icons/aiChat/trash.svg';
@@ -43,8 +42,8 @@ const AiChat: React.FC = () => {
   const [models, setModels] = useState<string[]>([]);
   const [currentModel, setCurrentModel] = useState<string | undefined>(undefined);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // --- helpers ---
@@ -124,8 +123,9 @@ const AiChat: React.FC = () => {
   const handleDeleteChat = async (id: number) => {
     try {
       await apiDeleteChat(id);
-    } catch {
-      // ignore API ошибки — всё равно удалим локально
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Не удалось удалить чат');
+      return;
     }
     setChats(prev => prev.filter(c => c.id !== id));
     if (selectedChatId === id) {
@@ -154,13 +154,9 @@ const AiChat: React.FC = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) console.log('Выбран файл:', file);
-  };
-
   const handleSend = async () => {
-    if (!input.trim() || selectedChatId == null) return;
+    if (sending || !input.trim() || selectedChatId == null) return;
+    setError('');
     const toSend = input.trim();
     setInput('');
 
@@ -190,7 +186,8 @@ const AiChat: React.FC = () => {
       }
     } catch (e) {
       console.error('Send error', e);
-      alert('Не удалось отправить сообщение');
+      setError(e instanceof Error ? e.message : 'Не удалось отправить сообщение');
+      setInput(toSend);
       setMessages(prev => prev.filter(m => m.id !== userMsg.id));
     } finally {
       setSending(false);
@@ -247,18 +244,12 @@ const AiChat: React.FC = () => {
           )}
         </div>
 
+        {error && <p role="alert">{error}</p>}
         <div className={styles.inputBar}>
-          <button onClick={() => fileInputRef.current?.click()}>
-            <img src={addDocument} alt="" />
-          </button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
           <input
             value={input}
+            disabled={sending}
+            maxLength={3000}
             onChange={e => setInput(e.target.value)}
             placeholder="Введите сообщение..."
             onKeyDown={e => e.key === 'Enter' && handleSend()}

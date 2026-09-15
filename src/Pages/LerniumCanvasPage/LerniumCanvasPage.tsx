@@ -9,21 +9,15 @@ import { CanvasView, type CanvasViewApi } from '@/Components/canvas/CanvasView';
 import { useCanvasActions } from '@/hooks/useCanvasActions';
 import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
 import { useCanvasStore } from '@/store/canvasStore';
-import { apiFetch } from '@/shared/api';
 import styles from '@/Components/canvas/styles.module.css';
 import type { CanvasAiActionType, CanvasNodeType } from '@/types/canvas';
-
-type CourseSummary = {
-  id: number;
-  title: string;
-  description: string;
-};
 
 function LerniumCanvasPage() {
   const { id } = useParams<{ id: string }>();
   const courseId = id ?? 'draft';
 
   const [pageLoading, setPageLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const viewApiRef = useRef<CanvasViewApi | null>(null);
 
   const courseTitle = useCanvasStore((state) => state.courseTitle);
@@ -64,25 +58,11 @@ function LerniumCanvasPage() {
     (async () => {
       setPageLoading(true);
 
+      setLoadError('');
       try {
-        const response = await apiFetch('/courses/');
-        let nextTitle = `Курс ${courseId}`;
-
-        if (response.ok) {
-          const data = (await response.json()) as CourseSummary[];
-          const course = data.find((item) => String(item.id) === courseId);
-          if (course?.title) {
-            nextTitle = course.title;
-          }
-        }
-
-        if (!ignore) {
-          await loadCourse(courseId, nextTitle);
-        }
-      } catch {
-        if (!ignore) {
-          await loadCourse(courseId, `Курс ${courseId}`);
-        }
+        if (!ignore) await loadCourse(courseId);
+      } catch (error) {
+        if (!ignore) setLoadError(error instanceof Error ? error.message : 'Не удалось загрузить канву');
       } finally {
         if (!ignore) {
           setPageLoading(false);
@@ -119,6 +99,13 @@ function LerniumCanvasPage() {
   const handleCanvasReady = useCallback((api: CanvasViewApi) => {
     viewApiRef.current = api;
   }, []);
+
+  if (loadError) return <main className={styles.workspacePage}>
+    <div className={styles.workspaceLoading} role="alert">{loadError}
+      <button onClick={() => window.location.reload()}>Повторить загрузку</button>
+      <Link to="/courses">К курсам</Link>
+    </div>
+  </main>;
 
   if (pageLoading) {
     return (
@@ -161,7 +148,8 @@ function LerniumCanvasPage() {
               <ArrowLeft size={16} />
               Назад к курсам
             </Link>
-            <span className={styles.workspaceHint}>
+            <Link to={`/courses/${courseId}/edit`} className={styles.backLink}>Содержание курса</Link>
+            <span className={styles.workspaceHint} title="Канва сохраняет рабочую схему и AI-предложения. Уроки и публикация доступны в содержании курса.">
               {interactionMode === 'connect'
                 ? 'Режим связей: тяните от handle к handle.'
                 : interactionMode === 'hand'

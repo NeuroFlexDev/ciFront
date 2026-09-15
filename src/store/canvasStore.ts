@@ -443,6 +443,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
 
     try {
       const result = await requestAiAction({
+        courseId: state.courseId!,
         action,
         selectedNodes,
       });

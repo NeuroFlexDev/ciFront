@@ -1,66 +1,14 @@
 import type { CanvasAiActionType, CanvasAiResult, CanvasNodeType, LerniumNode } from '@/types/canvas';
+import { api } from '@/shared/api';
 import { createCanvasEdge } from '@/utils/edgeFactory';
 import { createCanvasNode } from '@/utils/nodeFactory';
-
-type AiRequest = {
-  action: CanvasAiActionType;
-  selectedNodes: LerniumNode[];
-};
-
-function buildGeneratedNodes(action: CanvasAiActionType, anchor: LerniumNode): CanvasAiResult {
-  const baseX = anchor.position.x + 260;
-  const baseY = anchor.position.y - 40;
-  let generatedTypes: CanvasNodeType[] = [];
-  let prefix = '';
-
-  switch (action) {
-    case 'split_module':
-      generatedTypes = ['lesson', 'lesson', 'practice'];
-      prefix = 'Урок';
-      break;
-    case 'generate_test':
-      generatedTypes = ['test'];
-      prefix = 'Тест';
-      break;
-    case 'extend_branch':
-      generatedTypes = ['branch', 'lesson', 'practice'];
-      prefix = 'Ветка';
-      break;
-    case 'simplify_structure':
-      generatedTypes = ['module', 'lesson'];
-      prefix = 'Упрощенный блок';
-      break;
-    case 'find_gaps':
-      generatedTypes = ['comment', 'skill'];
-      prefix = 'AI заметка';
-      break;
-  }
-
-  const nodes = generatedTypes.map((nodeType, index) => createCanvasNode(nodeType, {
-    x: baseX + (index % 2) * 180,
-    y: baseY + index * 110,
-  }, {
-    title: `${prefix} ${index + 1}`,
-    description: `AI-добавление для "${anchor.data.title}"`,
-    status: 'draft',
-  }));
-
-  const edges = nodes.map((node) => createCanvasEdge(anchor.id, node.id, action === 'generate_test' ? 'assesses' : 'contains'));
-
-  return {
-    nodes,
-    edges,
-    summary: `AI добавил ${nodes.length} ${nodes.length === 1 ? 'узел' : 'узла'} на канву.`,
-  };
-}
-
-export async function requestAiAction({ action, selectedNodes }: AiRequest): Promise<CanvasAiResult> {
-  await new Promise((resolve) => window.setTimeout(resolve, 900));
-
+type AiRequest = {courseId: string; action: CanvasAiActionType; selectedNodes: LerniumNode[]};
+type Proposal = {nodes: {kind: CanvasNodeType; title: string; description: string; source_ref_ids: number[]}[];summary: string};
+export async function requestAiAction({courseId,action,selectedNodes}: AiRequest): Promise<CanvasAiResult> {
   const anchor = selectedNodes[0];
-  if (!anchor) {
-    throw new Error('Сначала выделите узел или группу узлов');
-  }
-
-  return buildGeneratedNodes(action, anchor);
+  if (!anchor) throw new Error('Выберите узлы для работы с AI');
+  const {data} = await api.post<Proposal>(`/courses/${courseId}/ai/actions`,{action,selected_nodes:selectedNodes.map(n => ({...n.data,id:n.id}))});
+  const nodes = data.nodes.map((n,i) => createCanvasNode(n.kind,{x:anchor.position.x+320,y:anchor.position.y+i*180},
+    {title:n.title,description:n.description + (n.source_ref_ids.length ? `\n\nИсточники: ${n.source_ref_ids.map(id => `[chunk:${id}]`).join(', ')}` : ''),status:'draft'}));
+  return {nodes,edges:nodes.map(n => createCanvasEdge(anchor.id,n.id,action === 'generate_test' ? 'assesses' : 'contains')),summary:data.summary};
 }

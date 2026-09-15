@@ -20,13 +20,13 @@ async function request<T = unknown>(path: string, init: RequestInit = {}): Promi
   const data = await parseResponseData(response);
 
   if (!response.ok) {
-    const message =
-      typeof data === "object" &&
-      data !== null &&
-      "detail" in data &&
-      typeof (data as { detail?: unknown }).detail === "string"
-        ? (data as { detail: string }).detail
-        : `Request failed with status ${response.status}`;
+    const detail = typeof data === 'object' && data !== null && 'detail' in data
+      ? (data as {detail: unknown}).detail : null;
+    const message = typeof detail === 'string' ? detail
+      : typeof detail === 'object' && detail !== null && 'message' in detail && typeof detail.message === 'string'
+        ? detail.message
+        : Array.isArray(detail) ? detail.map(item => `${item.loc?.slice(1).join('.') ?? ''}: ${item.msg ?? 'Некорректное значение'}`).join('; ')
+          : `Ошибка запроса (${response.status})`;
 
     const error = new Error(message) as Error & { response?: { data: unknown; status: number } };
     error.response = { data, status: response.status };
@@ -79,10 +79,14 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set("Content-Type", "application/json");
   }
 
-  return fetch(apiUrl(path), {
+  const response = await fetch(apiUrl(path), {
     ...init,
     headers,
   });
+  if (response.status === 401 && !path.startsWith('/auth/')) {
+    window.dispatchEvent(new CustomEvent('lernium-session-expired'));
+  }
+  return response;
 }
 
 export const api = {

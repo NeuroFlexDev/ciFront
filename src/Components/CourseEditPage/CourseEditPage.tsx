@@ -1,317 +1,95 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import styles from "./courseEditPage.module.css";
-import Button from "@/Components/ElementUi/Button/Button";
-import { apiFetch } from "@/shared/api";
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { api } from '@/shared/api';
+import Menu from '@/Components/Menu/Menu';
+import styles from './courseEditPage.module.css';
 
-// Импортируем ваш кастомный TextEditor
-import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+type Lesson = {id: number; title: string; description: string; content: string; revision: number};
+type ReviewTest = {id: number; question: string; answers: string[]; correct_answer: string};
+type Module = {id: number; title: string; revision: number; lessons: Lesson[]; tests: ReviewTest[]; tasks: {id:number;name:string;description:string}[]};
+type Structure = {course_id: number; title: string; status: string; modules_timeline: {module_id: number}[]};
+const message = (e: unknown) => e instanceof Error ? e.message : 'Ошибка запроса';
 
-// Типы для уроков/модулей (соответствуют FinalEditorProps)
-interface Lesson {
-  id: number;
-  lesson: string;
-  description: string;
-}
-interface Test {
-  id?: number;
-  test: string;
-  description: string;
-}
-interface Task {
-  id?: number;
-  name: string;
-  description?: string;
-}
-interface Module {
-  id: number;
-  title: string;
-  lessons: Lesson[];
-  tests: Test[];
-  tasks: Task[];
-}
-
-interface LoadedLessonPayload {
-  lesson: string;
-  description: string;
-}
-
-interface LoadedTestPayload {
-  test: string;
-  description: string;
-}
-
-interface LoadedTaskPayload {
-  name: string;
-  description?: string;
-}
-
-interface LoadedModulePayload {
-  title: string;
-  lessons: LoadedLessonPayload[];
-  tests: LoadedTestPayload[];
-  tasks: LoadedTaskPayload[];
-}
-
-interface LoadModulesResponse {
-  modules: LoadedModulePayload[];
-}
-
-const CourseEditPage: React.FC = () => {
-  const { id } = useParams();        // ID курса из URL
-  const navigate = useNavigate();
-
-  // Локальный стейт для списка модулей
+export default function CourseEditPage() {
+  const {id} = useParams();
+  const [structure, setStructure] = useState<Structure | null>(null);
   const [modules, setModules] = useState<Module[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [finalTests, setFinalTests] = useState<ReviewTest[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [draft, setDraft] = useState('');
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [busy, setBusy] = useState(false);
+  const lesson = modules.flatMap(m => m.lessons).find(l => l.id === selected);
+  const dirty = Boolean(lesson && draft !== lesson.content);
 
-  // === 1) Загрузка модулей и уроков ===
   useEffect(() => {
-    if (!id) return;
-
+    let stopped = false;
     (async () => {
       try {
-        setLoading(true);
-        // Пример: GET /courses/{id}/modules + для каждого модуля уроки
-        // или если бэкенд возвращает сразу modules со списком lessons/tests/tasks.
-        // Предположим, у вас есть GET /courses/{id}/load_modules, который возвращает:
-        // { "modules": [ { "title": ..., "lessons": [...], "tests": [...], "tasks": [...] }, ... ] }
-
-        const resp = await apiFetch(`/courses/${id}/load_modules`);
-        if (!resp.ok) {
-          throw new Error(`Ошибка при загрузке модулей: ${resp.statusText}`);
-        }
-        const data: LoadModulesResponse = await resp.json();
-
-        // data.modules => [{title: string, lessons: [{lesson, description}], tests, tasks}]
-        // Нужно преобразовать к типу Module (c id, ...).
-        // Допустим, ваш load_modules не возвращает module.id — тогда
-        // можно генерировать искусственные id, или доработать бэкенд.
-
-        // Пример (упрощённо):
-        const loadedModules = data.modules.map((m, index) => ({
-          id: index + 100, // искусственно, если нет ID
-          title: m.title,
-          lessons: m.lessons.map((ls, i) => ({
-            id: i + 1000,
-            lesson: ls.lesson,
-            description: ls.description,
-          })),
-          tests: m.tests.map((t) => ({
-            test: t.test,
-            description: t.description,
-          })),
-          tasks: m.tasks.map((tsk) => ({
-            name: tsk.name,
-            description: tsk.description,
-          })),
-        })) as Module[];
-
-        setModules(loadedModules);
-        console.log("Модули загружены:", loadedModules);
-      } catch (err) {
-        console.error("Ошибка загрузки модулей:", err);
-      } finally {
-        setLoading(false);
-      }
+        const {data} = await api.get<Structure>(`/courses/${id}/structure`);
+        const details = await Promise.all(data.modules_timeline.map(m => api.get<Module>(`/modules/${m.module_id}`)));
+        const finals = await api.get<ReviewTest[]>(`/courses/${id}/tests/`);
+        if (!stopped) {setFinalTests(finals.data);setStructure(data);setModules(details.map(r => r.data));}
+      } catch(e) {if (!stopped) setError(message(e));}
     })();
+    return () => {stopped = true;};
   }, [id]);
 
-  // === 2) Клик по уроку => выбираем, чтобы редактировать
-  const handleLessonClick = (lesson: Lesson) => {
-    setSelectedLesson(lesson);
-  };
+  useEffect(() => {
+    if (!dirty) return;
+    const prevent = (event: BeforeUnloadEvent) => {event.preventDefault();};
+    window.addEventListener('beforeunload', prevent);
+    return () => window.removeEventListener('beforeunload', prevent);
+  }, [dirty]);
 
-  // === 3) Когда TextEditor меняет текст => обновляем описание урока
-  const handleEditorChange = (newHTML: string) => {
-    if (!selectedLesson) return;
-
-    setModules((prev) =>
-      prev.map((mod) => ({
-        ...mod,
-        lessons: mod.lessons.map((ls) =>
-          ls.id === selectedLesson.id
-            ? { ...ls, description: newHTML }
-            : ls
-        ),
-      }))
-    );
-
-    setSelectedLesson({ ...selectedLesson, description: newHTML });
-  };
-
-  // === 4) Сохранение на сервер
-  const saveModulesToServer = async () => {
-    try {
-      console.log("Сохраняем изменения на сервер...");
-
-      // Если у вас на бэкенде есть save_modules: POST /courses/{id}/save_modules
-      // и принимает {modules: [...]}, можно просто отправить новые данные:
-
-      const body = {
-        modules: modules.map((m) => ({
-          title: m.title,
-          lessons: m.lessons.map((ls) => ({
-            lesson: ls.lesson,
-            description: ls.description,
-          })),
-          tests: m.tests,
-          tasks: m.tasks,
-        })),
-      };
-
-      const resp = await apiFetch(`/courses/${id}/save_modules`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (!resp.ok) {
-        throw new Error("Ошибка сохранения модулей");
-      }
-
-      console.log("✅ Все изменения успешно сохранены!");
-      alert("Изменения сохранены!");
-    } catch (err) {
-      console.error("Ошибка сохранения:", err);
-      alert(String(err));
-    }
-  };
-
-  // === Экспорт MD
-  const exportToMarkdown = () => {
-    let markdownContent = "";
-    modules.forEach((mod) => {
-      markdownContent += `# ${mod.title}\n\n`;
-      mod.lessons.forEach((lesson) => {
-        const textOnly = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
-        markdownContent += `## ${lesson.lesson}\n\n${textOnly}\n\n`;
-      });
-      mod.tests.forEach((test) => {
-        markdownContent += `### Тест: ${test.test}\n\n${test.description}\n\n`;
-      });
-      mod.tasks.forEach((task) => {
-        markdownContent += `### Задание: ${task.name}\n\n`;
-      });
-    });
-
-    const blob = new Blob([markdownContent], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "course.md";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
-
-  // === Экспорт PDF
-  const exportToPDF = async () => {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-    let y = 10;
-
-    modules.forEach((mod) => {
-      doc.setFontSize(16);
-      doc.text(mod.title, 10, y);
-      y += 8;
-
-      mod.lessons.forEach((lesson) => {
-        doc.setFontSize(14);
-        doc.text(lesson.lesson, 10, y);
-        y += 6;
-        doc.setFontSize(12);
-        const textNoTags = lesson.description.replace(/<\/?[^>]+(>|$)/g, "");
-        const splitText = doc.splitTextToSize(textNoTags, 180);
-        doc.text(splitText, 10, y);
-        y += splitText.length * 6 + 4;
-      });
-
-      mod.tests.forEach((test) => {
-        doc.setFontSize(14);
-        doc.text(`Тест: ${test.test}`, 10, y);
-        y += 6;
-        doc.setFontSize(12);
-        doc.text(test.description, 10, y);
-        y += 8;
-      });
-
-      mod.tasks.forEach((task) => {
-        doc.setFontSize(14);
-        doc.text(`Задание: ${task.name}`, 10, y);
-        y += 8;
-      });
-
-      y += 10;
-    });
-
-    doc.save("course.pdf");
-  };
-
-  // === 5) Кнопка «Назад» => возвращаемся на /courses
-  const handleBack = () => {
-    navigate("/courses");
-  };
-
-  // === 6) Кнопка «Готово» => тоже возвращаемся на /courses
-  const handleFinish = () => {
-    navigate("/courses");
-  };
-
-  if (loading) {
-    return <p>Загрузка...</p>;
+  function select(item: Lesson) {
+    if (dirty && !window.confirm('Есть несохранённые изменения. Перейти к другому уроку?')) return;
+    setSelected(item.id); setDraft(item.content); setNotice('');
   }
-
-  // === РЕНДЕР ===
-  return (
-    <div className={styles.container}>
-      <h2>Редактирование курса</h2>
-
-      <div className={styles.content}>
-        {/* Боковая панель */}
-        <div className={styles.sidebar}>
-          {modules.map((mod) => (
-            <div key={mod.id} className={styles.module}>
-              <h3>{mod.title}</h3>
-              {mod.lessons.map((lesson) => (
-                <p
-                  key={lesson.id}
-                  className={`${styles.lesson} ${
-                    selectedLesson?.id === lesson.id ? styles.activeLesson : ""
-                  }`}
-                  onClick={() => handleLessonClick(lesson)}
-                >
-                  {lesson.lesson}
-                </p>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        {/* Основная часть */}
-        <div className={styles.editorContainer}>
-          {selectedLesson ? (
-            <>
-              <h3>{selectedLesson.lesson}</h3>
-              <TextEditor
-                value={selectedLesson.description}
-                onChange={handleEditorChange}
-              />
-            </>
-          ) : (
-            <p className={styles.placeholder}>Выберите урок для редактирования</p>
-          )}
-        </div>
-      </div>
-
-      <div className={styles.buttons}>
-        <Button onClick={handleBack} text="Назад" />
-        <Button onClick={saveModulesToServer} text="💾 Сохранить" />
-        <Button onClick={exportToMarkdown} text="📄 Экспорт в MD" />
-        <Button onClick={exportToPDF} text="📄 Экспорт в PDF" />
-        <Button onClick={handleFinish} text="Готово" />
-      </div>
+  async function save() {
+    if (!lesson) return;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      const {data} = await api.put<Lesson>(`/lessons/${lesson.id}`, {content: draft, expected_revision: lesson.revision});
+      setModules(prev => prev.map(m => ({...m, lessons: m.lessons.map(l => l.id === lesson.id ? {...l, ...data, content: draft} : l)})));
+      setStructure(s => s ? {...s,status:'draft'} : s); setNotice('Урок сохранён');
+    } catch(e) {setError(message(e));}
+    finally {setBusy(false);}
+  }
+  async function publish() {
+    setBusy(true); setError('');
+    try {await api.post(`/courses/${id}/publish`);setNotice('Курс опубликован');setStructure(s => s ? {...s,status:'published'} : s);}
+    catch(e) {setError(message(e));} finally {setBusy(false);}
+  }
+  function download() {
+    const text = `# ${structure?.title ?? 'Курс'}\n\n` + modules.map(m => `## ${m.title}\n\n` + m.lessons.map(l => `### ${l.title}\n\n${l.content}`).join('\n\n')).join('\n\n');
+    const url = URL.createObjectURL(new Blob([text], {type:'text/markdown;charset=utf-8'}));
+    const anchor = document.createElement('a');anchor.href=url;anchor.download='course.md';anchor.click();URL.revokeObjectURL(url);
+  }
+  return <><Menu/><main className={styles.container}>
+    <p><Link to="/courses">Мои курсы</Link> · <Link to={`/courses/${id}/canvas`}>Канва</Link></p>
+    <h1>{structure?.title ?? 'Проверка курса'}</h1>
+    {error && <p role="alert" style={{color:'#d94747'}}>{error}</p>}
+    {notice && <p role="status">{notice}</p>}
+    <div className={styles.content}>
+      <aside className={styles.sidebar}>{modules.map(m => <section key={m.id}><h2>{m.title}</h2>
+        {m.lessons.map(l => <button key={l.id} onClick={() => select(l)} disabled={busy} style={{display:'block',marginBottom:10}}>{l.title}</button>)}
+        <details><summary>Тесты ({m.tests.length})</summary>{m.tests.map(t => <div key={t.id}><strong>{t.question}</strong><ul>{t.answers.map((a,i) => <li key={i}>{a}{a === t.correct_answer ? ' ✓' : ''}</li>)}</ul><p>Ответ: {t.correct_answer}</p></div>)}</details>
+        <details><summary>Практика и кейсы ({m.tasks?.length ?? 0})</summary>{m.tasks?.map(task => <article key={task.id}><strong>{task.name}</strong><ReactMarkdown remarkPlugins={[remarkGfm]}>{task.description}</ReactMarkdown></article>)}</details>
+      </section>)}
+      <details><summary>Итоговый тест ({finalTests.length})</summary>{finalTests.map(test => <article key={test.id}><strong>{test.question}</strong><ul>{test.answers.map((answer,i) => <li key={i}>{answer}</li>)}</ul><p>Ответ: {test.correct_answer}</p></article>)}</details>
+      </aside>
+      <section className={styles.editorContainer}>{lesson ? <><h2>{lesson.title}</h2>
+        <label>Текст урока (Markdown)<textarea value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} rows={18} style={{width:'100%',padding:16}}/></label>
+        <button disabled={busy || !dirty} onClick={() => void save()}>Сохранить урок</button>
+        <h3>Предпросмотр</h3><ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
+      </> : <p>Выберите урок для проверки и редактирования.</p>}</section>
     </div>
-  );
-};
-
-export default CourseEditPage;
+    <div className={styles.buttons}><button disabled={!modules.length || dirty} onClick={download}>Скачать Markdown</button>
+      <button disabled={busy || dirty || !modules.length || structure?.status === 'published'} onClick={() => void publish()}>{structure?.status === 'published' ? 'Опубликовано' : 'Опубликовать курс'}</button>
+    </div>
+  </main></>;
+}
