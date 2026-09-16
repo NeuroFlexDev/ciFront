@@ -25,3 +25,6 @@ build/.cache
 *.sw?
 
 node_modules
+
+venv
+__pycache__
