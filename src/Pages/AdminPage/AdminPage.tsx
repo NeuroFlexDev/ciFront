@@ -11,13 +11,36 @@ import { useAuth } from "@/auth/useAuth";
 import { api } from "@/shared/api";
 import {
   Shell,
-  Stat,
   CopyLink,
-  styles,
+  styles as workspaceStyles,
   dateText,
   statuses,
   type Overview,
 } from "@/Pages/Workspace/shared";
+import adminStyles from "./admin.module.css";
+import AdminOverview from "./AdminOverview";
+import {
+  ArrowUpRight,
+  LayoutDashboard,
+  Building2,
+  Users,
+  MailPlus,
+  BookOpen,
+  Inbox,
+  History,
+  Settings2,
+  RefreshCw,
+} from "lucide-react";
+const styles = { ...workspaceStyles, ...adminStyles };
+const tabIcons = {
+  overview: LayoutDashboard,
+  organizations: Building2,
+  users: Users,
+  invitations: MailPlus,
+  courses: BookOpen,
+  requests: Inbox,
+  audit: History,
+};
 export type Organization = {
   id: number;
   name: string;
@@ -422,468 +445,326 @@ export default function AdminPage() {
           onClick={() => setVersion((v) => v + 1)}
           disabled={loading}
         >
+          <RefreshCw size={16} aria-hidden="true" />
           {t("Обновить данные")}
         </button>
       }
     >
-      <fieldset disabled={busy} style={{ border: 0, padding: 0, minWidth: 0 }}>
-        <DraftNotice />
-        <p>
-          <Link className={styles.secondary} to="/admin/operations">
-            {t("Состояние установки и доставки")}
-          </Link>
-        </p>
-        <div
-          className={styles.tabs}
-          role="tablist"
-          aria-label={t("Разделы админки")}
-        >
-          {tabs.map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => switchTab(key)}
-            >
-              {t(label)}
-            </button>
-          ))}
-        </div>
-        {!!error && (
-          <RequestError
-            error={error}
-            onRetry={() => setVersion((v) => v + 1)}
-          />
-        )}
-        {message && (
-          <p className={styles.success} role="status">
-            {message}
-          </p>
-        )}
-        {link && <CopyLink key={link} url={link} title={linkTitle} />}
-        {tab === "overview" && overview && (
-          <>
-            <div className={styles.stats}>
-              <Stat label={t("Заказчики")} value={overview.organizations} />
-              <Stat label={t("Аккаунты")} value={overview.users} />
-              <Stat label={t("Курсы")} value={overview.metrics.courses} />
-              <Stat
-                label={t("Открытые обращения")}
-                value={overview.open_requests}
-              />
-            </div>
-            <div className={styles.split}>
-              <section className={styles.panel}>
-                <h2>{t("Подключить заказчика")}</h2>
-                <p>
-                  {t(
-                    "Создайте организацию, задайте индивидуальные лимиты и выдайте приглашение её администратору.",
-                  )}
-                </p>
-                <button
-                  className={styles.primary}
-                  onClick={() => switchTab("organizations")}
-                >
-                  {t("Перейти к заказчикам")}
-                </button>
-              </section>
-              <section className={styles.panel}>
-                <h2>{t("Архивные материалы")}</h2>
-                <p>
-                  {t("Курсов без владельца:")} {overview.unassigned_courses}
-                  {t(". Назначайте их только после проверки принадлежности.")}
-                </p>
-                <button
-                  className={styles.secondary}
-                  onClick={() => {
-                    switchTab("courses");
-                    setUnassigned(true);
-                  }}
-                >
-                  {t("Разобрать архив")}
-                </button>
-              </section>
-            </div>
-            <div className={styles.stats}>
-              <Stat
-                label={t("Запуски за 30 дней")}
-                value={overview.metrics.runs}
-              />
-              <Stat label={t("Завершено")} value={overview.metrics.completed} />
-              <Stat label={t("Ошибки")} value={overview.metrics.failed} />
-              <Stat
-                label={t("Учтено расходов, USD")}
-                value={
-                  overview.metrics.known_cost_usd === null
-                    ? t("Нет данных")
-                    : overview.metrics.known_cost_usd.toFixed(3)
-                }
-              />
-            </div>
-            <p>
-              {t(
-                "Стоимость отражает сохранённые данные запусков, а не итоговый счёт провайдера.",
-              )}
-            </p>
-          </>
-        )}
-        {(tab === "organizations" || tab === "users") && (
-          <div className={styles.between}>
-            <label className={styles.search}>
-              {t("Поиск")}
-              <input
-                type="search"
-                value={q}
-                onChange={(e) => {
-                  setQ(e.target.value);
-                  setOffset(0);
-                }}
-                placeholder={
-                  tab === "users" ? t("Имя или email") : t("Название заказчика")
-                }
-              />
-            </label>
-            {tab === "organizations" && (
-              <button
-                className={styles.primary}
-                onClick={() => openOrgForm(freshOrg())}
-              >
-                {t("Добавить заказчика +")}
-              </button>
-            )}
+      <fieldset disabled={busy} className={styles.layout}>
+        <aside className={styles.navigation}>
+          <div className={styles.navigationTitle}>
+            {t("Управление платформой")}
           </div>
-        )}
-        {tab === "organizations" && orgForm && (
-          <section className={styles.panel}>
-            <h2>{orgForm.id ? t("Условия заказчика") : t("Новый заказчик")}</h2>
-            <form className={styles.form} onSubmit={saveOrg}>
-              <label>
-                {t("Название")}
+          <div
+            className={styles.tabs}
+            role="tablist"
+            aria-label={t("Разделы админки")}
+            onKeyDown={(event) => {
+              const keys = [
+                "ArrowDown",
+                "ArrowRight",
+                "ArrowUp",
+                "ArrowLeft",
+                "Home",
+                "End",
+              ];
+              if (!keys.includes(event.key)) return;
+              event.preventDefault();
+              const index = tabs.findIndex(([key]) => key === tab);
+              const next =
+                event.key === "Home"
+                  ? 0
+                  : event.key === "End"
+                    ? tabs.length - 1
+                    : (index +
+                        (["ArrowDown", "ArrowRight"].includes(event.key)
+                          ? 1
+                          : -1) +
+                        tabs.length) %
+                      tabs.length;
+              switchTab(tabs[next][0]);
+              const controls = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+              controls[next]?.focus();
+            }}
+          >
+            {tabs.map(([key, label]) => {
+              const Icon = tabIcons[key as keyof typeof tabIcons];
+              return (
+                <button
+                  key={key}
+                  id={`admin-tab-${key}`}
+                  role="tab"
+                  aria-selected={tab === key}
+                  aria-controls="admin-content"
+                  tabIndex={tab === key ? 0 : -1}
+                  onClick={() => switchTab(key)}
+                >
+                  <Icon size={18} aria-hidden="true" />
+                  {t(label)}
+                  <ArrowUpRight size={16} aria-hidden="true" />
+                </button>
+              );
+            })}
+          </div>
+          <Link className={styles.operationsLink} to="/admin/operations">
+            <Settings2 size={18} aria-hidden="true" />
+            {t("Состояние установки и доставки")}
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </aside>
+        <div
+          id="admin-content"
+          role="tabpanel"
+          aria-labelledby={`admin-tab-${tab}`}
+          className={styles.content}
+        >
+          <DraftNotice />
+          {!!error && (
+            <RequestError
+              error={error}
+              onRetry={() => setVersion((v) => v + 1)}
+            />
+          )}
+          {message && (
+            <p className={styles.success} role="status">
+              {message}
+            </p>
+          )}
+          {link && <CopyLink key={link} url={link} title={linkTitle} />}
+          {tab === "overview" && overview && (
+            <AdminOverview
+              data={overview}
+              onNavigate={(next, onlyUnassigned) => {
+                switchTab(next);
+                if (onlyUnassigned) setUnassigned(true);
+              }}
+            />
+          )}
+          {(tab === "organizations" || tab === "users") && (
+            <div className={styles.between}>
+              <label className={styles.search}>
+                {t("Поиск")}
                 <input
-                  required
-                  minLength={2}
-                  maxLength={200}
-                  value={orgForm.name}
-                  onChange={(e) =>
-                    setOrgForm({ ...orgForm, name: e.target.value })
+                  type="search"
+                  value={q}
+                  onChange={(e) => {
+                    setQ(e.target.value);
+                    setOffset(0);
+                  }}
+                  placeholder={
+                    tab === "users"
+                      ? t("Имя или email")
+                      : t("Название заказчика")
                   }
                 />
               </label>
-              <label>
-                {t("Тип")}
-                <select
-                  value={orgForm.kind}
-                  onChange={(e) =>
-                    setOrgForm({ ...orgForm, kind: e.target.value })
-                  }
+              {tab === "organizations" && (
+                <button
+                  className={styles.primary}
+                  onClick={() => openOrgForm(freshOrg())}
                 >
-                  {Object.entries(kinds).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {t(v)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {(
-                [
-                  ["seat_limit", t("Участников, включая приглашения")],
-                  ["course_limit", t("Курсов в организации")],
-                  ["source_limit", t("Источников на один курс")],
-                  ["generation_limit", t("Запусков генерации в месяц")],
-                ] as const
-              ).map(([key, label]) => (
-                <label key={key}>
-                  {label}
+                  {t("Добавить заказчика +")}
+                </button>
+              )}
+            </div>
+          )}
+          {tab === "organizations" && orgForm && (
+            <section className={styles.panel}>
+              <h2>
+                {orgForm.id ? t("Условия заказчика") : t("Новый заказчик")}
+              </h2>
+              <form className={styles.form} onSubmit={saveOrg}>
+                <label>
+                  {t("Название")}
                   <input
-                    type="number"
                     required
-                    min={key === "generation_limit" ? 0 : 1}
-                    max={key === "source_limit" ? 1000 : 100000}
-                    value={orgForm[key]}
+                    minLength={2}
+                    maxLength={200}
+                    value={orgForm.name}
                     onChange={(e) =>
-                      setOrgForm({ ...orgForm, [key]: Number(e.target.value) })
+                      setOrgForm({ ...orgForm, name: e.target.value })
                     }
                   />
                 </label>
-              ))}
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={orgForm.is_active}
-                  onChange={(e) =>
-                    setOrgForm({ ...orgForm, is_active: e.target.checked })
-                  }
-                />
-                {t("Доступ организации включён")}
-              </label>
-              <p className={styles.span}>
-                {t(
-                  "При снижении лимита существующие данные сохраняются, новые операции сверх лимита блокируются. Приостановка доступа запрещает вход участникам. Месячный лимит учитывает новые запуски, включая неудачные; продолжение приостановленного запуска не расходует новое место.",
-                )}
-              </p>
-              <div className={styles.row}>
-                <button className={styles.primary} disabled={busy}>
-                  {t("Сохранить заказчика")}
-                </button>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => setOrgForm(null)}
-                >
-                  {t("Отмена")}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-        {tab === "organizations" && !loading && (
-          <div className={styles.grid}>
-            {organizations.map((o) => (
-              <article className={styles.card} key={o.id}>
-                <span className={styles.badge}>
-                  {o.is_active ? t("Доступ включён") : t("Приостановлен")}
-                </span>
-                <h2 style={{ marginTop: 18 }}>{o.name}</h2>
-                <p>
-                  {t(kinds[o.kind] ?? o.kind)} · №{o.id}
-                </p>
-                <p>
-                  {t("Участники и приглашения:")} {o.reserved_seats} /{" "}
-                  {o.seat_limit}
-                  <br />
-                  {t("Курсы:")} {o.courses} / {o.course_limit}
-                  <br />
-                  {t("Источников на курс:")} {o.source_limit}
-                  <br />
-                  {t("Генераций в месяц:")} {o.generation_limit}
+                <label>
+                  {t("Тип")}
+                  <select
+                    value={orgForm.kind}
+                    onChange={(e) =>
+                      setOrgForm({ ...orgForm, kind: e.target.value })
+                    }
+                  >
+                    {Object.entries(kinds).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {t(v)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {(
+                  [
+                    ["seat_limit", t("Участников, включая приглашения")],
+                    ["course_limit", t("Курсов в организации")],
+                    ["source_limit", t("Источников на один курс")],
+                    ["generation_limit", t("Запусков генерации в месяц")],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label key={key}>
+                    {label}
+                    <input
+                      type="number"
+                      required
+                      min={key === "generation_limit" ? 0 : 1}
+                      max={key === "source_limit" ? 1000 : 100000}
+                      value={orgForm[key]}
+                      onChange={(e) =>
+                        setOrgForm({
+                          ...orgForm,
+                          [key]: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                ))}
+                <label className={styles.check}>
+                  <input
+                    type="checkbox"
+                    checked={orgForm.is_active}
+                    onChange={(e) =>
+                      setOrgForm({ ...orgForm, is_active: e.target.checked })
+                    }
+                  />
+                  {t("Доступ организации включён")}
+                </label>
+                <p className={styles.span}>
+                  {t(
+                    "При снижении лимита существующие данные сохраняются, новые операции сверх лимита блокируются. Приостановка доступа запрещает вход участникам. Месячный лимит учитывает новые запуски, включая неудачные; продолжение приостановленного запуска не расходует новое место.",
+                  )}
                 </p>
                 <div className={styles.row}>
-                  <button
-                    className={styles.secondary}
-                    onClick={() =>
-                      openOrgForm({
-                        id: o.id,
-                        name: o.name,
-                        kind: o.kind,
-                        is_active: o.is_active,
-                        seat_limit: o.seat_limit,
-                        course_limit: o.course_limit,
-                        source_limit: o.source_limit,
-                        generation_limit: o.generation_limit,
-                      })
-                    }
-                  >
-                    {t("Настроить лимиты")}
+                  <button className={styles.primary} disabled={busy}>
+                    {t("Сохранить заказчика")}
                   </button>
-                  <Link
-                    className={styles.secondary}
-                    to={`/admin/organizations/${o.id}/delivery`}
-                  >
-                    {t("Функции и профиль")}
-                  </Link>
-                  <Link
-                    className={styles.secondary}
-                    to={`/admin/organizations/${o.id}/billing`}
-                  >
-                    {t("Договор и счета")}
-                  </Link>
                   <button
-                    className={styles.primary}
-                    disabled={!o.is_active}
-                    onClick={() => {
-                      switchTab("invitations");
-                      setInviteOrg(String(o.id));
-                      setInviteRole("owner");
-                    }}
+                    type="button"
+                    className={styles.secondary}
+                    onClick={() => setOrgForm(null)}
                   >
-                    {t("Пригласить владельца")}
+                    {t("Отмена")}
                   </button>
                 </div>
-              </article>
-            ))}
-            {!organizations.length && (
-              <div className={styles.empty}>
-                {t(
-                  "Заказчики не найдены. Добавьте первого или измените поиск.",
-                )}
-              </div>
-            )}
-          </div>
-        )}
-        {tab === "users" && userForm && (
-          <section className={styles.panel}>
-            <h2>
-              {t("Доступ:")} {userForm.email}
-            </h2>
-            <form className={styles.form} onSubmit={saveUser}>
-              <label>
-                {t("Поиск организации")}
-                <input
-                  type="search"
-                  value={orgSearch}
-                  onChange={(e) => setOrgSearch(e.target.value)}
-                  placeholder={t("Найти по названию")}
-                />
-              </label>
-              <label>
-                {t("Организация")}
-                <select
-                  value={userForm.organization_id ?? ""}
-                  onChange={(e) =>
-                    setUserForm({
-                      ...userForm,
-                      organization_id: e.target.value
-                        ? Number(e.target.value)
-                        : null,
-                    })
-                  }
-                >
-                  <option value="">{t("Личный аккаунт")}</option>
-                  {orgOptions.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                {t("Роль в организации")}
-                <select
-                  value={userForm.organization_role}
-                  onChange={(e) =>
-                    setUserForm({
-                      ...userForm,
-                      organization_role: e.target.value,
-                    })
-                  }
-                >
-                  <option value="member">{t("Участник")}</option>
-                  <option value="admin">{t("Администратор")}</option>
-                  <option value="author">{t("Автор")}</option>
-                  <option value="reviewer">{t("Проверяющий")}</option>
-                  <option value="manager">{t("Руководитель")}</option>
-                  <option
-                    value="owner"
-                    disabled={
-                      users.find((item) => item.id === userForm.id)
-                        ?.organization_role !== "owner"
-                    }
+              </form>
+            </section>
+          )}
+          {tab === "organizations" && !loading && (
+            <div className={styles.grid}>
+              {organizations.map((o) => (
+                <article className={styles.card} key={o.id}>
+                  <Link
+                    className={styles.cardAction}
+                    to={`/admin/organizations/${o.id}/delivery`}
+                    aria-label={`${o.name} · ${t("Функции и профиль")}`}
                   >
-                    {t("Владелец организации")}
-                  </option>
-                </select>
-              </label>
-              <label className={styles.check}>
-                <input
-                  type="checkbox"
-                  checked={userForm.is_active}
-                  onChange={(e) =>
-                    setUserForm({ ...userForm, is_active: e.target.checked })
-                  }
-                />
-                {t("Аккаунт активен")}
-              </label>
-              <p className={styles.span}>
-                {t(
-                  "Изменение доступа завершит предыдущие сеансы. Курсы остаются в исходном пространстве. Перевод человека не переносит материалы другой организации.",
-                )}
-              </p>
-              <div className={styles.row}>
-                <button className={styles.primary} disabled={busy}>
-                  {t("Сохранить доступ")}
-                </button>
-                <button
-                  type="button"
-                  className={styles.secondary}
-                  onClick={() => setUserForm(null)}
-                >
-                  {t("Отмена")}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
-        {tab === "users" && !loading && (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{t("Пользователь")}</th>
-                  <th>{t("Организация")}</th>
-                  <th>{t("Роль и доступ")}</th>
-                  <th>{t("Действия")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td>
-                      {u.full_name || t("Без имени")}
-                      <small>
-                        {u.email} · №{u.id}
-                      </small>
-                    </td>
-                    <td>{u.organization_name || t("Личный аккаунт")}</td>
-                    <td>
-                      {u.is_admin
-                        ? t("Администратор Лерниума")
-                        : t(
-                            roleLabels[u.organization_role] ??
-                              u.organization_role,
-                          )}
-                      <small>
-                        {u.is_active ? t("Активен") : t("Отключён")}
-                      </small>
-                    </td>
-                    <td>
-                      {u.is_admin ? (
-                        <span className={styles.muted}>
-                          {t("Защищённый аккаунт")}
-                        </span>
-                      ) : (
-                        <div className={styles.row}>
-                          <button
-                            className={styles.secondary}
-                            onClick={() => openUserForm(u)}
-                          >
-                            {t("Изменить доступ")}
-                          </button>
-                          <button
-                            className={styles.secondary}
-                            disabled={busy || !u.is_active}
-                            onClick={() =>
-                              void perform(async () => {
-                                const r = await api.post<{ url: string }>(
-                                  `/admin/users/${u.id}/recovery-link`,
-                                );
-                                setLink(r.data.url);
-                                setLinkTitle(
-                                  t("Восстановление для {v0} · 30 минут", {
-                                    v0: u.email,
-                                  }),
-                                );
-                              })
-                            }
-                          >
-                            {t("Восстановить доступ")}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {!users.length && (
-              <p style={{ padding: 20 }}>{t("Пользователи не найдены.")}</p>
-            )}
-          </div>
-        )}
-        {tab === "invitations" && (
-          <>
+                    <ArrowUpRight size={24} aria-hidden="true" />
+                  </Link>
+                  <span className={styles.badge}>
+                    {o.is_active ? t("Доступ включён") : t("Приостановлен")}
+                  </span>
+                  <h2>{o.name}</h2>
+                  <p>
+                    {t(kinds[o.kind] ?? o.kind)} · №{o.id}
+                  </p>
+                  <dl className={styles.quotaList}>
+                    <div>
+                      <dt>{t("Участники и приглашения:")}</dt>
+                      <dd>
+                        {o.reserved_seats} <span>/ {o.seat_limit}</span>
+                      </dd>
+                      <progress
+                        value={Math.min(o.reserved_seats, o.seat_limit)}
+                        max={o.seat_limit}
+                        aria-label={t("Участники и приглашения:")}
+                      />
+                    </div>
+                    <div>
+                      <dt>{t("Курсы:")}</dt>
+                      <dd>
+                        {o.courses} <span>/ {o.course_limit}</span>
+                      </dd>
+                      <progress
+                        value={Math.min(o.courses, o.course_limit)}
+                        max={o.course_limit}
+                        aria-label={t("Курсы:")}
+                      />
+                    </div>
+                    <div>
+                      <dt>{t("Источников на курс:")}</dt>
+                      <dd>{o.source_limit}</dd>
+                    </div>
+                    <div>
+                      <dt>{t("Генераций в месяц:")}</dt>
+                      <dd>{o.generation_limit}</dd>
+                    </div>
+                  </dl>
+                  <div className={styles.row}>
+                    <button
+                      className={styles.secondary}
+                      onClick={() =>
+                        openOrgForm({
+                          id: o.id,
+                          name: o.name,
+                          kind: o.kind,
+                          is_active: o.is_active,
+                          seat_limit: o.seat_limit,
+                          course_limit: o.course_limit,
+                          source_limit: o.source_limit,
+                          generation_limit: o.generation_limit,
+                        })
+                      }
+                    >
+                      {t("Настроить лимиты")}
+                    </button>
+                    <Link
+                      className={styles.secondary}
+                      to={`/admin/organizations/${o.id}/delivery`}
+                    >
+                      {t("Функции и профиль")}
+                    </Link>
+                    <Link
+                      className={styles.secondary}
+                      to={`/admin/organizations/${o.id}/billing`}
+                    >
+                      {t("Договор и счета")}
+                    </Link>
+                    <button
+                      className={styles.primary}
+                      disabled={!o.is_active}
+                      onClick={() => {
+                        switchTab("invitations");
+                        setInviteOrg(String(o.id));
+                        setInviteRole("owner");
+                      }}
+                    >
+                      {t("Пригласить владельца")}
+                    </button>
+                  </div>
+                </article>
+              ))}
+              {!organizations.length && (
+                <div className={styles.empty}>
+                  {t(
+                    "Заказчики не найдены. Добавьте первого или измените поиск.",
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          {tab === "users" && userForm && (
             <section className={styles.panel}>
-              <h2>{t("Пригласить нового пользователя")}</h2>
-              <form className={styles.form} onSubmit={createInvite}>
+              <h2>
+                {t("Доступ:")} {userForm.email}
+              </h2>
+              <form className={styles.form} onSubmit={saveUser}>
                 <label>
                   {t("Поиск организации")}
                   <input
@@ -896,348 +777,522 @@ export default function AdminPage() {
                 <label>
                   {t("Организация")}
                   <select
-                    required
-                    value={inviteOrg}
-                    onChange={(e) => setInviteOrg(e.target.value)}
+                    value={userForm.organization_id ?? ""}
+                    onChange={(e) =>
+                      setUserForm({
+                        ...userForm,
+                        organization_id: e.target.value
+                          ? Number(e.target.value)
+                          : null,
+                      })
+                    }
                   >
-                    <option value="">{t("Выберите заказчика")}</option>
-                    {orgOptions
-                      .filter((o) => o.is_active)
-                      .map((o) => (
-                        <option key={o.id} value={o.id}>
-                          {o.name}
-                        </option>
-                      ))}
+                    <option value="">{t("Личный аккаунт")}</option>
+                    {orgOptions.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label>
-                  Email
-                  <input
-                    required
-                    type="email"
-                    maxLength={255}
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                  />
-                </label>
-                <label>
-                  {t("Роль")}
+                  {t("Роль в организации")}
                   <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value)}
+                    value={userForm.organization_role}
+                    onChange={(e) =>
+                      setUserForm({
+                        ...userForm,
+                        organization_role: e.target.value,
+                      })
+                    }
                   >
                     <option value="member">{t("Участник")}</option>
                     <option value="admin">{t("Администратор")}</option>
                     <option value="author">{t("Автор")}</option>
                     <option value="reviewer">{t("Проверяющий")}</option>
                     <option value="manager">{t("Руководитель")}</option>
-                    <option value="owner">{t("Владелец организации")}</option>
-                  </select>
-                </label>
-                <button className={styles.primary} disabled={busy}>
-                  {t("Создать приглашение")}
-                </button>
-              </form>
-              <p>
-                {t(
-                  "Приглашения резервируют места. Пользователь личного аккаунта может принять приглашение после входа. Аккаунт другой организации сначала завершает прежнее членство.",
-                )}
-              </p>
-            </section>
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>{t("Организация")}</th>
-                    <th>{t("Роль")}</th>
-                    <th>{t("Состояние")}</th>
-                    <th>{t("Действие")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invites.map((i) => (
-                    <tr key={i.id}>
-                      <td>{i.email}</td>
-                      <td>
-                        {orgOptions.find((o) => o.id === i.organization_id)
-                          ?.name || `№${i.organization_id}`}
-                      </td>
-                      <td>{t(roleLabels[i.role] ?? i.role)}</td>
-                      <td>
-                        {t(statuses[i.status] ?? i.status)}
-                        <small>
-                          {t("До")} {dateText(i.expires_at)}
-                        </small>
-                      </td>
-                      <td>
-                        {i.status === "pending" && (
-                          <button
-                            className={styles.danger}
-                            disabled={busy}
-                            onClick={() =>
-                              void perform(async () => {
-                                await api.delete(`/admin/invitations/${i.id}`);
-                                setMessage(t("Приглашение отозвано."));
-                              })
-                            }
-                          >
-                            {t("Отозвать")}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!invites.length && !loading && (
-                <p style={{ padding: 20 }}>{t("Приглашений пока нет.")}</p>
-              )}
-            </div>
-          </>
-        )}
-        {tab === "courses" && (
-          <>
-            <label className={styles.check}>
-              <input
-                type="checkbox"
-                checked={unassigned}
-                onChange={(e) => {
-                  setUnassigned(e.target.checked);
-                  setOffset(0);
-                }}
-              />
-              {t("Только без владельца")}
-            </label>
-            {assign && (
-              <section className={styles.panel}>
-                <h2>
-                  {t("Назначить владельца курса №")}
-                  {assign.course}
-                </h2>
-                <p>
-                  {t(
-                    "Убедитесь, что материалы принадлежат выбранному пользователю. Курс появится только в его аккаунте.",
-                  )}
-                </p>
-                <form
-                  className={styles.form}
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void perform(async () => {
-                      await api.post(
-                        `/admin/courses/${assign.course}/assign-owner`,
-                        { user_id: Number(assign.user) },
-                      );
-                      setAssign(null);
-                      setMessage(t("Владелец курса назначен."));
-                    });
-                  }}
-                >
-                  <label>
-                    {t("Поиск владельца")}
-                    <input
-                      type="search"
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      placeholder={t("Имя или email")}
-                    />
-                  </label>
-                  <label>
-                    {t("Пользователь")}
-                    <select
-                      required
-                      value={assign.user}
-                      onChange={(e) =>
-                        setAssign({ ...assign, user: e.target.value })
+                    <option
+                      value="owner"
+                      disabled={
+                        users.find((item) => item.id === userForm.id)
+                          ?.organization_role !== "owner"
                       }
                     >
-                      <option value="">{t("Выберите владельца")}</option>
-                      {userOptions
-                        .filter((u) => u.is_active)
-                        .map((u) => (
-                          <option key={u.id} value={u.id}>
-                            {u.email}
-                          </option>
-                        ))}
-                    </select>
-                  </label>
+                      {t("Владелец организации")}
+                    </option>
+                  </select>
+                </label>
+                <label className={styles.check}>
+                  <input
+                    type="checkbox"
+                    checked={userForm.is_active}
+                    onChange={(e) =>
+                      setUserForm({ ...userForm, is_active: e.target.checked })
+                    }
+                  />
+                  {t("Аккаунт активен")}
+                </label>
+                <p className={styles.span}>
+                  {t(
+                    "Изменение доступа завершит предыдущие сеансы. Курсы остаются в исходном пространстве. Перевод человека не переносит материалы другой организации.",
+                  )}
+                </p>
+                <div className={styles.row}>
                   <button className={styles.primary} disabled={busy}>
-                    {t("Назначить владельца")}
+                    {t("Сохранить доступ")}
                   </button>
                   <button
                     type="button"
                     className={styles.secondary}
-                    onClick={() => setAssign(null)}
+                    onClick={() => setUserForm(null)}
                   >
                     {t("Отмена")}
                   </button>
-                </form>
-              </section>
-            )}
+                </div>
+              </form>
+            </section>
+          )}
+          {tab === "users" && !loading && (
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>{t("Курс")}</th>
-                    <th>{t("Владелец")}</th>
-                    <th>{t("Состояние")}</th>
-                    <th>{t("Действие")}</th>
+                    <th>{t("Пользователь")}</th>
+                    <th>{t("Организация")}</th>
+                    <th>{t("Роль и доступ")}</th>
+                    <th>{t("Действия")}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {courses.map((c) => (
-                    <tr key={c.id}>
+                  {users.map((u) => (
+                    <tr key={u.id}>
                       <td>
-                        {c.title || t("Без названия")}
-                        <small>№{c.id}</small>
-                      </td>
-                      <td>
-                        {c.owner_id === null
-                          ? t("Не назначен")
-                          : userOptions.find((u) => u.id === c.owner_id)
-                              ?.email ||
-                            t("Пользователь №{v0}", { v0: c.owner_id })}
-                      </td>
-                      <td>
-                        {t(statuses[c.status] ?? c.status)}
+                        {u.full_name || t("Без имени")}
                         <small>
-                          {t(
-                            statuses[c.publication_status] ??
-                              c.publication_status,
-                          )}
+                          {u.email} · №{u.id}
+                        </small>
+                      </td>
+                      <td>{u.organization_name || t("Личный аккаунт")}</td>
+                      <td>
+                        {u.is_admin
+                          ? t("Администратор Лерниума")
+                          : t(
+                              roleLabels[u.organization_role] ??
+                                u.organization_role,
+                            )}
+                        <small>
+                          {u.is_active ? t("Активен") : t("Отключён")}
                         </small>
                       </td>
                       <td>
-                        {c.owner_id === null && (
-                          <button
-                            className={styles.secondary}
-                            onClick={() =>
-                              setAssign({ course: c.id, user: "" })
-                            }
-                          >
-                            {t("Назначить владельца")}
-                          </button>
+                        {u.is_admin ? (
+                          <span className={styles.muted}>
+                            {t("Защищённый аккаунт")}
+                          </span>
+                        ) : (
+                          <div className={styles.row}>
+                            <button
+                              className={styles.secondary}
+                              onClick={() => openUserForm(u)}
+                            >
+                              {t("Изменить доступ")}
+                            </button>
+                            <button
+                              className={styles.secondary}
+                              disabled={busy || !u.is_active}
+                              onClick={() =>
+                                void perform(async () => {
+                                  const r = await api.post<{ url: string }>(
+                                    `/admin/users/${u.id}/recovery-link`,
+                                  );
+                                  setLink(r.data.url);
+                                  setLinkTitle(
+                                    t("Восстановление для {v0} · 30 минут", {
+                                      v0: u.email,
+                                    }),
+                                  );
+                                })
+                              }
+                            >
+                              {t("Восстановить доступ")}
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {!users.length && (
+                <p style={{ padding: 20 }}>{t("Пользователи не найдены.")}</p>
+              )}
             </div>
-          </>
-        )}
-        {tab === "requests" && (
-          <>
-            <label className={styles.search}>
-              {t("Показывать")}
-              <select
-                value={requestStatus}
-                onChange={(e) => {
-                  setRequestStatus(e.target.value);
-                  setOffset(0);
-                }}
-              >
-                <option value="open">{t("Открытые обращения")}</option>
-                <option value="closed">{t("Обработанные")}</option>
-              </select>
-            </label>
-            {requests.map((r) => (
-              <section className={styles.panel} key={r.reference}>
-                <h2>{r.name || r.email}</h2>
-                <p>
-                  {r.email} · {dateText(r.created_at)}
-                </p>
-                <p style={{ whiteSpace: "pre-wrap" }}>{r.message}</p>
-                <p>
-                  {t("Номер:")} {r.reference}
-                </p>
-                {r.status === "open" && (
-                  <button
-                    className={styles.secondary}
-                    disabled={busy}
-                    onClick={() =>
-                      void perform(async () => {
-                        await api.post(`/admin/requests/${r.reference}/close`);
-                        setMessage(t("Обращение отмечено как обработанное."));
-                      })
-                    }
-                  >
-                    {t("Отметить обработанным")}
+          )}
+          {tab === "invitations" && (
+            <>
+              <section className={styles.panel}>
+                <h2>{t("Пригласить нового пользователя")}</h2>
+                <form className={styles.form} onSubmit={createInvite}>
+                  <label>
+                    {t("Поиск организации")}
+                    <input
+                      type="search"
+                      value={orgSearch}
+                      onChange={(e) => setOrgSearch(e.target.value)}
+                      placeholder={t("Найти по названию")}
+                    />
+                  </label>
+                  <label>
+                    {t("Организация")}
+                    <select
+                      required
+                      value={inviteOrg}
+                      onChange={(e) => setInviteOrg(e.target.value)}
+                    >
+                      <option value="">{t("Выберите заказчика")}</option>
+                      {orgOptions
+                        .filter((o) => o.is_active)
+                        .map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label>
+                    Email
+                    <input
+                      required
+                      type="email"
+                      maxLength={255}
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    {t("Роль")}
+                    <select
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value)}
+                    >
+                      <option value="member">{t("Участник")}</option>
+                      <option value="admin">{t("Администратор")}</option>
+                      <option value="author">{t("Автор")}</option>
+                      <option value="reviewer">{t("Проверяющий")}</option>
+                      <option value="manager">{t("Руководитель")}</option>
+                      <option value="owner">{t("Владелец организации")}</option>
+                    </select>
+                  </label>
+                  <button className={styles.primary} disabled={busy}>
+                    {t("Создать приглашение")}
                   </button>
-                )}
+                </form>
+                <p>
+                  {t(
+                    "Приглашения резервируют места. Пользователь личного аккаунта может принять приглашение после входа. Аккаунт другой организации сначала завершает прежнее членство.",
+                  )}
+                </p>
               </section>
-            ))}
-            {!requests.length && !loading && (
-              <div className={styles.empty}>
-                {t("Обращений в этом списке нет.")}
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>{t("Организация")}</th>
+                      <th>{t("Роль")}</th>
+                      <th>{t("Состояние")}</th>
+                      <th>{t("Действие")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invites.map((i) => (
+                      <tr key={i.id}>
+                        <td>{i.email}</td>
+                        <td>
+                          {orgOptions.find((o) => o.id === i.organization_id)
+                            ?.name || `№${i.organization_id}`}
+                        </td>
+                        <td>{t(roleLabels[i.role] ?? i.role)}</td>
+                        <td>
+                          {t(statuses[i.status] ?? i.status)}
+                          <small>
+                            {t("До")} {dateText(i.expires_at)}
+                          </small>
+                        </td>
+                        <td>
+                          {i.status === "pending" && (
+                            <button
+                              className={styles.danger}
+                              disabled={busy}
+                              onClick={() =>
+                                void perform(async () => {
+                                  await api.delete(
+                                    `/admin/invitations/${i.id}`,
+                                  );
+                                  setMessage(t("Приглашение отозвано."));
+                                })
+                              }
+                            >
+                              {t("Отозвать")}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!invites.length && !loading && (
+                  <p style={{ padding: 20 }}>{t("Приглашений пока нет.")}</p>
+                )}
               </div>
-            )}
-          </>
-        )}
-        {tab === "audit" && (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{t("Когда")}</th>
-                  <th>{t("Кто")}</th>
-                  <th>{t("Действие")}</th>
-                  <th>{t("Объект")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((e) => (
-                  <tr key={e.id}>
-                    <td>{dateText(e.created_at)}</td>
-                    <td>
-                      {e.actor_id
-                        ? userOptions.find((u) => u.id === e.actor_id)?.email ||
-                          t("Пользователь №{v0}", { v0: e.actor_id })
-                        : t("Система")}
-                    </td>
-                    <td>{t(eventTitles[e.action] || e.action)}</td>
-                    <td>
-                      {e.target_type} №{e.target_id}
-                      <details>
-                        <summary>{t("Подробности")}</summary>
-                        <pre>{JSON.stringify(e.details, null, 2)}</pre>
-                      </details>
-                    </td>
+            </>
+          )}
+          {tab === "courses" && (
+            <>
+              <label className={styles.check}>
+                <input
+                  type="checkbox"
+                  checked={unassigned}
+                  onChange={(e) => {
+                    setUnassigned(e.target.checked);
+                    setOffset(0);
+                  }}
+                />
+                {t("Только без владельца")}
+              </label>
+              {assign && (
+                <section className={styles.panel}>
+                  <h2>
+                    {t("Назначить владельца курса №")}
+                    {assign.course}
+                  </h2>
+                  <p>
+                    {t(
+                      "Убедитесь, что материалы принадлежат выбранному пользователю. Курс появится только в его аккаунте.",
+                    )}
+                  </p>
+                  <form
+                    className={styles.form}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void perform(async () => {
+                        await api.post(
+                          `/admin/courses/${assign.course}/assign-owner`,
+                          { user_id: Number(assign.user) },
+                        );
+                        setAssign(null);
+                        setMessage(t("Владелец курса назначен."));
+                      });
+                    }}
+                  >
+                    <label>
+                      {t("Поиск владельца")}
+                      <input
+                        type="search"
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        placeholder={t("Имя или email")}
+                      />
+                    </label>
+                    <label>
+                      {t("Пользователь")}
+                      <select
+                        required
+                        value={assign.user}
+                        onChange={(e) =>
+                          setAssign({ ...assign, user: e.target.value })
+                        }
+                      >
+                        <option value="">{t("Выберите владельца")}</option>
+                        {userOptions
+                          .filter((u) => u.is_active)
+                          .map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.email}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <button className={styles.primary} disabled={busy}>
+                      {t("Назначить владельца")}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      onClick={() => setAssign(null)}
+                    >
+                      {t("Отмена")}
+                    </button>
+                  </form>
+                </section>
+              )}
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>{t("Курс")}</th>
+                      <th>{t("Владелец")}</th>
+                      <th>{t("Состояние")}</th>
+                      <th>{t("Действие")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {courses.map((c) => (
+                      <tr key={c.id}>
+                        <td>
+                          {c.title || t("Без названия")}
+                          <small>№{c.id}</small>
+                        </td>
+                        <td>
+                          {c.owner_id === null
+                            ? t("Не назначен")
+                            : userOptions.find((u) => u.id === c.owner_id)
+                                ?.email ||
+                              t("Пользователь №{v0}", { v0: c.owner_id })}
+                        </td>
+                        <td>
+                          {t(statuses[c.status] ?? c.status)}
+                          <small>
+                            {t(
+                              statuses[c.publication_status] ??
+                                c.publication_status,
+                            )}
+                          </small>
+                        </td>
+                        <td>
+                          {c.owner_id === null && (
+                            <button
+                              className={styles.secondary}
+                              onClick={() =>
+                                setAssign({ course: c.id, user: "" })
+                              }
+                            >
+                              {t("Назначить владельца")}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {tab === "requests" && (
+            <>
+              <label className={styles.search}>
+                {t("Показывать")}
+                <select
+                  value={requestStatus}
+                  onChange={(e) => {
+                    setRequestStatus(e.target.value);
+                    setOffset(0);
+                  }}
+                >
+                  <option value="open">{t("Открытые обращения")}</option>
+                  <option value="closed">{t("Обработанные")}</option>
+                </select>
+              </label>
+              {requests.map((r) => (
+                <section className={styles.panel} key={r.reference}>
+                  <h2>{r.name || r.email}</h2>
+                  <p>
+                    {r.email} · {dateText(r.created_at)}
+                  </p>
+                  <p style={{ whiteSpace: "pre-wrap" }}>{r.message}</p>
+                  <p>
+                    {t("Номер:")} {r.reference}
+                  </p>
+                  {r.status === "open" && (
+                    <button
+                      className={styles.secondary}
+                      disabled={busy}
+                      onClick={() =>
+                        void perform(async () => {
+                          await api.post(
+                            `/admin/requests/${r.reference}/close`,
+                          );
+                          setMessage(t("Обращение отмечено как обработанное."));
+                        })
+                      }
+                    >
+                      {t("Отметить обработанным")}
+                    </button>
+                  )}
+                </section>
+              ))}
+              {!requests.length && !loading && (
+                <div className={styles.empty}>
+                  {t("Обращений в этом списке нет.")}
+                </div>
+              )}
+            </>
+          )}
+          {tab === "audit" && (
+            <div className={styles.tableWrap}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>{t("Когда")}</th>
+                    <th>{t("Кто")}</th>
+                    <th>{t("Действие")}</th>
+                    <th>{t("Объект")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {!events.length && !loading && (
-              <p style={{ padding: 20 }}>{t("Действий пока нет.")}</p>
-            )}
-          </div>
-        )}
-        {loading && <LoadingState>{t("Загружаем данные…")}</LoadingState>}
-        {total > 0 && (
-          <div className={styles.between}>
-            <span className={styles.muted}>
-              {t("Всего:")} {total} {t("· показаны")} {offset + 1}–
-              {Math.min(offset + 50, total)}
-            </span>
-            <div className={styles.row}>
-              <button
-                className={styles.secondary}
-                disabled={offset === 0 || loading}
-                onClick={() => setOffset((v) => Math.max(0, v - 50))}
-              >
-                {t("Назад")}
-              </button>
-              <button
-                className={styles.secondary}
-                disabled={offset + 50 >= total || loading}
-                onClick={() => setOffset((v) => v + 50)}
-              >
-                {t("Далее")}
-              </button>
+                </thead>
+                <tbody>
+                  {events.map((e) => (
+                    <tr key={e.id}>
+                      <td>{dateText(e.created_at)}</td>
+                      <td>
+                        {e.actor_id
+                          ? userOptions.find((u) => u.id === e.actor_id)
+                              ?.email ||
+                            t("Пользователь №{v0}", { v0: e.actor_id })
+                          : t("Система")}
+                      </td>
+                      <td>{t(eventTitles[e.action] || e.action)}</td>
+                      <td>
+                        {e.target_type} №{e.target_id}
+                        <details>
+                          <summary>{t("Подробности")}</summary>
+                          <pre>{JSON.stringify(e.details, null, 2)}</pre>
+                        </details>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!events.length && !loading && (
+                <p style={{ padding: 20 }}>{t("Действий пока нет.")}</p>
+              )}
             </div>
-          </div>
-        )}
+          )}
+          {loading && <LoadingState>{t("Загружаем данные…")}</LoadingState>}
+          {total > 0 && (
+            <div className={styles.between}>
+              <span className={styles.muted}>
+                {t("Всего:")} {total} {t("· показаны")} {offset + 1}–
+                {Math.min(offset + 50, total)}
+              </span>
+              <div className={styles.row}>
+                <button
+                  className={styles.secondary}
+                  disabled={offset === 0 || loading}
+                  onClick={() => setOffset((v) => Math.max(0, v - 50))}
+                >
+                  {t("Назад")}
+                </button>
+                <button
+                  className={styles.secondary}
+                  disabled={offset + 50 >= total || loading}
+                  onClick={() => setOffset((v) => v + 50)}
+                >
+                  {t("Далее")}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </fieldset>
     </Shell>
   );

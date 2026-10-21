@@ -7,12 +7,14 @@ import { ApiError } from "@/shared/errors";
 import { useDurableState } from "@/hooks/useDurableState";
 import { useLearningData } from "@/Pages/Learning/useLearningData";
 import type { TeamSettings } from "@/Pages/TeamLearning/types";
-import { Shell, styles } from "@/Pages/Workspace/shared";
+import { Shell, styles as workspaceStyles } from "@/Pages/Workspace/shared";
 import StatusPage from "@/Pages/AccessPage/StatusPage";
 import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import OrganizationResourcePolicy from "@/Components/OrganizationResourcePolicy";
 import { resourceProfiles } from "@/Pages/TeamLearning/resourceProfiles";
+import adminStyles from "./admin.module.css";
+const styles = { ...workspaceStyles, ...adminStyles };
 const features: Record<string, string> = {
   learning: "Обучение и назначения",
   authoring: "Создание и редактирование курсов",
@@ -51,29 +53,31 @@ export default function DeliveryPage() {
         "Функции, профиль и квоты. Каждое изменение сохраняется в журнале действий.",
       )}
     >
-      <p>
-        <Link to="/admin?tab=organizations">{t("← Заказчики")}</Link> ·{" "}
-        <Link to={`/admin/organizations/${organizationId}/billing`}>
-          {t("Договор и счета")}
-        </Link>
-      </p>
-      {!!data.error && (
-        <RequestError error={data.error} onRetry={() => void data.reload()} />
-      )}{" "}
-      {!data.data && data.loading && (
-        <LoadingState>{t("Загружаем состав поставки…")}</LoadingState>
-      )}
-      {data.data && (
-        <DeliveryForm
-          key={organizationId}
-          organizationId={organizationId!}
-          server={data.data}
-          reload={data.reload}
-        />
-      )}
-      {organizationId && (
-        <OrganizationResourcePolicy organizationId={organizationId} />
-      )}
+      <div className={styles.deliveryPage}>
+        <p className={styles.breadcrumbs}>
+          <Link to="/admin?tab=organizations">{t("← Заказчики")}</Link> ·{" "}
+          <Link to={`/admin/organizations/${organizationId}/billing`}>
+            {t("Договор и счета")}
+          </Link>
+        </p>
+        {!!data.error && (
+          <RequestError error={data.error} onRetry={() => void data.reload()} />
+        )}{" "}
+        {!data.data && data.loading && (
+          <LoadingState>{t("Загружаем состав поставки…")}</LoadingState>
+        )}
+        {data.data && (
+          <DeliveryForm
+            key={organizationId}
+            organizationId={organizationId!}
+            server={data.data}
+            reload={data.reload}
+          />
+        )}
+        {organizationId && (
+          <OrganizationResourcePolicy organizationId={organizationId} />
+        )}
+      </div>
     </Shell>
   );
 }
