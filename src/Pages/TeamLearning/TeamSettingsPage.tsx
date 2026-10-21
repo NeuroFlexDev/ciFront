@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/shared/api";
@@ -14,12 +15,16 @@ import s from "../Learning/learning.module.css";
 
 type Permission = { can_manage_team: boolean; can_manage_admins: boolean };
 export default function TeamSettingsPage() {
+  const { t } = useLocale();
+
   const settings = useLearningData<TeamSettings>("/team/settings");
   const permission = useLearningData<Permission>("/team/permissions");
   return (
     <Shell
-      title="Настройки обучения"
-      description="Правила организации, её учебный контекст и управление владением."
+      title={t("Настройки обучения")}
+      description={t(
+        "Правила организации, её учебный контекст и управление владением.",
+      )}
     >
       <div className={s.page}>
         <TeamTabs />
@@ -36,7 +41,7 @@ export default function TeamSettingsPage() {
           />
         )}{" "}
         {settings.loading && !settings.data ? (
-          <LoadingState>Загружаем правила обучения…</LoadingState>
+          <LoadingState>{t("Загружаем правила обучения…")}</LoadingState>
         ) : (
           settings.data && (
             <SettingsForm
@@ -85,6 +90,8 @@ function SettingsForm({
   canManage: boolean;
   reload: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const initial = {
     expected_revision: settings.revision,
     profile: settings.profile,
@@ -116,18 +123,20 @@ function SettingsForm({
             if (e instanceof ApiError && e.status === 409) await reload();
             throw e;
           }
-        }, "Настройки сохранены. Уже выданные назначения используют зафиксированные правила.");
+        }, t("Настройки сохранены. Уже выданные назначения используют зафиксированные правила."));
       }}
     >
       {conflict && (
         <section className={s.conflict}>
-          <h3>Настройки изменились</h3>
+          <h3>{t("Настройки изменились")}</h3>
           <p>
-            Ваш черновик относится к редакции {draft.expected_revision}. На
-            сервере редакция {settings.revision}.
+            {t("Ваш черновик относится к редакции") + " "}
+            {draft.expected_revision}
+            {t(". На сервере редакция") + " "}
+            {settings.revision}.
           </p>
           <details>
-            <summary>Сравнить текущие настройки сервера</summary>
+            <summary>{t("Сравнить текущие настройки сервера")}</summary>
             <pre>{JSON.stringify(initial, null, 2)}</pre>
           </details>
           <div className={s.row}>
@@ -136,7 +145,7 @@ function SettingsForm({
               className={s.secondary}
               onClick={() => setDraft(initial)}
             >
-              Взять настройки сервера
+              {t("Взять настройки сервера")}
             </button>
             <button
               type="button"
@@ -146,16 +155,16 @@ function SettingsForm({
                 setDraft({ ...draft, expected_revision: settings.revision })
               }
             >
-              Применить мои после сравнения
+              {t("Применить мои после сравнения")}
             </button>
           </div>
         </section>
       )}
       <section className={s.card}>
-        <h2>Профиль организации</h2>
+        <h2>{t("Профиль организации")}</h2>
         <div className={s.formGrid}>
           <label className={s.field}>
-            Тип учебной среды
+            {t("Тип учебной среды")}
             <select
               disabled={!canManage}
               value={draft.profile}
@@ -163,15 +172,15 @@ function SettingsForm({
             >
               {Object.entries(profileLabels).map(([v, n]) => (
                 <option key={v} value={v}>
-                  {n}
+                  {t(String(n))}
                 </option>
               ))}
             </select>
           </label>
           <div className={s.field}>
-            <span>Языки материалов и приглашений</span>
+            <span>{t("Языки материалов и приглашений")}</span>
             {[
-              ["ru", "Русский"],
+              ["ru", t("Русский")],
               ["en", "English"],
             ].map(([code, label]) => (
               <label className={s.check} key={code}>
@@ -192,21 +201,21 @@ function SettingsForm({
                     })
                   }
                 />
-                {label}
+                {t(String(label))}
               </label>
             ))}
           </div>
         </div>
-        <h3>Названия ролей в вашей организации</h3>
+        <h3>{t("Названия ролей в вашей организации")}</h3>
         <div className={s.formGrid}>
           {Object.entries(roles).map(([key, title]) => (
             <label key={key} className={s.field}>
-              {title}
+              {t(String(title))}
               <input
                 disabled={!canManage}
                 maxLength={100}
                 value={draft.role_labels[key] ?? ""}
-                placeholder={title}
+                placeholder={t(String(title))}
                 onChange={(e) =>
                   setDraft({
                     ...draft,
@@ -222,15 +231,15 @@ function SettingsForm({
         </div>
       </section>
       <section className={s.card}>
-        <h2>Правила новых назначений</h2>
+        <h2>{t("Правила новых назначений")}</h2>
         <p className={s.muted}>
-          При назначении участник получает конкретную опубликованную версию и
-          копию правил. Изменение этих настроек не меняет его уже начатую
-          попытку.
+          {t(
+            "При назначении участник получает конкретную опубликованную версию и копию правил. Изменение этих настроек не меняет его уже начатую попытку.",
+          )}
         </p>
         <div className={s.formGrid}>
           <label className={s.field}>
-            Максимум попыток
+            {t("Максимум попыток")}
             <input
               disabled={!canManage}
               type="number"
@@ -250,7 +259,7 @@ function SettingsForm({
             />
           </label>
           <label className={s.field}>
-            Проходной результат, %
+            {t("Проходной результат, %")}
             <input
               disabled={!canManage}
               type="number"
@@ -271,7 +280,7 @@ function SettingsForm({
             />
           </label>
           <label className={s.field}>
-            Когда показывать правильные ответы
+            {t("Когда показывать правильные ответы")}
             <select
               disabled={!canManage}
               value={draft.rules.reveal_answers}
@@ -286,12 +295,12 @@ function SettingsForm({
                 })
               }
             >
-              <option value="never">Не показывать</option>
+              <option value="never">{t("Не показывать")}</option>
               <option value="after_pass">
-                После достижения проходного результата
+                {t("После достижения проходного результата")}
               </option>
               <option value="after_final_attempt">
-                После последней попытки
+                {t("После последней попытки")}
               </option>
             </select>
           </label>
@@ -317,11 +326,11 @@ function SettingsForm({
                   }
                 />
                 <span>
-                  {label}
+                  {t(String(label))}
                   {unavailable && (
                     <small className={s.caption}>
                       {" "}
-                      · Функция не включена в поставку
+                      {t("· Функция не включена в поставку")}
                     </small>
                   )}
                 </span>
@@ -329,7 +338,7 @@ function SettingsForm({
             );
           })}
         </div>
-        <h3>Что разрешено менять в отдельном назначении</h3>
+        <h3>{t("Что разрешено менять в отдельном назначении")}</h3>
         <div className={s.formGrid}>
           {Object.entries(overrideNames).map(([key, title]) => (
             <label key={key} className={s.check}>
@@ -351,26 +360,27 @@ function SettingsForm({
                   })
                 }
               />
-              {title}
+              {t(String(title))}
             </label>
           ))}
         </div>
       </section>
       <section className={s.card}>
-        <h2>Учебный контекст для AI</h2>
+        <h2>{t("Учебный контекст для AI")}</h2>
         <p className={s.muted}>
-          Контекст организации помогает учитывать аудиторию и терминологию при
-          работе с материалами. Он не заменяет критерии оценки.
+          {t(
+            "Контекст организации помогает учитывать аудиторию и терминологию при работе с материалами. Он не заменяет критерии оценки.",
+          )}
         </p>
         <div className={s.stack}>
           {[
-            ["audience", "Кого обучаем"],
-            ["terminology", "Терминология и стиль"],
-            ["goals", "Учебные цели"],
-            ["constraints", "Требования к содержанию"],
+            ["audience", t("Кого обучаем")],
+            ["terminology", t("Терминология и стиль")],
+            ["goals", t("Учебные цели")],
+            ["constraints", t("Требования к содержанию")],
           ].map(([key, label]) => (
             <label key={key} className={s.field}>
-              {label}
+              {t(String(label))}
               <textarea
                 disabled={!canManage}
                 maxLength={2000}
@@ -389,12 +399,13 @@ function SettingsForm({
       <ActionStatus action={action} />
       {canManage ? (
         <button className={s.primary} disabled={action.busy || conflict}>
-          Сохранить настройки
+          {t("Сохранить настройки")}
         </button>
       ) : (
         <p className={s.notice}>
-          Вы видите действующие правила. Изменить их может администратор
-          организации.
+          {t(
+            "Вы видите действующие правила. Изменить их может администратор организации.",
+          )}
         </p>
       )}
     </form>
@@ -408,6 +419,8 @@ type Transfer = {
   expires_at: string;
 };
 function Ownership({ isOwner }: { isOwner: boolean }) {
+  const { t } = useLocale();
+
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
@@ -419,10 +432,11 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
   const action = useTeamAction();
   return (
     <section className={s.card} style={{ marginTop: 28 }}>
-      <h2>Владение организацией</h2>
+      <h2>{t("Владение организацией")}</h2>
       <p className={s.muted}>
-        Передача завершается после подтверждения выбранным участником из его
-        аккаунта. После принятия оба участника входят заново.
+        {t(
+          "Передача завершается после подтверждения выбранным участником из его аккаунта. После принятия оба участника входят заново.",
+        )}
       </p>
       {isOwner && (
         <form
@@ -431,7 +445,9 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
             e.preventDefault();
             if (
               confirm(
-                "Предложить передачу владения выбранному участнику? До его принятия вы остаётесь владельцем.",
+                t(
+                  "Предложить передачу владения выбранному участнику? До его принятия вы остаётесь владельцем.",
+                ),
               )
             )
               void action.run(async () => {
@@ -439,17 +455,17 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
                   user_id: Number(target),
                 });
                 await transfers.reload();
-              }, "Предложение создано. Получатель подтвердит его в настройках своего аккаунта.");
+              }, t("Предложение создано. Получатель подтвердит его в настройках своего аккаунта."));
           }}
         >
           <label className={s.field}>
-            Новый владелец
+            {t("Новый владелец")}
             <select
               required
               value={target}
               onChange={(e) => setTarget(e.target.value)}
             >
-              <option value="">Выберите участника</option>
+              <option value="">{t("Выберите участника")}</option>
               {team.data?.members
                 .filter((m) => m.id !== user?.id && m.is_active)
                 .map((m) => (
@@ -460,7 +476,7 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
             </select>
           </label>
           <button className={s.secondary} disabled={action.busy || !target}>
-            Предложить передачу
+            {t("Предложить передачу")}
           </button>
         </form>
       )}
@@ -473,28 +489,37 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
           onRetry={() => void transfers.reload()}
         />
       )}{" "}
-      {transfers.data?.items.map((t) => (
-        <section className={s.notice} key={t.id}>
+      {transfers.data?.items.map((transfer) => (
+        <section className={s.notice} key={transfer.id}>
           <p>
-            {t.to_user_id === user?.id
-              ? "Вам предложено принять владение организацией."
-              : `Ожидается подтверждение участника ${team.data?.members.find((m) => m.id === t.to_user_id)?.full_name || t.to_user_id}.`}
+            {transfer.to_user_id === user?.id
+              ? t("Вам предложено принять владение организацией.")
+              : t("Ожидается подтверждение участника {v0}.", {
+                  v0:
+                    team.data?.members.find((m) => m.id === transfer.to_user_id)
+                      ?.full_name || transfer.to_user_id,
+                })}
           </p>
-          <p className={s.caption}>Действует до {dateLabel(t.expires_at)}</p>
+          <p className={s.caption}>
+            {t("Действует до") + " "}
+            {dateLabel(transfer.expires_at)}
+          </p>
           <div className={s.row}>
-            {t.to_user_id === user?.id && (
+            {transfer.to_user_id === user?.id && (
               <button
                 className={s.primary}
                 disabled={action.busy}
                 onClick={() => {
                   if (
                     confirm(
-                      "Принять права владельца? После этого нужно снова войти в свой аккаунт.",
+                      t(
+                        "Принять права владельца? После этого нужно снова войти в свой аккаунт.",
+                      ),
                     )
                   )
                     void action.run(async () => {
                       await api.post(
-                        `/team/ownership-transfers/${t.id}/accept`,
+                        `/team/ownership-transfers/${transfer.id}/accept`,
                       );
                       logout();
                       navigate("/auth?returnTo=%2Fteam-settings", {
@@ -503,7 +528,7 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
                     });
                 }}
               >
-                Принять владение
+                {t("Принять владение")}
               </button>
             )}
             <button
@@ -511,28 +536,30 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
               disabled={action.busy}
               onClick={() =>
                 void action.run(async () => {
-                  await api.delete(`/team/ownership-transfers/${t.id}`);
+                  await api.delete(`/team/ownership-transfers/${transfer.id}`);
                   await transfers.reload();
-                }, "Передача отменена")
+                }, t("Передача отменена"))
               }
             >
-              Отменить предложение
+              {t("Отменить предложение")}
             </button>
           </div>
         </section>
       ))}
       {transfers.data && !transfers.data.items.length && (
-        <p className={s.muted}>Активных предложений передачи нет.</p>
+        <p className={s.muted}>{t("Активных предложений передачи нет.")}</p>
       )}
       <ActionStatus action={action} />
       <Link className={s.secondary} to="/team">
-        Участники и приглашения
+        {t("Участники и приглашения")}
       </Link>
     </section>
   );
 }
 
 function Audit() {
+  const { t } = useLocale();
+
   const [offset, setOffset] = useState(0);
   const data = useLearningData<{
     total: number;
@@ -548,12 +575,12 @@ function Audit() {
   }>(`/team/audit?limit=30&offset=${offset}`);
   return (
     <section className={s.card} style={{ marginTop: 28 }}>
-      <h2>Журнал действий</h2>
+      <h2>{t("Журнал действий")}</h2>
       {!!data.error && (
         <RequestError error={data.error} onRetry={() => void data.reload()} />
       )}{" "}
       {data.loading && !data.data && (
-        <LoadingState>Загружаем журнал…</LoadingState>
+        <LoadingState>{t("Загружаем журнал…")}</LoadingState>
       )}
       <div className={s.history}>
         {data.data?.items.map((e) => (
@@ -562,8 +589,8 @@ function Audit() {
               {dateLabel(e.created_at)} · {e.action}
             </summary>
             <p>
-              Инициатор: {e.actor_id ?? "Система"} · {e.target_type}{" "}
-              {e.target_id}
+              {t("Инициатор:") + " "}
+              {e.actor_id ?? t("Система")} · {e.target_type} {e.target_id}
             </p>
             <pre style={{ whiteSpace: "pre-wrap" }}>
               {JSON.stringify(e.details, null, 2)}
@@ -572,7 +599,7 @@ function Audit() {
         ))}
       </div>
       {data.data && !data.data.total && (
-        <p className={s.muted}>Событий организации пока нет.</p>
+        <p className={s.muted}>{t("Событий организации пока нет.")}</p>
       )}
       <div className={s.stickyActions}>
         <button
@@ -580,19 +607,23 @@ function Audit() {
           disabled={offset === 0 || data.loading}
           onClick={() => setOffset(Math.max(0, offset - 30))}
         >
-          Назад
+          {t("Назад")}
         </button>
         <span className={s.muted}>
           {data.data?.total
-            ? `${offset + 1}–${Math.min(offset + 30, data.data.total)} из ${data.data.total}`
-            : "0 событий"}
+            ? t("{v0}–{v1} из {v2}", {
+                v0: offset + 1,
+                v1: Math.min(offset + 30, data.data.total),
+                v2: data.data.total,
+              })
+            : t("0 событий")}
         </span>
         <button
           className={s.secondary}
           disabled={data.loading || offset + 30 >= (data.data?.total ?? 0)}
           onClick={() => setOffset(offset + 30)}
         >
-          Далее
+          {t("Далее")}
         </button>
       </div>
     </section>

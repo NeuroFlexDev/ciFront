@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -20,6 +21,8 @@ import {
 import s from "../Learning/learning.module.css";
 
 export default function ProgramsPage() {
+  const { t } = useLocale();
+
   const programs = useLearningData<{ items: Program[] }>("/team/programs");
   const catalogue = useLearningData<{ items: CatalogueItem[] }>(
     "/team/catalogue",
@@ -28,8 +31,10 @@ export default function ProgramsPage() {
   const [selected, setSelected] = useState<number | null>(null);
   return (
     <Shell
-      title="Программы обучения"
-      description="Последовательности курсов с фиксированными версиями, сроками и повторными циклами."
+      title={t("Программы обучения")}
+      description={t(
+        "Последовательности курсов с фиксированными версиями, сроками и повторными циклами.",
+      )}
     >
       <div className={s.page}>
         <TeamTabs />
@@ -43,7 +48,7 @@ export default function ProgramsPage() {
           ) : null,
         )}
         {programs.loading && !programs.data ? (
-          <LoadingState>Загружаем программы…</LoadingState>
+          <LoadingState>{t("Загружаем программы…")}</LoadingState>
         ) : (
           programs.data &&
           catalogue.data && (
@@ -65,7 +70,7 @@ export default function ProgramsPage() {
               </div>
               <aside className={s.rail}>
                 <button className={s.primary} onClick={() => setSelected(null)}>
-                  + Новая программа
+                  {t("+ Новая программа")}
                 </button>
                 {programs.data.items.map((p) => (
                   <button
@@ -77,14 +82,18 @@ export default function ProgramsPage() {
                     <strong>{p.steps.length}</strong>
                     <span>
                       {p.title}
-                      <small>Редакция {p.revision}</small>
+                      <small>
+                        {t("Редакция") + " "}
+                        {p.revision}
+                      </small>
                     </span>
                   </button>
                 ))}
                 {!programs.data.items.length && (
                   <p className={s.muted}>
-                    Программы пока не созданы. Добавьте опубликованные курсы в
-                    нужном порядке.
+                    {t(
+                      "Программы пока не созданы. Добавьте опубликованные курсы в нужном порядке.",
+                    )}
                   </p>
                 )}
               </aside>
@@ -107,6 +116,8 @@ function ProgramForm({
   reload: () => Promise<void>;
   select: (id: number | null) => void;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clear] = useDurableState(
     `learning-program:${program?.id ?? "new"}`,
     {
@@ -150,7 +161,7 @@ function ProgramForm({
         if (e instanceof ApiError && e.status === 409) await reload();
         throw e;
       }
-    }, "Программа сохранена. Ранее назначенное обучение сохраняет свою редакцию.");
+    }, t("Программа сохранена. Ранее назначенное обучение сохраняет свою редакцию."));
     return ok;
   };
   return (
@@ -161,16 +172,19 @@ function ProgramForm({
         void save();
       }}
     >
-      <h2>{program ? "Редактирование программы" : "Новая программа"}</h2>
+      <h2>{program ? t("Редактирование программы") : t("Новая программа")}</h2>
       {conflict && (
         <div className={s.conflict}>
-          <h3>Программа изменена другим администратором</h3>
+          <h3>{t("Программа изменена другим администратором")}</h3>
           <p>
-            На сервере: «{program.title}», редакция {program.revision},{" "}
-            {program.steps.length} курсов. Ваши изменения сохранены локально.
+            {t("На сервере: «")}
+            {program.title}
+            {t("», редакция") + " "}
+            {program.revision}, {program.steps.length}
+            {" " + t("курсов. Ваши изменения сохранены локально.")}
           </p>
           <details>
-            <summary>Сравнить содержание сервера</summary>
+            <summary>{t("Сравнить содержание сервера")}</summary>
             <pre>{JSON.stringify(program, null, 2)}</pre>
           </details>
           <div className={s.row}>
@@ -190,7 +204,7 @@ function ProgramForm({
                 })
               }
             >
-              Взять серверную редакцию
+              {t("Взять серверную редакцию")}
             </button>
             <button
               type="button"
@@ -199,14 +213,14 @@ function ProgramForm({
                 setDraft({ ...draft, expected_revision: program.revision })
               }
             >
-              Сохранить мои изменения поверх после сравнения
+              {t("Сохранить мои изменения поверх после сравнения")}
             </button>
           </div>
         </div>
       )}
       <div className={s.stack}>
         <label className={s.field}>
-          Название
+          {t("Название")}
           <input
             required
             maxLength={200}
@@ -215,7 +229,7 @@ function ProgramForm({
           />
         </label>
         <label className={s.field}>
-          Описание
+          {t("Описание")}
           <textarea
             maxLength={10000}
             value={draft.description}
@@ -224,10 +238,11 @@ function ProgramForm({
             }
           />
         </label>
-        <h3>Этапы программы</h3>
+        <h3>{t("Этапы программы")}</h3>
         <p className={s.muted}>
-          Следующий курс открывается после завершения предыдущего. Срок этапа
-          считается от даты назначения всей программы.
+          {t(
+            "Следующий курс открывается после завершения предыдущего. Срок этапа считается от даты назначения всей программы.",
+          )}
         </p>
         {draft.steps.map((step, i) => {
           const c = catalogue.find(
@@ -238,21 +253,23 @@ function ProgramForm({
               <div className={s.spread}>
                 <strong>
                   {i + 1}.{" "}
-                  {c?.title ?? `Версия курса ${step.course_version_id}`}
+                  {c?.title ??
+                    t("Версия курса {v0}", { v0: step.course_version_id })}
                 </strong>
                 <span className={s.badge}>
-                  Редакция {c?.revision ?? "сохранена"}
+                  {t("Редакция") + " "}
+                  {c?.revision ?? t("сохранена")}
                 </span>
               </div>
               <div className={s.toolbar}>
                 <label className={s.field}>
-                  Дней на прохождение от назначения
+                  {t("Дней на прохождение от назначения")}
                   <input
                     type="number"
                     min={1}
                     max={3650}
                     value={step.due_days ?? ""}
-                    placeholder="Без срока"
+                    placeholder={t("Без срока")}
                     onChange={(e) =>
                       setDraft({
                         ...draft,
@@ -304,7 +321,7 @@ function ProgramForm({
                     })
                   }
                 >
-                  Убрать
+                  {t("Убрать")}
                 </button>
               </div>
             </section>
@@ -312,12 +329,14 @@ function ProgramForm({
         })}
         <div className={s.inlineForm}>
           <label className={s.field}>
-            Опубликованный курс
+            {t("Опубликованный курс")}
             <select value={add} onChange={(e) => setAdd(e.target.value)}>
-              <option value="">Выберите курс…</option>
+              <option value="">{t("Выберите курс…")}</option>
               {available.map((c) => (
                 <option key={c.course_version_id} value={c.course_version_id}>
-                  {c.title} · редакция {c.revision}
+                  {c.title}
+                  {" " + t("· редакция") + " "}
+                  {c.revision}
                 </option>
               ))}
             </select>
@@ -337,31 +356,32 @@ function ProgramForm({
               setAdd("");
             }}
           >
-            Добавить этап
+            {t("Добавить этап")}
           </button>
         </div>
         {!catalogue.length && (
           <p className={s.notice}>
-            Сначала опубликуйте курс в редакторе. Программа использует только
-            опубликованные версии.
+            {t(
+              "Сначала опубликуйте курс в редакторе. Программа использует только опубликованные версии.",
+            )}
           </p>
         )}
         <div className={s.formGrid}>
           <label className={s.field}>
-            Повторять через дней
+            {t("Повторять через дней")}
             <input
               type="number"
               min={1}
               max={3650}
               value={draft.recurrence_days}
-              placeholder="Без повторения"
+              placeholder={t("Без повторения")}
               onChange={(e) =>
                 setDraft({ ...draft, recurrence_days: e.target.value })
               }
             />
           </label>
           <label className={s.field}>
-            Показывать в ближайших сроках за дней
+            {t("Показывать в ближайших сроках за дней")}
             <input
               type="number"
               min={0}
@@ -375,8 +395,9 @@ function ProgramForm({
           </label>
         </div>
         <p className={s.caption}>
-          Наступившие повторные циклы доступны в списке назначений ниже. Новый
-          цикл создаёт отдельную историю результатов.
+          {t(
+            "Наступившие повторные циклы доступны в списке назначений ниже. Новый цикл создаёт отдельную историю результатов.",
+          )}
         </p>
         <div className={s.row}>
           <button
@@ -388,7 +409,7 @@ function ProgramForm({
               !draft.title.trim()
             }
           >
-            Сохранить программу
+            {t("Сохранить программу")}
           </button>
           {program && (
             <button
@@ -398,17 +419,19 @@ function ProgramForm({
               onClick={() => {
                 if (
                   confirm(
-                    "Архивировать программу? Назначения и результаты останутся доступны, новые циклы создаваться не будут.",
+                    t(
+                      "Архивировать программу? Назначения и результаты останутся доступны, новые циклы создаваться не будут.",
+                    ),
                   )
                 )
                   void action.run(async () => {
                     await api.delete(`/team/programs/${program.id}`);
                     await reload();
                     select(null);
-                  }, "Программа архивирована");
+                  }, t("Программа архивирована"));
               }}
             >
-              Архивировать
+              {t("Архивировать")}
             </button>
           )}
         </div>
@@ -425,6 +448,8 @@ function Enrollments({
   programId: number;
   members: TeamMember[];
 }) {
+  const { t } = useLocale();
+
   const list = useLearningData<{ items: ProgramEnrollment[] }>(
     `/team/programs/${programId}/enrollments`,
   );
@@ -435,9 +460,9 @@ function Enrollments({
   const action = useTeamAction();
   return (
     <section className={s.card}>
-      <h2>Участники программы</h2>
+      <h2>{t("Участники программы")}</h2>
       <details>
-        <summary>Назначить программу</summary>
+        <summary>{t("Назначить программу")}</summary>
         <div className={s.stack}>
           {members
             .filter((m) => m.is_active)
@@ -470,10 +495,10 @@ function Enrollments({
                   );
                   clear(draft);
                   await list.reload();
-                }, "Программа назначена выбранным участникам")
+                }, t("Программа назначена выбранным участникам"))
               }
             >
-              Назначить
+              {t("Назначить")}
             </button>
             <button
               className={s.secondary}
@@ -481,19 +506,23 @@ function Enrollments({
               onClick={() => {
                 if (
                   confirm(
-                    "Начать отдельный цикл для выбранных участников? Предыдущие назначения сохранятся.",
+                    t(
+                      "Начать отдельный цикл для выбранных участников? Предыдущие назначения сохранятся.",
+                    ),
                   )
                 )
                   setDraft({ ...draft, cycle_key: crypto.randomUUID() });
               }}
             >
-              Отдельный новый цикл
+              {t("Отдельный новый цикл")}
             </button>
           </div>
           <p className={s.caption}>
             {draft.cycle_key === "initial"
-              ? "Первое назначение. Повторное нажатие не создаёт дубль."
-              : "Выбран отдельный цикл. Повторная отправка этой формы не создаёт дубль."}
+              ? t("Первое назначение. Повторное нажатие не создаёт дубль.")
+              : t(
+                  "Выбран отдельный цикл. Повторная отправка этой формы не создаёт дубль.",
+                )}
           </p>
         </div>
       </details>
@@ -502,20 +531,23 @@ function Enrollments({
         <RequestError error={list.error} onRetry={() => void list.reload()} />
       )}{" "}
       {list.loading && !list.data && (
-        <LoadingState>Загружаем назначения…</LoadingState>
+        <LoadingState>{t("Загружаем назначения…")}</LoadingState>
       )}
       {list.data?.items.map((e) => (
         <article className={s.card} key={e.id} style={{ marginTop: 20 }}>
           <div className={s.spread}>
             <strong>
               {members.find((m) => m.id === e.user_id)?.full_name ||
-                `Участник ${e.user_id}`}
+                t("Участник {v0}", { v0: e.user_id })}
             </strong>
-            <span className={s.badge}>{stateLabel[e.status]}</span>
+            <span className={s.badge}>
+              {t(stateLabel[e.status] ?? String(e.status))}
+            </span>
           </div>
           <p className={s.caption}>
-            Редакция программы {e.program_revision} · назначена{" "}
-            {dateLabel(e.created_at)}
+            {t("Редакция программы") + " "}
+            {e.program_revision}
+            {" " + t("· назначена")} {dateLabel(e.created_at)}
           </p>
           {e.assignments.map((a, i) => (
             <div className={s.spread} key={a.id}>
@@ -523,14 +555,16 @@ function Enrollments({
                 {i + 1}. {a.title}
               </p>
               <span>
-                {stateLabel[a.status]} · {a.progress_percent}%
+                {t(stateLabel[a.status] ?? String(a.status))} ·{" "}
+                {a.progress_percent}%
               </span>
             </div>
           ))}
           {e.next_cycle_at && (
             <div className={s.spread}>
               <p className={s.caption}>
-                Следующий цикл: {dateLabel(e.next_cycle_at)}
+                {t("Следующий цикл:") + " "}
+                {dateLabel(e.next_cycle_at)}
               </p>
               <button
                 className={s.secondary}
@@ -544,17 +578,17 @@ function Enrollments({
                       `/team/program-enrollments/${e.id}/next-cycle`,
                     );
                     await list.reload();
-                  }, "Повторный цикл назначен; предыдущие результаты сохранены")
+                  }, t("Повторный цикл назначен; предыдущие результаты сохранены"))
                 }
               >
-                Начать повторный цикл
+                {t("Начать повторный цикл")}
               </button>
             </div>
           )}
         </article>
       ))}
       {list.data && !list.data.items.length && (
-        <p className={s.muted}>Программа пока никому не назначена.</p>
+        <p className={s.muted}>{t("Программа пока никому не назначена.")}</p>
       )}
     </section>
   );

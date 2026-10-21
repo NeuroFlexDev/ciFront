@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/shared/api";
@@ -12,6 +13,8 @@ import { dateLabel, stateLabel } from "./types";
 import s from "./learning.module.css";
 
 export default function LearningCourse() {
+  const { t } = useLocale();
+
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
   const resultsOnly = params.get("view") === "results";
@@ -68,15 +71,18 @@ export default function LearningCourse() {
   };
   return (
     <Shell
-      title={data?.title ?? "Обучение"}
+      title={data?.title ?? t("Обучение")}
       description={
         data
-          ? `Опубликованная версия ${data.revision} · срок: ${dateLabel(data.due_at)}`
-          : "Открываем назначенный вам курс"
+          ? t("Опубликованная версия {v0} · срок: {v1}", {
+              v0: data.revision,
+              v1: dateLabel(data.due_at),
+            })
+          : t("Открываем назначенный вам курс")
       }
       action={
         <Link className={s.secondary} to="/learning">
-          ← Моё обучение
+          {t("← Моё обучение")}
         </Link>
       }
     >
@@ -89,29 +95,32 @@ export default function LearningCourse() {
           />
         )}{" "}
         {!data && query.loading && (
-          <LoadingState>Загружаем курс и сохранённые ответы…</LoadingState>
+          <LoadingState>
+            {t("Загружаем курс и сохранённые ответы…")}
+          </LoadingState>
         )}
         {data && (
           <>
             <div className={s.stats}>
               <div className={s.stat}>
-                <span>Пройдено уроков</span>
+                <span>{t("Пройдено уроков")}</span>
                 <strong>
                   {data.completed_lessons.length} / {data.lesson_count}
                 </strong>
               </div>
               <div className={s.stat}>
-                <span>Баллы</span>
+                <span>{t("Баллы")}</span>
                 <strong>
                   {data.max_points
                     ? `${data.points} / ${data.max_points}`
-                    : "Без оценки"}
+                    : t("Без оценки")}
                 </strong>
               </div>
               <div className={s.stat}>
-                <span>Статус обучения</span>
+                <span>{t("Статус обучения")}</span>
                 <strong style={{ fontSize: 23 }}>
-                  {stateLabel[data.status] ?? data.status}
+                  {t(stateLabel[data.status] ?? String(data.status)) ??
+                    data.status}
                 </strong>
               </div>
             </div>
@@ -121,13 +130,13 @@ export default function LearningCourse() {
                 disabled={data.state !== "active"}
                 onClick={() => setParams({})}
               >
-                Материалы и задания
+                {t("Материалы и задания")}
               </button>
               <button
                 aria-selected={resultsOnly}
                 onClick={() => setParams({ view: "results" })}
               >
-                Мои результаты
+                {t("Мои результаты")}
               </button>
             </div>
             {resultsOnly ? (
@@ -145,8 +154,8 @@ export default function LearningCourse() {
                         <div className={s.spread}>
                           <span className={s.muted}>
                             {data.completed_lessons.includes(lesson.id)
-                              ? "Урок отмечен как пройденный"
-                              : "Отметьте урок после изучения материала"}
+                              ? t("Урок отмечен как пройденный")
+                              : t("Отметьте урок после изучения материала")}
                           </span>
                           <button
                             className={s.primary}
@@ -154,8 +163,8 @@ export default function LearningCourse() {
                             onClick={() => void markComplete()}
                           >
                             {busy
-                              ? "Сохраняем…"
-                              : "Урок пройден · продолжить →"}
+                              ? t("Сохраняем…")
+                              : t("Урок пройден · продолжить →")}
                           </button>
                         </div>
                       </article>
@@ -167,8 +176,8 @@ export default function LearningCourse() {
                             onClick={() => setAssistant((v) => !v)}
                           >
                             {assistant
-                              ? "Свернуть помощника"
-                              : "✧ Задать вопрос по уроку"}
+                              ? t("Свернуть помощника")
+                              : t("✧ Задать вопрос по уроку")}
                           </button>
                           {assistant && (
                             <LearningAssistant
@@ -193,8 +202,8 @@ export default function LearningCourse() {
                     />
                   ) : (
                     <section className={s.empty}>
-                      <h2>Выберите материал курса</h2>
-                      <p>Уроки и задания доступны в списке справа.</p>
+                      <h2>{t("Выберите материал курса")}</h2>
+                      <p>{t("Уроки и задания доступны в списке справа.")}</p>
                     </section>
                   )}
                   {!!error && (
@@ -204,11 +213,12 @@ export default function LearningCourse() {
                     />
                   )}
                 </div>
-                <nav className={s.rail} aria-label="Уроки и задания курса">
+                <nav className={s.rail} aria-label={t("Уроки и задания курса")}>
                   {data.content.modules.map((m, i) => (
                     <div className={s.stack} style={{ gap: 10 }} key={m.id}>
                       <div className={s.railSection}>
-                        Модуль {i + 1} · {m.title}
+                        {t("Модуль") + " "}
+                        {i + 1} · {m.title}
                       </div>
                       {m.lessons.map((l, n) => (
                         <button
@@ -221,7 +231,7 @@ export default function LearningCourse() {
                           <span>
                             {l.title}
                             {data.completed_lessons.includes(l.id) && (
-                              <small>Пройден</small>
+                              <small>{t("Пройден")}</small>
                             )}
                           </span>
                         </button>
@@ -235,7 +245,9 @@ export default function LearningCourse() {
                         >
                           <strong>✓</strong>
                           <span>
-                            {a.question_type === "open" ? "Практика" : "Тест"}{" "}
+                            {a.question_type === "open"
+                              ? t("Практика")
+                              : t("Тест")}{" "}
                             {n + 1}. {a.question}
                           </span>
                         </button>
@@ -250,24 +262,30 @@ export default function LearningCourse() {
                       onClick={() => choose(a.id)}
                     >
                       <strong>✓</strong>
-                      <span>Итоговое задание · {a.question}</span>
+                      <span>
+                        {t("Итоговое задание ·") + " "}
+                        {a.question}
+                      </span>
                     </button>
                   ))}
                   <div className={s.card}>
-                    <h3>Правила прохождения</h3>
+                    <h3>{t("Правила прохождения")}</h3>
                     <p className={s.muted}>
-                      До {data.rules.max_attempts} попыток на задание. Проходной
-                      балл — {data.rules.pass_percent}%.{" "}
+                      {t("До") + " "}
+                      {data.rules.max_attempts}
+                      {" " + t("попыток на задание. Проходной балл —") + " "}
+                      {data.rules.pass_percent}%.{" "}
                       {data.rules.require_all_lessons
-                        ? "Нужно изучить все уроки."
+                        ? t("Нужно изучить все уроки.")
                         : ""}{" "}
                       {data.rules.require_all_assessments
-                        ? "Нужно пройти все задания."
+                        ? t("Нужно пройти все задания.")
                         : ""}
                     </p>
                     <p className={s.caption}>
-                      Версия правил {data.rules_revision} закреплена за этим
-                      назначением.
+                      {t("Версия правил") + " "}
+                      {data.rules_revision}
+                      {" " + t("закреплена за этим назначением.")}
                     </p>
                   </div>
                 </nav>
@@ -287,27 +305,34 @@ function Results({
   data: Assignment;
   responses: LearnerResponse[];
 }) {
+  const { t } = useLocale();
+
   return (
     <div className={s.stack}>
       <section className={s.card}>
-        <h2>Результаты прохождения</h2>
+        <h2>{t("Результаты прохождения")}</h2>
         <p>
           {data.completed_at
-            ? `Курс завершён ${dateLabel(data.completed_at)}.`
-            : "Обучение ещё не завершено."}{" "}
+            ? t("Курс завершён {v0}.", { v0: dateLabel(data.completed_at) })
+            : t("Обучение ещё не завершено.")}{" "}
           {data.pending_reviews > 0
-            ? `Работ ожидает проверки: ${data.pending_reviews}.`
+            ? t("Работ ожидает проверки: {v0}.", { v0: data.pending_reviews })
             : ""}
         </p>
         <p className={s.muted}>
-          Каждая попытка и комментарий сохранены. Предыдущая оценка не исчезает
-          при пересдаче.
+          {t(
+            "Каждая попытка и комментарий сохранены. Предыдущая оценка не исчезает при пересдаче.",
+          )}
         </p>
       </section>
       {!responses.length && (
         <section className={s.empty}>
-          <h3>Ответов пока нет</h3>
-          <p>После сохранения или отправки задания результат появится здесь.</p>
+          <h3>{t("Ответов пока нет")}</h3>
+          <p>
+            {t(
+              "После сохранения или отправки задания результат появится здесь.",
+            )}
+          </p>
         </section>
       )}
       {responses.map((r) => (
@@ -315,27 +340,31 @@ function Results({
           <div className={s.spread}>
             <h3>
               {r.assessment_id.startsWith("task:")
-                ? "Практическое задание"
-                : "Тест"}{" "}
-              · попытка {r.attempt}
+                ? t("Практическое задание")
+                : t("Тест")}{" "}
+              {t("· попытка") + " "}
+              {r.attempt}
             </h3>
-            <span className={s.badge}>{stateLabel[r.status]}</span>
+            <span className={s.badge}>
+              {t(stateLabel[r.status] ?? String(r.status))}
+            </span>
           </div>
           <p>
             {r.points === null
-              ? "Баллы ещё не выставлены"
-              : `${r.points} из ${r.max_points} баллов`}
+              ? t("Баллы ещё не выставлены")
+              : t("{v0} из {v1} баллов", { v0: r.points, v1: r.max_points })}
           </p>
           {r.feedback && <p>{r.feedback}</p>}
           <details>
-            <summary>Ваш ответ</summary>
+            <summary>{t("Ваш ответ")}</summary>
             <pre style={{ whiteSpace: "pre-wrap" }}>
               {r.answer.text ?? r.answer.selected?.join("\n")}
             </pre>
           </details>
           {r.correct_answers && (
             <p className={s.notice}>
-              Правильные ответы: {r.correct_answers.join(" · ")}
+              {t("Правильные ответы:") + " "}
+              {r.correct_answers.join(" · ")}
             </p>
           )}
           {r.can_retry && data.state === "active" && (
@@ -343,7 +372,7 @@ function Results({
               className={s.primary}
               to={`/learning/${data.id}?item=${encodeURIComponent(r.assessment_id)}`}
             >
-              Открыть задание для пересдачи
+              {t("Открыть задание для пересдачи")}
             </Link>
           )}
         </article>

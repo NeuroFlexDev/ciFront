@@ -155,11 +155,12 @@ export const dateLabel = (value: string | null) =>
   value
     ? new Date(
         /[zZ]|[+-]\d\d:\d\d$/.test(value) ? value : value + "Z",
-      ).toLocaleString("ru-RU", {
+      ).toLocaleString(getLocale() === "en" ? "en-GB" : "ru-RU", {
         day: "numeric",
         month: "long",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "Без срока";
+    : translate(getLocale(), "Без срока");
+import { getLocale, translate } from "@/i18n/locale";

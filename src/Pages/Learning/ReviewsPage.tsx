@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "@/shared/api";
@@ -11,6 +12,8 @@ import { type Review, type AIProposal, dateLabel, stateLabel } from "./types";
 import s from "./learning.module.css";
 
 export default function ReviewsPage() {
+  const { t } = useLocale();
+
   const [status, setStatus] = useState("pending_review");
   const [params, setParams] = useSearchParams();
   const selected = params.get("response");
@@ -22,8 +25,10 @@ export default function ReviewsPage() {
   );
   return (
     <Shell
-      title="Проверка работ"
-      description="Работы закреплённых за вами участников. Каждая оценка и её пересмотр остаются в истории."
+      title={t("Проверка работ")}
+      description={t(
+        "Работы закреплённых за вами участников. Каждая оценка и её пересмотр остаются в истории.",
+      )}
     >
       <div className={s.page}>
         <div className={s.tablist}>
@@ -31,13 +36,13 @@ export default function ReviewsPage() {
             aria-selected={status === "pending_review"}
             onClick={() => setStatus("pending_review")}
           >
-            Ожидают проверки
+            {t("Ожидают проверки")}
           </button>
           <button
             aria-selected={status === "reviewed"}
             onClick={() => setStatus("reviewed")}
           >
-            Проверенные
+            {t("Проверенные")}
           </button>
         </div>
         {!!queue.error && (
@@ -47,7 +52,7 @@ export default function ReviewsPage() {
           />
         )}{" "}
         {queue.loading && !queue.data && (
-          <LoadingState>Загружаем очередь…</LoadingState>
+          <LoadingState>{t("Загружаем очередь…")}</LoadingState>
         )}
         <div className={s.layout}>
           <div className={s.stack}>
@@ -58,7 +63,7 @@ export default function ReviewsPage() {
               />
             )}{" "}
             {selected && !detail.data && detail.loading && (
-              <LoadingState>Загружаем ответ и историю…</LoadingState>
+              <LoadingState>{t("Загружаем ответ и историю…")}</LoadingState>
             )}
             {detail.data ? (
               <ReviewForm
@@ -72,18 +77,22 @@ export default function ReviewsPage() {
               <section className={s.empty}>
                 <h2>
                   {queue.data?.items.length
-                    ? "Выберите работу"
-                    : "В вашей области сейчас нет работ"}
+                    ? t("Выберите работу")
+                    : t("В вашей области сейчас нет работ")}
                 </h2>
                 <p>
-                  Здесь появятся ответы участников назначенных вам курсов, групп
-                  или подразделений.
+                  {t(
+                    "Здесь появятся ответы участников назначенных вам курсов, групп или подразделений.",
+                  )}
                 </p>
               </section>
             )}
           </div>
           <aside className={s.rail}>
-            <h2>Работы · {queue.data?.items.length ?? "…"}</h2>
+            <h2>
+              {t("Работы ·") + " "}
+              {queue.data?.items.length ?? "…"}
+            </h2>
             {queue.data?.items.map((r) => (
               <button
                 className={s.railItem}
@@ -93,10 +102,11 @@ export default function ReviewsPage() {
               >
                 <strong>{r.attempt}</strong>
                 <span>
-                  {r.full_name || `Участник ${r.user_id}`}
+                  {r.full_name || t("Участник {v0}", { v0: r.user_id })}
                   <small>{r.course_title}</small>
                   <span className={s.caption}>
-                    {stateLabel[r.status]} · {dateLabel(r.submitted_at)}
+                    {t(stateLabel[r.status] ?? String(r.status))} ·{" "}
+                    {dateLabel(r.submitted_at)}
                   </span>
                 </span>
               </button>
@@ -115,6 +125,8 @@ function ReviewForm({
   review: Review;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clear] = useDurableState(
     `learning-review:${review.id}`,
     {
@@ -170,7 +182,7 @@ function ReviewForm({
       };
       setDraft(clean);
       clear(clean);
-      setSaved("Оценка сохранена. Участник видит этот результат.");
+      setSaved(t("Оценка сохранена. Участник видит этот результат."));
       setConflict(false);
       await onSaved();
     } catch (e) {
@@ -187,15 +199,24 @@ function ReviewForm({
     <article className={s.article}>
       <div className={s.spread}>
         <span className={s.badge}>
-          {stateLabel[review.status]} · попытка {review.attempt}
+          {t(stateLabel[review.status] ?? String(review.status))}
+          {" " + t("· попытка") + " "}
+          {review.attempt}
         </span>
-        <span>До {review.max_points} баллов</span>
+        <span>
+          {t("До") + " "}
+          {review.max_points}
+          {" " + t("баллов")}
+        </span>
       </div>
       <h2>{review.assessment.question}</h2>
       {review.assessment.description && <p>{review.assessment.description}</p>}
-      <p className={s.muted}>Отправлено: {dateLabel(review.submitted_at)}</p>
+      <p className={s.muted}>
+        {t("Отправлено:") + " "}
+        {dateLabel(review.submitted_at)}
+      </p>
       <section className={s.card}>
-        <h3>Ответ участника</h3>
+        <h3>{t("Ответ участника")}</h3>
         <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit" }}>
           {review.answer.text ?? review.answer.selected?.join("\n")}
         </pre>
@@ -203,14 +224,17 @@ function ReviewForm({
       {draft.dirty && <DraftNotice />}
       {(conflict || draft.expected_revision !== review.revision) && (
         <section className={s.conflict}>
-          <h3>Оценка была изменена</h3>
+          <h3>{t("Оценка была изменена")}</h3>
           <p>
-            На сервере: {review.points ?? "не выставлена"} балл. Комментарий:{" "}
-            {review.feedback || "не добавлен"}
+            {t("На сервере:") + " "}
+            {review.points ?? t("не выставлена")}
+            {" " + t("балл. Комментарий:")}{" "}
+            {review.feedback || t("не добавлен")}
           </p>
           <p>
-            Ваш комментарий и баллы сохранены на устройстве. Подтвердите
-            пересмотр после сравнения.
+            {t(
+              "Ваш комментарий и баллы сохранены на устройстве. Подтвердите пересмотр после сравнения.",
+            )}
           </p>
           <button
             className={s.secondary}
@@ -223,7 +247,7 @@ function ReviewForm({
               setConflict(false);
             }}
           >
-            Оформить мою оценку как новый пересмотр
+            {t("Оформить мою оценку как новый пересмотр")}
           </button>
         </section>
       )}
@@ -250,7 +274,9 @@ function ReviewForm({
         {criteria.length ? (
           criteria.map((c) => (
             <label className={s.field} key={c.id}>
-              {c.title} · максимум {c.max_points}
+              {c.title}
+              {" " + t("· максимум") + " "}
+              {c.max_points}
               <span className={s.muted}>{c.description}</span>
               <input
                 type="number"
@@ -273,7 +299,7 @@ function ReviewForm({
           ))
         ) : (
           <label className={s.field}>
-            Балл
+            {t("Балл")}
             <input
               type="number"
               min={0}
@@ -288,7 +314,7 @@ function ReviewForm({
           </label>
         )}
         <label className={s.field}>
-          Комментарий участнику
+          {t("Комментарий участнику")}
           <textarea
             disabled={busy}
             value={draft.feedback}
@@ -300,7 +326,8 @@ function ReviewForm({
         </label>
         <div className={s.spread}>
           <strong>
-            Итого: {Number.isFinite(total) ? total : "—"} / {review.max_points}
+            {t("Итого:") + " "}
+            {Number.isFinite(total) ? total : "—"} / {review.max_points}
           </strong>
           <button
             className={s.primary}
@@ -315,10 +342,10 @@ function ReviewForm({
             onClick={() => void save()}
           >
             {busy
-              ? "Сохраняем…"
+              ? t("Сохраняем…")
               : review.status === "reviewed"
-                ? "Сохранить пересмотр оценки"
-                : "Выставить оценку"}
+                ? t("Сохранить пересмотр оценки")
+                : t("Выставить оценку")}
           </button>
         </div>
       </div>
@@ -330,18 +357,21 @@ function ReviewForm({
       )}
       {!!review.history?.length && (
         <details open>
-          <summary>История оценок</summary>
+          <summary>{t("История оценок")}</summary>
           <div className={s.history}>
             {review.history.map((h) => (
               <section key={h.id}>
-                <strong>{h.points} балл.</strong>
+                <strong>
+                  {h.points}
+                  {" " + t("балл.")}
+                </strong>
                 <p className={s.caption}>
                   {dateLabel(h.created_at)} ·{" "}
                   {h.actor_id
-                    ? `Проверяющий ${h.actor_id}`
-                    : "Автоматическая проверка"}
+                    ? t("Проверяющий {v0}", { v0: h.actor_id })
+                    : t("Автоматическая проверка")}
                   {h.old_points !== null
-                    ? ` · ранее ${h.old_points} балл.`
+                    ? t(" · ранее {v0} балл.", { v0: h.old_points })
                     : ""}
                 </p>
                 <p>{h.feedback}</p>
@@ -363,6 +393,8 @@ function Proposal({
   disabled: boolean;
   onApply: (p: AIProposal) => void;
 }) {
+  const { t } = useLocale();
+
   const [request, setRequest, clear] = useDurableState(
     `review-ai:${review.id}`,
     { request_id: null as string | null, expected_revision: review.revision },
@@ -398,19 +430,25 @@ function Proposal({
   };
   return (
     <section className={s.card} style={{ marginTop: 24 }}>
-      <h3>Предложение AI по критериям</h3>
+      <h3>{t("Предложение AI по критериям")}</h3>
       <p className={s.muted}>
-        Предложение не выставляет оценку. Сравните его с ответом, при
-        необходимости измените баллы и отдельно подтвердите итоговую оценку.
+        {t(
+          "Предложение не выставляет оценку. Сравните его с ответом, при необходимости измените баллы и отдельно подтвердите итоговую оценку.",
+        )}
       </p>
       {proposal && (
         <>
           <p>
             {proposal.status === "pending"
-              ? "Предложение готовится"
+              ? t("Предложение готовится")
               : proposal.status === "failed"
-                ? "Предложение получить не удалось. Ручная проверка доступна."
-                : `${proposal.points} балл. · ${proposal.model ?? "AI"}`}
+                ? t(
+                    "Предложение получить не удалось. Ручная проверка доступна.",
+                  )
+                : t("{v0} балл. · {v1}", {
+                    v0: String(proposal.points),
+                    v1: proposal.model ?? "AI",
+                  })}
           </p>
           {proposal.status === "completed" && (
             <>
@@ -429,12 +467,13 @@ function Proposal({
                 }
                 onClick={() => onApply(proposal)}
               >
-                Перенести в форму ручной оценки
+                {t("Перенести в форму ручной оценки")}
               </button>
               {proposal.response_revision !== review.revision && (
                 <p className={s.caption}>
-                  Ответ или оценка изменились после этого предложения. Оно не
-                  может заменить текущую оценку.
+                  {t(
+                    "Ответ или оценка изменились после этого предложения. Оно не может заменить текущую оценку.",
+                  )}
                 </p>
               )}
             </>
@@ -449,10 +488,10 @@ function Proposal({
         onClick={() => void generate()}
       >
         {busy
-          ? "Запрашиваем…"
+          ? t("Запрашиваем…")
           : request.request_id
-            ? "Проверить запрос предложения"
-            : "Запросить предложение AI"}
+            ? t("Проверить запрос предложения")
+            : t("Запросить предложение AI")}
       </button>
     </section>
   );

@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "@/shared/api";
@@ -20,6 +21,8 @@ import {
 import s from "../Learning/learning.module.css";
 
 export default function GroupsPage() {
+  const { t } = useLocale();
+
   const team = useLearningData<Team>("/team");
   const groups = useLearningData<{ items: Group[] }>("/team/groups");
   const departments = useLearningData<{ items: Department[] }>(
@@ -39,8 +42,10 @@ export default function GroupsPage() {
   };
   return (
     <Shell
-      title="Команда и группы"
-      description="Состав команды, учебные группы, подразделения и права в конкретной области."
+      title={t("Команда и группы")}
+      description={t(
+        "Состав команды, учебные группы, подразделения и права в конкретной области.",
+      )}
     >
       <div className={s.page}>
         <TeamTabs />
@@ -54,16 +59,16 @@ export default function GroupsPage() {
           ) : null,
         )}
         {!team.data && team.loading ? (
-          <LoadingState>Загружаем команду…</LoadingState>
+          <LoadingState>{t("Загружаем команду…")}</LoadingState>
         ) : (
           team.data && (
             <>
               <div className={s.spread}>
                 <div className={s.tablist}>
                   {[
-                    ["groups", "Группы"],
-                    ["people", "Участники"],
-                    ["departments", "Подразделения"],
+                    ["groups", t("Группы")],
+                    ["people", t("Участники")],
+                    ["departments", t("Подразделения")],
                   ].map(([key, label]) => (
                     <button
                       key={key}
@@ -73,12 +78,12 @@ export default function GroupsPage() {
                         setSelected(null);
                       }}
                     >
-                      {label}
+                      {t(String(label))}
                     </button>
                   ))}
                 </div>
                 <Link className={s.secondary} to="/team">
-                  Пригласить участника
+                  {t("Пригласить участника")}
                 </Link>
               </div>
               {tab === "groups" && (
@@ -100,16 +105,18 @@ export default function GroupsPage() {
                       <GroupCreate reload={reload} onCreated={setSelected} />
                     ) : (
                       <section className={s.empty}>
-                        <h2>Выберите группу</h2>
+                        <h2>{t("Выберите группу")}</h2>
                         <p>
-                          Здесь показаны группы, к которым у вас есть доступ.
+                          {t(
+                            "Здесь показаны группы, к которым у вас есть доступ.",
+                          )}
                         </p>
                       </section>
                     )}
                   </div>
                   <aside className={s.rail}>
                     <label className={s.field}>
-                      Поиск группы
+                      {t("Поиск группы")}
                       <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
@@ -130,20 +137,21 @@ export default function GroupsPage() {
                           <span>
                             {g.name}
                             <small>
-                              {g.staff.length} назначений ответственных
+                              {g.staff.length}
+                              {" " + t("назначений ответственных")}
                             </small>
                           </span>
                         </button>
                       ))}
                     {!groups.data?.items.length && (
-                      <p className={s.muted}>Группы ещё не созданы.</p>
+                      <p className={s.muted}>{t("Группы ещё не созданы.")}</p>
                     )}
                     {team.data.can_manage && (
                       <button
                         className={s.secondary}
                         onClick={() => setSelected(null)}
                       >
-                        + Новая группа
+                        {t("+ Новая группа")}
                       </button>
                     )}
                   </aside>
@@ -152,11 +160,11 @@ export default function GroupsPage() {
               {tab === "people" && (
                 <>
                   <label className={s.field}>
-                    Поиск участника
+                    {t("Поиск участника")}
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Имя или почта"
+                      placeholder={t("Имя или почта")}
                     />
                   </label>
                   <div className={s.grid} style={{ marginTop: 24 }}>
@@ -175,10 +183,14 @@ export default function GroupsPage() {
                           <p className={s.muted}>{m.email}</p>
                           <p>
                             {people.data?.items.find((p) => p.user_id === m.id)
-                              ?.position || roles[m.organization_role]}
+                              ?.position ||
+                              t(
+                                roles[m.organization_role] ??
+                                  String(m.organization_role),
+                              )}
                           </p>
                           <span className={s.badge}>
-                            {m.is_active ? "Активен" : "Доступ отозван"}
+                            {m.is_active ? t("Активен") : t("Доступ отозван")}
                           </span>
                           <div className={s.row} style={{ marginTop: 18 }}>
                             <button
@@ -187,13 +199,13 @@ export default function GroupsPage() {
                                 setSelected(selected === m.id ? null : m.id)
                               }
                             >
-                              Карточка и права
+                              {t("Карточка и права")}
                             </button>
                             <Link
                               className={s.primary}
                               to={`/assignments?user=${m.id}`}
                             >
-                              Назначить
+                              {t("Назначить")}
                             </Link>
                           </div>
                         </article>
@@ -239,6 +251,8 @@ function GroupCreate({
   reload: () => Promise<void>;
   onCreated: (id: number) => void;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clear] = useDurableState("new-learning-group", {
     name: "",
     description: "",
@@ -254,13 +268,13 @@ function GroupCreate({
           clear(draft);
           await reload();
           onCreated(result.data.id);
-        }, "Группа создана");
+        }, t("Группа создана"));
       }}
     >
-      <h2>Новая группа</h2>
+      <h2>{t("Новая группа")}</h2>
       <div className={s.stack}>
         <label className={s.field}>
-          Название
+          {t("Название")}
           <input
             required
             maxLength={200}
@@ -269,7 +283,7 @@ function GroupCreate({
           />
         </label>
         <label className={s.field}>
-          Описание
+          {t("Описание")}
           <textarea
             maxLength={10000}
             value={draft.description}
@@ -282,7 +296,7 @@ function GroupCreate({
           className={s.primary}
           disabled={action.busy || !draft.name.trim()}
         >
-          Создать группу
+          {t("Создать группу")}
         </button>
         <ActionStatus action={action} />
       </div>
@@ -303,6 +317,8 @@ function GroupForm({
   reload: () => Promise<void>;
   onArchive: () => void;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clear] = useDurableState(
     `learning-group:${group.id}`,
     { name: group.name, description: group.description },
@@ -324,7 +340,7 @@ function GroupForm({
         }}
       >
         <label className={s.field}>
-          Название
+          {t("Название")}
           <input
             disabled={!canManage || action.busy}
             required
@@ -334,7 +350,7 @@ function GroupForm({
           />
         </label>
         <label className={s.field}>
-          Описание
+          {t("Описание")}
           <textarea
             disabled={!canManage || action.busy}
             maxLength={10000}
@@ -347,21 +363,24 @@ function GroupForm({
         {canManage && (
           <div className={s.row}>
             <button className={s.primary} disabled={action.busy}>
-              Сохранить
+              {t("Сохранить")}
             </button>
             <Link className={s.secondary} to="/assignments">
-              Назначить обучение
+              {t("Назначить обучение")}
             </Link>
           </div>
         )}
       </form>
       <hr className={s.divider} />
-      <h3>Состав · {group.user_ids.length}</h3>
+      <h3>
+        {t("Состав ·") + " "}
+        {group.user_ids.length}
+      </h3>
       {group.user_ids.map((uid) => {
         const m = members.find((v) => v.id === uid);
         return (
           <div className={s.spread} key={uid}>
-            <p>{m?.full_name || m?.email || `Участник ${uid}`}</p>
+            <p>{m?.full_name || m?.email || t("Участник {v0}", { v0: uid })}</p>
             {canManage && (
               <button
                 className={s.secondary}
@@ -369,7 +388,9 @@ function GroupForm({
                 onClick={() => {
                   if (
                     confirm(
-                      "Убрать участника из группы? Его ранее назначенные курсы и результаты сохранятся.",
+                      t(
+                        "Убрать участника из группы? Его ранее назначенные курсы и результаты сохранятся.",
+                      ),
                     )
                   )
                     void action.run(async () => {
@@ -377,10 +398,10 @@ function GroupForm({
                         `/team/groups/${group.id}/members/${uid}`,
                       );
                       await reload();
-                    }, "Участник убран из группы. Результаты сохранены.");
+                    }, t("Участник убран из группы. Результаты сохранены."));
                 }}
               >
-                Убрать
+                {t("Убрать")}
               </button>
             )}
           </div>
@@ -388,12 +409,12 @@ function GroupForm({
       })}
       {!group.user_ids.length && (
         <p className={s.muted}>
-          Добавьте участников, чтобы назначать обучение всей группе.
+          {t("Добавьте участников, чтобы назначать обучение всей группе.")}
         </p>
       )}
       {canManage && (
         <details>
-          <summary>Добавить участников</summary>
+          <summary>{t("Добавить участников")}</summary>
           <div className={s.stack}>
             {members
               .filter((m) => m.is_active && !group.user_ids.includes(m.id))
@@ -423,26 +444,26 @@ function GroupForm({
                   });
                   setAdd([]);
                   await reload();
-                }, "Участники добавлены. Действующие групповые назначения применены.")
+                }, t("Участники добавлены. Действующие групповые назначения применены."))
               }
             >
-              Добавить выбранных
+              {t("Добавить выбранных")}
             </button>
           </div>
         </details>
       )}
       {!!group.staff.length && (
         <section>
-          <h3>Ответственные</h3>
+          <h3>{t("Ответственные")}</h3>
           {group.staff.map((g) => (
             <p key={g.id}>
               {members.find((m) => m.id === g.user_id)?.full_name ||
-                `Участник ${g.user_id}`}{" "}
-              · {roles[g.role]}
+                t("Участник {v0}", { v0: g.user_id })}{" "}
+              · {t(roles[g.role] ?? String(g.role))}
             </p>
           ))}
           <p className={s.caption}>
-            Изменить область ответственности можно в карточке участника.
+            {t("Изменить область ответственности можно в карточке участника.")}
           </p>
         </section>
       )}
@@ -455,17 +476,19 @@ function GroupForm({
           onClick={() => {
             if (
               confirm(
-                "Архивировать группу? Новые участники перестанут получать групповые назначения. История обучения сохраняется.",
+                t(
+                  "Архивировать группу? Новые участники перестанут получать групповые назначения. История обучения сохраняется.",
+                ),
               )
             )
               void action.run(async () => {
                 await api.delete(`/team/groups/${group.id}`);
                 await reload();
                 onArchive();
-              }, "Группа архивирована");
+              }, t("Группа архивирована"));
           }}
         >
-          Архивировать группу
+          {t("Архивировать группу")}
         </button>
       )}
     </section>
@@ -481,6 +504,8 @@ function Departments({
   canManage: boolean;
   reload: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clear] = useDurableState("learning-department", {
     id: null as number | null,
     name: "",
@@ -491,14 +516,15 @@ function Departments({
   return (
     <div className={s.grid}>
       <section className={s.card}>
-        <h2>Структура организации</h2>
+        <h2>{t("Структура организации")}</h2>
         {data.map((d) => (
           <div className={s.spread} key={d.id}>
             <div>
               <strong>{d.name}</strong>
               {d.parent_id && (
                 <p className={s.muted}>
-                  В составе: {data.find((v) => v.id === d.parent_id)?.name}
+                  {t("В составе:") + " "}
+                  {data.find((v) => v.id === d.parent_id)?.name}
                 </p>
               )}
             </div>
@@ -514,7 +540,7 @@ function Departments({
                     });
                   }}
                 >
-                  Изменить
+                  {t("Изменить")}
                 </button>
                 <button
                   className={s.danger}
@@ -522,7 +548,10 @@ function Departments({
                   onClick={() => {
                     if (
                       confirm(
-                        `Архивировать «${d.name}»? Сначала перенесите участников и дочерние подразделения.`,
+                        t(
+                          "Архивировать «{v0}»? Сначала перенесите участников и дочерние подразделения.",
+                          { v0: d.name },
+                        ),
                       )
                     )
                       void action.run(async () => {
@@ -531,14 +560,14 @@ function Departments({
                       });
                   }}
                 >
-                  Архивировать
+                  {t("Архивировать")}
                 </button>
               </div>
             )}
           </div>
         ))}
         {!data.length && (
-          <p className={s.muted}>Подразделения ещё не добавлены.</p>
+          <p className={s.muted}>{t("Подразделения ещё не добавлены.")}</p>
         )}
       </section>
       {canManage && (
@@ -559,10 +588,10 @@ function Departments({
             });
           }}
         >
-          <h2>{id ? "Изменить подразделение" : "Новое подразделение"}</h2>
+          <h2>{id ? t("Изменить подразделение") : t("Новое подразделение")}</h2>
           <div className={s.stack}>
             <label className={s.field}>
-              Название
+              {t("Название")}
               <input
                 required
                 maxLength={200}
@@ -571,14 +600,14 @@ function Departments({
               />
             </label>
             <label className={s.field}>
-              Входит в подразделение
+              {t("Входит в подразделение")}
               <select
                 value={draft.parent_id}
                 onChange={(e) =>
                   setDraft({ ...draft, parent_id: e.target.value })
                 }
               >
-                <option value="">Корневой уровень</option>
+                <option value="">{t("Корневой уровень")}</option>
                 {data
                   .filter((d) => d.id !== id)
                   .map((d) => (
@@ -593,7 +622,7 @@ function Departments({
                 className={s.primary}
                 disabled={action.busy || !draft.name.trim()}
               >
-                Сохранить
+                {t("Сохранить")}
               </button>
               {id && (
                 <button
@@ -603,7 +632,7 @@ function Departments({
                     setDraft({ id: null, name: "", parent_id: "" });
                   }}
                 >
-                  Новое подразделение
+                  {t("Новое подразделение")}
                 </button>
               )}
             </div>
@@ -630,6 +659,8 @@ function PersonForm({
   canManage: boolean;
   reload: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const { user } = useAuth();
   const [draft, setDraft, clear] = useDurableState(
     `learning-person:${member.id}`,
@@ -663,7 +694,7 @@ function PersonForm({
       >
         <div className={s.formGrid}>
           <label className={s.field}>
-            Должность
+            {t("Должность")}
             <input
               disabled={!canManage}
               maxLength={200}
@@ -672,7 +703,7 @@ function PersonForm({
             />
           </label>
           <label className={s.field}>
-            Подразделение
+            {t("Подразделение")}
             <select
               disabled={!canManage}
               value={draft.department_id}
@@ -680,7 +711,7 @@ function PersonForm({
                 setDraft({ ...draft, department_id: e.target.value })
               }
             >
-              <option value="">Не указано</option>
+              <option value="">{t("Не указано")}</option>
               {departments.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -689,7 +720,7 @@ function PersonForm({
             </select>
           </label>
           <label className={s.field}>
-            Идентификатор в организации
+            {t("Идентификатор в организации")}
             <input
               disabled={!canManage}
               maxLength={200}
@@ -702,7 +733,7 @@ function PersonForm({
         </div>
         {canManage && (
           <button className={s.primary} disabled={action.busy}>
-            Сохранить карточку
+            {t("Сохранить карточку")}
           </button>
         )}
         <ActionStatus action={action} />
@@ -730,6 +761,8 @@ function Roles({
   departments: Department[];
   own: boolean;
 }) {
+  const { t } = useLocale();
+
   const grants = useLearningData<{ role: string; items: RoleGrant[] }>(
     `/team/members/${member.id}/roles`,
   );
@@ -751,7 +784,7 @@ function Roles({
         : (courses.data?.items ?? []);
   const scopeLabel = (g: RoleGrant) =>
     g.scope_type === "organization"
-      ? "Вся организация"
+      ? t("Вся организация")
       : g.scope_type === "group"
         ? groups.find((v) => v.id === g.scope_id)?.name
         : g.scope_type === "department"
@@ -759,11 +792,16 @@ function Roles({
           : courses.data?.items.find((v) => v.id === g.scope_id)?.title;
   return (
     <div className={s.stack} style={{ marginTop: 28 }}>
-      <h3>Права доступа</h3>
+      <h3>{t("Права доступа")}</h3>
       <p className={s.muted}>
-        Основная роль: {roles[grants.data?.role ?? member.organization_role]}.
-        Автор работает с содержанием; проверяющий оценивает работы; руководитель
-        видит результаты в своей области.
+        {t("Основная роль:") + " "}
+        {t(
+          roles[grants.data?.role ?? member.organization_role] ??
+            String(grants.data?.role ?? member.organization_role),
+        )}
+        {t(
+          ". Автор работает с содержанием; проверяющий оценивает работы; руководитель видит результаты в своей области.",
+        )}
       </p>
       {!!grants.error && (
         <RequestError
@@ -780,7 +818,8 @@ function Roles({
       {grants.data?.items.map((g) => (
         <div className={s.spread} key={g.id}>
           <span>
-            {roles[g.role]} · {scopeLabel(g) || `${g.scope_type} ${g.scope_id}`}
+            {t(roles[g.role] ?? String(g.role))} ·{" "}
+            {scopeLabel(g) || `${g.scope_type} ${g.scope_id}`}
           </span>
           <button
             className={s.danger}
@@ -792,22 +831,24 @@ function Roles({
             onClick={() => {
               if (
                 confirm(
-                  "Отозвать это назначение роли? Сеансы участника будут завершены.",
+                  t(
+                    "Отозвать это назначение роли? Сеансы участника будут завершены.",
+                  ),
                 )
               )
                 void action.run(async () => {
                   await api.delete(`/team/members/${member.id}/roles/${g.id}`);
                   await grants.reload();
-                }, "Роль отозвана");
+                }, t("Роль отозвана"));
             }}
           >
-            Отозвать
+            {t("Отозвать")}
           </button>
         </div>
       ))}
       {own ? (
         <p className={s.muted}>
-          Собственные права изменяет другой администратор или владелец.
+          {t("Собственные права изменяет другой администратор или владелец.")}
         </p>
       ) : (
         <form
@@ -821,12 +862,12 @@ function Roles({
                 scope_id: scope === "organization" ? 0 : Number(scopeId),
               });
               await grants.reload();
-            }, "Роль назначена");
+            }, t("Роль назначена"));
           }}
         >
           <div className={s.formGrid}>
             <label className={s.field}>
-              Роль
+              {t("Роль")}
               <select
                 value={role}
                 onChange={(e) => {
@@ -848,13 +889,13 @@ function Roles({
                   ...(permission.data?.can_manage_admins ? ["admin"] : []),
                 ].map((r) => (
                   <option key={r} value={r}>
-                    {roles[r]}
+                    {t(roles[r] ?? String(r))}
                   </option>
                 ))}
               </select>
             </label>
             <label className={s.field}>
-              Область
+              {t("Область")}
               <select
                 value={scope}
                 onChange={(e) => {
@@ -871,10 +912,10 @@ function Roles({
                   <option key={v} value={v}>
                     {
                       {
-                        organization: "Организация",
-                        course: "Курс",
-                        group: "Группа",
-                        department: "Подразделение",
+                        organization: t("Организация"),
+                        course: t("Курс"),
+                        group: t("Группа"),
+                        department: t("Подразделение"),
                       }[v]
                     }
                   </option>
@@ -883,13 +924,13 @@ function Roles({
             </label>
             {scope !== "organization" && (
               <label className={s.field}>
-                Выберите область
+                {t("Выберите область")}
                 <select
                   required
                   value={scopeId}
                   onChange={(e) => setScopeId(e.target.value)}
                 >
-                  <option value="">Выберите…</option>
+                  <option value="">{t("Выберите…")}</option>
                   {choices.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.title}
@@ -907,7 +948,7 @@ function Roles({
               (scope !== "organization" && !scopeId)
             }
           >
-            Назначить роль
+            {t("Назначить роль")}
           </button>
         </form>
       )}

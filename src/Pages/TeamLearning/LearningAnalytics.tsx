@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiFetch } from "@/shared/api";
@@ -22,6 +23,8 @@ type Report = {
   };
 };
 export default function LearningAnalytics() {
+  const { t } = useLocale();
+
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState("");
   const course = params.get("course_id") ?? "";
@@ -64,7 +67,7 @@ export default function LearningAnalytics() {
       const response = await apiFetch("/team/results/export?" + filters);
       if (!response.ok)
         throw new ApiError(
-          "Не удалось подготовить выгрузку. Повторите запрос.",
+          t("Не удалось подготовить выгрузку. Повторите запрос."),
           response.status,
           "http",
         );
@@ -75,11 +78,13 @@ export default function LearningAnalytics() {
       link.download = "learning-results.csv";
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, "Выгрузка подготовлена с выбранными фильтрами");
+    }, t("Выгрузка подготовлена с выбранными фильтрами"));
   return (
     <Shell
-      title="Результаты обучения"
-      description="Подтверждённые назначения и оценки в вашей области ответственности."
+      title={t("Результаты обучения")}
+      description={t(
+        "Подтверждённые назначения и оценки в вашей области ответственности.",
+      )}
     >
       <div className={s.page}>
         <TeamTabs />
@@ -93,24 +98,24 @@ export default function LearningAnalytics() {
           ) : null,
         )}
         {report.loading && !report.data && (
-          <LoadingState>Собираем результаты…</LoadingState>
+          <LoadingState>{t("Собираем результаты…")}</LoadingState>
         )}
         {report.data && (
           <>
             <section className={s.stats}>
               <div className={s.stat}>
-                <span>Назначено / завершено</span>
+                <span>{t("Назначено / завершено")}</span>
                 <strong>
                   {report.data.metrics.assigned} /{" "}
                   {report.data.metrics.completed}
                 </strong>
               </div>
               <div className={s.stat}>
-                <span>Ожидают проверки</span>
+                <span>{t("Ожидают проверки")}</span>
                 <strong>{report.data.metrics.pending_reviews}</strong>
               </div>
               <div className={s.stat}>
-                <span>Средний результат</span>
+                <span>{t("Средний результат")}</span>
                 <strong>
                   {report.data.metrics.average_score_percent !== null
                     ? report.data.metrics.average_score_percent + "%"
@@ -120,23 +125,23 @@ export default function LearningAnalytics() {
             </section>
             <div className={s.card}>
               <div className={s.spread}>
-                <h2>Назначения и результаты</h2>
+                <h2>{t("Назначения и результаты")}</h2>
                 <button
                   className={s.primary}
                   disabled={action.busy || !report.data.items.length}
                   onClick={exportResults}
                 >
-                  Скачать CSV ↓
+                  {t("Скачать CSV ↓")}
                 </button>
               </div>
               <div className={s.formGrid}>
                 <label className={s.field}>
-                  Курс
+                  {t("Курс")}
                   <select
                     value={course}
                     onChange={(e) => choose("course_id", e.target.value)}
                   >
-                    <option value="">Все доступные курсы</option>
+                    <option value="">{t("Все доступные курсы")}</option>
                     {courses.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.title}
@@ -145,12 +150,12 @@ export default function LearningAnalytics() {
                   </select>
                 </label>
                 <label className={s.field}>
-                  Группа
+                  {t("Группа")}
                   <select
                     value={group}
                     onChange={(e) => choose("group_id", e.target.value)}
                   >
-                    <option value="">Все группы</option>
+                    <option value="">{t("Все группы")}</option>
                     {groups.data?.items.map((g) => (
                       <option key={g.id} value={g.id}>
                         {g.name}
@@ -159,12 +164,12 @@ export default function LearningAnalytics() {
                   </select>
                 </label>
                 <label className={s.field}>
-                  Участник
+                  {t("Участник")}
                   <select
                     value={user}
                     onChange={(e) => choose("user_id", e.target.value)}
                   >
-                    <option value="">Все участники</option>
+                    <option value="">{t("Все участники")}</option>
                     {team.data?.members.map((m) => (
                       <option key={m.id} value={m.id}>
                         {m.full_name || m.email}
@@ -173,29 +178,32 @@ export default function LearningAnalytics() {
                   </select>
                 </label>
                 <label className={s.field}>
-                  Поиск
+                  {t("Поиск")}
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Имя, почта или курс"
+                    placeholder={t("Имя, почта или курс")}
                   />
                 </label>
               </div>
               <p className={s.caption}>
-                В процессе: {report.data.metrics.in_progress}. Просрочено:{" "}
-                {report.data.metrics.overdue}. Отозванные назначения остаются в
-                истории и не учитываются в активной сводке.
+                {t("В процессе:") + " "}
+                {report.data.metrics.in_progress}
+                {t(". Просрочено:")} {report.data.metrics.overdue}
+                {t(
+                  ". Отозванные назначения остаются в истории и не учитываются в активной сводке.",
+                )}
               </p>
               <ActionStatus action={action} />
               <div className={s.tableWrap}>
                 <table className={s.table}>
                   <thead>
                     <tr>
-                      <th>Участник</th>
-                      <th>Курс / версия</th>
-                      <th>Прогресс</th>
-                      <th>Результат</th>
-                      <th>Статус и срок</th>
+                      <th>{t("Участник")}</th>
+                      <th>{t("Курс / версия")}</th>
+                      <th>{t("Прогресс")}</th>
+                      <th>{t("Результат")}</th>
+                      <th>{t("Статус и срок")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -208,7 +216,10 @@ export default function LearningAnalytics() {
                         <td>
                           {a.title}
                           <p className={s.caption}>
-                            Версия {a.revision} · назначение {a.id}
+                            {t("Версия") + " "}
+                            {a.revision}
+                            {" " + t("· назначение") + " "}
+                            {a.id}
                           </p>
                         </td>
                         <td>
@@ -217,30 +228,35 @@ export default function LearningAnalytics() {
                             className={s.progress}
                             max={100}
                             value={a.progress_percent}
-                            aria-label={`Прогресс ${a.full_name}`}
+                            aria-label={t("Прогресс {v0}", {
+                              v0: a.full_name ?? a.email ?? String(a.user_id),
+                            })}
                           />
                         </td>
                         <td>
                           {a.max_points
                             ? `${a.points} / ${a.max_points}`
-                            : "Без балльной оценки"}
+                            : t("Без балльной оценки")}
                           <p className={s.caption}>
                             {a.score_percent !== null
                               ? `${a.score_percent}%`
                               : ""}
                             {a.pending_reviews
-                              ? ` · На проверке: ${a.pending_reviews}`
+                              ? t(" · На проверке: {v0}", {
+                                  v0: a.pending_reviews,
+                                })
                               : ""}
                           </p>
                         </td>
                         <td>
                           <span className={s.badge}>
-                            {stateLabel[a.status] ?? a.status}
+                            {t(stateLabel[a.status] ?? String(a.status)) ??
+                              a.status}
                           </span>
                           <p className={s.caption}>
                             {a.completed_at
-                              ? "Завершено: " + dateLabel(a.completed_at)
-                              : "Срок: " + dateLabel(a.due_at)}
+                              ? t("Завершено: ") + dateLabel(a.completed_at)
+                              : t("Срок: ") + dateLabel(a.due_at)}
                           </p>
                         </td>
                       </tr>
@@ -252,34 +268,36 @@ export default function LearningAnalytics() {
                 <div className={s.empty}>
                   <h3>
                     {report.data.items.length
-                      ? "По вашему поиску ничего не найдено"
-                      : "Назначений с такими условиями нет"}
+                      ? t("По вашему поиску ничего не найдено")
+                      : t("Назначений с такими условиями нет")}
                   </h3>
                   <p>
-                    Измените фильтры или назначьте участникам опубликованный
-                    курс.
+                    {t(
+                      "Измените фильтры или назначьте участникам опубликованный курс.",
+                    )}
                   </p>
                   <Link className={s.secondary} to="/assignments">
-                    К назначениям
+                    {t("К назначениям")}
                   </Link>
                 </div>
               )}
             </div>
             <section className={s.card} style={{ marginTop: 28 }}>
-              <h2>Ближайшие сроки и просроченные назначения</h2>
+              <h2>{t("Ближайшие сроки и просроченные назначения")}</h2>
               <p className={s.muted}>
-                Для программ учитывается интервал предупреждения из назначенной
-                редакции; для отдельных курсов — три дня.
+                {t(
+                  "Для программ учитывается интервал предупреждения из назначенной редакции; для отдельных курсов — три дня.",
+                )}
               </p>
               {reminders.data?.items.length ? (
                 <div className={s.tableWrap}>
                   <table className={s.table}>
                     <thead>
                       <tr>
-                        <th>Участник</th>
-                        <th>Курс</th>
-                        <th>Срок</th>
-                        <th>Прогресс</th>
+                        <th>{t("Участник")}</th>
+                        <th>{t("Курс")}</th>
+                        <th>{t("Срок")}</th>
+                        <th>{t("Прогресс")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -287,7 +305,8 @@ export default function LearningAnalytics() {
                         <tr key={a.id}>
                           <td>
                             {team.data?.members.find((m) => m.id === a.user_id)
-                              ?.full_name || `Участник ${a.user_id}`}
+                              ?.full_name ||
+                              t("Участник {v0}", { v0: a.user_id })}
                           </td>
                           <td>{a.title}</td>
                           <td>{dateLabel(a.due_at)}</td>
@@ -299,7 +318,7 @@ export default function LearningAnalytics() {
                 </div>
               ) : (
                 <p className={s.muted}>
-                  Назначений с приближающимся сроком нет.
+                  {t("Назначений с приближающимся сроком нет.")}
                 </p>
               )}
             </section>

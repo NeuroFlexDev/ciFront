@@ -1,19 +1,22 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { RequestError } from "@/Components/RequestState";
 import s from "../Learning/learning.module.css";
 export function TeamTabs() {
+  const { t } = useLocale();
+
   return (
-    <nav className={s.tablist} aria-label="Управление обучением">
+    <nav className={s.tablist} aria-label={t("Управление обучением")}>
       {[
-        ["/groups", "Команда и группы"],
-        ["/assignments", "Назначения"],
-        ["/programs", "Программы"],
-        ["/learning-analytics", "Результаты"],
-        ["/team-settings", "Настройки"],
+        ["/groups", t("Команда и группы")],
+        ["/assignments", t("Назначения")],
+        ["/programs", t("Программы")],
+        ["/learning-analytics", t("Результаты")],
+        ["/team-settings", t("Настройки")],
       ].map(([to, label]) => (
         <NavLink key={to} to={to}>
-          {label}
+          {t(String(label))}
         </NavLink>
       ))}
     </nav>
@@ -22,12 +25,14 @@ export function TeamTabs() {
 // Kept beside the status component so callers share one action/error contract.
 // eslint-disable-next-line react-refresh/only-export-components
 export function useTeamAction() {
+  const { t } = useLocale();
+
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState("");
   const run = async (
     action: () => Promise<unknown>,
-    message = "Изменения сохранены",
+    message = t("Изменения сохранены"),
   ) => {
     setBusy(true);
     setError(null);

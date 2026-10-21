@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Shell } from "@/Pages/Workspace/shared";
@@ -12,6 +13,8 @@ import {
 import s from "./learning.module.css";
 
 export default function LearningHome() {
+  const { t } = useLocale();
+
   const [history, setHistory] = useState(false);
   const [page, setPage] = useState(0);
   const courses = useLearningData<{ items: Assignment[]; total: number }>(
@@ -22,8 +25,10 @@ export default function LearningHome() {
   );
   return (
     <Shell
-      title="Моё обучение"
-      description="Назначенные курсы, ваши ответы и результаты. Прогресс сохранён в аккаунте."
+      title={t("Моё обучение")}
+      description={t(
+        "Назначенные курсы, ваши ответы и результаты. Прогресс сохранён в аккаунте.",
+      )}
     >
       <div className={s.page}>
         <div className={s.spread}>
@@ -36,14 +41,14 @@ export default function LearningHome() {
                 setPage(0);
               }}
             />
-            Показывать историю назначений
+            {t("Показывать историю назначений")}
           </label>
           <button
             className={s.secondary}
             disabled={courses.loading}
             onClick={() => void courses.reload()}
           >
-            Обновить
+            {t("Обновить")}
           </button>
         </div>
         {!!courses.error && (
@@ -53,11 +58,11 @@ export default function LearningHome() {
           />
         )}
         {!courses.data && courses.loading && (
-          <LoadingState>Загружаем ваше обучение…</LoadingState>
+          <LoadingState>{t("Загружаем ваше обучение…")}</LoadingState>
         )}
         {programs.data?.items.length ? (
           <section className={s.stack} style={{ margin: "28px 0" }}>
-            <h2>Программы обучения</h2>
+            <h2>{t("Программы обучения")}</h2>
             {programs.data.items.map((p) => (
               <article key={p.id} className={s.card}>
                 <div className={s.spread}>
@@ -68,7 +73,9 @@ export default function LearningHome() {
                         p.assignments.filter((a) => a.status === "completed")
                           .length
                       }{" "}
-                      из {p.assignments.length} этапов · версия программы{" "}
+                      {t("из") + " "}
+                      {p.assignments.length}
+                      {" " + t("этапов · версия программы")}{" "}
                       {p.program_revision}
                     </p>
                   </div>
@@ -77,24 +84,26 @@ export default function LearningHome() {
                       className={s.primary}
                       to={`/learning/${p.next_assignment_id}`}
                     >
-                      Продолжить программу →
+                      {t("Продолжить программу →")}
                     </Link>
                   ) : (
                     <span className={s.badge}>
-                      {stateLabel[p.status] ?? p.status}
+                      {t(stateLabel[p.status] ?? String(p.status)) ?? p.status}
                     </span>
                   )}
                 </div>
                 <div className={s.row}>
                   {p.assignments.map((a, i) => (
                     <span key={a.id} className={s.badge}>
-                      {i + 1}. {a.title} · {stateLabel[a.status] ?? a.status}
+                      {i + 1}. {a.title} ·{" "}
+                      {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
                     </span>
                   ))}
                 </div>
                 {p.next_cycle_at && (
                   <p className={s.caption}>
-                    Следующее повторное обучение: {dateLabel(p.next_cycle_at)}
+                    {t("Следующее повторное обучение:") + " "}
+                    {dateLabel(p.next_cycle_at)}
                   </p>
                 )}
               </article>
@@ -111,15 +120,16 @@ export default function LearningHome() {
           <section className={s.empty}>
             <h2>
               {history
-                ? "В истории пока нет курсов"
-                : "Пока нет назначенных курсов"}
+                ? t("В истории пока нет курсов")
+                : t("Пока нет назначенных курсов")}
             </h2>
             <p>
-              Ответственный за обучение назначит вам курс или программу. После
-              назначения они появятся здесь.
+              {t(
+                "Ответственный за обучение назначит вам курс или программу. После назначения они появятся здесь.",
+              )}
             </p>
             <Link className={s.secondary} to="/employees">
-              Открыть команду
+              {t("Открыть команду")}
             </Link>
           </section>
         )}
@@ -127,31 +137,41 @@ export default function LearningHome() {
           {courses.data?.items.map((a) => (
             <article className={s.card} key={a.id}>
               <span className={s.badge}>
-                {stateLabel[a.status] ?? a.status}
+                {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
               </span>
               <h2 style={{ marginTop: 20 }}>{a.title}</h2>
               <p className={s.muted}>
-                Версия {a.revision} · {a.lesson_count} уроков
+                {t("Версия") + " "}
+                {a.revision} · {a.lesson_count}
+                {" " + t("уроков")}
               </p>
               <progress
                 className={s.progress}
                 value={a.progress_percent}
                 max={100}
-                aria-label={`Прогресс курса ${a.title}`}
+                aria-label={t("Прогресс курса {v0}", { v0: a.title })}
               />
               <div className={s.spread}>
-                <span>{a.progress_percent}% пройдено</span>
+                <span>
+                  {a.progress_percent}
+                  {t("% пройдено")}
+                </span>
                 {a.max_points > 0 && (
                   <span>
-                    {a.points} / {a.max_points} баллов
+                    {a.points} / {a.max_points}
+                    {" " + t("баллов")}
                   </span>
                 )}
               </div>
-              <p className={s.muted}>Срок: {dateLabel(a.due_at)}</p>
+              <p className={s.muted}>
+                {t("Срок:") + " "}
+                {dateLabel(a.due_at)}
+              </p>
               {a.status === "locked" ? (
                 <p className={s.notice}>
-                  Этот этап откроется после завершения предыдущего курса
-                  программы.
+                  {t(
+                    "Этот этап откроется после завершения предыдущего курса программы.",
+                  )}
                 </p>
               ) : (
                 <Link
@@ -159,12 +179,12 @@ export default function LearningHome() {
                   to={`/learning/${a.id}${a.state !== "active" ? "?view=results" : ""}`}
                 >
                   {a.state !== "active"
-                    ? "Посмотреть результаты"
+                    ? t("Посмотреть результаты")
                     : a.status === "completed"
-                      ? "Открыть пройденный курс"
+                      ? t("Открыть пройденный курс")
                       : a.status === "assigned"
-                        ? "Начать обучение"
-                        : "Продолжить"}{" "}
+                        ? t("Начать обучение")
+                        : t("Продолжить")}{" "}
                   →
                 </Link>
               )}
@@ -172,23 +192,29 @@ export default function LearningHome() {
           ))}
         </div>
         {!!courses.data && courses.data.total > 24 && (
-          <nav className={s.stickyActions} aria-label="Страницы назначений">
+          <nav
+            className={s.stickyActions}
+            aria-label={t("Страницы назначений")}
+          >
             <button
               className={s.secondary}
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
             >
-              Назад
+              {t("Назад")}
             </button>
             <span>
-              Страница {page + 1} из {Math.ceil(courses.data.total / 24)}
+              {t("Страница") + " "}
+              {page + 1}
+              {" " + t("из") + " "}
+              {Math.ceil(courses.data.total / 24)}
             </span>
             <button
               className={s.secondary}
               disabled={(page + 1) * 24 >= courses.data.total}
               onClick={() => setPage((p) => p + 1)}
             >
-              Далее
+              {t("Далее")}
             </button>
           </nav>
         )}

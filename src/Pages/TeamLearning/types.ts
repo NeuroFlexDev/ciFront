@@ -85,4 +85,5 @@ export const initials = (name: string) =>
     .slice(0, 2)
     .map((v) => v[0])
     .join("")
-    .toUpperCase() || "Л";
+    .toUpperCase() || (getLocale() === "en" ? "L" : "Л");
+import { getLocale } from "@/i18n/locale";

@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useEffect, useState } from "react";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -36,6 +37,8 @@ export function AnswerForm({
   server?: LearnerResponse;
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const [draft, setDraft, clearDraft] = useDurableState<AnswerDraft>(
     `learning:${assignmentId}:${assessment.id}:attempt:${attempt}`,
     {
@@ -116,7 +119,9 @@ export function AnswerForm({
       clearDraft(clean);
       setConflict(null);
       setNotice(
-        submit ? "Ответ принят сервером." : "Черновик сохранён на сервере.",
+        submit
+          ? t("Ответ принят сервером.")
+          : t("Черновик сохранён на сервере."),
       );
       if (result.data.status !== "draft") setConfirmed(result.data);
       await onSaved();
@@ -137,21 +142,24 @@ export function AnswerForm({
   if (confirmed)
     return (
       <section className={s.notice} role="status">
-        <h3>Ответ принят сервером</h3>
+        <h3>{t("Ответ принят сервером")}</h3>
         <p>
-          Попытка {confirmed.attempt} · {stateLabel[confirmed.status]}. Отправка
-          этой попытки завершена.
+          {t("Попытка") + " "}
+          {confirmed.attempt} ·{" "}
+          {t(stateLabel[confirmed.status] ?? String(confirmed.status))}
+          {t(". Отправка этой попытки завершена.")}
         </p>
         <pre style={{ whiteSpace: "pre-wrap" }}>
           {answerText(confirmed.answer)}
         </pre>
         {confirmed.points !== null && (
           <p>
-            {confirmed.points} / {confirmed.max_points} баллов
+            {confirmed.points} / {confirmed.max_points}
+            {" " + t("баллов")}
           </p>
         )}
         <button className={s.secondary} onClick={() => void onSaved()}>
-          Обновить результат
+          {t("Обновить результат")}
         </button>
       </section>
     );
@@ -160,18 +168,22 @@ export function AnswerForm({
       {draft.dirty && <DraftNotice restored />}
       {remote && (
         <section className={s.conflict} role="alert">
-          <h3>Есть другая сохранённая версия ответа</h3>
+          <h3>{t("Есть другая сохранённая версия ответа")}</h3>
           <p>
-            Сравните тексты перед продолжением. Ваш черновик остаётся на
-            устройстве.
+            {t(
+              "Сравните тексты перед продолжением. Ваш черновик остаётся на устройстве.",
+            )}
           </p>
           <div className={s.compare}>
             <div>
-              <strong>Ваш текст</strong>
-              <pre>{answerText(draft.answer) || "Ответ не заполнен"}</pre>
+              <strong>{t("Ваш текст")}</strong>
+              <pre>{answerText(draft.answer) || t("Ответ не заполнен")}</pre>
             </div>
             <div>
-              <strong>Сервер · {stateLabel[remote.status]}</strong>
+              <strong>
+                {t("Сервер ·") + " "}
+                {t(stateLabel[remote.status] ?? String(remote.status))}
+              </strong>
               <pre>{answerText(remote.answer)}</pre>
             </div>
           </div>
@@ -192,7 +204,7 @@ export function AnswerForm({
                   setError(null);
                 }}
               >
-                Продолжить с моим текстом
+                {t("Продолжить с моим текстом")}
               </button>
             )}
             <button
@@ -214,29 +226,29 @@ export function AnswerForm({
                 void onSaved();
               }}
             >
-              Использовать подтверждённый ответ
+              {t("Использовать подтверждённый ответ")}
             </button>
           </div>
         </section>
       )}
       {assessment.question_type === "open" ? (
         <label className={s.field}>
-          Ваш ответ
+          {t("Ваш ответ")}
           <textarea
             className={s.answer}
             disabled={busy}
             maxLength={100000}
             value={draft.answer.text ?? ""}
             onChange={(e) => change({ text: e.target.value })}
-            placeholder="Опишите решение своими словами…"
+            placeholder={t("Опишите решение своими словами…")}
           />
         </label>
       ) : (
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className={s.muted}>
             {assessment.question_type === "single"
-              ? "Выберите один ответ"
-              : "Выберите все подходящие ответы"}
+              ? t("Выберите один ответ")
+              : t("Выберите все подходящие ответы")}
           </legend>
           <div className={s.stack} style={{ gap: 10, marginTop: 14 }}>
             {assessment.answers.map((option, i) => (
@@ -280,7 +292,7 @@ export function AnswerForm({
           disabled={busy || !!remote}
           onClick={() => void save(false)}
         >
-          {busy ? "Сохраняем…" : "Сохранить черновик"}
+          {busy ? t("Сохраняем…") : t("Сохранить черновик")}
         </button>
         <button
           className={s.primary}
@@ -293,16 +305,20 @@ export function AnswerForm({
           onClick={() => void save(true)}
         >
           {busy
-            ? "Отправляем…"
+            ? t("Отправляем…")
             : draft.submission_key
-              ? "Проверить и повторить отправку"
-              : "Отправить на проверку →"}
+              ? t("Проверить и повторить отправку")
+              : t("Отправить на проверку →")}
         </button>
-        <span className={s.muted}>Попытка {attempt}</span>
+        <span className={s.muted}>
+          {t("Попытка") + " "}
+          {attempt}
+        </span>
       </div>
       <p className={s.caption}>
-        После отправки эта попытка остаётся в истории. При обрыве связи повтор
-        использует тот же идентификатор отправки.
+        {t(
+          "После отправки эта попытка остаётся в истории. При обрыве связи повтор использует тот же идентификатор отправки.",
+        )}
       </p>
     </div>
   );
@@ -319,6 +335,8 @@ export default function AssessmentAnswer({
   responses: LearnerResponse[];
   onSaved: () => Promise<void>;
 }) {
+  const { t } = useLocale();
+
   const [newAttempt, setNewAttempt] = useState(false);
   const attempts = responses
     .filter((r) => r.assessment_id === assessment.id)
@@ -338,12 +356,15 @@ export default function AssessmentAnswer({
       <div className={s.spread}>
         <span className={s.badge}>
           {assessment.question_type === "open"
-            ? "Практика"
+            ? t("Практика")
             : assessment.question_type === "multiple"
-              ? "Несколько ответов"
-              : "Один ответ"}
+              ? t("Несколько ответов")
+              : t("Один ответ")}
         </span>
-        <span>{assessment.max_points} балл.</span>
+        <span>
+          {assessment.max_points}
+          {" " + t("балл.")}
+        </span>
       </div>
       <h2>{assessment.question}</h2>
       {assessment.description && (
@@ -351,12 +372,14 @@ export default function AssessmentAnswer({
       )}
       {!!assessment.criteria.length && (
         <details>
-          <summary>Критерии проверки</summary>
+          <summary>{t("Критерии проверки")}</summary>
           <ul>
             {assessment.criteria.map((c) => (
               <li key={c.id}>
-                <strong>{c.title}</strong> — до {c.max_points} балл.{" "}
-                {c.description}
+                <strong>{c.title}</strong>
+                {" " + t("— до") + " "}
+                {c.max_points}
+                {" " + t("балл.")} {c.description}
               </li>
             ))}
           </ul>
@@ -368,7 +391,8 @@ export default function AssessmentAnswer({
           <div key={r.id} className={s.card} style={{ margin: "18px 0" }}>
             <div className={s.spread}>
               <span>
-                Попытка {r.attempt} · {stateLabel[r.status]}
+                {t("Попытка") + " "}
+                {r.attempt} · {t(stateLabel[r.status] ?? String(r.status))}
               </span>
               {r.points !== null && (
                 <strong>
@@ -378,7 +402,7 @@ export default function AssessmentAnswer({
             </div>
             <p className={s.muted}>{dateLabel(r.submitted_at)}</p>
             <details>
-              <summary>Ваш отправленный ответ</summary>
+              <summary>{t("Ваш отправленный ответ")}</summary>
               <pre style={{ whiteSpace: "pre-wrap" }}>
                 {answerText(r.answer)}
               </pre>
@@ -386,7 +410,7 @@ export default function AssessmentAnswer({
             {r.feedback && <p>{r.feedback}</p>}
             {r.correct_answers && (
               <div className={s.notice}>
-                <strong>Разбор открыт по правилам обучения</strong>
+                <strong>{t("Разбор открыт по правилам обучения")}</strong>
                 <p>{r.correct_answers.join(" · ")}</p>
               </div>
             )}
@@ -407,13 +431,17 @@ export default function AssessmentAnswer({
           className={s.secondary}
           onClick={() => setNewAttempt(true)}
         >
-          Начать следующую попытку
+          {t("Начать следующую попытку")}
         </button>
       ) : (
         <p className={s.muted}>
           {latest?.status === "pending_review"
-            ? "Проверяющий увидит вашу работу в очереди. Ответ сохранён; можно продолжать обучение."
-            : "Дополнительная попытка сейчас недоступна по правилам назначения."}
+            ? t(
+                "Проверяющий увидит вашу работу в очереди. Ответ сохранён; можно продолжать обучение.",
+              )
+            : t(
+                "Дополнительная попытка сейчас недоступна по правилам назначения.",
+              )}
         </p>
       )}
     </section>

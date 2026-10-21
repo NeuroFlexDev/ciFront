@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { api } from "@/shared/api";
 import { useDurableState } from "@/hooks/useDurableState";
@@ -26,6 +27,8 @@ export default function LearningAssistant({
   lessonId: number;
   onLesson: (id: number) => void;
 }) {
+  const { t } = useLocale();
+
   const path = `/learning/assignments/${assignmentId}/assistant/messages`;
   const history = useLearningData<{ items: Message[]; total: number }>(
     path + "?limit=50",
@@ -82,12 +85,13 @@ export default function LearningAssistant({
   return (
     <section className={s.card}>
       <div className={s.spread}>
-        <h3>Помощник по курсу</h3>
-        <span className={s.badge}>По материалам вашей версии</span>
+        <h3>{t("Помощник по курсу")}</h3>
+        <span className={s.badge}>{t("По материалам вашей версии")}</span>
       </div>
       <p className={s.muted}>
-        Объясняет урок и указывает источники. Решение о результате принимает
-        система проверки, а не диалог.
+        {t(
+          "Объясняет урок и указывает источники. Решение о результате принимает система проверки, а не диалог.",
+        )}
       </p>
       {!!history.error && (
         <RequestError
@@ -96,7 +100,7 @@ export default function LearningAssistant({
         />
       )}{" "}
       {history.loading && !history.data && (
-        <LoadingState>Загружаем ваш диалог…</LoadingState>
+        <LoadingState>{t("Загружаем ваш диалог…")}</LoadingState>
       )}
       <div className={s.stack}>
         {history.data?.items.map((m) => (
@@ -107,18 +111,19 @@ export default function LearningAssistant({
               <MarkdownContent>{m.answer}</MarkdownContent>
             ) : m.status === "pending" ? (
               <p role="status">
-                Помощник готовит ответ.{" "}
+                {t("Помощник готовит ответ.")}{" "}
                 <button
                   className={s.secondary}
                   onClick={() => void history.reload()}
                 >
-                  Проверить ответ
+                  {t("Проверить ответ")}
                 </button>
               </p>
             ) : (
               <p className={s.notice}>
-                Ответ не получен. Обучение и отправка заданий доступны; вопрос
-                можно отправить снова.
+                {t(
+                  "Ответ не получен. Обучение и отправка заданий доступны; вопрос можно отправить снова.",
+                )}
               </p>
             )}
             <div className={s.row}>
@@ -138,7 +143,7 @@ export default function LearningAssistant({
         ))}
       </div>
       <label className={s.field}>
-        Вопрос по открытому уроку
+        {t("Вопрос по открытому уроку")}
         <textarea
           value={draft.question}
           disabled={busy}
@@ -155,7 +160,7 @@ export default function LearningAssistant({
           disabled={busy || !history.data?.items.length}
           onClick={() => setConfirmDelete(true)}
         >
-          Удалить мой диалог
+          {t("Удалить мой диалог")}
         </button>
         <button
           className={s.primary}
@@ -163,17 +168,18 @@ export default function LearningAssistant({
           onClick={() => void send()}
         >
           {busy
-            ? "Отправляем…"
+            ? t("Отправляем…")
             : draft.requestId
-              ? "Проверить отправленный вопрос"
-              : "Спросить помощника ↑"}
+              ? t("Проверить отправленный вопрос")
+              : t("Спросить помощника ↑")}
         </button>
       </div>
       {confirmDelete && (
         <div className={s.conflict}>
           <p>
-            Удалить историю этого диалога? Сохранённые ответы на учебные задания
-            останутся.
+            {t(
+              "Удалить историю этого диалога? Сохранённые ответы на учебные задания останутся.",
+            )}
           </p>
           <div className={s.row}>
             <button
@@ -181,14 +187,14 @@ export default function LearningAssistant({
               disabled={busy}
               onClick={() => void remove()}
             >
-              Удалить историю
+              {t("Удалить историю")}
             </button>
             <button
               className={s.secondary}
               disabled={busy}
               onClick={() => setConfirmDelete(false)}
             >
-              Оставить
+              {t("Оставить")}
             </button>
           </div>
         </div>

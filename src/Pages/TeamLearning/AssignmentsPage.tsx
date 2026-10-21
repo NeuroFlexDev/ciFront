@@ -1,3 +1,4 @@
+import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "@/shared/api";
@@ -13,6 +14,8 @@ import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
 import s from "../Learning/learning.module.css";
 
 export default function AssignmentsPage() {
+  const { t } = useLocale();
+
   const [params] = useSearchParams();
   const preferredCourse = Number(params.get("course") || 0),
     preferredUser = Number(params.get("user") || 0);
@@ -61,7 +64,7 @@ export default function AssignmentsPage() {
       );
       await assignments.reload();
       return response.data;
-    }, "Назначение подтверждено. Участники увидят курс в «Моём обучении». Повторный запрос не создаёт дубль.");
+    }, t("Назначение подтверждено. Участники увидят курс в «Моём обучении». Повторный запрос не создаёт дубль."));
     if (ok) clear(draft);
   };
   const members =
@@ -81,8 +84,10 @@ export default function AssignmentsPage() {
     });
   return (
     <Shell
-      title="Назначить обучение"
-      description="Выберите опубликованную версию курса, участников и срок. Старые результаты сохраняются."
+      title={t("Назначить обучение")}
+      description={t(
+        "Выберите опубликованную версию курса, участников и срок. Старые результаты сохраняются.",
+      )}
     >
       <div className={s.page}>
         <TeamTabs />
@@ -109,23 +114,26 @@ export default function AssignmentsPage() {
         )}
         {catalogue.data && !!catalogue.data.items.length && !selected && (
           <section className={s.conflict}>
-            <h2>Выбранная версия курса недоступна</h2>
+            <h2>{t("Выбранная версия курса недоступна")}</h2>
             <p>
-              Черновик назначения сохранён. Выберите доступную опубликованную
-              версию перед отправкой.
+              {t(
+                "Черновик назначения сохранён. Выберите доступную опубликованную версию перед отправкой.",
+              )}
             </p>
             <label className={s.field}>
-              Доступные версии
+              {t("Доступные версии")}
               <select
                 value=""
                 onChange={(e) =>
                   setDraft({ ...draft, versionId: Number(e.target.value) })
                 }
               >
-                <option value="">Выберите версию…</option>
+                <option value="">{t("Выберите версию…")}</option>
                 {catalogue.data.items.map((v) => (
                   <option key={v.course_version_id} value={v.course_version_id}>
-                    {v.title} · версия {v.revision}
+                    {v.title}
+                    {" " + t("· версия") + " "}
+                    {v.revision}
                   </option>
                 ))}
               </select>
@@ -133,17 +141,20 @@ export default function AssignmentsPage() {
           </section>
         )}
         {!catalogue.data && catalogue.loading && (
-          <LoadingState>Загружаем каталог опубликованных курсов…</LoadingState>
+          <LoadingState>
+            {t("Загружаем каталог опубликованных курсов…")}
+          </LoadingState>
         )}
         {catalogue.data && !catalogue.data.items.length ? (
           <section className={s.empty}>
-            <h2>Нет доступных опубликованных курсов</h2>
+            <h2>{t("Нет доступных опубликованных курсов")}</h2>
             <p>
-              Автор должен опубликовать полную версию курса. Руководителю также
-              нужно разрешение на этот курс.
+              {t(
+                "Автор должен опубликовать полную версию курса. Руководителю также нужно разрешение на этот курс.",
+              )}
             </p>
             <Link className={s.primary} to="/courses">
-              Открыть курсы
+              {t("Открыть курсы")}
             </Link>
           </section>
         ) : (
@@ -152,7 +163,7 @@ export default function AssignmentsPage() {
               <section className={s.card}>
                 <div className={s.formGrid}>
                   <label className={s.field}>
-                    Курс и зафиксированная версия
+                    {t("Курс и зафиксированная версия")}
                     <select
                       value={selected.course_version_id}
                       onChange={(e) =>
@@ -167,13 +178,15 @@ export default function AssignmentsPage() {
                           value={v.course_version_id}
                           key={v.course_version_id}
                         >
-                          {v.title} · версия {v.revision}
+                          {v.title}
+                          {" " + t("· версия") + " "}
+                          {v.revision}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label className={s.field}>
-                    Срок прохождения
+                    {t("Срок прохождения")}
                     <input
                       type="datetime-local"
                       value={draft.due}
@@ -184,20 +197,23 @@ export default function AssignmentsPage() {
                   </label>
                 </div>
                 <p className={s.muted}>
-                  Опубликовано: {dateLabel(selected.published_at)}. Назначенный
-                  снимок не изменится после редактирования курса.
+                  {t("Опубликовано:") + " "}
+                  {dateLabel(selected.published_at)}
+                  {t(
+                    ". Назначенный снимок не изменится после редактирования курса.",
+                  )}
                 </p>
                 <details>
-                  <summary>Повторное назначение</summary>
+                  <summary>{t("Повторное назначение")}</summary>
                   <p className={s.muted}>
-                    Обычное назначение не дублируется. Для отдельного нового
-                    цикла создайте идентификатор; прежние результаты останутся в
-                    истории.
+                    {t(
+                      "Обычное назначение не дублируется. Для отдельного нового цикла создайте идентификатор; прежние результаты останутся в истории.",
+                    )}
                   </p>
                   <div className={s.row}>
                     <code>
                       {draft.cycleKey === "initial"
-                        ? "Первичное обучение"
+                        ? t("Первичное обучение")
                         : draft.cycleKey}
                     </code>
                     <button
@@ -206,7 +222,7 @@ export default function AssignmentsPage() {
                         setDraft({ ...draft, cycleKey: crypto.randomUUID() })
                       }
                     >
-                      Начать новый цикл назначения
+                      {t("Начать новый цикл назначения")}
                     </button>
                     {draft.cycleKey !== "initial" && (
                       <button
@@ -215,7 +231,7 @@ export default function AssignmentsPage() {
                           setDraft({ ...draft, cycleKey: "initial" })
                         }
                       >
-                        Вернуть первичное назначение
+                        {t("Вернуть первичное назначение")}
                       </button>
                     )}
                   </div>
@@ -223,12 +239,12 @@ export default function AssignmentsPage() {
               </section>
               <section className={s.card} style={{ marginTop: 24 }}>
                 <label className={s.field}>
-                  Поиск сотрудника или должности
+                  {t("Поиск сотрудника или должности")}
                   <input
                     type="search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Имя, email или должность…"
+                    placeholder={t("Имя, email или должность…")}
                   />
                 </label>
                 <div className={s.tablist} style={{ marginTop: 20 }}>
@@ -236,13 +252,17 @@ export default function AssignmentsPage() {
                     aria-selected={tab === "people"}
                     onClick={() => setTab("people")}
                   >
-                    Участники · {draft.users.length} выбрано
+                    {t("Участники ·") + " "}
+                    {draft.users.length}
+                    {" " + t("выбрано")}
                   </button>
                   <button
                     aria-selected={tab === "groups"}
                     onClick={() => setTab("groups")}
                   >
-                    Группы · {draft.groups.length} выбрано
+                    {t("Группы ·") + " "}
+                    {draft.groups.length}
+                    {" " + t("выбрано")}
                   </button>
                 </div>
                 {tab === "people" ? (
@@ -268,8 +288,11 @@ export default function AssignmentsPage() {
                           <h3>{m.full_name || m.email}</h3>
                           <p className={s.accent}>
                             {person?.position ||
-                              roles[m.organization_role] ||
-                              "Участник"}
+                              t(
+                                roles[m.organization_role] ??
+                                  String(m.organization_role),
+                              ) ||
+                              t("Участник")}
                           </p>
                           <span className={s.muted}>{m.email}</span>
                         </label>
@@ -277,7 +300,7 @@ export default function AssignmentsPage() {
                     })}
                     {!members.length && (
                       <p className={s.empty}>
-                        Участники по этому запросу не найдены.
+                        {t("Участники по этому запросу не найдены.")}
                       </p>
                     )}
                   </div>
@@ -315,8 +338,9 @@ export default function AssignmentsPage() {
                           setDraft({ ...draft, future: e.target.checked })
                         }
                       />
-                      Назначать эту же версию новым участникам выбранных групп.
-                      Срок остаётся общим для группы.
+                      {t(
+                        "Назначать эту же версию новым участникам выбранных групп. Срок остаётся общим для группы.",
+                      )}
                     </label>
                   </>
                 )}
@@ -333,12 +357,14 @@ export default function AssignmentsPage() {
                     }
                     onClick={() => void submit()}
                   >
-                    {action.busy ? "Назначаем…" : "Подтвердить назначение →"}
+                    {action.busy
+                      ? t("Назначаем…")
+                      : t("Подтвердить назначение →")}
                   </button>
                 </div>
               </section>
               <section className={s.card} style={{ marginTop: 24 }}>
-                <h2>Назначения этого курса</h2>
+                <h2>{t("Назначения этого курса")}</h2>
                 {!!assignments.error && (
                   <RequestError
                     error={assignments.error}
@@ -348,18 +374,18 @@ export default function AssignmentsPage() {
                 {assignments.loading && !assignments.data && <LoadingState />}
                 {assignments.data && !assignments.data.items.length && (
                   <p className={s.muted}>
-                    Пока никому не назначен в вашей области доступа.
+                    {t("Пока никому не назначен в вашей области доступа.")}
                   </p>
                 )}
                 <div className={s.tableWrap}>
                   <table className={s.table}>
                     <thead>
                       <tr>
-                        <th>Участник</th>
-                        <th>Версия</th>
-                        <th>Статус</th>
-                        <th>Срок</th>
-                        <th>Действие</th>
+                        <th>{t("Участник")}</th>
+                        <th>{t("Версия")}</th>
+                        <th>{t("Статус")}</th>
+                        <th>{t("Срок")}</th>
+                        <th>{t("Действие")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -367,10 +393,14 @@ export default function AssignmentsPage() {
                         <tr key={a.id}>
                           <td>
                             {team.data?.members.find((m) => m.id === a.user_id)
-                              ?.full_name || `Участник ${a.user_id}`}
+                              ?.full_name ||
+                              t("Участник {v0}", { v0: a.user_id })}
                           </td>
                           <td>{a.revision}</td>
-                          <td>{stateLabel[a.status] ?? a.status}</td>
+                          <td>
+                            {t(stateLabel[a.status] ?? String(a.status)) ??
+                              a.status}
+                          </td>
                           <td>{dateLabel(a.due_at)}</td>
                           <td>
                             {a.state === "active" && (
@@ -378,7 +408,7 @@ export default function AssignmentsPage() {
                                 className={s.secondary}
                                 onClick={() => setConfirmRevoke(a.id)}
                               >
-                                Отозвать доступ
+                                {t("Отозвать доступ")}
                               </button>
                             )}
                           </td>
@@ -390,8 +420,9 @@ export default function AssignmentsPage() {
                 {confirmRevoke && (
                   <div className={s.conflict}>
                     <p>
-                      Отозвать доступ к этому назначению? Ответы, оценки и
-                      история останутся.
+                      {t(
+                        "Отозвать доступ к этому назначению? Ответы, оценки и история останутся.",
+                      )}
                     </p>
                     <div className={s.row}>
                       <button
@@ -404,16 +435,16 @@ export default function AssignmentsPage() {
                             );
                             setConfirmRevoke(null);
                             await assignments.reload();
-                          }, "Доступ к назначению отозван; результаты сохранены.")
+                          }, t("Доступ к назначению отозван; результаты сохранены."))
                         }
                       >
-                        Отозвать назначение
+                        {t("Отозвать назначение")}
                       </button>
                       <button
                         className={s.secondary}
                         onClick={() => setConfirmRevoke(null)}
                       >
-                        Оставить
+                        {t("Оставить")}
                       </button>
                     </div>
                   </div>
