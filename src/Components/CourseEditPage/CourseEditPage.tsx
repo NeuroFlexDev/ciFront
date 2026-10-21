@@ -22,18 +22,26 @@ export default function CourseEditPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const lesson = modules.flatMap(m => m.lessons).find(l => l.id === selected);
   const dirty = Boolean(lesson && draft !== lesson.content);
 
   useEffect(() => {
     let stopped = false;
+    setLoading(true);setError('');setNotice('');setSelected(null);setDraft('');setModules([]);setStructure(null);
     (async () => {
       try {
         const {data} = await api.get<Structure>(`/courses/${id}/structure`);
         const details = await Promise.all(data.modules_timeline.map(m => api.get<Module>(`/modules/${m.module_id}`)));
         const finals = await api.get<ReviewTest[]>(`/courses/${id}/tests/`);
-        if (!stopped) {setFinalTests(finals.data);setStructure(data);setModules(details.map(r => r.data));}
+        if (!stopped) {
+          const loaded = details.map(r => r.data);
+          const first = loaded.flatMap(m => m.lessons)[0];
+          setFinalTests(finals.data);setStructure(data);setModules(loaded);
+          setSelected(first?.id ?? null);setDraft(first?.content ?? '');
+        }
       } catch(e) {if (!stopped) setError(message(e));}
+      finally {if (!stopped) setLoading(false);}
     })();
     return () => {stopped = true;};
   }, [id]);
@@ -72,11 +80,12 @@ export default function CourseEditPage() {
   return <><Menu/><main className={styles.container}>
     <p><Link to="/courses">Мои курсы</Link> · <Link to={`/courses/${id}/canvas`}>Канва</Link></p>
     <h1>{structure?.title ?? 'Проверка курса'}</h1>
+    {loading && <p role="status">Загружаем содержание курса…</p>}
     {error && <p role="alert" style={{color:'#d94747'}}>{error}</p>}
     {notice && <p role="status">{notice}</p>}
     <div className={styles.content}>
       <aside className={styles.sidebar}>{modules.map(m => <section key={m.id}><h2>{m.title}</h2>
-        {m.lessons.map(l => <button key={l.id} onClick={() => select(l)} disabled={busy} style={{display:'block',marginBottom:10}}>{l.title}</button>)}
+        {m.lessons.map(l => <button key={l.id} onClick={() => select(l)} disabled={busy} className={styles.lesson} aria-pressed={selected===l.id}>{l.title}</button>)}
         <details><summary>Тесты ({m.tests.length})</summary>{m.tests.map(t => <div key={t.id}><strong>{t.question}</strong><ul>{t.answers.map((a,i) => <li key={i}>{a}{a === t.correct_answer ? ' ✓' : ''}</li>)}</ul><p>Ответ: {t.correct_answer}</p></div>)}</details>
         <details><summary>Практика и кейсы ({m.tasks?.length ?? 0})</summary>{m.tasks?.map(task => <article key={task.id}><strong>{task.name}</strong><ReactMarkdown remarkPlugins={[remarkGfm]}>{task.description}</ReactMarkdown></article>)}</details>
       </section>)}
@@ -89,7 +98,7 @@ export default function CourseEditPage() {
       </> : <p>Выберите урок для проверки и редактирования.</p>}</section>
     </div>
     <div className={styles.buttons}><button disabled={!modules.length || dirty} onClick={download}>Скачать Markdown</button>
-      <button disabled={busy || dirty || !modules.length || structure?.status === 'published'} onClick={() => void publish()}>{structure?.status === 'published' ? 'Опубликовано' : 'Опубликовать курс'}</button>
+      <button className={styles.primary} disabled={busy || dirty || !modules.length || structure?.status === 'published'} onClick={() => void publish()}>{structure?.status === 'published' ? 'Опубликовано' : 'Опубликовать курс'}</button>
     </div>
   </main></>;
 }

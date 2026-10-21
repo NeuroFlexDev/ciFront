@@ -1,111 +1,19 @@
-.container {
-    display: flex;
-    flex-direction: column;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    font-family: Arial, sans-serif;
-  }
-  
-  h2 {
-    text-align: center;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .content {
-    display: flex;
-    gap: 20px;
-  }
-  
-  .sidebar {
-    width: 300px;
-    border-right: 2px solid #ddd;
-    padding-right: 20px;
-    overflow-y: auto;
-    max-height: 500px;
-  }
-  
-  .module {
-    margin-bottom: 15px;
-  }
-  
-  .module h3 {
-    font-size: 18px;
-    margin-bottom: 5px;
-    color: #333;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 5px;
-  }
-  
-  .lesson {
-    padding: 8px 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.2s;
-  }
-  
-  .lesson:hover {
-    background: #f0f0f0;
-  }
-  
-  .activeLesson {
-    background: #007bff;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .editorContainer {
-    flex-grow: 1;
-    padding: 15px;
-    background: #f9f9f9;
-    border-radius: 6px;
-    min-height: 300px;
-  }
-  
-  .placeholder {
-    text-align: center;
-    font-size: 16px;
-    color: #999;
-    margin-top: 50px;
-  }
-  
-  .buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  
-  button:hover {
-    opacity: 0.9;
-  }
-  
-  /* button:nth-child(1) {
-    background: #6c757d;
-    color: white;
-  }
-  
-  button:nth-child(2) {
-    background: #28a745;
-    color: white;
-  }
-  
-  button:nth-child(3) {
-    background: #dc3545;
-    color: white;
-  }
-  
-  button:nth-child(4) {
-    background: #007bff;
-    color: white;
-  }
-   */
+.container{max-width:1320px;margin:32px auto 70px;padding:0 24px;font-family:'GolosText',sans-serif;color:#eef2e6;min-width:0}
+.container h1{font-size:clamp(26px,3vw,38px);line-height:1.25;margin:26px 0;overflow-wrap:anywhere}
+.container h2{font-size:23px;font-weight:650;line-height:1.4;margin:0 0 20px;text-align:left}
+.container h3{font-size:19px;font-weight:600;margin:26px 0 12px}
+.container p{font-size:15px;line-height:1.7;margin:12px 0;color:#c2cdb7}
+.container a{color:#caf432;text-underline-offset:4px}
+.content{display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px;align-items:start}
+.sidebar{padding:22px;background:#151b11;border:1px solid #344029;border-radius:22px;min-width:0;overflow-wrap:anywhere}
+.sidebar section{margin-bottom:26px}.sidebar h2{font-size:20px}.sidebar details{padding:12px 0;border-top:1px solid #344029}.sidebar summary{cursor:pointer;font-size:14px;color:#c4dc9e}.sidebar article,.sidebar details div{padding:16px 0}.sidebar strong{font-size:14px;line-height:1.6}.sidebar li{font-size:13px;line-height:1.6;margin:7px 0}
+.container button{font:600 14px 'GolosText',sans-serif;padding:12px 20px;border:1px solid #4c6036;border-radius:28px;background:#202c14;color:#e8f1db;cursor:pointer;line-height:1.5;max-width:100%}
+.container button:disabled{opacity:.45;cursor:default}.container button:hover:not(:disabled){border-color:#caf432}.container button.primary{background:#caf432;border-color:#caf432;color:#121808}
+.container .lesson{display:block;width:100%;text-align:left;margin:0 0 12px;white-space:normal;border-radius:14px;background:#10160b;font-weight:500}
+.container .lesson[aria-pressed=true]{background:#2e4019;border-color:#91b62e;color:#e2f6ba}
+.editorContainer{padding:28px;background:#151b11;border:1px solid #344029;border-radius:22px;min-width:0;overflow-wrap:anywhere}
+.editorContainer label{display:grid;gap:10px;font-size:13px;color:#c2cdb7;margin-bottom:16px}
+.editorContainer textarea{width:100%;padding:16px;border:1px solid #52683b;border-radius:14px;background:#0b1008;color:#e7efdc;font:14px/1.7 'GolosText',sans-serif;resize:vertical;min-height:280px}
+.editorContainer pre{overflow-x:auto;padding:16px;border-radius:14px;background:#0b1008}.editorContainer code{font-size:13px}.editorContainer blockquote{border-left:3px solid #91b62e;padding-left:18px;margin:16px 0}.editorContainer ul,.editorContainer ol,.sidebar ul{padding-left:22px;line-height:1.7}.editorContainer table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}.editorContainer td,.editorContainer th{border:1px solid #445532;padding:10px}.editorContainer img{max-width:100%}
+.buttons{display:flex;gap:14px;justify-content:flex-end;flex-wrap:wrap;margin-top:24px}.container :focus-visible{outline:2px solid #caf432;outline-offset:3px}
+@media(max-width:800px){.container{padding:0 18px;margin-top:24px}.content{grid-template-columns:minmax(0,1fr)}.sidebar,.editorContainer{padding:20px}.sidebar section{margin-bottom:15px}.container h2{font-size:20px}.buttons{justify-content:flex-start}}
