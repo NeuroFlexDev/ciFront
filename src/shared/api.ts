@@ -92,6 +92,13 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     const response = await fetch(apiUrl(path), {...init,headers,signal:controller.signal});
     if(response.status<500) window.dispatchEvent(new Event('lernium-network-restored'));
     if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new CustomEvent('lernium-session-expired'));
+    if (response.status === 403) {
+      try {
+        const body=await response.clone().json();
+        if(['mfa_step_up_required','mfa_enrollment_required'].includes(body?.detail?.code))
+          window.dispatchEvent(new CustomEvent('lernium-mfa-required',{detail:body.detail.code}));
+      } catch { /* Ordinary non-JSON 403 keeps its original error handling. */ }
+    }
     return response;
   } catch(error) {
     if(init.signal?.aborted) throw error;

@@ -6,6 +6,8 @@ import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { api, apiFetch, apiUrl } from '@/shared/api';
 import type { AuthResponse } from '@/auth/auth-context';
+import {isMFAChallenge,MFAChallengeError,type MFAChallengeResponse} from '@/auth/mfa';
+import MFAChallengeForm from '@/auth/MFAChallengeForm';
 import catalog from '@/legal/catalog.json';
 import styles from './styles.module.css';
 export default function AuthPage() {
@@ -32,6 +34,7 @@ export default function AuthPage() {
     const [marketing, setMarketing] = useState(false);
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [challenge,setChallenge]=useState<MFAChallengeResponse|null>(null);
     const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
     useEffect(() => {
         if (ssoStarted.current)
@@ -56,9 +59,10 @@ export default function AuthPage() {
             setSsoPending(false);
             return;
         }
-        void api.post<AuthResponse & {
+        void api.post<MFAChallengeResponse | AuthResponse & {
             assignment_id?: number;
         }>(lti ? '/lti/exchange' : '/auth/oidc/exchange', { code, state }).then(({ data }) => {
+            if(isMFAChallenge(data)){setChallenge(data);return;}
             if (!completeAuthentication.current)
                 throw new Error(t("Не удалось завершить вход. Обновите страницу и откройте вход заново."));
             completeAuthentication.current(data);
@@ -98,7 +102,8 @@ export default function AuthPage() {
                 await login(credentials);
         }
         catch (err) {
-            setError(err instanceof Error ? err.message : t("Не удалось выполнить запрос. Попробуйте ещё раз."));
+            if(err instanceof MFAChallengeError){setChallenge(err.challenge);setPassword('');}
+            else setError(err instanceof Error ? err.message : t("Не удалось выполнить запрос. Попробуйте ещё раз."));
         }
         finally {
             setSubmitting(false);
@@ -109,6 +114,7 @@ export default function AuthPage() {
         next.set('mode', isRegistration ? 'login' : 'register');
         setParams(next);
         setPassword('');
+        setChallenge(null);
         setError('');
         setAccepted(false);
         setMarketing(false);
@@ -127,7 +133,7 @@ export default function AuthPage() {
         {ssoPending && <p className={styles.notice} role="status">{t("Проверяем корпоративный вход…")}</p>}
         {!isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
         {ssoHandled && !ssoPending && isAuthenticated && <p><Link to="/account">{t("Вернуться к своему профилю")}</Link></p>}
-        {isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
+        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={data=>{auth.completeAuthentication?.(data);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:data.user.is_admin?'/admin':'/dashboard',{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
             <form className={styles.form} onSubmit={submit}>
           {isRegistration && <div className={styles.nameRow}>
             <label>{t("Имя") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder={t("Иван")}/></label>

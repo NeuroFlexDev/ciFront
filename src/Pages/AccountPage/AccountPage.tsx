@@ -4,12 +4,13 @@ import { useReconnect } from '@/hooks/useReconnect';
 import { useDurableState } from '@/hooks/useDurableState';
 import DraftNotice from '@/Components/DraftNotice';
 import { FormEvent, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { api, apiFetch, setAuthToken } from '@/shared/api';
 import catalog from '@/legal/catalog.json';
 import styles from './styles.module.css';
 import IdentityLinks from './IdentityLinks';
+import MFASettings from './MFASettings';
 type Receipt = {
     id: number;
     slug: string;
@@ -27,7 +28,9 @@ type Receipt = {
 export default function AccountPage() {
     const { t,locale } = useLocale();
     const { user, logout, refreshUser } = useAuth();
-    const [tab, setTab] = useState('profile');
+    const [params]=useSearchParams();
+    const [tab, setTab] = useState(()=>params.get('tab')==='security'?'security':'profile');
+    useEffect(()=>{if(params.get('tab')==='security')setTab('security');},[params]);
     const [name, setName, clearName] = useDurableState('account:name', user?.full_name ?? '');
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -108,6 +111,7 @@ export default function AccountPage() {
         <section className={styles.card}><h2>{t("Личные данные")}</h2><DraftNotice /><form onSubmit={profile}><label>{t("Имя и фамилия")}<input autoComplete="name" value={name} onChange={e => setName(e.target.value)} maxLength={160} minLength={1} required/></label><label>{t("Электронная почта")}<input type="email" value={user?.email ?? ''} readOnly/></label><p className={styles.muted}>{t("Для изменения почты обратитесь в поддержку: сначала потребуется подтвердить владение аккаунтом.")}</p><button className={styles.primary} disabled={busy}>{t("Сохранить изменения")}</button></form></section></div>}
       {tab === 'security' && <div className={styles.grid}><section className={styles.card}><h2>{t("Изменить пароль")}</h2><form onSubmit={password}><label>{t("Текущий пароль")}<input type="password" autoComplete="current-password" required value={oldPassword} onChange={e => setOldPassword(e.target.value)}/></label><label>{t("Новый пароль")}<input type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={newPassword} onChange={e => setNewPassword(e.target.value)}/></label><p className={styles.muted}>{t("Минимум 12 символов. После смены остальные сеансы завершатся.")}</p><button className={styles.primary} disabled={busy}>{t("Изменить пароль")}</button></form></section><section className={styles.card}><h2>{t("Сеансы и доступ")}</h2><p>{t("Если вы входили на чужом устройстве, завершите все сеансы. Затем войдите снова на своём устройстве.")}</p><button className={styles.secondary} disabled={busy} onClick={() => void perform(async () => { await api.post('/auth/logout-all'); logout(); })}>{t("Завершить все сеансы")}</button><hr /><h3>{t("Закрыть аккаунт")}</h3><p>{t("Перед закрытием сохраните нужные материалы. Отправьте запрос, чтобы мы проверили принадлежность аккаунта и обработали его данные.")}</p><a href="/legal/contacts/#request">{t("Отправить запрос ↗")}</a></section></div>}
       {tab === 'security' && <IdentityLinks />}
+      {tab === 'security' && <MFASettings />}
       {tab === 'documents' && !!documentsError && <RequestError error={documentsError} onRetry={() => void loadDocuments()} retrying={documentsLoading}/>}{tab === 'documents' && documentsLoading && <LoadingState>{t("Загружаем документы и согласия…")}</LoadingState>}
       {tab === 'documents' && !documentsError && !documentsLoading && <div className={styles.grid}><section className={styles.card}><h2>{t("Новости и предложения")}</h2><p>{marketing === null ? t("Загружаем статус…") : marketing ? t("Согласие на рассылку действует.") : t("Рекламная подписка отключена.")}</p>
         {marketing === true ? <button className={styles.secondary} disabled={busy} onClick={() => void changeMarketing(false)}>{t("Отозвать согласие")}</button> : marketing === false ? <><label className={styles.checkbox}><input type="checkbox" checked={choice} onChange={e => setChoice(e.target.checked)}/><span>{t("Хочу получать новости по почте. Даю отдельное") + " "}<a href="/legal/marketing-consent/" target="_blank" rel="noopener">{t("согласие на рассылку")}</a>.</span></label><button className={styles.primary} disabled={busy || !choice} onClick={() => void changeMarketing(true)}>{t("Сохранить выбор")}</button></> : null}

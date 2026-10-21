@@ -20,6 +20,9 @@ import ConnectionNotice from '@/Components/ConnectionNotice';
 import {useReconnect} from '@/hooks/useReconnect';
 import {useLocale} from '@/i18n/useLocale';
 import {useDialogFocus} from '@/hooks/useDialogFocus';
+import {isMFAChallenge,MFAChallengeError,type MFAChallengeResponse} from './mfa';
+import MFAChallengeForm from './MFAChallengeForm';
+import mfaStyles from './mfa.module.css';
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
@@ -38,6 +41,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [password, setPassword] = useState('');
   const [renewError, setRenewError] = useState('');
   const [renewing, setRenewing] = useState(false);
+  const [renewChallenge,setRenewChallenge]=useState<MFAChallengeResponse|null>(null);
+  const [mfaRequired,setMfaRequired]=useState<string|null>(null);
+  const mfaDialog=useRef<HTMLDivElement>(null);
+  useDialogFocus(mfaDialog,{active:Boolean(mfaRequired&&user),onClose:()=>setMfaRequired(null)});
   const [authError,setAuthError]=useState<unknown>(null);
   const [checkVersion,setCheckVersion]=useState(0);
   const renewDialog=useRef<HTMLDivElement>(null);
@@ -46,7 +53,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     const expire = () => { setSessionExpired(true); };
     window.addEventListener('lernium-session-expired', expire);
-    return () => window.removeEventListener('lernium-session-expired', expire);
+    const stepUp=(event:Event)=>setMfaRequired((event as CustomEvent<string>).detail);
+    window.addEventListener('lernium-mfa-required',stepUp);
+    return () => {window.removeEventListener('lernium-session-expired', expire);window.removeEventListener('lernium-mfa-required',stepUp);};
   }, []);
 
   useEffect(() => {
@@ -90,7 +99,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       throw new Error(await readErrorMessage(response));
     }
 
-    const data = (await response.json()) as AuthResponse;
+    const data = (await response.json()) as AuthResponse | MFAChallengeResponse;
+    if(isMFAChallenge(data))throw new MFAChallengeError(data);
     completeAuthentication(data);
   }
 
@@ -101,6 +111,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setDraftOwner(data.user.id);
     setAuthError(null);
     setSessionExpired(false);
+    setRenewChallenge(null);
+    setMfaRequired(null);
     setPassword('');
     setRenewError('');
     window.dispatchEvent(new Event('lernium-session-renewed'));
@@ -121,6 +133,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setAuthToken(null);
       setUser(null);
       setDraftOwner(null);
+      setRenewChallenge(null);setMfaRequired(null);setPassword('');
     },
   };
 
@@ -129,11 +142,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     {authError&&!user?<RequestError error={authError} fullPage onRetry={()=>setCheckVersion(v=>v+1)} retrying={isLoading}/>:children}
     {sessionExpired && user && <div ref={renewDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="renew-title" className="session-recovery"
       style={{position:'fixed',inset:0,zIndex:10000,background:'#10182899',display:'grid',placeItems:'center',padding:16,overflow:'auto'}}>
-      <form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,width:'min(460px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
+      {renewChallenge?<div className={mfaStyles.dialog}><h2 id="renew-title">{t('Подтвердите двухэтапный вход')}</h2><MFAChallengeForm challenge={renewChallenge} onSuccess={completeAuthentication} onCancel={()=>setRenewChallenge(null)}/></div>:<form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,width:'min(460px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
         onSubmit={async event => {
           event.preventDefault(); if(renewing)return; setRenewing(true); setRenewError('');
           try { await authenticate('/auth/login', {email:user.email,password}); }
-          catch (error) { setRenewError(errorMessage(error)); }
+          catch (error) { if(error instanceof MFAChallengeError){setRenewChallenge(error.challenge);setPassword('');}else setRenewError(errorMessage(error)); }
           finally { setRenewing(false); }
         }}>
         <h2 id="renew-title">{t('Сессия истекла')}</h2>
@@ -144,7 +157,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         <button disabled={renewing}>{t(renewing ? 'Входим…' : 'Продолжить работу')}</button>
         <button type="button" onClick={downloadDrafts}>{t('Скачать копию черновиков')}</button>
         <button type="button" disabled={renewing} onClick={()=>setSessionExpired(false)}>{t('Вернуться к черновику')}</button>
-      </form>
+      </form>}
     </div>}
+    {mfaRequired&&user&&!sessionExpired&&<div className={mfaStyles.overlay} ref={mfaDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="mfa-title"><div className={mfaStyles.dialog}>
+      <h2 id="mfa-title">{t('Подтвердите двухэтапный вход')}</h2>
+      <p>{t('Введённые данные остаются на странице. После подтверждения повторите действие.')}</p>
+      {mfaRequired==='mfa_enrollment_required'?<><p>{t('Для действий оператора подключите двухэтапный вход в безопасности профиля.')}</p><p><a href="/account?tab=security" target="_blank" rel="noopener">{t('Открыть безопасность профиля ↗')}</a></p><button className={mfaStyles.secondary} onClick={()=>setMfaRequired(null)}>{t('Вернуться к форме')}</button></>:<MFAChallengeForm onSuccess={completeAuthentication} onCancel={()=>setMfaRequired(null)}/>}
+    </div></div>}
   </AuthContext.Provider>;
 }
