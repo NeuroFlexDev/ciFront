@@ -1,4 +1,5 @@
 export const publicEnglish: Record<string, string> = {
+  'Вернуться к черновику': 'Return to draft',
   'Сессия истекла': 'Your session has expired',
   Пароль: 'Password',
   'Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.':

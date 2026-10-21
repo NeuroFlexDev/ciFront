@@ -1,6 +1,7 @@
 import {
   useEffect,
   useState,
+  useRef,
   type PropsWithChildren,
 } from "react";
 
@@ -18,6 +19,7 @@ import {RequestError} from '@/Components/RequestState';
 import ConnectionNotice from '@/Components/ConnectionNotice';
 import {useReconnect} from '@/hooks/useReconnect';
 import {useLocale} from '@/i18n/useLocale';
+import {useDialogFocus} from '@/hooks/useDialogFocus';
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
@@ -38,6 +40,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [renewing, setRenewing] = useState(false);
   const [authError,setAuthError]=useState<unknown>(null);
   const [checkVersion,setCheckVersion]=useState(0);
+  const renewDialog=useRef<HTMLDivElement>(null);
+  useDialogFocus(renewDialog,{active:sessionExpired&&Boolean(user),busy:renewing,onClose:()=>setSessionExpired(false)});
   useReconnect(()=>{if(authError&&!user)setCheckVersion(v=>v+1);});
   useEffect(() => {
     const expire = () => { setSessionExpired(true); };
@@ -123,22 +127,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
   return <AuthContext.Provider value={value}>
     <ConnectionNotice/>
     {authError&&!user?<RequestError error={authError} fullPage onRetry={()=>setCheckVersion(v=>v+1)} retrying={isLoading}/>:children}
-    {sessionExpired && user && <div role="dialog" aria-modal="true" aria-labelledby="renew-title"
-      style={{position:'fixed',inset:0,zIndex:10000,background:'#10182899',display:'grid',placeItems:'center'}}>
-      <form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,maxWidth:460,display:'grid',gap:16}}
+    {sessionExpired && user && <div ref={renewDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="renew-title" className="session-recovery"
+      style={{position:'fixed',inset:0,zIndex:10000,background:'#10182899',display:'grid',placeItems:'center',padding:16,overflow:'auto'}}>
+      <form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,width:'min(460px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
         onSubmit={async event => {
-          event.preventDefault(); setRenewing(true); setRenewError('');
+          event.preventDefault(); if(renewing)return; setRenewing(true); setRenewError('');
           try { await authenticate('/auth/login', {email:user.email,password}); }
           catch (error) { setRenewError(errorMessage(error)); }
           finally { setRenewing(false); }
         }}>
         <h2 id="renew-title">{t('Сессия истекла')}</h2>
         <p>{t('Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.',{email:user.email})}</p>
-        <label>{t('Пароль')}<input autoFocus required disabled={renewing} type="password" autoComplete="current-password" value={password}
+        <label>{t('Пароль')}<input required disabled={renewing} type="password" autoComplete="current-password" value={password}
           onChange={event => setPassword(event.target.value)} /></label>
         {renewError && <p role="alert">{t(renewError)}</p>}
         <button disabled={renewing}>{t(renewing ? 'Входим…' : 'Продолжить работу')}</button>
         <button type="button" onClick={downloadDrafts}>{t('Скачать копию черновиков')}</button>
+        <button type="button" disabled={renewing} onClick={()=>setSessionExpired(false)}>{t('Вернуться к черновику')}</button>
       </form>
     </div>}
   </AuthContext.Provider>;

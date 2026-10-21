@@ -1,5 +1,6 @@
 import { useLocale } from "@/i18n/useLocale";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import {useDialogFocus} from '@/hooks/useDialogFocus';
 import { api } from "@/shared/api";
 import { useDurableState } from "@/hooks/useDurableState";
 import { RequestError } from "@/Components/RequestState";
@@ -48,41 +49,7 @@ export default function EntityEditor({
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    const element = dialog.current;
-    const focusable = () =>
-      Array.from(
-        element?.querySelectorAll<HTMLElement>(
-          "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]",
-        ) ?? [],
-      );
-    focusable()[0]?.focus();
-    const keyboard = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busy) {
-        event.preventDefault();
-        onClose();
-      }
-      if (event.key === "Tab") {
-        const list = focusable();
-        if (event.shiftKey && document.activeElement === list[0]) {
-          event.preventDefault();
-          list[list.length - 1]?.focus();
-        } else if (
-          !event.shiftKey &&
-          document.activeElement === list[list.length - 1]
-        ) {
-          event.preventDefault();
-          list[0]?.focus();
-        }
-      }
-    };
-    element?.addEventListener("keydown", keyboard);
-    return () => {
-      element?.removeEventListener("keydown", keyboard);
-      previous?.focus();
-    };
-  }, [busy, onClose]);
+  useDialogFocus(dialog,{busy,onClose});
   async function save() {
     if (busy) return;
     setBusy(true);
@@ -159,6 +126,7 @@ export default function EntityEditor({
     <div className={styles.overlay}>
       <div
         ref={dialog}
+        tabIndex={-1}
         className={styles.dialog}
         role="dialog"
         aria-modal="true"

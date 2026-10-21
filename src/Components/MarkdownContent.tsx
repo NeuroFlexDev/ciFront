@@ -80,7 +80,7 @@ export default function MarkdownContent({ children }: { children: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[[rehypeKatex, {trust:false, maxSize:20, maxExpand:1000}]]}
       components={{
         img: ({ src, alt }) => <ProtectedImage src={src} alt={alt} />,
         a: ({ href, children }) => (

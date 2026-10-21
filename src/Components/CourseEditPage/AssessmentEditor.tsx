@@ -1,5 +1,6 @@
 import { useLocale } from "@/i18n/useLocale";
 import { useEffect, useRef, useState } from "react";
+import {useDialogFocus} from '@/hooks/useDialogFocus';
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
 import { useDurableState } from "@/hooks/useDurableState";
@@ -53,6 +54,8 @@ export default function AssessmentEditor({
   const [server, setServer] = useState<Assessment | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [version, setVersion] = useState(0);
+  const loadingDialog=useRef<HTMLDivElement>(null);
+  useDialogFocus(loadingDialog,{active:!server,onClose});
   const path = `/${target.kind === "test" ? "tests" : "tasks"}/${target.id}/assessment-settings`;
   useEffect(() => {
     let active = true;
@@ -85,6 +88,8 @@ export default function AssessmentEditor({
         />
       ) : (
         <div
+          ref={loadingDialog}
+          tabIndex={-1}
           className={styles.dialog}
           role="dialog"
           aria-modal="true"
@@ -129,11 +134,7 @@ function AssessmentForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const previous = document.activeElement as HTMLElement | null;
-    dialog.current?.focus();
-    return () => previous?.focus();
-  }, []);
+  useDialogFocus(dialog,{busy,onClose});
   const criteriaTotal = form.criteria.reduce(
     (sum, item) => sum + Number(item.max_points || 0),
     0,
@@ -205,30 +206,6 @@ function AssessmentForm({
       role="dialog"
       aria-modal="true"
       aria-labelledby="assessment-title"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !busy) onClose();
-        if (event.key === "Tab") {
-          const list = Array.from(
-            dialog.current?.querySelectorAll<HTMLElement>(
-              "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled)",
-            ) ?? [],
-          );
-          if (
-            event.shiftKey &&
-            (document.activeElement === list[0] ||
-              document.activeElement === dialog.current)
-          ) {
-            event.preventDefault();
-            list.at(-1)?.focus();
-          } else if (
-            !event.shiftKey &&
-            document.activeElement === list.at(-1)
-          ) {
-            event.preventDefault();
-            list[0]?.focus();
-          }
-        }
-      }}
     >
       <h2 id="assessment-title">
         {t("Оценивание:") + " "}
