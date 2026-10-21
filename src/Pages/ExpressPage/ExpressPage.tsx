@@ -6,7 +6,7 @@ import styles from './styles.module.css';
 
 type DocumentItem = { id: number; original_filename: string; status: string };
 type Run = { run_id: number; course_id: number; status: string; progress_percent: number; current_stage: string;
-  stages: { code: string; title: string; status: string }[]; status_error?: { message: string; retryable: boolean } | null };
+  stages: { code: string; title: string; status: string }[]; status_error?: { message: string; retryable: boolean } | null; status_notice?: string | null };
 const errorText = (error: unknown) => error instanceof Error ? error.message : 'Не удалось выполнить запрос';
 const fieldStyle = { display: 'block', width: '100%', padding: 12, borderRadius: 10, marginTop: 6 };
 
@@ -16,6 +16,7 @@ export default function ExpressPage() {
   const runId = Number(params.get('run')) || null;
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [run, setRun] = useState<Run | null>(null);
+  const [pollVersion, setPollVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [title, setTitle] = useState('');
@@ -81,7 +82,7 @@ export default function ExpressPage() {
     };
     void poll();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [runId]);
+  }, [runId, pollVersion]);
 
   async function upload(files: FileList | null) {
     if (!files?.length || busy) return;
@@ -123,6 +124,7 @@ export default function ExpressPage() {
     try {
       const {data} = await api.post<{run_id: number}>(`/generation-runs/${runId}/retry`);
       setRun(null); setParams({course: String(courseId), run: String(data.run_id)}, {replace: true});
+      setPollVersion(value => value + 1);
     } catch (e) { setError(errorText(e)); }
     finally { setBusy(false); }
   }
@@ -131,15 +133,17 @@ export default function ExpressPage() {
       <h1>Создать курс по документам</h1>
       {error && <p role="alert" style={{color: '#d94747'}}>{error}</p>}
       {runId ? <section aria-live="polite">
-        <h2>{run?.status === 'completed' || run?.status === 'succeeded' ? 'Курс готов к проверке' : 'Генерация курса'}</h2>
+        <h2>{run?.status === 'completed' || run?.status === 'succeeded' ? 'Курс готов к проверке' : run?.status === 'paused' ? 'Прогресс сохранён' : 'Генерация курса'}</h2>
         <progress value={run?.progress_percent ?? 0} max={100} style={{width: '100%'}}/>
         <p>{run?.progress_percent ?? 0}%</p>
         <ol>{run?.stages?.map(s => <li key={s.code}>{s.title} — {s.status === 'completed' ? 'Готово' : s.status === 'running' ? 'В работе' : 'Ожидание'}</li>)}</ol>
         {run?.status_error && <p role="alert">{run.status_error.message}</p>}
+        {run?.status_notice && <p role="status">{run.status_notice}</p>}
+        {run?.status === 'paused' && <button disabled={busy} onClick={() => void retry()}>Продолжить генерацию</button>}
         {run?.status === 'failed' && run.status_error?.retryable && <button disabled={busy} onClick={() => void retry()}>Повторить генерацию</button>}
         {run?.status === 'failed' && <p><button onClick={() => {setRun(null);setParams({course:String(courseId)}, {replace:true});}}>Изменить параметры курса</button></p>}
         {['completed', 'succeeded'].includes(run?.status ?? '') && <p><Link to={`/courses/${courseId}/edit`}>Проверить и опубликовать курс</Link> · <Link to={`/courses/${courseId}/canvas`}>Открыть канву</Link></p>}
-        <p>Можно закрыть страницу: генерация продолжится на сервере. Сохраните адрес, чтобы вернуться к результату.</p>
+        <p>{run?.status === 'paused' ? 'Можно закрыть страницу: готовые этапы сохранены. Вернитесь по этому адресу, чтобы продолжить.' : 'Можно закрыть страницу: генерация продолжится на сервере. Сохраните адрес, чтобы вернуться к результату.'}</p>
       </section> : <form onChangeCapture={() => {edited.current = true;}} onSubmit={e => { e.preventDefault(); void generate(); }} style={{display: 'grid', gap: 18}}>
         <label>Документы (PDF, DOCX, TXT, до 25 МБ)<input type="file" multiple accept=".pdf,.docx,.txt" disabled={busy} onChange={e => void upload(e.target.files)} style={fieldStyle}/></label>
         <ul>{documents.map(d => <li key={d.id}>{d.original_filename} — {d.status === 'ready' ? 'Готов к генерации' : 'Требуется обработка'}{d.status !== 'ready' && <button type="button" disabled={busy} onClick={async () => {setBusy(true); try {await api.post(`/documents/${d.id}/reindex`);setDocuments(prev => prev.map(item => item.id === d.id ? {...item,status:'ready'} : item));} catch(e) {setError(errorText(e));} finally {setBusy(false);} }}>Обработать</button>}</li>)}</ul>

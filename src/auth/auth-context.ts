@@ -3,6 +3,7 @@ import { createContext } from "react";
 export type AuthUser = {
   id: number;
   email: string;
+  full_name?: string;
 };
 
 export type AuthPayload = {
@@ -10,12 +11,19 @@ export type AuthPayload = {
   password: string;
 };
 
+export type RegistrationPayload = AuthPayload & {
+  full_name?: string;
+  terms_accepted: boolean;
+  legal_version: string;
+  marketing_accepted?: boolean;
+};
+
 export type AuthContextValue = {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: AuthPayload) => Promise<void>;
-  register: (payload: AuthPayload) => Promise<void>;
+  register: (payload: RegistrationPayload) => Promise<void>;
   logout: () => void;
 };
 

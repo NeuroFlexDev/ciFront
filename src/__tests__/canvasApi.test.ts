@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadCanvasSnapshot, saveCanvasSnapshot } from '@/api/canvasApi';
 import { requestAiAction } from '@/api/aiApi';
 import { createCanvasNode } from '@/utils/nodeFactory';
+import { useCanvasStore } from '@/store/canvasStore';
 const fetchMock = vi.fn();
 beforeEach(() => {vi.stubGlobal('fetch',fetchMock);fetchMock.mockReset();localStorage.clear();});
 const json = (data: unknown, status=200) => new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
@@ -31,5 +32,19 @@ describe('server canvas persistence', () => {
     expect(result.nodes[0].data.title).toBe('Проверка давления');
     expect(result.nodes[0].data.description).toContain('[chunk:17]');
     expect(fetchMock.mock.calls[0][0]).toBe('/api/courses/9/ai/actions');
+  });
+  it('preserves editable nodes and selection when AI returns a local notice',async () => {
+    const node = createCanvasNode('module',{x:0,y:0},{title:'Материал пользователя'});
+    useCanvasStore.setState({courseId:'9',nodes:[node],edges:[],selectedNodeIds:[node.id],selectedEdgeIds:[],lastError:null});
+    fetchMock.mockResolvedValueOnce(json({nodes:[],summary:'Доступно ручное редактирование.',degraded:true}));
+    await useCanvasStore.getState().runAiAction('split_module');
+    const state = useCanvasStore.getState();
+    expect(state.nodes).toHaveLength(1);
+    expect(state.nodes[0].data.title).toBe('Материал пользователя');
+    expect(state.selectedNodeIds).toEqual([node.id]);
+    expect(state.edges).toEqual([]);
+    expect(state.lastError).toBeNull();
+    expect(state.isAiRunning).toBe(false);
+    expect(state.aiNotice).toBe('Доступно ручное редактирование.');
   });
 });

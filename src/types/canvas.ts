@@ -73,4 +73,5 @@ export type CanvasAiResult = {
   nodes: LerniumNode[];
   edges: LerniumEdge[];
   summary: string;
+  degraded?: boolean;
 };

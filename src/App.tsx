@@ -1,11 +1,15 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
+import { AppErrorBoundary } from './Components/AppErrorBoundary';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 const MainPage = lazy(() => import('./Pages/MainPage/MainPage'));
 const AuthPage = lazy(() => import('./Pages/AuthPage/AuthPage'));
-const PrivacyPage = lazy(() => import('./Pages/PrivacyPage/PrivacyPage'));
+const AccountPage = lazy(() => import('./Pages/AccountPage/AccountPage'));
+const AccessPage = lazy(() => import('./Pages/AccessPage/AccessPage'));
+const StatusPage = lazy(() => import('./Pages/AccessPage/StatusPage'));
+function PrivacyRedirect() { window.location.replace('/legal/privacy/'); return null; }
 const AiHelperPage = lazy(() => import('./Pages/AiHelperPage/AiHelperPage'));
 const TemplatesPage = lazy(() => import('./Pages/TemplatesPage/TemplatesPage'));
 const ExpressPage = lazy(() => import('./Pages/ExpressPage/ExpressPage'));
@@ -42,13 +46,18 @@ function AppFallback() {
 
 function App() {
   return (
-    <>
+    <AppErrorBoundary>
     <BrowserRouter>
       <Suspense fallback={<AppFallback />}>
         <Routes>
           <Route path="/" element={<MainPage/>} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/privacy" element={<PrivacyRedirect />} />
+          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+          <Route path="/forgot-password" element={<AccessPage />} />
+          <Route path="/reset-password" element={<AccessPage reset />} />
+          {['dashboard','employees','analytics'].map(path => <Route key={path} path={`/${path}`} element={<ProtectedRoute><StatusPage code="Скоро" title="Готовим этот раздел" description="Функция ещё в разработке. Вы можете продолжить работу с курсами или обсудить нужные возможности при подключении организации." /></ProtectedRoute>} />)}
+          <Route path="*" element={<StatusPage />} />
           <Route path="/ai-helper" element={<ProtectedRoute><AiHelperPage /></ProtectedRoute>} />
           <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
           <Route path="/express" element={<ProtectedRoute><ExpressPage /></ProtectedRoute>} />
@@ -58,7 +67,7 @@ function App() {
         </Routes>
       </Suspense>
     </BrowserRouter>
-    </>
+    </AppErrorBoundary>
   )
 }
 

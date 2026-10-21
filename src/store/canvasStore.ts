@@ -44,6 +44,7 @@ type CanvasStoreState = {
   isAiRunning: boolean;
   lastSavedAt: number | null;
   lastError: string | null;
+  aiNotice: string | null;
   pendingFocusNodeId: string | null;
   loadCourse: (courseId: string, courseTitle?: string) => Promise<void>;
   saveCourse: () => Promise<void>;
@@ -122,6 +123,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
   isAiRunning: false,
   lastSavedAt: null,
   lastError: null,
+  aiNotice: null,
   pendingFocusNodeId: null,
 
   async loadCourse(courseId, courseTitle = `Курс ${courseId}`) {
@@ -138,6 +140,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
       selectedEdgeIds: [],
       interactionMode: 'select',
       lastError: null,
+      aiNotice: null,
       lastSavedAt: snapshot.updatedAt ?? null,
     });
   },
@@ -438,6 +441,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
     set({
       isAiRunning: true,
       lastError: null,
+      aiNotice: null,
       nodes: setAiState(state.nodes, state.selectedNodeIds, 'loading'),
     });
 
@@ -447,6 +451,12 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
         action,
         selectedNodes,
       });
+
+      if (result.degraded) {
+        set((current) => ({isAiRunning: false, aiNotice: result.summary,
+          nodes: setAiState(current.nodes, current.selectedNodeIds, 'idle')}));
+        return;
+      }
 
       set((current) => ({
         isAiRunning: false,

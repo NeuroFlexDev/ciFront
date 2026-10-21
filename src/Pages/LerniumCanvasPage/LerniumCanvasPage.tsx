@@ -30,6 +30,7 @@ function LerniumCanvasPage() {
   const isAiRunning = useCanvasStore((state) => state.isAiRunning);
   const lastSavedAt = useCanvasStore((state) => state.lastSavedAt);
   const lastError = useCanvasStore((state) => state.lastError);
+  const aiNotice = useCanvasStore((state) => state.aiNotice);
   const loadCourse = useCanvasStore((state) => state.loadCourse);
 
   const {
@@ -173,6 +174,7 @@ function LerniumCanvasPage() {
             </button>
           </div>
 
+          {aiNotice && <div role="status" style={{padding: '12px 16px', background: '#eef4ff', borderRadius: 12}}>{aiNotice}</div>}
           {lastError ? (
             <div className={styles.errorBanner}>
               <AlertCircle size={16} />

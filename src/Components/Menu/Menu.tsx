@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import notification from '../../assets/icons/menu/notification.svg';
 import { useAuth } from '@/auth/useAuth';
 import logo from '../../assets/icons/logo.svg';
 import styles from './styles.module.css';
@@ -39,17 +38,15 @@ const Menu = () => {
       </nav>
 
       <div className={styles.accountBlock}>
-        <button type="button" className={styles.notificationButton}>
-          <img src={notification} alt='' />
-        </button>
+        <a href="/legal/" className={styles.navText}>Документы</a>
 
         <div className={styles.containerUserInfo}>
-          <div className={styles.userInfo}>
-            <span className={styles.userName}>{user?.email ?? 'Пашковский Руслан'}</span>
-            <span className={styles.userRole}>Администратор</span>
-          </div>
+          <Link to="/account" className={styles.userInfo} style={{color:"inherit",textDecoration:"none"}}>
+            <span className={styles.userName}>{user?.full_name || user?.email || 'Личный профиль'}</span>
+            <span className={styles.userRole}>Личный профиль</span>
+          </Link>
 
-          <button type="button" className={styles.logoutButton} onClick={handleLogout}>
+          <button type="button" className={styles.logoutButton} onClick={handleLogout} aria-label="Выйти из аккаунта">
             <img src={arrowLogout} alt="" />
           </button>
         </div>

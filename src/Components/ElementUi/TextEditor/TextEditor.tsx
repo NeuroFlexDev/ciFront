@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Link from "@tiptap/extension-link"
-import TextStyle from "@tiptap/extension-text-style"
+import { TextStyle } from "@tiptap/extension-text-style"
 import FontFamily from "@tiptap/extension-font-family"
 import { Color } from "@tiptap/extension-color"
 import TextAlign from "@tiptap/extension-text-align"
@@ -61,8 +61,11 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
 
   // Инициализируем editor с content = value
   const editor = useEditor({
+    shouldRerenderOnTransaction: true,
     extensions: [
       StarterKit.configure({
+        link: false,
+        underline: false,
         heading: { levels: [1, 2] },
         bulletList: {
           HTMLAttributes: { class: styles.ulList },
@@ -107,7 +110,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
   // обновляем контент редактора, если он отличается
   React.useEffect(() => {
     if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value)
+      editor.commands.setContent(value, { emitUpdate: false })
     }
   }, [value, editor])
 

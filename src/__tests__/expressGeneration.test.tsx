@@ -25,3 +25,17 @@ it('resumes uploaded ready documents and launches the real generation API', asyn
     {document_ids:[42],settings}));
   expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toHaveAttribute('href','/courses/7/edit');
 });
+
+it('resumes polling when a paused run keeps the same checkpoint ID', async () => {
+  let resumed = false;
+  vi.mocked(api.get).mockImplementation(async path => ({data: path.includes('documents') ? {items:[]}
+    : {run_id:99,course_id:7,status:resumed ? 'completed' : 'paused',progress_percent:resumed ? 100 : 60,
+       stages:[],status_error:null,status_notice:resumed ? null : 'Материалы и готовые этапы сохранены.'}}));
+  vi.mocked(api.post).mockImplementation(async () => {resumed = true; return {data:{run_id:99}};});
+  render(<MemoryRouter initialEntries={['/express?course=7&run=99']}><ExpressPage/></MemoryRouter>);
+  expect(await screen.findByRole('heading',{name:'Прогресс сохранён'})).toBeInTheDocument();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'Продолжить генерацию'}));
+  expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toBeInTheDocument();
+  expect(api.post).toHaveBeenCalledWith('/generation-runs/99/retry');
+});

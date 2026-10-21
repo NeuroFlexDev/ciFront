@@ -15,8 +15,8 @@ import { apiFetch, getAuthToken, setAuthToken } from "@/shared/api";
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
-    const data = (await response.json()) as { detail?: string };
-    return data.detail ?? "Ошибка авторизации";
+    const data = (await response.json()) as { detail?: unknown };
+    return typeof data.detail === "string" ? data.detail : "Проверьте заполненные поля и принятие условий.";
   } catch {
     return "Ошибка авторизации";
   }
