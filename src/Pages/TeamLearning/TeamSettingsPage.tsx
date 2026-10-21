@@ -378,6 +378,8 @@ function SettingsForm({
             ["terminology", t("Терминология и стиль")],
             ["goals", t("Учебные цели")],
             ["constraints", t("Требования к содержанию")],
+            ["specialist_role", t("Профиль специалиста")],
+            ["industry", t("Отрасль организации")],
           ].map(([key, label]) => (
             <label key={key} className={s.field}>
               {t(String(label))}

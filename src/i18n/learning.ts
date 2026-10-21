@@ -534,4 +534,6 @@ export const learningEnglish: Record<string, string> = {
   "— до": "— up to",
   "← Моё обучение": "← My learning",
   "✧ Задать вопрос по уроку": "✧ Ask about this lesson",
+  "Профиль специалиста": "Specialist role",
+  "Отрасль организации": "Organization industry",
 };
