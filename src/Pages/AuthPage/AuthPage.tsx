@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
-import { api, apiFetch, apiUrl } from '@/shared/api';
+import { api, apiFetch, apiUrl, captureAuthSession, assertAuthSession } from '@/shared/api';
 import type { AuthResponse } from '@/auth/auth-context';
 import {isMFAChallenge,MFAChallengeError,type MFAChallengeResponse} from '@/auth/mfa';
 import MFAChallengeForm from '@/auth/MFAChallengeForm';
@@ -14,9 +14,7 @@ export default function AuthPage() {
     const { t } = useLocale();
     const [params, setParams] = useSearchParams();
     const navigate = useNavigate();
-    const auth = useAuth() as ReturnType<typeof useAuth> & {
-        completeAuthentication?: (response: AuthResponse) => void;
-    };
+    const auth = useAuth();
     const { user, isAuthenticated, isLoading, login, register } = auth;
     const ssoFragment = useRef(new URLSearchParams(window.location.hash.slice(1)));
     const ssoStarted = useRef(false);
@@ -37,6 +35,9 @@ export default function AuthPage() {
     const [challenge,setChallenge]=useState<MFAChallengeResponse|null>(null);
     const [registrationEnabled, setRegistrationEnabled] = useState<boolean | null>(null);
     useEffect(() => {
+        // Finish the existing session check before consuming a one-use SSO code.
+        // This also avoids a StrictMode mount cycle invalidating its only exchange.
+        if(isLoading)return;
         if (ssoStarted.current)
             return;
         ssoStarted.current = true;
@@ -59,21 +60,27 @@ export default function AuthPage() {
             setSsoPending(false);
             return;
         }
+        const session=captureAuthSession();
         void api.post<MFAChallengeResponse | AuthResponse & {
             assignment_id?: number;
         }>(lti ? '/lti/exchange' : '/auth/oidc/exchange', { code, state }).then(({ data }) => {
+            assertAuthSession(session);
             if(isMFAChallenge(data)){setChallenge(data);return;}
             if (!completeAuthentication.current)
                 throw new Error(t("Не удалось завершить вход. Обновите страницу и откройте вход заново."));
-            completeAuthentication.current(data);
+            completeAuthentication.current(data,session);
             navigate(data.assignment_id ? `/learning/${data.assignment_id}` : data.user.is_admin ? '/admin' : '/dashboard', { replace: true });
         }).catch(reason => { setError(t("{value0} Повторите вход из корпоративного сервиса или LMS; ваши материалы и ответы сохранены.", { value0: reason instanceof Error ? reason.message : t("Не удалось завершить вход.") })); }).finally(() => setSsoPending(false));
-    }, [navigate,t]);
+    }, [navigate,t,isLoading]);
     useEffect(() => {
         let active = true;
+        const session=captureAuthSession();
         void apiFetch('/legal/catalog').then(async (response) => {
-            if (response.ok && active)
-                setRegistrationEnabled((await response.json()).registration_enabled === true);
+            if (response.ok && active){
+                const data=await response.json();
+                assertAuthSession(session);
+                if(active)setRegistrationEnabled(data.registration_enabled === true);
+            }
         }).catch(() => { });
         return () => { active = false; };
     }, []);
@@ -133,7 +140,7 @@ export default function AuthPage() {
         {ssoPending && <p className={styles.notice} role="status">{t("Проверяем корпоративный вход…")}</p>}
         {!isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
         {ssoHandled && !ssoPending && isAuthenticated && <p><Link to="/account">{t("Вернуться к своему профилю")}</Link></p>}
-        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={data=>{auth.completeAuthentication?.(data);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:data.user.is_admin?'/admin':'/dashboard',{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
+        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={(data,session)=>{auth.completeAuthentication?.(data,session);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:data.user.is_admin?'/admin':'/dashboard',{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
             <form className={styles.form} onSubmit={submit}>
           {isRegistration && <div className={styles.nameRow}>
             <label>{t("Имя") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder={t("Иван")}/></label>

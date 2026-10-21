@@ -5,7 +5,7 @@ import AuthPage from '../Pages/AuthPage/AuthPage';
 import catalog from '../legal/catalog.json';
 const mocks=vi.hoisted(()=>({register:vi.fn(),login:vi.fn()}));
 vi.mock('@/auth/useAuth',()=>({useAuth:()=>({isLoading:false,isAuthenticated:false,...mocks})}));
-vi.mock('@/shared/api',()=>({apiFetch:vi.fn(async()=>({ok:true,json:async()=>({registration_enabled:true})}))}));
+vi.mock('@/shared/api',async importOriginal=>({...await importOriginal<typeof import('@/shared/api')>(),apiFetch:vi.fn(async()=>({ok:true,json:async()=>({registration_enabled:true})}))}));
 afterEach(()=>{cleanup();vi.clearAllMocks();});
 it('requires terms and keeps marketing optional, transmitting a versioned explicit choice',async()=>{
   render(<MemoryRouter initialEntries={['/auth?mode=register']}><AuthPage/></MemoryRouter>);

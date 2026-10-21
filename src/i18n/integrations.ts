@@ -413,5 +413,6 @@ export const integrationsEnglish:Record<string,string> = {
   ". Необязательно.": ". Optional.",
   "Уже есть аккаунт?": "Already have an account?",
   "Впервые здесь?": "New here?",
-  "Все документы": "All documents"
+  "Все документы": "All documents",
+  "Сеанс изменился во время запроса. Ответ не применён к текущему аккаунту. Проверьте результат в исходном аккаунте.": "The session changed during the request. The response was not applied to the current account. Check the result in the original account."
 };

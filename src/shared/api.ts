@@ -3,6 +3,24 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 export const AUTH_TOKEN_KEY = "lernium_auth_token";
 export const LEGACY_AUTH_TOKEN_KEY = "access_token";
 let boundToken: string | null | undefined;
+let sessionGeneration = 0;
+export type AuthSessionStamp = Readonly<{generation: number; storedToken: string | null}>;
+
+/** Keep this in memory only. A result belongs to the session that requested it. */
+export function captureAuthSession(): AuthSessionStamp {
+  return {generation: sessionGeneration, storedToken: storedAuthToken()};
+}
+
+export function authSessionIsCurrent(stamp: AuthSessionStamp): boolean {
+  return stamp.generation === sessionGeneration && stamp.storedToken === storedAuthToken();
+}
+
+export function assertAuthSession(stamp: AuthSessionStamp): void {
+  if (!authSessionIsCurrent(stamp)) {
+    if (authSessionChanged()) window.dispatchEvent(new Event('lernium-session-changed'));
+    throw new ApiError('Сеанс изменился во время запроса. Ответ не применён к текущему аккаунту. Проверьте результат в исходном аккаунте.',409,'http');
+  }
+}
 
 type ApiResponse<T = unknown> = {
   data: T;
@@ -20,8 +38,10 @@ async function parseResponseData(response: Response): Promise<unknown> {
 }
 
 async function request<T = unknown>(path: string, init: RequestInit = {}): Promise<ApiResponse<T>> {
+  const session = captureAuthSession();
   const response = await apiFetch(path, init);
   const data = await parseResponseData(response);
+  assertAuthSession(session);
 
   if (!response.ok) {
     const detail = typeof data === 'object' && data !== null && 'detail' in data
@@ -58,8 +78,9 @@ function storedAuthToken(): string | null {
 
 /** A mounted workspace must never borrow another tab's account credentials. */
 export function bindAuthSession(): () => void {
+  sessionGeneration += 1;
   boundToken = storedAuthToken();
-  return () => { boundToken = undefined; };
+  return () => { sessionGeneration += 1; boundToken = undefined; };
 }
 
 export function authSessionChanged(): boolean {
@@ -70,11 +91,13 @@ export function getAuthToken(): string | null {
   return boundToken === undefined ? storedAuthToken() : boundToken;
 }
 
-export function setAuthToken(token: string | null): void {
+export function setAuthToken(token: string | null, expectedSession?: AuthSessionStamp): void {
   if (typeof window === "undefined") {
     return;
   }
+  if (expectedSession) assertAuthSession(expectedSession);
   const changedElsewhere = authSessionChanged();
+  sessionGeneration += 1;
   if (boundToken !== undefined) boundToken = token;
   // Logging out an old tab must not delete a different tab's new session.
   if (!token && changedElsewhere) return;
@@ -90,6 +113,7 @@ export function setAuthToken(token: string | null): void {
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const session = captureAuthSession();
   // Check synchronously as well as on storage events: a user can click Save
   // before the event from a different tab has reached this document.
   const publicCredentialFlow = ['/auth/login', '/auth/register', '/auth/mfa/verify',
@@ -118,17 +142,20 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const timer=setTimeout(()=>{timedOut=true;controller.abort();}, init.method && init.method!=='GET' ? 120000 : 30000);
   try {
     const response = await fetch(apiUrl(path), {...init,headers,signal:controller.signal});
+    assertAuthSession(session);
     if(response.status<500) window.dispatchEvent(new Event('lernium-network-restored'));
     if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new CustomEvent('lernium-session-expired'));
     if (response.status === 403) {
       try {
         const body=await response.clone().json();
+        assertAuthSession(session);
         if(['mfa_step_up_required','mfa_enrollment_required'].includes(body?.detail?.code))
           window.dispatchEvent(new CustomEvent('lernium-mfa-required',{detail:body.detail.code}));
-      } catch { /* Ordinary non-JSON 403 keeps its original error handling. */ }
+      } catch(error) { if(error instanceof ApiError)throw error; /* Ordinary non-JSON 403 keeps its original error handling. */ }
     }
     return response;
   } catch(error) {
+    if(error instanceof ApiError) throw error;
     if(init.signal?.aborted) throw error;
     window.dispatchEvent(new Event('lernium-network-failed'));
     throw new ApiError(timedOut?'Сервер не ответил вовремя. Проверьте результат перед повторным сохранением.':'Нет связи с сервером. Проверьте подключение и повторите действие.',0,timedOut?'timeout':'network');

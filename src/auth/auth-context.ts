@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import type {AuthSessionStamp} from '@/shared/api';
 
 export type AuthUser = {
   id: number;
@@ -29,7 +30,7 @@ export type AuthContextValue = {
   register: (payload: RegistrationPayload) => Promise<void>;
   logout: () => void;
   refreshUser?: () => Promise<void>;
-  completeAuthentication?: (response:AuthResponse) => void;
+  completeAuthentication?: (response:AuthResponse, expectedSession?:AuthSessionStamp) => void;
 };
 
 export type AuthResponse = {

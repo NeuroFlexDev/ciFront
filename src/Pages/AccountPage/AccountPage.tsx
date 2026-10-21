@@ -6,7 +6,7 @@ import DraftNotice from '@/Components/DraftNotice';
 import { FormEvent, useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { api, apiFetch, setAuthToken } from '@/shared/api';
+import { api, apiFetch, setAuthToken, captureAuthSession, assertAuthSession } from '@/shared/api';
 import catalog from '@/legal/catalog.json';
 import styles from './styles.module.css';
 import IdentityLinks from './IdentityLinks';
@@ -80,23 +80,27 @@ export default function AccountPage() {
     function profile(event: FormEvent) { event.preventDefault(); void perform(async () => { const savedName = name; await api.patch('/me', { full_name: savedName }); clearName(savedName); await refreshUser?.(); setMessage(t("Имя сохранено.")); }); }
     function password(event: FormEvent) {
         event.preventDefault();
+        const session=captureAuthSession();
         void perform(async () => {
             const { data } = await api.post<{
                 access_token: string;
             }>('/change-password', { old_password: oldPassword, new_password: newPassword });
-            setAuthToken(data.access_token);
+            setAuthToken(data.access_token,session);
             setOldPassword('');
             setNewPassword('');
             setMessage(t("Пароль изменён. Предыдущие сеансы завершены."));
         });
     }
     async function changeMarketing(accepted: boolean) {
+        const session=captureAuthSession();
         await perform(async () => {
             const response = await apiFetch('/legal/me/marketing', { method: 'PUT', body: JSON.stringify({ accepted, legal_version: catalog.version }) });
             if (!response.ok) {
                 const body = await response.json();
+                assertAuthSession(session);
                 throw new Error(typeof body.detail === 'string' ? body.detail : t("Не удалось изменить подписку."));
             }
+            assertAuthSession(session);
             await loadDocuments();
             setChoice(false);
             setMessage(accepted ? t("Предпочтение сохранено.") : t("Согласие на рассылку отозвано."));

@@ -1,19 +1,20 @@
 import {useState,type FormEvent} from 'react';
 import type {AuthResponse} from './auth-context';
 import type {MFAChallengeResponse} from './mfa';
-import {api} from '@/shared/api';
+import {api,captureAuthSession,assertAuthSession,type AuthSessionStamp} from '@/shared/api';
 import {errorMessage} from '@/shared/errors';
 import {useLocale} from '@/i18n/useLocale';
 import styles from './mfa.module.css';
-export default function MFAChallengeForm({challenge,onSuccess,onCancel}:{challenge?:MFAChallengeResponse;onSuccess:(response:AuthResponse&{assignment_id?:number})=>void;onCancel:()=>void}){
+export default function MFAChallengeForm({challenge,onSuccess,onCancel}:{challenge?:MFAChallengeResponse;onSuccess:(response:AuthResponse&{assignment_id?:number},session:AuthSessionStamp)=>void;onCancel:()=>void}){
   const {t}=useLocale();
   const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
   async function submit(event:FormEvent){
     event.preventDefault();if(busy)return;setBusy(true);setError('');
+    const session=captureAuthSession();
     try{
       const {data}=await api.post<AuthResponse&{assignment_id?:number}>(challenge?'/auth/mfa/verify':'/auth/mfa/step-up',
         challenge?{challenge_token:challenge.challenge_token,code}:{code});
-      setCode('');onSuccess(data);
+      assertAuthSession(session);setCode('');onSuccess(data,session);
     }catch(reason){setError(errorMessage(reason));}finally{setBusy(false);}
   }
   return <form onSubmit={submit} className={styles.form}>

@@ -1,7 +1,7 @@
 import {useEffect,useState,type FormEvent} from 'react';
 import {useAuth} from '@/auth/useAuth';
 import type {AuthResponse} from '@/auth/auth-context';
-import {api} from '@/shared/api';
+import {api,captureAuthSession,assertAuthSession,type AuthSessionStamp} from '@/shared/api';
 import {errorMessage} from '@/shared/errors';
 import {RequestError,LoadingState} from '@/Components/RequestState';
 import {useReconnect} from '@/hooks/useReconnect';
@@ -28,20 +28,23 @@ export default function MFASettings(){
     if(busy)return;setBusy(true);setError('');setMessage('');
     try{await fn();}catch(reason){setError(errorMessage(reason));}finally{setBusy(false);}
   }
-  function apply(data:Result){
+  function apply(data:Result,session:AuthSessionStamp){
+    assertAuthSession(session);
     if(!completeAuthentication)throw new Error('Не удалось завершить вход. Обновите страницу и откройте вход заново.');
-    completeAuthentication(data);setRecovery(data.recovery_codes||[]);setPassword('');setCode('');setSetup(null);setAction(null);
+    completeAuthentication(data,session);setRecovery(data.recovery_codes||[]);setPassword('');setCode('');setSetup(null);setAction(null);
   }
   function start(event:FormEvent){event.preventDefault();void perform(async()=>{
     setSetup((await api.post<Setup>('/auth/mfa/enroll',{password})).data);setPassword('');
   });}
   function confirm(event:FormEvent){event.preventDefault();if(!setup)return;void perform(async()=>{
-    apply((await api.post<Result>('/auth/mfa/enroll/confirm',{enrollment_token:setup.enrollment_token,code})).data);
+    const session=captureAuthSession();
+    apply((await api.post<Result>('/auth/mfa/enroll/confirm',{enrollment_token:setup.enrollment_token,code})).data,session);
     setMessage('Двухэтапный вход подключён. Предыдущие сеансы завершены.');await load();
   });}
   function manage(event:FormEvent){event.preventDefault();if(!action)return;void perform(async()=>{
     const disable=action==='disable';
-    apply((await api.post<Result>(disable?'/auth/mfa/disable':'/auth/mfa/recovery-codes',{password,code})).data);
+    const session=captureAuthSession();
+    apply((await api.post<Result>(disable?'/auth/mfa/disable':'/auth/mfa/recovery-codes',{password,code})).data,session);
     setMessage(disable?'Двухэтапный вход отключён. Предыдущие сеансы завершены.':'Новые резервные коды выпущены. Старые больше не действуют.');await load();
   });}
   function download(){

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useState,
   useRef,
   type PropsWithChildren,
@@ -12,7 +13,7 @@ import {
   type AuthResponse,
   type AuthUser,
 } from "@/auth/auth-context";
-import { apiFetch, getAuthToken, setAuthToken, bindAuthSession, authSessionChanged, AUTH_TOKEN_KEY, LEGACY_AUTH_TOKEN_KEY } from "@/shared/api";
+import { apiFetch, getAuthToken, setAuthToken, bindAuthSession, authSessionChanged, captureAuthSession, assertAuthSession, authSessionIsCurrent, type AuthSessionStamp, AUTH_TOKEN_KEY, LEGACY_AUTH_TOKEN_KEY } from "@/shared/api";
 import {ApiError,errorMessage} from '@/shared/errors';
 import {setDraftOwner,downloadDrafts} from '@/shared/drafts';
 import {RequestError} from '@/Components/RequestState';
@@ -36,6 +37,8 @@ async function readErrorMessage(response: Response): Promise<string> {
 export function AuthProvider({ children }: PropsWithChildren) {
   const {t}=useLocale();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const currentUser = useRef<AuthUser | null>(null);
+  function updateUser(nextUser:AuthUser|null){currentUser.current=nextUser;setUser(nextUser);}
   const [isLoading, setIsLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
   const [sessionChanged, setSessionChanged] = useState(false);
@@ -51,7 +54,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const renewDialog=useRef<HTMLDivElement>(null);
   useDialogFocus(renewDialog,{active:sessionExpired&&Boolean(user),busy:renewing,onClose:()=>setSessionExpired(false)});
   useReconnect(()=>{if(authError&&!user)setCheckVersion(v=>v+1);});
-  useEffect(() => {
+  useLayoutEffect(() => {
     const releaseBinding = bindAuthSession();
     const expire = () => { setSessionExpired(true); };
     const changed = () => { setSessionChanged(true); setSessionExpired(true); setRenewChallenge(null); setPassword(''); };
@@ -74,22 +77,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return;
     }
     let active=true;
+    const session=captureAuthSession();
     const controller=new AbortController();
     setIsLoading(true);setAuthError(null);
     void (async () => {
       try {
         const response = await apiFetch("/auth/me",{signal:controller.signal});
         if(!active)return;
+        assertAuthSession(session);
         if (!response.ok) {
-          if(response.status===401){setAuthToken(null);setDraftOwner(null);setUser(null);return;}
+          if(response.status===401){setAuthToken(null,session);setDraftOwner(null);updateUser(null);return;}
           throw new ApiError(response.status===403?'Доступ к аккаунту приостановлен. Обратитесь в поддержку.':'Не удалось проверить вход. Сохранённый сеанс не удалён: повторите проверку.',response.status,'http');
         }
 
         const nextUser = (await response.json()) as AuthUser;
-        setUser(nextUser);
+        if(!active)return;
+        assertAuthSession(session);
+        updateUser(nextUser);
         setDraftOwner(nextUser.id);
       } catch(error) {
-        if(active)setAuthError(error);
+        if(active&&authSessionIsCurrent(session))setAuthError(error);
       } finally {
         if(active)setIsLoading(false);
       }
@@ -98,6 +105,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, [checkVersion]);
 
   async function authenticate(path: string, payload: AuthPayload): Promise<void> {
+    const session=captureAuthSession();
     const response = await apiFetch(path, {
       method: "POST",
       body: JSON.stringify(payload),
@@ -108,15 +116,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     const data = (await response.json()) as AuthResponse | MFAChallengeResponse;
+    assertAuthSession(session);
     if(isMFAChallenge(data))throw new MFAChallengeError(data);
-    completeAuthentication(data);
+    completeAuthentication(data,session);
   }
 
-  function completeAuthentication(data:AuthResponse){
+  function completeAuthentication(data:AuthResponse, expectedSession?:AuthSessionStamp){
+    if(expectedSession)assertAuthSession(expectedSession);
     if(!data.access_token||!data.user?.id)throw new Error('Сервис входа вернул неполный ответ. Повторите вход.');
-    if(user&&data.user.id!==user.id)throw new Error('Для продолжения войдите в аккаунт этой страницы. Черновик остаётся у исходного владельца.');
-    setAuthToken(data.access_token);
-    setUser(data.user);
+    if(currentUser.current&&data.user.id!==currentUser.current.id)throw new Error('Для продолжения войдите в аккаунт этой страницы. Черновик остаётся у исходного владельца.');
+    setAuthToken(data.access_token,expectedSession);
+    updateUser(data.user);
+    setIsLoading(false);
     setDraftOwner(data.user.id);
     setAuthError(null);
     setSessionExpired(false);
@@ -136,12 +147,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
     register: (payload) => authenticate("/auth/register", payload),
     completeAuthentication,
     refreshUser: async () => {
+      const session=captureAuthSession();
       const response=await apiFetch('/auth/me');
-      if(response.ok)setUser(await response.json() as AuthUser);
+      if(response.ok){
+        const nextUser=await response.json() as AuthUser;
+        assertAuthSession(session);
+        if(currentUser.current&&nextUser.id!==currentUser.current.id)throw new ApiError('Не удалось проверить учетные данные',401,'http');
+        updateUser(nextUser);
+      }
     },
     logout: () => {
       setAuthToken(null);
-      setUser(null);
+      updateUser(null);
       setDraftOwner(null);
       setRenewChallenge(null);setMfaRequired(null);setPassword('');
     },

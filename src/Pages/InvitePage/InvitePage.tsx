@@ -5,7 +5,7 @@ import LanguageSwitch from '@/Components/LanguageSwitch';
 import { RequestError } from '@/Components/RequestState';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { api, setAuthToken } from '@/shared/api';
+import { api, setAuthToken, captureAuthSession, assertAuthSession } from '@/shared/api';
 import catalog from '@/legal/catalog.json';
 import styles from '@/Pages/Workspace/workspace.module.css';
 import { errorText } from '@/Pages/Workspace/shared';
@@ -56,6 +56,7 @@ export default function InvitePage() {
     if (busy) return;
     setBusy(true);
     setError('');
+    const session=captureAuthSession();
     api
       .post<AuthResponse>(
         preview?.existing_account
@@ -73,8 +74,9 @@ export default function InvitePage() {
             },
       )
       .then((r) => {
-        if (auth.completeAuthentication) auth.completeAuthentication(r.data);
-        else setAuthToken(r.data.access_token);
+        assertAuthSession(session);
+        if (auth.completeAuthentication) auth.completeAuthentication(r.data,session);
+        else setAuthToken(r.data.access_token,session);
         window.location.replace('/dashboard');
       })
       .catch((e) => setError(errorText(e)))

@@ -48,7 +48,7 @@ it('exchanges an LTI return once in StrictMode, clears the URL secret and opens 
  render(<StrictMode><MemoryRouter initialEntries={['/auth']}><Routes><Route path="/auth" element={<AuthPage/>}/><Route path="/learning/:id" element={<h1>Assigned course</h1>}/></Routes></MemoryRouter></StrictMode>);
  expect(await screen.findByText('Assigned course')).toBeInTheDocument();
  expect(fetch.mock.calls.filter(([url])=>String(url).endsWith('/lti/exchange'))).toHaveLength(1);
- expect(mock.completeAuthentication).toHaveBeenCalledWith(expect.objectContaining({access_token:'verified',assignment_id:44}));
+ expect(mock.completeAuthentication).toHaveBeenCalledWith(expect.objectContaining({access_token:'verified',assignment_id:44}),expect.objectContaining({generation:expect.any(Number),storedToken:null}));
  expect(window.location.hash).toBe('');
  expect(JSON.stringify(localStorage)).not.toContain(code);
 });
