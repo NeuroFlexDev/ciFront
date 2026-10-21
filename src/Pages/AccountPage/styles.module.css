@@ -332,7 +332,7 @@
    used by the supplied course/settings designs. Security form logic stays in TSX. */
 .page {
   --account-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
-  padding: 32px clamp(20px, 4vw, 64px) 56px;
+  padding: 0 clamp(20px, 4vw, 64px) 56px;
 }
 .container,
 .header {
@@ -494,7 +494,7 @@
 }
 @media (max-width: 800px) {
   .page {
-    padding: 24px 20px 40px;
+    padding: 0 20px 40px;
   }
   .container {
     margin-top: 36px;

@@ -14,6 +14,7 @@ import MFASettings from './MFASettings';
 import { useLearningData } from '@/Pages/Learning/useLearningData';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
 import { ApiError } from '@/shared/errors';
+import Menu from '@/Components/Menu/Menu';
 type Receipt = {
     id: number;
     slug: string;
@@ -109,8 +110,7 @@ export default function AccountPage() {
             setMessage(accepted ? t("Предпочтение сохранено.") : t("Согласие на рассылку отозвано."));
         });
     }
-    return <main className={styles.page}>
-    <header className={styles.header}><a href="/" className={styles.brand}>{t("ЛЕРНИУМ")}</a><nav><Link to="/dashboard">{t("Обзор")}</Link>{user?.is_admin && <Link to="/admin">{t("Админка")}</Link>}<Link to="/courses">{t("Мои курсы")}</Link><Link to="/express">{t("Создать курс")}</Link><a href="/legal/">{t("Документы")}</a><button onClick={logout}>{t("Выйти")}</button></nav></header>
+    return <><Menu /><main className={styles.page}>
     <div className={styles.container}><h1>{t("Личный профиль")}</h1><p className={styles.subtitle}>{t("Управляйте аккаунтом, безопасностью и согласиями.")}</p>
       <div className={styles.tabs} aria-label={t("Разделы профиля")}>{[['profile', t("Основные настройки")], ['security', t("Безопасность")], ['documents', t("Документы и согласия")]].map(([id, label]) => <button key={id} className={tab === id ? styles.active : ''} onClick={() => { setTab(id); setMessage(''); setError(''); }} aria-pressed={tab === id}>{t(label)}</button>)}</div>
       {message && <p className={styles.success} role="status">{message}</p>}{error && <p className={styles.error} role="alert">{error}</p>}
@@ -127,7 +127,7 @@ export default function AccountPage() {
       {selected && <section className={styles.snapshot} aria-label={t("Сохранённая редакция")}><button className={styles.secondary} onClick={() => setSelected(null)}>{t("Закрыть редакцию")}</button><h2>{selected.document.title}</h2><p>{t("Редакция") + " "}{selected.version}{" " + t("· Сохранённый текст")}</p>{selected.document.sections.map(section => <section key={section.title}><h3>{section.title}</h3>{section.paragraphs.map((p, i) => <p key={i}>{p}</p>)}</section>)}</section>}
       <footer className={styles.footer}><a href="/legal/privacy/">{t("Политика обработки данных")}</a><a href="/legal/contacts/">{t("Помощь и контакты")}</a><a href="/legal/cookies/">{t("Данные браузера")}</a></footer>
     </div>
-  </main>;
+  </main></>;
 }
 
 type AccountTeam = {

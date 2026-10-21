@@ -58,7 +58,8 @@ it('late password-change response from an unmounted account must not replace the
   fireEvent.change(screen.getByLabelText('Новый пароль'),{target:{value:'new-long-password'}});
   fireEvent.click(screen.getByRole('button',{name:'Изменить пароль'}));
   await waitFor(()=>expect(fetchMock.mock.calls.some(([url])=>String(url).endsWith('/change-password'))).toBe(true));
-  fireEvent.click(screen.getByRole('button',{name:'Выйти'}));
+  fireEvent.click(screen.getByRole('banner').querySelector('summary')!);
+  fireEvent.click(screen.getByRole('button',{name:'Выйти из аккаунта ↗'}));
   fireEvent.click(screen.getByRole('button',{name:'Login Bob'}));
   await waitFor(()=>expect(auth.user?.id).toBe(8));
   await act(async()=>{resolve(json({access_token:'alice-password-new'}));await delayed;});
