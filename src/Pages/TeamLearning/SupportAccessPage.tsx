@@ -450,7 +450,7 @@ function SupportPreview({
   }, [query.data?.grant.expires_at]);
   const content = (value: string) =>
     value.replace(
-      /\/api\/images\/(\d+)\/content/g,
+      /(?<![\w/])(?:\/api)?\/images\/(\d+)\/content(?=$|[\s?#)\]>"'])/g,
       `/api/support/grants/${grantId}/images/$1/content`,
     );
   return (

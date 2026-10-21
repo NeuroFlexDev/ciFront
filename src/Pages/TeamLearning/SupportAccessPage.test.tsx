@@ -94,7 +94,7 @@ it("requires an explicit operator open action and revocation closes loaded priva
                   {
                     id: 1,
                     title: "Private lesson",
-                    content: "Owner-approved lesson",
+                    content: "Owner-approved lesson ![A](/images/9/content) ![B](/api/images/10/content)",
                   },
                 ],
                 assessments: [],
@@ -123,14 +123,14 @@ it("requires an explicit operator open action and revocation closes loaded priva
   const open = await screen.findByRole("button", {
     name: "Открыть разрешённые данные",
   });
-  expect(screen.queryByText("Owner-approved lesson")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Owner-approved lesson/)).not.toBeInTheDocument();
   fireEvent.click(open);
-  expect(await screen.findByText("Owner-approved lesson")).toBeInTheDocument();
+  expect(await screen.findByText(/Owner-approved lesson/)).toHaveTextContent("![A](/api/support/grants/7/images/9/content) ![B](/api/support/grants/7/images/10/content)");
   fireEvent.click(
     screen.getByRole("button", { name: "Закрыть запрос и доступ" }),
   );
   await waitFor(() =>
-    expect(screen.queryByText("Owner-approved lesson")).not.toBeInTheDocument(),
+    expect(screen.queryByText(/Owner-approved lesson/)).not.toBeInTheDocument(),
   );
   expect(api.post).toHaveBeenCalledWith("/support/grants/7/revoke", {
     expected_revision: 3,
