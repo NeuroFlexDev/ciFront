@@ -380,6 +380,7 @@ export default function AssessmentAnswer({
                 {" " + t("— до") + " "}
                 {c.max_points}
                 {" " + t("балл.")} {c.description}
+                {!!c.levels?.length&&<ul>{c.levels.map((level,index)=><li key={index}><strong>{level.title}</strong> — {level.points} {t('баллов')}. {level.description}</li>)}</ul>}
               </li>
             ))}
           </ul>

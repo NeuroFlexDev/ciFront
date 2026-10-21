@@ -278,6 +278,7 @@ function ReviewForm({
               {" " + t("· максимум") + " "}
               {c.max_points}
               <span className={s.muted}>{c.description}</span>
+              {!!c.levels?.length&&<span className={s.muted}>{c.levels.map((level,index)=><span style={{display:'block'}} key={index}>{level.title} — {level.points} {t('баллов')}. {level.description}</span>)}</span>}
               <input
                 type="number"
                 min={0}

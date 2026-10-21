@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach,beforeEach, expect, it, vi } from 'vitest';
 import ExpressPage from '@/Pages/ExpressPage/ExpressPage';
@@ -70,4 +70,18 @@ it('resumes polling when a paused run keeps the same checkpoint ID', async () =>
   fireEvent.click(screen.getByRole('button',{name:'Продолжить генерацию'}));
   expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toBeInTheDocument();
   expect(api.post).toHaveBeenCalledWith('/generation-runs/99/retry');
+});
+
+it('locks editable settings while a save is pending so its receipt cannot overwrite newer typing',async()=>{
+  const settings={title:'Original',goal:'Learning goal',target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],revision:4};
+  vi.mocked(api.get).mockImplementation(async path=>({data:path.includes('capabilities')?capabilities:path.includes('generation-settings')?settings:{items:[{id:42,status:'ready',original_filename:'source.txt'}],total:1}}));
+  let resolveSave:(value:{data:unknown})=>void=()=>{};vi.mocked(api.put).mockImplementation(()=>new Promise(resolve=>{resolveSave=resolve;}));vi.mocked(api.post).mockResolvedValue({data:preflight});
+  render(<MemoryRouter initialEntries={['/express?course=17']}><ExpressPage/></MemoryRouter>);
+  const title=await screen.findByLabelText('Название курса');await waitFor(()=>expect(title).toHaveValue('Original'));
+  fireEvent.change(title,{target:{value:'Submitted title'}});fireEvent.click(screen.getByRole('button',{name:'Сохранить и продолжить →'}));
+  await waitFor(()=>expect(api.put).toHaveBeenCalled());expect(title).toBeDisabled();expect(screen.getByLabelText('Цель курса')).toBeDisabled();expect(screen.getByLabelText('Язык курса')).toBeDisabled();
+  fireEvent.change(title,{target:{value:'Must not overwrite'}});expect(title).toHaveValue('Submitted title');
+  await act(async()=>resolveSave({data:{...settings,title:'Submitted title',revision:5}}));
+  await screen.findByRole('button',{name:'Сгенерировать курс'});
+  expect(api.post).toHaveBeenCalledWith('/courses/17/generation-preflight',expect.objectContaining({settings:expect.objectContaining({title:'Submitted title',expected_revision:5})}));
 });

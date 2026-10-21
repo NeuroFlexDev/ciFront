@@ -15,6 +15,7 @@ export type Criterion = {
   title: string;
   description?: string;
   max_points: number;
+  levels?: {title:string;description:string;points:number}[];
 };
 export type Assessment = {
   id: string;
