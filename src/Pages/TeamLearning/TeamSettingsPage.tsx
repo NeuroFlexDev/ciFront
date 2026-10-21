@@ -8,6 +8,7 @@ import { useDurableState } from "@/hooks/useDurableState";
 import { Shell } from "@/Pages/Workspace/shared";
 import { LoadingState, RequestError } from "@/Components/RequestState";
 import ResourceUsagePanel from "@/Components/ResourceUsagePanel";
+import CourseTransferPanel from "./CourseTransferPanel";
 import { resourceProfiles } from "./resourceProfiles";
 import { useLearningData } from "../Learning/useLearningData";
 import { dateLabel } from "../Learning/types";
@@ -18,6 +19,7 @@ import s from "../Learning/learning.module.css";
 type Permission = { can_manage_team: boolean; can_manage_admins: boolean };
 export default function TeamSettingsPage() {
   const { t } = useLocale();
+  const { user } = useAuth();
 
   const settings = useLearningData<TeamSettings>("/team/settings");
   const permission = useLearningData<Permission>("/team/permissions");
@@ -69,6 +71,9 @@ export default function TeamSettingsPage() {
           )
         )}
         <Ownership isOwner={!!permission.data?.can_manage_admins} />
+        {permission.data?.can_manage_admins &&
+          user?.organization_role === "owner" &&
+          !user.is_admin && <CourseTransferPanel />}
         {permission.data?.can_manage_admins && (
           <Link className={s.secondary} to="/support-access">
             {t("Доступ поддержки")}
