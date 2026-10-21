@@ -8,6 +8,7 @@ import {
   Network,
   SlidersHorizontal,
   Blocks,
+  Plus,
 } from "lucide-react";
 
 import { CanvasLeftPanel } from "@/Components/canvas/CanvasLeftPanel";
@@ -24,12 +25,15 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { fetchCanvasWorkspace, adoptCanvasRevision } from "@/api/canvasApi";
+import { useAssistantAvailability } from "@/Pages/AiHelperPage/useAssistantAvailability";
+import { canvasAiDisabledReasons } from "@/utils/canvasAiAvailability";
 
 function LerniumCanvasPage() {
   const { t } = useLocale();
 
   const { id } = useParams<{ id: string }>();
   const courseId = id ?? "draft";
+  const assistantAvailability = useAssistantAvailability();
 
   const [pageLoading, setPageLoading] = useState(true);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -55,6 +59,7 @@ function LerniumCanvasPage() {
   const recoveredDraft = useCanvasStore((state) => state.recoveredDraft);
   const hasUnsavedChanges = useCanvasStore((state) => state.hasUnsavedChanges);
   const aiNotice = useCanvasStore((state) => state.aiNotice);
+  const aiProposal = useCanvasStore((state) => state.aiProposal);
   const loadCourse = useCanvasStore((state) => state.loadCourse);
   useReconnect(() => {
     if (loadError) setLoadVersion((v) => v + 1);
@@ -91,6 +96,19 @@ function LerniumCanvasPage() {
     () => edges.find((edge) => selectedEdgeIds.includes(edge.id)) ?? null,
     [edges, selectedEdgeIds],
   );
+  const aiDisabledReasons = canvasAiDisabledReasons(
+    nodes.filter((node) => selectedNodeIds.includes(node.id)),
+    assistantAvailability.reason,
+    Boolean(aiProposal),
+  );
+  const handleAiAction = (action: CanvasAiActionType) => {
+    if (
+      !assistantAvailability.blocked &&
+      !aiDisabledReasons[action] &&
+      !isAiRunning
+    )
+      void runAiAction(action);
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -183,9 +201,8 @@ function LerniumCanvasPage() {
         onZoomIn={() => viewApiRef.current?.zoomIn()}
         onZoomOut={() => viewApiRef.current?.zoomOut()}
         onFitView={() => viewApiRef.current?.fitView()}
-        onAiAction={(action: CanvasAiActionType) => {
-          void runAiAction(action);
-        }}
+        onAiAction={handleAiAction}
+        aiDisabledReasons={aiDisabledReasons}
       />
 
       <nav className={styles.mobilePanels} aria-label={t("Панели канвы")}>
@@ -261,7 +278,36 @@ function LerniumCanvasPage() {
           <div className={styles.proposalReview}>
             <AIProposalReview />
           </div>
-          <CanvasView onReady={handleCanvasReady} />
+          <div className={styles.boardFrame}>
+            <CanvasView onReady={handleCanvasReady} />
+            {!nodes.length && (
+              <section
+                className={styles.emptyBoard}
+                aria-labelledby="canvas-empty-title"
+              >
+                <Network size={28} aria-hidden="true" />
+                <h2 id="canvas-empty-title">{t("Схема ещё не создана")}</h2>
+                <p>
+                  {t(
+                    "Канва — отдельная рабочая схема курса. Уроки доступны в содержании курса. Добавьте первый модуль, чтобы спланировать связи между учебными блоками.",
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nodeId = createNode("module", { x: 80, y: 80 });
+                    requestFocusNode(nodeId);
+                  }}
+                >
+                  <Plus size={18} aria-hidden="true" />
+                  {t("Добавить модуль")}
+                </button>
+                <Link to={`/courses/${courseId}/edit`}>
+                  {t("Открыть содержание курса")}
+                </Link>
+              </section>
+            )}
+          </div>
 
           <div className={styles.workspaceStatusBar}>
             <div className={styles.workspaceStatusItem}>
@@ -374,10 +420,18 @@ function LerniumCanvasPage() {
                 : null
             }
             isAiRunning={isAiRunning}
-            onAiAction={(action) => {
-              void runAiAction(action);
-            }}
+            onAiAction={handleAiAction}
+            aiDisabledReasons={aiDisabledReasons}
           />
+          {assistantAvailability.status === "error" && (
+            <button
+              type="button"
+              className={styles.utilityButton}
+              onClick={() => void assistantAvailability.reload()}
+            >
+              {t("Повторить проверку доступности AI")}
+            </button>
+          )}
         </div>
       </div>
     </main>

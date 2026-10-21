@@ -14,6 +14,7 @@ import LanguageSwitch from "@/Components/LanguageSwitch";
 import { AIActionsMenu } from "@/Components/ai/AIActionsMenu";
 import styles from "@/Components/canvas/styles.module.css";
 import type { CanvasAiActionType } from "@/types/canvas";
+import type { CanvasAiDisabledReasons } from "@/utils/canvasAiAvailability";
 
 type CanvasToolbarProps = {
   courseTitle: string;
@@ -27,6 +28,7 @@ type CanvasToolbarProps = {
   onZoomOut: () => void;
   onFitView: () => void;
   onAiAction: (action: CanvasAiActionType) => void;
+  aiDisabledReasons?: CanvasAiDisabledReasons;
 };
 
 export function CanvasToolbar({
@@ -41,6 +43,7 @@ export function CanvasToolbar({
   onZoomOut,
   onFitView,
   onAiAction,
+  aiDisabledReasons,
 }: CanvasToolbarProps) {
   const { t, locale } = useLocale();
 
@@ -142,6 +145,7 @@ export function CanvasToolbar({
           <AIActionsMenu
             compact
             isLoading={isAiRunning}
+            disabledReasons={aiDisabledReasons}
             onSelect={(action) => {
               if (aiRef.current) aiRef.current.open = false;
               onAiAction(action);

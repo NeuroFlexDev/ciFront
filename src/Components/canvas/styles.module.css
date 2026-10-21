@@ -302,13 +302,14 @@
 }
 .paletteGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
   gap: 8px;
 }
 .paletteButton {
   min-width: 0;
-  display: grid;
-  gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   justify-items: start;
   padding: 14px 10px;
   border-radius: 18px;
@@ -321,7 +322,74 @@
   color: var(--canvas-accent);
 }
 .paletteButton span {
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  white-space: nowrap;
+}
+.paletteButton svg {
+  flex-shrink: 0;
+}
+.boardFrame {
+  position: relative;
+}
+.emptyBoard {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(460px, calc(100% - 40px));
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 32px;
+  border: 1px solid #3b4430;
+  border-radius: 28px;
+  background: #171a14;
+  box-shadow: 0 16px 48px #0006;
+  text-align: center;
+}
+.emptyBoard > svg {
+  color: var(--canvas-accent);
+}
+.emptyBoard h2 {
+  margin: 0;
+  font-family: "Days", "GolosText", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.4;
+}
+.emptyBoard p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--canvas-muted);
+}
+.emptyBoard button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 20px;
+  color: #141414;
+  background: var(--canvas-accent);
+  border: 0;
+  border-radius: 28px;
+  cursor: pointer;
+}
+.emptyBoard a {
+  color: var(--canvas-accent);
+  font-size: 13px;
+  text-underline-offset: 4px;
+}
+.aiUnavailableReason {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px;
+  background: #25291e;
+  border-radius: 14px;
+  color: #e3e9d7;
+  font-size: 12px;
+  line-height: 1.6;
 }
 .leftPanelHint {
   display: flex;
@@ -805,7 +873,7 @@
     align-items: start;
   }
   .paletteGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
   }
   .paletteButton {
     display: flex;
@@ -897,7 +965,7 @@
     flex: 1;
   }
   .paletteGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   }
   .paletteButton {
     display: grid;
@@ -936,6 +1004,13 @@
   }
 }
 @media (max-width: 480px) {
+  .emptyBoard {
+    padding: 24px 20px;
+    gap: 14px;
+  }
+  .emptyBoard h2 {
+    font-size: 17px;
+  }
   .toolbar {
     padding: 18px 16px;
     border-radius: 24px;
@@ -970,6 +1045,7 @@
   }
   .paletteButton {
     display: flex;
+    padding: 14px 10px;
   }
   .aiActionsCompact,
   .sidebarAiBlock .aiActions {

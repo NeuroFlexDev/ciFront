@@ -14,12 +14,14 @@ import {
   EXTENDED_NODE_TYPES,
 } from "@/utils/canvasAdapters";
 import styles from "@/Components/canvas/styles.module.css";
+import type { CanvasAiDisabledReasons } from "@/utils/canvasAiAvailability";
 
 type CanvasSidebarProps = {
   selectedNode: { id: string; data: CanvasNodeData } | null;
   selectedEdge: { id: string; data?: CanvasEdgeData | null } | null;
   isAiRunning: boolean;
   onAiAction: (action: CanvasAiActionType) => void;
+  aiDisabledReasons?: CanvasAiDisabledReasons;
 };
 
 function toCommaSeparated(value?: string[]) {
@@ -31,6 +33,7 @@ export function CanvasSidebar({
   selectedEdge,
   isAiRunning,
   onAiAction,
+  aiDisabledReasons,
 }: CanvasSidebarProps) {
   const { t } = useLocale();
 
@@ -99,7 +102,11 @@ export function CanvasSidebar({
             "Выберите узел на канве, чтобы редактировать его свойства, запускать AI-действия и управлять структурой.",
           )}
         </p>
-        <AIActionsMenu isLoading={isAiRunning} onSelect={onAiAction} />
+        <AIActionsMenu
+          isLoading={isAiRunning}
+          onSelect={onAiAction}
+          disabledReasons={aiDisabledReasons}
+        />
       </aside>
     );
   }
@@ -296,7 +303,11 @@ export function CanvasSidebar({
 
       <div className={styles.sidebarAiBlock}>
         <div className={styles.sectionCaption}>{t("AI-действия")}</div>
-        <AIActionsMenu isLoading={isAiRunning} onSelect={onAiAction} />
+        <AIActionsMenu
+          isLoading={isAiRunning}
+          onSelect={onAiAction}
+          disabledReasons={aiDisabledReasons}
+        />
       </div>
     </aside>
   );

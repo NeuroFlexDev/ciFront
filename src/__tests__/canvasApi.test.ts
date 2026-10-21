@@ -8,6 +8,27 @@ const fetchMock = vi.fn();
 beforeEach(() => {vi.stubGlobal('fetch',fetchMock);fetchMock.mockReset();localStorage.clear();setDraftOwner(null);useCanvasStore.setState({aiProposal:null,isAiRunning:false});});
 const json = (data: unknown, status=200) => new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
 describe('server canvas persistence', () => {
+  it("retains the canonical title for an empty manual course and makes no writes", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        json({ version: 0, snapshot: null, course_title: "Ручной курс" }),
+      )
+      .mockResolvedValueOnce(json({ nodes: [], edges: [], updated_at: null }));
+    const snapshot = await loadCanvasSnapshot("4");
+    expect(snapshot).toMatchObject({
+      courseId: "4",
+      courseTitle: "Ручной курс",
+      nodes: [],
+      edges: [],
+      updatedAt: 0,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(
+      fetchMock.mock.calls.every(
+        ([, options]) => !options?.method || options.method === "GET",
+      ),
+    ).toBe(true);
+  });
   it('keeps an AI proposal separate and durable until explicit acceptance',async()=>{
     setDraftOwner(42);
     const anchor=createCanvasNode('module',{x:0,y:0},{title:'Author material'});

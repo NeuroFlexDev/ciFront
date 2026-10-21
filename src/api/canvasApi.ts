@@ -15,9 +15,8 @@ type Graph = {nodes: {id: string; type: string; label?: string; title?: string; 
 export async function loadCanvasSnapshot(courseId: string): Promise<CanvasSnapshot | null> {
   const data = await fetchCanvasWorkspace(courseId);
   versions.set(key(courseId),data.version);
-  if (data.snapshot) return data.snapshot;
+  if (data.snapshot) return {...data.snapshot,courseTitle:data.course_title ?? data.snapshot.courseTitle};
   const graph = (await api.get<Graph>(`/courses/${courseId}/canvas`)).data;
-  if (!graph.nodes.length) return null;
   const nodes = graph.nodes.map((n,i) => {
     const type = (n.type === 'task' ? 'practice' : n.type) as CanvasNodeType;
     const node = createCanvasNode(type,n.position ?? {x:(i%4)*300,y:Math.floor(i/4)*200},

@@ -1,4 +1,22 @@
 export const canvasEnglish: Record<string, string> = {
+  'Добавить модуль': 'Add module',
+  "Схема ещё не создана": "The diagram has not been created yet",
+  "Канва — отдельная рабочая схема курса. Уроки доступны в содержании курса. Добавьте первый модуль, чтобы спланировать связи между учебными блоками.":
+    "The canvas is a separate working diagram for the course. Your lessons are available in the course content. Add the first module to plan connections between learning blocks.",
+  "Открыть содержание курса": "Open course content",
+  "Повторить проверку доступности AI": "Check AI availability again",
+  "Выберите не больше 10 узлов для одного AI-действия.":
+    "Select no more than 10 nodes for one AI action.",
+  "Для разбиения выберите один модуль.":
+    "Select one module to split into lessons.",
+  "Выберите учебный блок, по которому нужно составить тест.":
+    "Select a learning block to create a test for.",
+  "Выберите учебный блок, от которого продолжится ветка.":
+    "Select a learning block from which to extend the branch.",
+  "Выберите не меньше двух узлов для упрощения связанной структуры.":
+    "Select at least two nodes to simplify a connected structure.",
+  "Выберите учебные блоки, навыки или компетенции для анализа.":
+    "Select learning blocks, skills or competencies to analyse.",
   'Найти узел': 'Find node',
   'Панели канвы': 'Canvas panels',
   'Схема': 'Diagram',
