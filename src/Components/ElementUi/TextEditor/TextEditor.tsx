@@ -109,7 +109,7 @@ const TextEditor: React.FC<TextEditorProps> = ({ value, onChange }) => {
   // 3) ВАЖНО: Если prop value меняется (например, при переключении уроков),
   // обновляем контент редактора, если он отличается
   React.useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
+    if (editor && !editor.isDestroyed && value !== editor.getHTML()) {
       editor.commands.setContent(value, { emitUpdate: false })
     }
   }, [value, editor])
