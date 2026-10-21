@@ -387,7 +387,7 @@ export default function CourseEditPage() {
       <Menu />
       <main className={styles.container}>
         <WizardSteps step={5} />
-        <p>
+        <p className={styles.breadcrumbs}>
           <Link to="/courses">{t("Мои курсы")}</Link> ·{" "}
           <Link to={`/courses/${id}/canvas`}>{t("Канва")}</Link>
           {user?.organization_id && (
@@ -448,7 +448,7 @@ export default function CourseEditPage() {
         )}
         {notice && <p role="status">{notice}</p>}
         {user?.organization_id && structure && (
-          <details>
+          <details className={styles.reviewHistory}>
             <summary>{t("История согласования курса")}</summary>
             <PublicationHistory key={version} courseId={Number(id)} />
           </details>
@@ -486,7 +486,7 @@ export default function CourseEditPage() {
         )}
         {dirty && <DraftNotice restored={restored} />}
         {pendingLessons.length > 0 && (
-          <p>
+          <div className={styles.pending} role="status">
             {t("Несохранённых уроков:")} {pendingLessons.length}.{" "}
             {pendingLessons.map((item) => (
               <button
@@ -497,7 +497,7 @@ export default function CourseEditPage() {
                 {item.title}
               </button>
             ))}
-          </p>
+          </div>
         )}
         {!loading && !modules.some((m) => m.lessons.length) && (
           <section className="request-state">
@@ -518,6 +518,9 @@ export default function CourseEditPage() {
               <button
                 key={module.id}
                 disabled={busy || !module.lessons.length}
+                aria-current={
+                  module.lessons.some((item) => item.id === selected) || undefined
+                }
                 onClick={() => select(module.lessons[0])}
               >
                 <small>
@@ -530,6 +533,166 @@ export default function CourseEditPage() {
           </nav>
         )}
         <div className={styles.content}>
+          <section className={styles.editorContainer}>
+            {lesson ? (
+              <>
+                <header className={styles.editorHeading}>
+                  <h2>{lesson.title}</h2>
+                </header>
+                <div className={styles.toolbar}>
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      setEditing({
+                        kind: "lesson",
+                        courseId: Number(id),
+                        id: lesson.id,
+                        revision: baseRevision,
+                        title: lesson.title,
+                        description: lesson.description,
+                        content: draft,
+                      })
+                    }
+                  >
+                    {t("Название и описание")}
+                  </button>
+                  <button
+                    disabled={busy}
+                    className={styles.danger}
+                    onClick={() =>
+                      removeEntity("lessons", lesson, lesson.title)
+                    }
+                  >
+                    {t("Убрать урок")}
+                  </button>
+                </div>
+                <div
+                  className={`${styles.toolbar} ${styles.formatToolbar}`}
+                  role="toolbar"
+                  aria-label={t("Добавить блок содержания")}
+                >
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      insertMarkdown(t("\n## Заголовок раздела\n\n"))
+                    }
+                  >
+                    {t("Заголовок")}
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      insertMarkdown(
+                        t(
+                          "\n| Столбец 1 | Столбец 2 |\n| --- | --- |\n| Значение | Значение |\n",
+                        ),
+                      )
+                    }
+                  >
+                    {t("Таблица")}
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() => insertMarkdown("\n$$\nE = mc^2\n$$\n")}
+                  >
+                    {t("Формула")}
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      insertMarkdown(t("[Текст ссылки](https://)"))
+                    }
+                  >
+                    {t("Ссылка")}
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() =>
+                      insertMarkdown(t("\n- Первый пункт\n- Второй пункт\n"))
+                    }
+                  >
+                    {t("Список")}
+                  </button>
+                </div>
+                <label>
+                  {t("Текст урока (Markdown)")}
+                  <textarea
+                    ref={textInput}
+                    value={draft}
+                    onChange={(e) => edit(e.target.value)}
+                    disabled={busy}
+                    rows={18}
+                  />
+                </label>
+                <div className={styles.saveRow}>
+                  <button
+                    className={styles.primary}
+                    disabled={busy || !dirty}
+                    aria-describedby={!dirty ? "lesson-save-status" : undefined}
+                    onClick={() => void save()}
+                  >
+                    {busy ? t("Сохраняем…") : t("Сохранить урок")}
+                  </button>
+                  {!dirty && (
+                    <p id="lesson-save-status">{t("Урок сохранён")}</p>
+                  )}
+                </div>
+                {serverLesson && (
+                  <section className="request-state">
+                    <h2>{t("На сервере другая версия")}</h2>
+                    <p>
+                      {t(
+                        "Ваш текст сохранён в черновике. Сравните версии и внесите нужные изменения в поле выше.",
+                      )}
+                    </p>
+                    <details>
+                      <summary>
+                        {t("Показать текст сервера (версия")}{" "}
+                        {serverLesson.revision})
+                      </summary>
+                      <pre style={{ whiteSpace: "pre-wrap" }}>
+                        {serverLesson.content}
+                      </pre>
+                    </details>
+                    <button
+                      disabled={busy}
+                      onClick={() => void save(serverLesson.revision)}
+                    >
+                      {t("Сохранить мой текст вместо этой версии")}
+                    </button>
+                  </section>
+                )}
+                <div className={styles.toolbar}>
+                  <button
+                    disabled={busy}
+                    onClick={() => setShowImages((value) => !value)}
+                    aria-expanded={showImages}
+                  >
+                    {showImages
+                      ? t("Закрыть иллюстрации")
+                      : t("Добавить иллюстрацию")}
+                  </button>
+                </div>
+                {showImages && (
+                  <ImageLibrary
+                    courseId={id!}
+                    onInsert={(markdown) => {
+                      insertMarkdown("\n" + markdown + "\n");
+                      setShowImages(false);
+                    }}
+                  />
+                )}
+                <section
+                  className={styles.preview}
+                  aria-label={t("Предпросмотр")}
+                  key={lesson.id}
+                >
+                  <h3>{t("Предпросмотр")}</h3>
+                  <MarkdownContent>{draft}</MarkdownContent>
+                </section>
+              </>
+            ) : null}
+          </section>
           <aside className={styles.sidebar}>
             {modules.map((m, moduleIndex) => (
               <section key={m.id}>
@@ -581,6 +744,7 @@ export default function CourseEditPage() {
                   </button>
                   <button
                     disabled={busy}
+                    className={styles.danger}
                     aria-label={t("Удалить модуль {v0}", { v0: m.title })}
                     onClick={() => removeEntity("modules", m, m.title)}
                   >
@@ -595,7 +759,10 @@ export default function CourseEditPage() {
                       className={styles.lesson}
                       aria-pressed={selected === l.id}
                     >
-                      {l.title}
+                      <span className={styles.lessonNumber} aria-hidden="true">
+                        {lessonIndex + 1}
+                      </span>
+                      <span>{l.title}</span>
                     </button>
                     <button
                       disabled={busy || lessonIndex === 0}
@@ -629,6 +796,7 @@ export default function CourseEditPage() {
                 ))}
                 <button
                   disabled={busy}
+                  className={styles.addLesson}
                   onClick={() =>
                     setEditing({
                       kind: "lesson",
@@ -680,6 +848,7 @@ export default function CourseEditPage() {
                       </button>
                       <button
                         disabled={busy}
+                        className={styles.danger}
                         onClick={() =>
                           removeEntity("tests", question, question.question)
                         }
@@ -742,6 +911,7 @@ export default function CourseEditPage() {
                       </button>
                       <button
                         disabled={busy}
+                        className={styles.danger}
                         onClick={() => removeEntity("tasks", task, task.name)}
                       >
                         {t("Убрать задание")}
@@ -798,6 +968,7 @@ export default function CourseEditPage() {
                   </button>
                   <button
                     disabled={busy}
+                    className={styles.danger}
                     onClick={() => removeEntity("tests", test, test.question)}
                   >
                     {t("Убрать вопрос")}
@@ -806,148 +977,6 @@ export default function CourseEditPage() {
               ))}
             </details>
           </aside>
-          <section className={styles.editorContainer}>
-            {lesson ? (
-              <>
-                <h2>{lesson.title}</h2>
-                <div className={styles.toolbar}>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      setEditing({
-                        kind: "lesson",
-                        courseId: Number(id),
-                        id: lesson.id,
-                        revision: baseRevision,
-                        title: lesson.title,
-                        description: lesson.description,
-                        content: draft,
-                      })
-                    }
-                  >
-                    {t("Название и описание")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      removeEntity("lessons", lesson, lesson.title)
-                    }
-                  >
-                    {t("Убрать урок")}
-                  </button>
-                </div>
-                <div
-                  className={styles.toolbar}
-                  role="toolbar"
-                  aria-label={t("Добавить блок содержания")}
-                >
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("\n## Заголовок раздела\n\n"))
-                    }
-                  >
-                    {t("Заголовок")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(
-                        t(
-                          "\n| Столбец 1 | Столбец 2 |\n| --- | --- |\n| Значение | Значение |\n",
-                        ),
-                      )
-                    }
-                  >
-                    {t("Таблица")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => insertMarkdown("\n$$\nE = mc^2\n$$\n")}
-                  >
-                    {t("Формула")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("[Текст ссылки](https://)"))
-                    }
-                  >
-                    {t("Ссылка")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("\n- Первый пункт\n- Второй пункт\n"))
-                    }
-                  >
-                    {t("Список")}
-                  </button>
-                </div>
-                <label>
-                  {t("Текст урока (Markdown)")}
-                  <textarea
-                    ref={textInput}
-                    value={draft}
-                    onChange={(e) => edit(e.target.value)}
-                    disabled={busy}
-                    rows={18}
-                    style={{ width: "100%", padding: 16 }}
-                  />
-                </label>
-                <button disabled={busy || !dirty} onClick={() => void save()}>
-                  {t("Сохранить урок")}
-                </button>
-                {serverLesson && (
-                  <section className="request-state">
-                    <h2>{t("На сервере другая версия")}</h2>
-                    <p>
-                      {t(
-                        "Ваш текст сохранён в черновике. Сравните версии и внесите нужные изменения в поле выше.",
-                      )}
-                    </p>
-                    <details>
-                      <summary>
-                        {t("Показать текст сервера (версия")}{" "}
-                        {serverLesson.revision})
-                      </summary>
-                      <pre style={{ whiteSpace: "pre-wrap" }}>
-                        {serverLesson.content}
-                      </pre>
-                    </details>
-                    <button
-                      disabled={busy}
-                      onClick={() => void save(serverLesson.revision)}
-                    >
-                      {t("Сохранить мой текст вместо этой версии")}
-                    </button>
-                  </section>
-                )}
-                <div className={styles.toolbar}>
-                  <button
-                    disabled={busy}
-                    onClick={() => setShowImages((value) => !value)}
-                    aria-expanded={showImages}
-                  >
-                    {showImages
-                      ? t("Закрыть иллюстрации")
-                      : t("Добавить иллюстрацию")}
-                  </button>
-                </div>
-                {showImages && (
-                  <ImageLibrary
-                    courseId={id!}
-                    onInsert={(markdown) => {
-                      insertMarkdown("\n" + markdown + "\n");
-                      setShowImages(false);
-                    }}
-                  />
-                )}
-                <h3>{t("Предпросмотр")}</h3>
-                <MarkdownContent>{draft}</MarkdownContent>
-              </>
-            ) : null}
-          </section>
         </div>
         <div className={styles.buttons}>
           <button disabled={!modules.length} onClick={download}>
@@ -955,6 +984,11 @@ export default function CourseEditPage() {
           </button>
           <button
             className={styles.primary}
+            aria-describedby={
+              pendingLessons.length > 0 || !modules.length
+                ? "course-publish-status"
+                : undefined
+            }
             disabled={
               busy ||
               pendingLessons.length > 0 ||
@@ -971,6 +1005,16 @@ export default function CourseEditPage() {
             <Link className={styles.primary} to={`/assignments?course=${id}`}>
               {t("Назначить участникам")}
             </Link>
+          )}
+          {(pendingLessons.length > 0 || !modules.length) && (
+            <p
+              className={`${styles.actionHint} ${styles.publishHint}`}
+              id="course-publish-status"
+            >
+              {pendingLessons.length > 0
+                ? t("Сначала сохраните все изменённые уроки.")
+                : t("Добавьте модуль и уроки вручную или подготовьте содержание из документов.")}
+            </p>
           )}
         </div>
         {assessment && (

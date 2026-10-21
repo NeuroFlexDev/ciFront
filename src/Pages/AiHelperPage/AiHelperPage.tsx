@@ -305,8 +305,9 @@ function ChatSession({
             <Edit3 size={17} />
           </button>
           <button
-            className={styles.icon}
+            className={`${styles.icon} ${styles.danger}`}
             aria-label={t("Удалить диалог")}
+            title={t("Удалить диалог")}
             onClick={() => setConfirmDelete((v) => !v)}
           >
             <Trash2 size={17} />
@@ -314,7 +315,7 @@ function ChatSession({
         </div>
       </header>
       {confirmDelete && (
-        <div className={styles.notice}>
+        <div className={`${styles.notice} ${styles.danger}`}>
           <p>
             {t(
               "Удалить диалог из вашей истории? Несохранённый текст останется в локальном черновике.",
@@ -405,15 +406,19 @@ function ChatSession({
             key={message.id}
             className={`${styles.message} ${message.author === "user" ? styles.user : styles.bot}`}
           >
-            <strong>
+            <strong className={styles.speaker}>
               {message.author === "user" ? t("Вы") : t("Помощник")}
             </strong>
             <MarkdownContent>{message.text}</MarkdownContent>
             {message.status === "pending" && (
-              <small>{t("Ответ готовится")}</small>
+              <small className={styles.messageStatus} data-status="pending">
+                {t("Ответ готовится")}
+              </small>
             )}
             {message.status === "failed" && (
-              <small>{t("Вопрос сохранён, ответ не получен")}</small>
+              <small className={styles.messageStatus} data-status="failed">
+                {t("Вопрос сохранён, ответ не получен")}
+              </small>
             )}
             {chat.course_id && message.author !== "user" && (
               <div className={styles.sources}>
@@ -439,7 +444,7 @@ function ChatSession({
         </p>
       )}
       {draft.requestId && (
-        <div className={styles.notice} role="status">
+        <div className={styles.notice} role="status" id="chat-request-status">
           {receiptStatus === "failed" ? (
             <>
               {t(
@@ -483,6 +488,11 @@ function ChatSession({
           value={draft.text}
           maxLength={12000}
           disabled={!!draft.requestId}
+          aria-describedby={
+            draft.requestId
+              ? "chat-request-status chat-composer-hint"
+              : "chat-composer-hint"
+          }
           onChange={(e) => setDraft({ ...draft, text: e.target.value })}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -494,18 +504,38 @@ function ChatSession({
         />
         <button
           className={styles.send}
+          aria-busy={busy}
+          aria-describedby={
+            draft.requestId ? "chat-request-status" : "chat-composer-hint"
+          }
+          title={
+            busy
+              ? t("Ответ готовится")
+              : receiptStatus === "failed"
+                ? t("Подготовить новую попытку")
+                : !draft.text.trim()
+                  ? t("Задайте вопрос или опишите учебную задачу")
+                  : draft.requestId
+                    ? t("Проверить отправку")
+                    : t("Отправить сообщение")
+          }
           aria-label={
             draft.requestId ? t("Проверить отправку") : t("Отправить сообщение")
           }
           disabled={busy || !draft.text.trim() || receiptStatus === "failed"}
         >
-          {draft.requestId ? <RefreshCw size={21} /> : <ArrowUp size={21} />}
+          {draft.requestId || busy ? (
+            <RefreshCw size={21} />
+          ) : (
+            <ArrowUp size={21} />
+          )}
         </button>
       </form>
-      <p className={styles.hint}>
-        {t(
-          "Ctrl + Enter — отправить · черновик сохраняется на этом устройстве",
+      <p className={styles.hint} id="chat-composer-hint">
+        {!draft.text.trim() && (
+          <>{t("Задайте вопрос или опишите учебную задачу")}. </>
         )}
+        {t("Ctrl + Enter — отправить · черновик сохраняется на этом устройстве")}
       </p>
       <DraftNotice />
     </section>
@@ -619,6 +649,7 @@ export default function AiHelperPage() {
               {chats.map((chat) => (
                 <button
                   key={chat.id}
+                  title={chat.name}
                   aria-current={chat.id === selected ? "page" : undefined}
                   onClick={() => {
                     setSelected(chat.id);
