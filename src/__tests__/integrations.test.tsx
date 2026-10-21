@@ -6,6 +6,9 @@ import IntegrationsPage from '@/Pages/Integrations/IntegrationsPage';
 import AuthPage from '@/Pages/AuthPage/AuthPage';
 import {amountMinor} from '@/Pages/Billing/billingUtils';
 import {readDraft,setDraftOwner} from '@/shared/drafts';
+import {LocaleProvider} from '@/i18n/LocaleContext';
+import {useLocale} from '@/i18n/useLocale';
+import {integrationsEnglish} from '@/i18n/integrations';
 
 const mock=vi.hoisted(()=>({user:{id:800,email:'owner@example.org',organization_id:12,organization_role:'owner'},completeAuthentication:vi.fn(),login:vi.fn()}));
 vi.mock('@/auth/useAuth',()=>({useAuth:()=>({...mock,isAuthenticated:false,isLoading:false})}));
@@ -65,4 +68,18 @@ it('converts agreed amounts without rounding or accepting ambiguous money format
  expect(amountMinor('0.01')).toBe(1);
  expect(amountMinor('1000000000')).toBe(100000000000);
  for(const bad of ['0','-1','1.001','1e5','Infinity','1,000.00','1000000001'])expect(()=>amountMinor(bad)).toThrow();
+});
+
+it('switches integration screens to English without losing the entered configuration',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>json({items:[],scopes:['members:read']})));
+ function Switch(){const {setLocale}=useLocale();return <button onClick={()=>setLocale('en')}>English</button>;}
+ render(<LocaleProvider dictionaries={{en:integrationsEnglish}}><MemoryRouter><Switch/><IntegrationsPage/></MemoryRouter></LocaleProvider>);
+ fireEvent.change(screen.getByLabelText('Название приложения'),{target:{value:'My customer CRM'}});
+ fireEvent.click(screen.getByText('English'));
+ expect(await screen.findByRole('heading',{name:'Integrations'})).toBeInTheDocument();
+ expect(screen.getByLabelText('Application name')).toHaveValue('My customer CRM');
+ expect(screen.getByLabelText('View employees')).toBeInTheDocument();
+ fireEvent.click(screen.getByRole('button',{name:'Corporate sign-in'}));
+ expect(await screen.findByLabelText('Client secret')).toBeInTheDocument();
+ expect(screen.getByRole('button',{name:'Save connection'})).toBeInTheDocument();
 });
