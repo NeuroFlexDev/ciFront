@@ -278,7 +278,16 @@ function ReviewForm({
               {" " + t("· максимум") + " "}
               {c.max_points}
               <span className={s.muted}>{c.description}</span>
-              {!!c.levels?.length&&<span className={s.muted}>{c.levels.map((level,index)=><span style={{display:'block'}} key={index}>{level.title} — {level.points} {t('баллов')}. {level.description}</span>)}</span>}
+              {!!c.levels?.length && (
+                <span className={s.muted}>
+                  {c.levels.map((level, index) => (
+                    <span style={{ display: "block" }} key={index}>
+                      {level.title} — {level.points} {t("баллов")}.{" "}
+                      {level.description}
+                    </span>
+                  ))}
+                </span>
+              )}
               <input
                 type="number"
                 min={0}
@@ -455,11 +464,41 @@ function Proposal({
             <>
               <p>{proposal.feedback}</p>
               {proposal.criteria_scores.map((c) => (
-                <p key={c.id}>
-                  {review.assessment.criteria.find((v) => v.id === c.id)
-                    ?.title ?? c.id}
-                  : {c.points}
-                </p>
+                <section
+                  key={c.id}
+                  className={s.card}
+                  style={{ marginTop: 12 }}
+                >
+                  <h4>
+                    {review.assessment.criteria.find((v) => v.id === c.id)
+                      ?.title ?? c.id}
+                    : {c.points} {t("баллов")}
+                  </h4>
+                  {c.rationale && <p>{c.rationale}</p>}
+                  {!!c.evidence?.length && (
+                    <>
+                      <p className={s.caption}>
+                        {t("Цитаты из ответа участника")}
+                      </p>
+                      {c.evidence.map((quote, index) => (
+                        <blockquote
+                          key={index}
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          {quote}
+                        </blockquote>
+                      ))}
+                    </>
+                  )}
+                  {c.evidence && !c.evidence.length && (
+                    <p className={s.caption}>
+                      {t("Подтверждающих цитат в ответе не найдено.")}
+                    </p>
+                  )}
+                </section>
               ))}
               <button
                 className={s.secondary}

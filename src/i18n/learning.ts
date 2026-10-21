@@ -1,5 +1,7 @@
 /** Interface text only. Course content, names, answers and review comments are never translated. */
 export const learningEnglish: Record<string, string> = {
+  "Цитаты из ответа участника": "Quotes from the participant's answer",
+  "Подтверждающих цитат в ответе не найдено.": "No supporting quotes were found in the answer.",
   "Профиль ресурсов": "Resource profile",
   Индивидуальный: "Custom",
   Пилот: "Pilot",

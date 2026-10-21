@@ -49,8 +49,16 @@ export type AIProposal = {
   status: "pending" | "completed" | "failed";
   points: number | null;
   feedback: string;
-  criteria_scores: { id: string; points: number }[];
+  criteria_scores: {
+    id: string;
+    points: number;
+    rationale?: string;
+    evidence?: string[];
+  }[];
   model: string | null;
+  provider?: string | null;
+  assessment_hash?: string;
+  answer_hash?: string;
   error_code: string | null;
 };
 export type LearnerResponse = {
