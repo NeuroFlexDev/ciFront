@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import MarkdownContent from '@/Components/MarkdownContent';
+import EntityEditor,{type EditableEntity} from './EntityEditor';
+import AssessmentEditor,{type AssessmentTarget} from './AssessmentEditor';
+import {WizardSteps} from '@/Pages/ExpressPage/CourseWizard';
 import { api } from '@/shared/api';
 import Menu from '@/Components/Menu/Menu';
 import styles from './courseEditPage.module.css';
@@ -13,9 +15,9 @@ import DraftNotice from '@/Components/DraftNotice';
 import {useReconnect} from '@/hooks/useReconnect';
 
 type Lesson = {id: number; title: string; description: string; content: string; revision: number};
-type ReviewTest = {id: number; question: string; answers: string[]; correct_answer: string};
-type Module = {id: number; title: string; revision: number; lessons: Lesson[]; tests: ReviewTest[]; tasks: {id:number;name:string;description:string}[]};
-type Structure = {course_id: number; title: string; status: string; modules_timeline: {module_id: number}[]};
+type ReviewTest = {id: number; question: string; answers: string[]; correct_answer: string;revision:number};
+type Module = {id: number; title: string;description?:string; revision: number; lessons: Lesson[]; tests: ReviewTest[]; tasks: {id:number;name:string;description:string;revision:number}[]};
+type Structure = {course_id: number; title: string;description?:string;content_revision:number; status: string; modules_timeline: {module_id: number}[]};
 
 export default function CourseEditPage() {
   const {id} = useParams();
@@ -35,6 +37,9 @@ export default function CourseEditPage() {
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editing,setEditing]=useState<EditableEntity|null>(null);
+  const [assessment,setAssessment]=useState<AssessmentTarget|null>(null);
+  const textInput=useRef<HTMLTextAreaElement>(null);
   const lesson = modules.flatMap(m => m.lessons).find(l => l.id === selected);
   const dirty = Boolean(lesson && draft !== lesson.content);
   const pendingLessons=modules.flatMap(m=>m.lessons).filter(item=>{
@@ -104,6 +109,25 @@ export default function CourseEditPage() {
     try {await api.post(`/courses/${id}/publish`);setNotice('Курс опубликован');setStructure(s => s ? {...s,status:'published'} : s);}
     catch(e) {setError(e);} finally {setBusy(false);}
   }
+  async function modify(action:()=>Promise<unknown>){
+    if(busy)return;setBusy(true);setError(null);setNotice('');
+    try{await action();setVersion(value=>value+1);}catch(reason){setError(reason);}finally{setBusy(false);}
+  }
+  function move<T extends {id:number;revision:number}>(items:T[],index:number,direction:number,path:string){
+    const next=[...items];[next[index],next[index+direction]]=[next[index+direction],next[index]];
+    void modify(()=>api.put(path,{items:next.map((item,position)=>({id:item.id,position,expected_revision:item.revision}))}));
+  }
+  function insertMarkdown(value:string){
+    const input=textInput.current;if(!input)return;
+    const start=input.selectionStart;const end=input.selectionEnd;
+    edit(draft.slice(0,start)+value+draft.slice(end));
+    requestAnimationFrame(()=>{input.focus();input.setSelectionRange(start+value.length,start+value.length);});
+  }
+  function editTest(test:ReviewTest,parentId?:number){setEditing({kind:'test',courseId:Number(id),id:test.id,parentId,revision:test.revision,title:test.question,answers:test.answers,correct_answer:test.correct_answer});}
+  function removeEntity(kind:'modules'|'lessons'|'tests'|'tasks',entity:{id:number;revision:number},label:string){
+    if(!window.confirm(`Убрать «${label}» из черновика? Опубликованные версии и результаты участников сохранятся.`))return;
+    void modify(()=>api.delete(`/${kind}/${entity.id}?expected_revision=${entity.revision}`));
+  }
   function download() {
     const text = `# ${structure?.title ?? 'Курс'}\n\n` + modules.map(m => `## ${m.title}\n\n` + m.lessons.map(l => `### ${l.title}\n\n${l.id===selected?draft:readDraft<string>(`lesson:${l.id}`,owner)?.value??l.content}`).join('\n\n')).join('\n\n');
     const url = URL.createObjectURL(new Blob([text], {type:'text/markdown;charset=utf-8'}));
@@ -111,31 +135,40 @@ export default function CourseEditPage() {
   }
   if(error&&!structure)return <><Menu/><RequestError error={error} fullPage onRetry={()=>setVersion(v=>v+1)} retrying={loading}/></>;
   return <><Menu/><main className={styles.container}>
+    <WizardSteps step={5}/>
     <p><Link to="/courses">Мои курсы</Link> · <Link to={`/courses/${id}/canvas`}>Канва</Link></p>
     <h1>{structure?.title ?? 'Проверка курса'}</h1>
+    {structure&&<div className={styles.toolbar}><button disabled={busy} onClick={()=>setEditing({kind:'course',courseId:Number(id),id:Number(id),revision:structure.content_revision,title:structure.title,description:structure.description})}>Настройки курса</button><button disabled={busy} onClick={()=>setEditing({kind:'module',courseId:Number(id),title:''})}>Добавить модуль +</button><button disabled={busy} onClick={()=>setEditing({kind:'test',courseId:Number(id),title:''})}>Добавить итоговый вопрос</button></div>}
     {loading && <LoadingState>Загружаем содержание курса…</LoadingState>}
     {Boolean(error) && <RequestError error={error} onRetry={()=>setVersion(v=>v+1)} retrying={loading}/>}
     {notice && <p role="status">{notice}</p>}
     {dirty&&<DraftNotice restored={restored}/>}
     {pendingLessons.length>0&&<p>Несохранённых уроков: {pendingLessons.length}. {pendingLessons.map(item=><button key={item.id} disabled={busy} onClick={()=>select(item)}>{item.title}</button>)}</p>}
-    {!loading&&!modules.some(m=>m.lessons.length)&&<section className="request-state"><h2>В курсе пока нет уроков</h2><p>Добавьте источники и запустите подготовку содержания.</p><Link to={`/express?course=${id}`}>Продолжить создание курса</Link></section>}
+    {!loading&&!modules.some(m=>m.lessons.length)&&<section className="request-state"><h2>В курсе пока нет уроков</h2><p>Добавьте модуль и уроки вручную или подготовьте содержание из документов.</p><Link to={`/express?course=${id}&step=2`}>Создать из документов</Link></section>}
+    {modules.length>0&&<nav className={styles.moduleMap} aria-label="Структура курса">{modules.map((module,index)=><button key={module.id} disabled={busy||!module.lessons.length} onClick={()=>select(module.lessons[0])}><small>Модуль {index+1} · {module.lessons.length} уроков</small>{module.title}</button>)}</nav>}
     <div className={styles.content}>
-      <aside className={styles.sidebar}>{modules.map(m => <section key={m.id}><h2>{m.title}</h2>
-        {m.lessons.map(l => <button key={l.id} onClick={() => select(l)} disabled={busy} className={styles.lesson} aria-pressed={selected===l.id}>{l.title}</button>)}
-        <details><summary>Тесты ({m.tests.length})</summary>{m.tests.map(t => <div key={t.id}><strong>{t.question}</strong><ul>{t.answers.map((a,i) => <li key={i}>{a}{a === t.correct_answer ? ' ✓' : ''}</li>)}</ul><p>Ответ: {t.correct_answer}</p></div>)}</details>
-        <details><summary>Практика и кейсы ({m.tasks?.length ?? 0})</summary>{m.tasks?.map(task => <article key={task.id}><strong>{task.name}</strong><ReactMarkdown remarkPlugins={[remarkGfm]}>{task.description}</ReactMarkdown></article>)}</details>
+      <aside className={styles.sidebar}>{modules.map((m,moduleIndex) => <section key={m.id}><h2>{m.title}</h2>
+        <div className={styles.moduleActions}><button disabled={busy} aria-label={`Редактировать модуль ${m.title}`} onClick={()=>setEditing({kind:'module',courseId:Number(id),id:m.id,revision:m.revision,title:m.title,description:m.description})}>Изменить</button><button disabled={busy||moduleIndex===0} aria-label={`Поднять модуль ${m.title}`} onClick={()=>move(modules,moduleIndex,-1,`/courses/${id}/modules/order`)}>↑</button><button disabled={busy||moduleIndex===modules.length-1} aria-label={`Опустить модуль ${m.title}`} onClick={()=>move(modules,moduleIndex,1,`/courses/${id}/modules/order`)}>↓</button><button disabled={busy} aria-label={`Удалить модуль ${m.title}`} onClick={()=>removeEntity('modules',m,m.title)}>Убрать</button></div>
+        {m.lessons.map((l,lessonIndex) => <div key={l.id} className={styles.lessonRow}><button onClick={() => select(l)} disabled={busy} className={styles.lesson} aria-pressed={selected===l.id}>{l.title}</button><button disabled={busy||lessonIndex===0} aria-label={`Поднять урок ${l.title}`} onClick={()=>move(m.lessons,lessonIndex,-1,`/modules/${m.id}/lessons/order`)}>↑</button><button disabled={busy||lessonIndex===m.lessons.length-1} aria-label={`Опустить урок ${l.title}`} onClick={()=>move(m.lessons,lessonIndex,1,`/modules/${m.id}/lessons/order`)}>↓</button></div>)}
+        <button disabled={busy} onClick={()=>setEditing({kind:'lesson',courseId:Number(id),parentId:m.id,title:''})}>Добавить урок +</button>
+        <details><summary>Тесты ({m.tests.length})</summary>{m.tests.map(t => <div key={t.id}><strong>{t.question}</strong><ul>{t.answers.map((a,i) => <li key={i}>{a}{a === t.correct_answer ? ' ✓' : ''}</li>)}</ul><p>Ответ: {t.correct_answer}</p><button disabled={busy} onClick={()=>editTest(t,m.id)}>Редактировать вопрос</button><button disabled={busy} onClick={()=>setAssessment({kind:'test',id:t.id,title:t.question,answers:t.answers})}>Тип ответа и оценивание</button><button disabled={busy} onClick={()=>removeEntity('tests',t,t.question)}>Убрать вопрос</button></div>)}<button disabled={busy} onClick={()=>setEditing({kind:'test',courseId:Number(id),parentId:m.id,title:''})}>Добавить вопрос</button></details>
+        <details><summary>Практика и кейсы ({m.tasks?.length ?? 0})</summary>{m.tasks?.map(task => <article key={task.id}><strong>{task.name}</strong><MarkdownContent>{task.description}</MarkdownContent><button disabled={busy} onClick={()=>setEditing({kind:'task',courseId:Number(id),parentId:m.id,id:task.id,revision:task.revision,title:task.name,description:task.description})}>Редактировать задание</button><button disabled={busy} onClick={()=>setAssessment({kind:'task',id:task.id,title:task.name,answers:[]})}>Критерии и оценивание</button><button disabled={busy} onClick={()=>removeEntity('tasks',task,task.name)}>Убрать задание</button></article>)}<button disabled={busy} onClick={()=>setEditing({kind:'task',courseId:Number(id),parentId:m.id,title:''})}>Добавить практику</button></details>
       </section>)}
-      <details><summary>Итоговый тест ({finalTests.length})</summary>{finalTests.map(test => <article key={test.id}><strong>{test.question}</strong><ul>{test.answers.map((answer,i) => <li key={i}>{answer}</li>)}</ul><p>Ответ: {test.correct_answer}</p></article>)}</details>
+      <details><summary>Итоговый тест ({finalTests.length})</summary>{finalTests.map(test => <article key={test.id}><strong>{test.question}</strong><ul>{test.answers.map((answer,i) => <li key={i}>{answer}</li>)}</ul><p>Ответ: {test.correct_answer}</p><button disabled={busy} onClick={()=>editTest(test)}>Редактировать вопрос</button><button disabled={busy} onClick={()=>setAssessment({kind:'test',id:test.id,title:test.question,answers:test.answers})}>Тип ответа и оценивание</button><button disabled={busy} onClick={()=>removeEntity('tests',test,test.question)}>Убрать вопрос</button></article>)}</details>
       </aside>
       <section className={styles.editorContainer}>{lesson ? <><h2>{lesson.title}</h2>
-        <label>Текст урока (Markdown)<textarea value={draft} onChange={e => edit(e.target.value)} disabled={busy} rows={18} style={{width:'100%',padding:16}}/></label>
+        <div className={styles.toolbar}><button disabled={busy} onClick={()=>setEditing({kind:'lesson',courseId:Number(id),id:lesson.id,revision:baseRevision,title:lesson.title,description:lesson.description,content:draft})}>Название и описание</button><button disabled={busy} onClick={()=>removeEntity('lessons',lesson,lesson.title)}>Убрать урок</button></div>
+        <div className={styles.toolbar} role="toolbar" aria-label="Добавить блок содержания"><button disabled={busy} onClick={()=>insertMarkdown('\n## Заголовок раздела\n\n')}>Заголовок</button><button disabled={busy} onClick={()=>insertMarkdown('\n| Столбец 1 | Столбец 2 |\n| --- | --- |\n| Значение | Значение |\n')}>Таблица</button><button disabled={busy} onClick={()=>insertMarkdown('\n$$\nE = mc^2\n$$\n')}>Формула</button><button disabled={busy} onClick={()=>insertMarkdown('[Текст ссылки](https://)')}>Ссылка</button><button disabled={busy} onClick={()=>insertMarkdown('\n- Первый пункт\n- Второй пункт\n')}>Список</button></div>
+        <label>Текст урока (Markdown)<textarea ref={textInput} value={draft} onChange={e => edit(e.target.value)} disabled={busy} rows={18} style={{width:'100%',padding:16}}/></label>
         <button disabled={busy || !dirty} onClick={() => void save()}>Сохранить урок</button>
         {serverLesson&&<section className="request-state"><h2>На сервере другая версия</h2><p>Ваш текст сохранён в черновике. Сравните версии и внесите нужные изменения в поле выше.</p><details><summary>Показать текст сервера (версия {serverLesson.revision})</summary><pre style={{whiteSpace:'pre-wrap'}}>{serverLesson.content}</pre></details><button disabled={busy} onClick={()=>void save(serverLesson.revision)}>Сохранить мой текст вместо этой версии</button></section>}
-        <h3>Предпросмотр</h3><ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
+        <h3>Предпросмотр</h3><MarkdownContent>{draft}</MarkdownContent>
       </> : null}</section>
     </div>
     <div className={styles.buttons}><button disabled={!modules.length} onClick={download}>Скачать Markdown с черновиками</button>
-      <button className={styles.primary} disabled={busy || pendingLessons.length>0 || !modules.length || structure?.status === 'published'} onClick={() => void publish()}>{structure?.status === 'published' ? 'Опубликовано' : 'Опубликовать курс'}</button>
+      <button className={styles.primary} disabled={busy || pendingLessons.length>0 || !modules.length || structure?.status === 'published'} onClick={() => void publish()}>{structure?.status === 'published' ? 'Опубликовано' : 'Опубликовать курс'}</button>{structure?.status==='published'&&<Link className={styles.primary} to={`/assignments?course=${id}`}>Назначить участникам</Link>}
     </div>
+    {assessment&&<AssessmentEditor target={assessment} onClose={()=>setAssessment(null)} onSaved={()=>{setAssessment(null);setVersion(value=>value+1);}}/>}
+    {editing&&<EntityEditor entity={editing} onClose={()=>setEditing(null)} onSaved={()=>{if(editing.kind==='lesson'&&editing.id)clearDraft(`lesson:${editing.id}`,editing.content??'',owner);setEditing(null);setVersion(value=>value+1);}}/>}
   </main></>;
 }

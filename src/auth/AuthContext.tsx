@@ -85,6 +85,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
 
     const data = (await response.json()) as AuthResponse;
+    completeAuthentication(data);
+  }
+
+  function completeAuthentication(data:AuthResponse){
+    if(!data.access_token||!data.user?.id)throw new Error('Сервис входа вернул неполный ответ. Повторите вход.');
     setAuthToken(data.access_token);
     setUser(data.user);
     setDraftOwner(data.user.id);
@@ -101,6 +106,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     isLoading,
     login: (payload) => authenticate("/auth/login", payload),
     register: (payload) => authenticate("/auth/register", payload),
+    completeAuthentication,
     refreshUser: async () => {
       const response=await apiFetch('/auth/me');
       if(response.ok)setUser(await response.json() as AuthUser);

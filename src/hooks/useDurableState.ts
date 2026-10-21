@@ -1,4 +1,4 @@
-import {useRef,useState,type SetStateAction} from 'react';
+import {useEffect,useRef,useState,type SetStateAction} from 'react';
 import {useAuth} from '@/auth/useAuth';
 import {readDraft,writeDraft,clearDraft} from '@/shared/drafts';
 
@@ -13,6 +13,17 @@ export function useDurableState<T>(resource:string,initial:T){
     current.current={key,value:readDraft<T>(resource,id)?.value??initial};
     setState(current.current);
   }
+  useEffect(()=>{
+    const recover=()=>{
+      const latest=readDraft<T>(resource,id);
+      if(latest&&JSON.stringify(latest.value)!==JSON.stringify(current.current.value)){
+        current.current={key,value:latest.value};setState(current.current);
+      }
+    };
+    window.addEventListener('lernium-drafts-changed',recover);
+    window.addEventListener('storage',recover);
+    return()=>{window.removeEventListener('lernium-drafts-changed',recover);window.removeEventListener('storage',recover);};
+  },[resource,id,key]);
   const update=(next:SetStateAction<T>)=>{
     const result=typeof next==='function'?(next as (p:T)=>T)(current.current.value):next;
     current.current={key,value:result};

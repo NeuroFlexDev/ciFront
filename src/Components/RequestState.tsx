@@ -1,5 +1,6 @@
 import {type ReactNode} from 'react';
 import {describeError} from '@/shared/errors';
+import logo from '@/assets/icons/logo.svg';
 import './requestState.css';
 
 export function RequestError({error, onRetry, retrying=false, fullPage=false}: {
@@ -22,7 +23,7 @@ export function LoadingState({children='Загружаем данные…'}:{ch
 }
 
 export function StatusScreen({code,title,children,actions}:{code:string;title:string;children:ReactNode;actions:ReactNode}){
-  return <main className="status-screen"><header><a className="status-screen__brand" href="/dashboard">ЛЕРНИУМ</a><a href="/legal/contacts/">Помощь</a></header>
+  return <main className="status-screen"><header><a className="status-screen__brand" href="/dashboard"><img src={logo} alt="Лерниум" style={{width:'min(220px,50vw)',height:'auto'}}/></a><a href="/legal/contacts/">Помощь</a></header>
     <section className="request-state request-state--page" role="alert"><span className="request-state__code">{code}</span><h1>{title}</h1><div className="status-screen__description">{children}</div><div className="request-state__actions">{actions}</div></section>
   </main>;
 }

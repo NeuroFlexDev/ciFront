@@ -6,44 +6,37 @@
     font-family: 'Ubuntu';
     src: url('./assets/fonts/Ubuntu-Regular.ttf');
     font-weight: 400;
-    font-size: normal;
+    font-style: normal;
+    font-display: swap;
 }
 
-@font-face {
-    font-family: 'GolosText';
-    src: url('./assets/fonts/GolosText-VariableFont_wght.ttf');
-    font-weight: 400;
-    font-size: normal;
-}
-
-@font-face {
-    font-family: 'Days';
-    src: url('./assets/fonts/DaysOne-Regular.ttf');
-    font-weight: 400;
-    font-size: normal;
-}
+@font-face {font-family:'GolosText';src:url('/fonts/golos-text-400.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
+@font-face {font-family:'GolosText';src:url('/fonts/golos-text-500.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap;}
+@font-face {font-family:'GolosText';src:url('/fonts/golos-text-600.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap;}
+@font-face {font-family:'GolosText';src:url('/fonts/golos-text-700.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap;}
+@font-face {font-family:'Days';src:url('/fonts/days-one.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap;}
 
 h1, h2, h3, h4 {
     font-family: 'GolosText';
     font-weight: 400;
-    font-size: normal;
+    font-style: normal;
 }
 
 p {
-    font-family: 'Ubuntu';
+    font-family: 'GolosText', sans-serif;
 }
 
 :root {
-    --ui-bg: #07111d;
-    --ui-bg-secondary: #0d1829;
-    --ui-surface: rgba(12, 20, 32, 0.84);
-    --ui-surface-strong: rgba(14, 24, 36, 0.94);
-    --ui-surface-soft: rgba(145, 176, 206, 0.08);
-    --ui-line: rgba(145, 176, 206, 0.14);
-    --ui-line-strong: rgba(145, 176, 206, 0.24);
-    --ui-text: #eef2f7;
-    --ui-muted: rgba(238, 242, 247, 0.68);
-    --ui-accent: #d7a97f;
+    --ui-bg: #0c0d12;
+    --ui-bg-secondary: #141414;
+    --ui-surface: #141414;
+    --ui-surface-strong: #191919;
+    --ui-surface-soft: #222;
+    --ui-line: #303030;
+    --ui-line-strong: #484848;
+    --ui-text: #fff;
+    --ui-muted: #aaa;
+    --ui-accent: #caf432;
     --ui-danger: #f0897d;
     --ui-success: #83c7a3;
     --ui-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -56,6 +49,7 @@ html {
 }
 
 body {
+    font-family: 'GolosText', sans-serif;
     min-height: 100%;
     margin: 0;
     color: var(--ui-text);
@@ -80,6 +74,6 @@ select {
 }
 
 ::selection {
-    background: rgba(215, 169, 127, 0.28);
+    background: rgba(202, 244, 50, 0.28);
     color: var(--ui-text);
 }
