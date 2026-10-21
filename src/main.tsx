@@ -9,11 +9,13 @@ import {integrationsEnglish} from '@/i18n/integrations';
 import {publicationEnglish} from '@/i18n/publication';
 import {materialsEnglish} from '@/i18n/materials';
 import {globalEnglish} from '@/i18n/global';
+import {publicEnglish} from '@/i18n/public';
+import {adminEditorEnglish} from '@/i18n/adminEditor';
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LocaleProvider dictionaries={{en:{...globalEnglish,...integrationsEnglish,...publicationEnglish,...materialsEnglish}}}><AppErrorBoundary><AuthProvider>
+    <LocaleProvider dictionaries={{en:{...globalEnglish,...integrationsEnglish,...publicationEnglish,...materialsEnglish,...adminEditorEnglish,...publicEnglish}}}><AppErrorBoundary><AuthProvider>
       <App />
     </AuthProvider></AppErrorBoundary></LocaleProvider>
   </StrictMode>,

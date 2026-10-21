@@ -7,6 +7,7 @@ import {
   type TranslationParams,
 } from "./locale";
 
+const fallbackTranslate=(key:string,params?:TranslationParams)=>translate(getLocale(),key,params);
 /** Provider-free rendering keeps isolated components and existing consumers compatible. */
 export function useLocale() {
   const context = useContext(LocaleContext);
@@ -14,8 +15,7 @@ export function useLocale() {
     context ?? {
       locale: getLocale(),
       setLocale: persistLocale,
-      t: (key: string, params?: TranslationParams) =>
-        translate(getLocale(), key, params),
+      t: fallbackTranslate,
     }
   );
 }

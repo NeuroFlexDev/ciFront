@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { AppErrorBoundary } from './Components/AppErrorBoundary';
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import {useLocale} from '@/i18n/useLocale';
 
 const MainPage = lazy(() => import('./Pages/MainPage/MainPage'));
 const AuthPage = lazy(() => import('./Pages/AuthPage/AuthPage'));
@@ -35,6 +36,7 @@ const TeamSettingsPage = lazy(() => import('./Pages/TeamLearning/TeamSettingsPag
 const LearningAnalytics = lazy(() => import('./Pages/TeamLearning/LearningAnalytics'));
 
 function AppFallback() {
+  const {t}=useLocale();
   return (
     <div
       style={{
@@ -55,7 +57,7 @@ function AppFallback() {
         }}
       >
         <div style={{ textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.76rem' }}>Lernium</div>
-        <div style={{ marginTop: '16px', color: 'var(--ui-muted)' }}>Загружаем интерфейс...</div>
+        <div style={{ marginTop: '16px', color: 'var(--ui-muted)' }}>{t('Загружаем интерфейс...')}</div>
       </div>
     </div>
   );

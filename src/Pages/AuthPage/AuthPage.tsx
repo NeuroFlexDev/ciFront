@@ -1,3 +1,4 @@
+import LanguageSwitch from '@/Components/LanguageSwitch';
 import {useLocale} from '@/i18n/useLocale';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -122,7 +123,7 @@ export default function AuthPage() {
         </div>
       </section>
       <section className={styles.card} aria-labelledby="auth-title">
-        <h2 id="auth-title">{isRegistration ? t("Регистрация") : t("С возвращением")}</h2>
+        <LanguageSwitch/><h2 id="auth-title">{isRegistration ? t("Регистрация") : t("С возвращением")}</h2>
         {ssoPending && <p className={styles.notice} role="status">{t("Проверяем корпоративный вход…")}</p>}
         {!isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
         {ssoHandled && !ssoPending && isAuthenticated && <p><Link to="/account">{t("Вернуться к своему профилю")}</Link></p>}

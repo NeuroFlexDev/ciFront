@@ -3,6 +3,7 @@ import { type ReactNode } from "react";
 import { describeError } from "@/shared/errors";
 import logo from "@/assets/icons/logo.svg";
 import "./requestState.css";
+import LanguageSwitch from './LanguageSwitch';
 
 export function RequestError({
   error,
@@ -91,6 +92,7 @@ export function StatusScreen({
         </a>
         <a href="/legal/contacts/">{t("Помощь")}</a>
       </header>
+      <LanguageSwitch/>
       <section className="request-state request-state--page" role="alert">
         <span className="request-state__code">{code}</span>
         <h1>{title}</h1>

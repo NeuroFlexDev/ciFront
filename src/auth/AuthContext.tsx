@@ -17,6 +17,7 @@ import {setDraftOwner,downloadDrafts} from '@/shared/drafts';
 import {RequestError} from '@/Components/RequestState';
 import ConnectionNotice from '@/Components/ConnectionNotice';
 import {useReconnect} from '@/hooks/useReconnect';
+import {useLocale} from '@/i18n/useLocale';
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
@@ -28,6 +29,7 @@ async function readErrorMessage(response: Response): Promise<string> {
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
+  const {t}=useLocale();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
@@ -130,13 +132,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
           catch (error) { setRenewError(errorMessage(error)); }
           finally { setRenewing(false); }
         }}>
-        <h2 id="renew-title">Сессия истекла</h2>
-        <p>Войдите снова как {user.email}. Ваши изменения остаются на странице. После входа повторите сохранение.</p>
-        <label>Пароль<input autoFocus required type="password" autoComplete="current-password" value={password}
+        <h2 id="renew-title">{t('Сессия истекла')}</h2>
+        <p>{t('Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.',{email:user.email})}</p>
+        <label>{t('Пароль')}<input autoFocus required disabled={renewing} type="password" autoComplete="current-password" value={password}
           onChange={event => setPassword(event.target.value)} /></label>
-        {renewError && <p role="alert">{renewError}</p>}
-        <button disabled={renewing}>{renewing ? 'Входим…' : 'Продолжить работу'}</button>
-        <button type="button" onClick={downloadDrafts}>Скачать копию черновиков</button>
+        {renewError && <p role="alert">{t(renewError)}</p>}
+        <button disabled={renewing}>{t(renewing ? 'Входим…' : 'Продолжить работу')}</button>
+        <button type="button" onClick={downloadDrafts}>{t('Скачать копию черновиков')}</button>
       </form>
     </div>}
   </AuthContext.Provider>;

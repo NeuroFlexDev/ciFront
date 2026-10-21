@@ -77,3 +77,4 @@ select {
     background: rgba(202, 244, 50, 0.28);
     color: var(--ui-text);
 }
+ .language-picker{display:flex;align-items:center;justify-content:flex-end;gap:10px;font:14px 'GolosText',sans-serif;color:#bbb;margin:12px 0 20px}.language-picker select{border:1px solid #444;border-radius:20px;background:#141414;color:#fff;padding:8px 14px;font:inherit}.language-picker select:focus-visible{outline:2px solid #caf432;outline-offset:3px}
