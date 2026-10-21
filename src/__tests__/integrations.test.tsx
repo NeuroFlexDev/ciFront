@@ -14,7 +14,7 @@ const mock=vi.hoisted(()=>({user:{id:800,email:'owner@example.org',organization_
 vi.mock('@/auth/useAuth',()=>({useAuth:()=>({...mock,isAuthenticated:false,isLoading:false})}));
 vi.mock('@/Components/Menu/Menu',()=>({default:()=>null}));
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
-beforeEach(()=>{mock.user.id++;setDraftOwner(mock.user.id);});
+beforeEach(()=>{mock.user.id++;mock.user.organization_role='owner';setDraftOwner(mock.user.id);});
 afterEach(()=>{cleanup();vi.unstubAllGlobals();vi.restoreAllMocks();vi.clearAllMocks();localStorage.clear();sessionStorage.clear();window.history.replaceState({},'','/');});
 
 it('preserves a connector draft after a failed save and never stores the returned key',async()=>{
@@ -68,6 +68,14 @@ it('converts agreed amounts without rounding or accepting ambiguous money format
  expect(amountMinor('0.01')).toBe(1);
  expect(amountMinor('1000000000')).toBe(100000000000);
  for(const bad of ['0','-1','1.001','1e5','Infinity','1,000.00','1000000001'])expect(()=>amountMinor(bad)).toThrow();
+});
+
+it('opens integrations for an explicit organization administrator grant',async()=>{
+ mock.user.organization_role='member';
+ vi.stubGlobal('fetch',vi.fn(async(url:unknown)=>String(url).endsWith('/team/permissions')?json({can_manage_team:true}):json({items:[],scopes:['members:read']})));
+ render(<MemoryRouter><IntegrationsPage/></MemoryRouter>);
+ expect(await screen.findByLabelText('Название приложения')).toBeInTheDocument();
+ expect(screen.queryByText('Управление подключениями')).not.toBeInTheDocument();
 });
 
 it('switches integration screens to English without losing the entered configuration',async()=>{
