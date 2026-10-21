@@ -1,0 +1,321 @@
+.team {
+  --team-accent: var(--ui-accent, #caf432);
+  --team-canvas: var(--ui-bg, #0b0c0f);
+  --team-surface: #141414;
+  --team-fast: var(--ui-motion-fast, 160ms);
+  --team-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+.team .capacity {
+  color: #aaa;
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+.invite {
+  background: var(--team-surface);
+  border: 1px solid #292b25;
+  border-radius: 24px;
+  margin: 0 0 24px;
+}
+.invite > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 18px 24px;
+  color: #f5f5f5;
+  list-style: none;
+  font-weight: 500;
+  cursor: pointer;
+}
+.invite > summary::-webkit-details-marker {
+  display: none;
+}
+.inviteLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.inviteLabel > svg {
+  color: var(--team-accent);
+}
+.chevron {
+  color: var(--team-accent);
+  flex: none;
+  transition: transform var(--team-fast) var(--team-ease);
+}
+.invite[open] .chevron {
+  transform: rotate(180deg);
+}
+.inviteBody {
+  padding: 0 24px 20px;
+}
+.inviteBody > p:last-child {
+  max-width: 920px;
+  margin-bottom: 0;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 28px 0;
+}
+.toolbar .search {
+  position: relative;
+  display: block;
+  min-width: min(100%, 280px);
+  flex: 1;
+  max-width: 480px;
+}
+.search svg {
+  position: absolute;
+  left: 18px;
+  top: 17px;
+  color: #a4a79b;
+  pointer-events: none;
+}
+.toolbar .search input {
+  padding: 16px 16px 16px 50px;
+  min-height: 56px;
+  border-color: transparent;
+  border-radius: 18px;
+  background: var(--team-surface);
+}
+.searchLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.people {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px;
+  align-items: start;
+}
+.person {
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 30px;
+  border-radius: 30px;
+  background: var(--team-surface);
+  animation: team-enter 300ms var(--team-ease) both;
+}
+.person:has(.cornerAction)::before {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  width: 68px;
+  height: 68px;
+  border-bottom-left-radius: 30px;
+  background: var(--team-canvas);
+}
+.team .person h2 {
+  font-family: "Days", "GolosText", sans-serif;
+  font-size: clamp(18px, 1.38vw, 23px);
+  line-height: 1.4;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.avatar {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 24px;
+  flex: none;
+  background: #292f1c;
+  color: #d6ef9a;
+  border-radius: 50%;
+  font:
+    400 20px "Days",
+    "GolosText",
+    sans-serif;
+}
+.team .role {
+  color: var(--team-accent);
+  font-size: 15px;
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+.team .email {
+  color: #a9aba5;
+  font-size: 13px;
+  margin: 0 0 22px;
+  overflow-wrap: anywhere;
+}
+.team .access {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: #b2b5aa;
+  margin: 0 0 24px;
+}
+.access > span {
+  height: 8px;
+  width: 8px;
+  flex: none;
+  background: #929489;
+  border-radius: 50%;
+}
+.access[data-active="true"] > span {
+  background: var(--team-accent);
+  box-shadow: 0 0 0 3px #caf43210;
+}
+.team .cornerAction {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--team-accent);
+  color: #10130a;
+  transition:
+    transform var(--team-fast) var(--team-ease),
+    background-color var(--team-fast);
+}
+.team .assign {
+  width: 100%;
+  min-height: 48px;
+  margin-top: auto;
+  font-size: 14px;
+  padding: 13px 16px;
+  transition:
+    background-color var(--team-fast),
+    transform var(--team-fast) var(--team-ease);
+}
+.accessActions {
+  margin-top: 16px;
+}
+.accessActions > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  list-style: none;
+  font-size: 12px;
+  min-height: 34px;
+  color: #b9c1a3;
+  cursor: pointer;
+}
+.accessActions > summary::-webkit-details-marker {
+  display: none;
+}
+.accessActions > summary svg {
+  flex: none;
+  transition: transform var(--team-fast);
+}
+.accessActions[open] > summary svg {
+  transform: rotate(180deg);
+}
+.accessActions > div {
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+}
+.accessActions button,
+.accessActions a {
+  font-size: 12px;
+  padding: 10px 12px;
+}
+.team :focus-visible {
+  outline: 2px solid var(--team-accent);
+  outline-offset: 4px;
+}
+@keyframes team-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (hover: hover) {
+  .cornerAction:hover {
+    transform: rotate(8deg);
+    background: #ddff72;
+  }
+  .team .assign:hover {
+    background: #ddff72;
+    transform: translateY(-2px);
+  }
+  .invite > summary:hover,
+  .accessActions > summary:hover {
+    color: var(--team-accent);
+  }
+}
+@media (max-width: 1200px) {
+  .people {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .person {
+    padding: 26px;
+  }
+}
+@media (max-width: 950px) {
+  .people {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .toolbar .search {
+    max-width: none;
+  }
+  .tools {
+    width: 100%;
+  }
+}
+@media (max-width: 560px) {
+  .people {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .person {
+    padding: 28px;
+  }
+  .team .person h2 {
+    font-size: 21px;
+  }
+  .invite > summary {
+    padding: 18px;
+  }
+  .inviteBody {
+    padding: 0 18px 20px;
+  }
+  .tools a {
+    flex: 1 0 auto;
+    text-align: center;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .team *,
+  .team *::before,
+  .team *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+  .team a:hover {
+    transform: none !important;
+  }
+}

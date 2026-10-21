@@ -6,9 +6,12 @@ import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
+import { ArrowUpRight, ChevronDown, Plus, Search } from "lucide-react";
 import { api } from "@/shared/api";
 import { useAuth } from "@/auth/useAuth";
 import { Shell, CopyLink, styles, statuses, dateText } from "./shared";
+import { initials } from "@/Pages/TeamLearning/types";
+import teamStyles from "./team.module.css";
 import type {
   Organization,
   Member,
@@ -111,8 +114,8 @@ export default function TeamPage() {
         </section>
       )}
       {team?.organization && (
-        <>
-          <p>
+        <div className={teamStyles.team}>
+          <p className={teamStyles.capacity}>
             {t("Занято мест с приглашениями:") + " "}
             {team.organization.reserved_seats}
             {" " + t("из") + " "}
@@ -137,48 +140,74 @@ export default function TeamPage() {
             </>
           )}
           {team.can_manage && (
-            <section className={styles.panel}>
-              <h2>{t("Пригласить участника")}</h2>
-              <DraftNotice />
-              <form className={styles.form} onSubmit={invite}>
-                <label>
-                  Email
-                  <input
-                    required
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </label>
-                <label>
-                  {t("Роль")}
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                  >
-                    <option value="member">{roleName("member")}</option>
-                    <option value="author">{roleName("author")}</option>
-                    <option value="reviewer">{roleName("reviewer")}</option>
-                    <option value="manager">{roleName("manager")}</option>
-                    {user?.organization_role === "owner" && (
-                      <option value="admin">{roleName("admin")}</option>
-                    )}
-                  </select>
-                </label>
-                <button className={styles.primary} disabled={busy}>
-                  {t("Создать приглашение")}
-                </button>
-              </form>
-              <p>
-                {t(
-                  "Передайте полученную ссылку сотруднику лично. Он задаст пароль и примет условия при первом входе.",
-                )}
-              </p>
-            </section>
+            <details className={teamStyles.invite}>
+              <summary>
+                <span className={teamStyles.inviteLabel}>
+                  <Plus size={20} aria-hidden="true" />
+                  {t("Пригласить участника")}
+                </span>
+                <ChevronDown
+                  size={20}
+                  className={teamStyles.chevron}
+                  aria-hidden="true"
+                />
+              </summary>
+              <div className={teamStyles.inviteBody}>
+                <DraftNotice />
+                <form className={styles.form} onSubmit={invite}>
+                  <label>
+                    Email
+                    <input
+                      required
+                      type="email"
+                      disabled={busy}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    {t("Роль")}
+                    <select
+                      value={role}
+                      disabled={busy}
+                      onChange={(e) => setRole(e.target.value)}
+                    >
+                      <option value="member">{roleName("member")}</option>
+                      <option value="author">{roleName("author")}</option>
+                      <option value="reviewer">{roleName("reviewer")}</option>
+                      <option value="manager">{roleName("manager")}</option>
+                      {user?.organization_role === "owner" && (
+                        <option value="admin">{roleName("admin")}</option>
+                      )}
+                    </select>
+                  </label>
+                  <button className={styles.primary} disabled={busy}>
+                    {t("Создать приглашение")}
+                  </button>
+                </form>
+                <p>
+                  {t(
+                    "Передайте полученную ссылку сотруднику лично. Он задаст пароль и примет условия при первом входе.",
+                  )}
+                </p>
+              </div>
+            </details>
           )}
-          <div className={styles.row}>
+          <div className={teamStyles.toolbar}>
+            <label className={teamStyles.search}>
+              <span className={teamStyles.searchLabel}>
+                {t("Найти участника")}
+              </span>
+              <Search size={21} aria-hidden="true" />
+              <input
+                type="search"
+                placeholder={t("Имя или почта")}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
             {team.can_manage && (
-              <>
+              <div className={teamStyles.tools}>
                 <Link className={styles.secondary} to="/groups">
                   {t("Группы и подразделения")}
                 </Link>
@@ -188,23 +217,15 @@ export default function TeamPage() {
                 <Link className={styles.secondary} to="/assignments">
                   {t("Назначить курс")}
                 </Link>
-              </>
+              </div>
             )}
-            <label>
-              {t("Найти участника")}
-              <input
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
           </div>
           {!team.members.some((m) =>
             (m.full_name + " " + m.email)
               .toLowerCase()
               .includes(query.toLowerCase()),
           ) && <p>{t("Участники не найдены. Измените поисковый запрос.")}</p>}
-          <div className={styles.grid}>
+          <div className={teamStyles.people}>
             {team.members
               .filter((m) =>
                 (m.full_name + " " + m.email)
@@ -212,20 +233,41 @@ export default function TeamPage() {
                   .includes(query.toLowerCase()),
               )
               .map((m) => (
-                <article key={m.id} className={styles.card}>
+                <article key={m.id} className={teamStyles.person}>
+                  {(team.can_manage || m.id === user?.id) && (
+                    <Link
+                      className={teamStyles.cornerAction}
+                      to={
+                        m.id === user?.id
+                          ? "/account"
+                          : `/team-settings?user=${m.id}`
+                      }
+                      aria-label={`${m.full_name || m.email} · ${m.id === user?.id ? t("Личный профиль") : t("Роли и области доступа")}`}
+                    >
+                      <ArrowUpRight
+                        size={26}
+                        strokeWidth={1.5}
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  )}
+                  <div className={teamStyles.avatar} aria-hidden="true">
+                    {initials(m.full_name || m.email)}
+                  </div>
                   <h2>{m.full_name || t("Без имени")}</h2>
-                  <p>{m.email}</p>
-                  <span className={styles.badge}>
+                  <p className={teamStyles.role}>
                     {roleName(m.organization_role)}
-                  </span>
-                  <p>
+                  </p>
+                  <p className={teamStyles.email}>{m.email}</p>
+                  <p className={teamStyles.access} data-active={m.is_active}>
+                    <span aria-hidden="true" />
                     {m.is_active
                       ? t("Доступ включён")
                       : t("Доступ приостановлен")}
                   </p>
                   {team.can_manage && m.is_active && (
                     <Link
-                      className={styles.secondary}
+                      className={`${styles.primary} ${teamStyles.assign}`}
                       to={`/assignments?user=${m.id}`}
                     >
                       {t("Назначить курс")}
@@ -237,31 +279,37 @@ export default function TeamPage() {
                     m.organization_role !== "owner" &&
                     (user?.organization_role === "owner" ||
                       m.organization_role !== "admin") && (
-                      <div className={styles.row}>
-                        <button
-                          className={styles.secondary}
-                          disabled={busy}
-                          onClick={() =>
-                            void perform(async () => {
-                              await api.put(`/team/members/${m.id}`, {
-                                organization_id: team.organization!.id,
-                                organization_role: m.organization_role,
-                                is_active: !m.is_active,
-                              });
-                            })
-                          }
-                        >
-                          {m.is_active
-                            ? t("Приостановить доступ")
-                            : t("Включить доступ")}
-                        </button>
-                        <Link
-                          className={styles.secondary}
-                          to={`/team-settings?user=${m.id}`}
-                        >
+                      <details className={teamStyles.accessActions}>
+                        <summary>
                           {t("Роли и области доступа")}
-                        </Link>
-                      </div>
+                          <ChevronDown size={16} aria-hidden="true" />
+                        </summary>
+                        <div>
+                          <button
+                            className={styles.secondary}
+                            disabled={busy}
+                            onClick={() =>
+                              void perform(async () => {
+                                await api.put(`/team/members/${m.id}`, {
+                                  organization_id: team.organization!.id,
+                                  organization_role: m.organization_role,
+                                  is_active: !m.is_active,
+                                });
+                              })
+                            }
+                          >
+                            {m.is_active
+                              ? t("Приостановить доступ")
+                              : t("Включить доступ")}
+                          </button>
+                          <Link
+                            className={styles.secondary}
+                            to={`/team-settings?user=${m.id}`}
+                          >
+                            {t("Роли и области доступа")}
+                          </Link>
+                        </div>
+                      </details>
                     )}
                 </article>
               ))}
@@ -336,7 +384,7 @@ export default function TeamPage() {
               )}
             </section>
           )}
-        </>
+        </div>
       )}
     </Shell>
   );
