@@ -175,4 +175,28 @@ export const materialsEnglish: Record<string, string> = {
     "Apply my draft to the current version",
   "Нулевой лимит блокирует новые операции этого типа. Резервы неизвестных ответов сохраняются; автоматических платных повторов нет.":
     "A zero limit blocks new operations of that type. Reservations for unknown outcomes remain; paid requests are never retried automatically.",
+  "Не удалось скачать источник. Проверьте доступ и повторите.":
+    "Could not download the source. Check access and try again.",
+  "Скачиваем…": "Downloading…",
+  "Скачать оригинал": "Download original",
+  "Материалы курса": "Course materials",
+  "Оригиналы закреплены за назначенной версией курса.":
+    "Original files are pinned to your assigned course version.",
+  "Версия {version}": "Version {version}",
+  "Источники для учеников": "Sources for learners",
+  "Загруженные источники закрыты по умолчанию. Разрешайте только проверенные оригиналы без ключей ответов и приватных материалов. Изменения вступят в силу после новой публикации; прежние назначения сохранят свои файлы.":
+    "Uploaded sources are private by default. Only share reviewed originals without answer keys or private materials. Changes take effect after a new publication; earlier assignments retain their files.",
+  "Загружаем источники…": "Loading sources…",
+  "Загрузите источники в мастере создания курса.":
+    "Upload sources in the course creation wizard.",
+  "Включён в следующий выпуск": "Included in the next release",
+  "Закрыт для учеников": "Private to authors",
+  "Убрать из следующего выпуска": "Remove from the next release",
+  "Разрешить ученикам": "Share with learners",
+  "Сначала дождитесь успешной обработки источника.":
+    "Wait until the source is processed successfully.",
+  "Подтверждение доступа к оригиналу": "Confirm access to original",
+  "Я проверил этот оригинал и разрешаю передать его целиком ученикам.":
+    "I reviewed this original and approve sharing the complete file with learners.",
+  "Подтвердить доступ": "Confirm access",
 };
