@@ -216,7 +216,9 @@ it("changes editor controls without changing saved lesson text, test answers or 
             ],
             tasks: [],
           }
-        : [],
+        : path.includes('/source-release')
+          ? { items: [], total: 0, can_edit: true, content_revision: 1 }
+          : [],
   }));
   render(
     <Page path="/courses/2/edit" route="/courses/:id/edit">

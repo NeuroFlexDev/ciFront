@@ -21,6 +21,7 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { PublicationHistory } from "@/Pages/Learning/CourseReviewsPage";
+import SourceReleasePanel from "@/Components/SourceReleasePanel";
 
 type Lesson = {
   id: number;
@@ -452,6 +453,7 @@ export default function CourseEditPage() {
             <PublicationHistory key={version} courseId={Number(id)} />
           </details>
         )}
+        {structure && <SourceReleasePanel courseId={Number(id)} onChanged={() => setVersion(v => v + 1)} />}
         {publicationProblems.length > 0 && (
           <section className="request-state">
             <h2>{t("Задания, требующие настройки")}</h2>

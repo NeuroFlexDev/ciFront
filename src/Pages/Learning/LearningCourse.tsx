@@ -5,6 +5,7 @@ import { api } from "@/shared/api";
 import { Shell } from "@/Pages/Workspace/shared";
 import { LoadingState, RequestError } from "@/Components/RequestState";
 import MarkdownContent from "@/Components/MarkdownContent";
+import { LearnerSources } from "@/Components/SourceReleasePanel";
 import { useLearningData } from "./useLearningData";
 import AssessmentAnswer from "./AssessmentAnswer";
 import LearningAssistant from "./LearningAssistant";
@@ -208,6 +209,7 @@ export default function LearningCourse() {
                 </strong>
               </div>
             </div>
+            {!resultsOnly && data.content && <LearnerSources assignmentId={data.id} sources={data.content.sources ?? []} />}
             <div className={s.tablist}>
               <button
                 aria-selected={!resultsOnly}

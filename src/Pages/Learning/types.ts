@@ -1,3 +1,4 @@
+import type { SourceAttachment } from '@/Components/SourceReleasePanel';
 export type Rules = {
   max_attempts: number;
   pass_percent: number;
@@ -103,6 +104,7 @@ export type Assignment = {
 };
 export type AssignmentDetail = Assignment & {
   content: {
+    sources?: SourceAttachment[];
     course: {
       id: number;
       title: string;
