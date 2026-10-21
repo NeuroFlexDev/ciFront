@@ -43,7 +43,7 @@ export default function AccountPage() {
     });
   }
   return <main className={styles.page}>
-    <header className={styles.header}><a href="/" className={styles.brand}>ЛЕРНИУМ</a><nav><Link to="/courses">Мои курсы</Link><Link to="/express">Создать курс</Link><a href="/legal/">Документы</a><button onClick={logout}>Выйти</button></nav></header>
+    <header className={styles.header}><a href="/" className={styles.brand}>ЛЕРНИУМ</a><nav><Link to="/dashboard">Обзор</Link>{user?.is_admin&&<Link to="/admin">Админка</Link>}<Link to="/courses">Мои курсы</Link><Link to="/express">Создать курс</Link><a href="/legal/">Документы</a><button onClick={logout}>Выйти</button></nav></header>
     <div className={styles.container}><h1>Личный профиль</h1><p className={styles.subtitle}>Управляйте аккаунтом, безопасностью и согласиями.</p>
       <div className={styles.tabs} aria-label="Разделы профиля">{[['profile','Основные настройки'],['security','Безопасность'],['documents','Документы и согласия']].map(([id,label]) => <button key={id} className={tab===id?styles.active:''} onClick={() => {setTab(id);setMessage('');setError('');}} aria-pressed={tab===id}>{label}</button>)}</div>
       {message&&<p className={styles.success} role="status">{message}</p>}{error&&<p className={styles.error} role="alert">{error}</p>}

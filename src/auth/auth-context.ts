@@ -4,6 +4,9 @@ export type AuthUser = {
   id: number;
   email: string;
   full_name?: string;
+  is_admin?: boolean;
+  organization_id?: number | null;
+  organization_role?: string;
 };
 
 export type AuthPayload = {

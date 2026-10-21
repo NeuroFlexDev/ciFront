@@ -11,7 +11,11 @@ const AccessPage = lazy(() => import('./Pages/AccessPage/AccessPage'));
 const StatusPage = lazy(() => import('./Pages/AccessPage/StatusPage'));
 function PrivacyRedirect() { window.location.replace('/legal/privacy/'); return null; }
 const AiHelperPage = lazy(() => import('./Pages/AiHelperPage/AiHelperPage'));
-const TemplatesPage = lazy(() => import('./Pages/TemplatesPage/TemplatesPage'));
+const TemplatesPage = lazy(() => import('./Pages/Workspace/Templates'));
+const Dashboard = lazy(() => import('./Pages/Workspace/Dashboard'));
+const TeamPage = lazy(() => import('./Pages/Workspace/TeamPage'));
+const AdminPage = lazy(() => import('./Pages/AdminPage/AdminPage'));
+const InvitePage = lazy(() => import('./Pages/InvitePage/InvitePage'));
 const ExpressPage = lazy(() => import('./Pages/ExpressPage/ExpressPage'));
 const MyCoursesPage = lazy(() => import('./Pages/MyCourses/MyCourses'));
 const CourseEditPage = lazy(() => import('./Components/CourseEditPage/CourseEditPage'));
@@ -56,7 +60,11 @@ function App() {
           <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
           <Route path="/forgot-password" element={<AccessPage />} />
           <Route path="/reset-password" element={<AccessPage reset />} />
-          {['dashboard','employees','analytics'].map(path => <Route key={path} path={`/${path}`} element={<ProtectedRoute><StatusPage code="Скоро" title="Готовим этот раздел" description="Функция ещё в разработке. Вы можете продолжить работу с курсами или обсудить нужные возможности при подключении организации." /></ProtectedRoute>} />)}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><Dashboard analytics /></ProtectedRoute>} />
+          <Route path="/employees" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/invite" element={<InvitePage />} />
           <Route path="*" element={<StatusPage />} />
           <Route path="/ai-helper" element={<ProtectedRoute><AiHelperPage /></ProtectedRoute>} />
           <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />

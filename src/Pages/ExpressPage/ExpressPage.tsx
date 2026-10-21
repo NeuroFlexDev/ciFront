@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import Menu from '@/Components/Menu/Menu';
 import { api } from '@/shared/api';
 import styles from './styles.module.css';
+import {templates} from '@/Pages/Workspace/template-data';
 
 type DocumentItem = { id: number; original_filename: string; status: string };
 type Run = { run_id: number; course_id: number; status: string; progress_percent: number; current_stage: string;
@@ -12,6 +13,7 @@ const fieldStyle = { display: 'block', width: '100%', padding: 12, borderRadius:
 
 export default function ExpressPage() {
   const [params, setParams] = useSearchParams();
+  const selectedTemplate = templates.find(t=>t.id===params.get('template'));
   const courseId = Number(params.get('course')) || null;
   const runId = Number(params.get('run')) || null;
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -19,12 +21,12 @@ export default function ExpressPage() {
   const [pollVersion, setPollVersion] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [title, setTitle] = useState('');
-  const [goal, setGoal] = useState('');
-  const [audience, setAudience] = useState('');
+  const [title, setTitle] = useState(selectedTemplate?.title ?? '');
+  const [goal, setGoal] = useState(selectedTemplate?.goal ?? '');
+  const [audience, setAudience] = useState(selectedTemplate?.audience ?? '');
   const [difficulty, setDifficulty] = useState('basic');
   const [language, setLanguage] = useState('ru');
-  const [lessonCount, setLessonCount] = useState(6);
+  const [lessonCount, setLessonCount] = useState(selectedTemplate?.lessons ?? 6);
   const [moduleTests, setModuleTests] = useState(true);
   const [finalTest, setFinalTest] = useState(true);
   const edited = useRef(false);

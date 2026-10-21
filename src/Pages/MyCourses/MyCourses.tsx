@@ -1,29 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Menu from '@/Components/Menu/Menu';
 import { api } from '@/shared/api';
-import styles from './myCourses.module.css';
-export interface CourseCard {id: number; author: string; title: string; lessons: number; tests: number; tags: string[];}
+import { Shell, styles, errorText } from '@/Pages/Workspace/shared';
 type Course = {id: number; title: string | null; publication_status: string; module_count: number; lesson_count: number};
 export default function MyCoursesPage() {
   const [courses,setCourses] = useState<Course[]>([]);
   const [offset,setOffset] = useState(0);
+  const [filter,setFilter] = useState('');
+  const [version,setVersion] = useState(0);
   const [error,setError] = useState('');
   const [loading,setLoading] = useState(true);
+  const [removing,setRemoving] = useState<number|null>(null);
   useEffect(() => {
     let stopped = false;setLoading(true);
-    api.get<Course[]>(`/courses/?limit=20&offset=${offset}`).then(({data}) => {if (!stopped) {setCourses(data);setError('');}})
-      .catch(e => {if (!stopped) setError(e instanceof Error ? e.message : 'Не удалось загрузить курсы');})
+    api.get<Course[]>(`/courses/?limit=20&offset=${offset}${filter?'&publication_status='+filter:''}`).then(({data}) => {if (!stopped) {setCourses(data);setError('');}})
+      .catch(e => {if (!stopped) setError(errorText(e));})
       .finally(() => {if (!stopped) setLoading(false);});
     return () => {stopped=true;};
-  },[offset]);
-  return <><Menu/><main className={styles.page}><h1>Мои курсы</h1><p><Link to="/express">Создать курс</Link></p>
-    {error && <p role="alert">{error}</p>}{loading && <p>Загрузка…</p>}
-    {!loading && !courses.length && !error && <p>Курсов пока нет. Загрузите документы, чтобы создать первый.</p>}
-    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20}}>{courses.map(c => <article key={c.id} style={{padding:24,border:'1px solid #64748b',borderRadius:20}}>
-      <h2>{c.title || `Черновик №${c.id}`}</h2><p>{c.module_count} модулей · {c.lesson_count} уроков</p><p>{c.publication_status === 'published' ? 'Опубликован' : 'Черновик'}</p>
-      <p>{c.lesson_count ? <Link to={`/courses/${c.id}/edit`}>Открыть курс</Link> : <Link to={`/express?course=${c.id}`}>Продолжить создание</Link>} · <Link to={`/courses/${c.id}/canvas`}>Канва</Link></p>
-    </article>)}</div>
-    <p><button disabled={offset === 0 || loading} onClick={() => setOffset(n => Math.max(0,n-20))}>Назад</button> <button disabled={courses.length < 20 || loading} onClick={() => setOffset(n => n+20)}>Далее</button></p>
-  </main></>;
+  },[offset,filter,version]);
+  async function remove(course:Course){
+    if(!window.confirm(`Удалить курс «${course.title||'Черновик №'+course.id}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.`))return;
+    setRemoving(course.id);setError('');
+    try{await api.delete(`/courses/${course.id}`);if(courses.length===1&&offset>0)setOffset(n=>n-20);else setVersion(n=>n+1);}catch(e){setError(errorText(e));}finally{setRemoving(null);}
+  }
+  return <Shell title="Мои курсы" description="Ваши материалы, черновики и опубликованные курсы." action={<Link className={styles.primary} to="/express">Создать курс +</Link>}>
+    <div className={styles.tabs} aria-label="Фильтр курсов">{[['','Все курсы'],['draft','Черновики'],['published','Опубликованные']].map(([value,label])=><button key={value} aria-pressed={filter===value} aria-selected={filter===value} onClick={()=>{setFilter(value);setOffset(0);}}>{label}</button>)}</div>
+    {error&&<p className={styles.error} role="alert">{error}</p>}{loading&&<p role="status">Загружаем курсы…</p>}
+    {!loading&&!courses.length&&!error&&<section className={styles.empty}><h2>{filter?'В этом разделе пока пусто':'Создайте первый курс'}</h2><p>Начните со своих документов или выберите готовый сценарий настройки.</p><Link className={styles.primary} to="/templates">Выбрать сценарий</Link></section>}
+    {!loading&&<div className={styles.grid}>{courses.map(c=><article className={styles.card} key={c.id}>
+      <span className={styles.badge}>{c.publication_status==='published'?'Опубликован':'Черновик'}</span><h2 style={{marginTop:18}}>{c.title||`Черновик №${c.id}`}</h2><p>{c.module_count} модулей · {c.lesson_count} уроков</p>
+      <div className={styles.row}><Link className={styles.primary} to={c.lesson_count?`/courses/${c.id}/edit`:`/express?course=${c.id}`}>{c.lesson_count?'Открыть курс':'Продолжить создание'}</Link><Link className={styles.secondary} to={`/courses/${c.id}/canvas`}>Канва</Link><button className={styles.danger} disabled={removing!==null} onClick={()=>void remove(c)}>{removing===c.id?'Удаляем…':'Удалить'}</button></div>
+    </article>)}</div>}
+    <div className={styles.row} style={{marginTop:28}}><button className={styles.secondary} disabled={offset===0||loading} onClick={()=>setOffset(n=>Math.max(0,n-20))}>Назад</button><button className={styles.secondary} disabled={courses.length<20||loading} onClick={()=>setOffset(n=>n+20)}>Далее</button></div>
+  </Shell>;
 }

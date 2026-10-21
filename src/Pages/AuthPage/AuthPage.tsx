@@ -9,7 +9,7 @@ import styles from './styles.module.css';
 export default function AuthPage() {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, login, register } = useAuth();
+  const { user, isAuthenticated, isLoading, login, register } = useAuth();
   const isRegistration = params.get('mode') === 'register';
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -33,9 +33,9 @@ export default function AuthPage() {
     if (!isLoading && isAuthenticated) {
       const next = params.get('next');
       const safe = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') && !next.startsWith('/auth');
-      navigate(safe ? next : '/courses', { replace: true });
+      navigate(safe ? next : user?.is_admin ? '/admin' : '/dashboard', { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, params]);
+  }, [isAuthenticated, isLoading, navigate, params, user?.is_admin]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError('');
@@ -66,7 +66,7 @@ export default function AuthPage() {
       </section>
       <section className={styles.card} aria-labelledby="auth-title">
         <h2 id="auth-title">{isRegistration ? 'Регистрация' : 'С возвращением'}</h2>
-        {isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>Доступ по приглашению</h3><p>Регистрация в этом контуре пока закрыта. Оставьте заявку на подключение или войдите в существующий аккаунт.</p><a href="/legal/contacts/#request">Обсудить подключение ↗</a></div> :
+        {isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>Доступ по приглашению</h3><p>Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.</p><button type="button" className={styles.submit} onClick={switchMode}>Войти в аккаунт</button></div> :
         <form className={styles.form} onSubmit={submit}>
           {isRegistration && <div className={styles.nameRow}>
             <label>Имя <span className={styles.optional}>(необязательно)</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder="Иван" /></label>
