@@ -12,11 +12,12 @@ import {globalEnglish} from '@/i18n/global';
 import {publicEnglish} from '@/i18n/public';
 import {adminEditorEnglish} from '@/i18n/adminEditor';
 import {canvasEnglish} from '@/i18n/canvas';
+import {creatorEnglish} from '@/i18n/creator';
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <LocaleProvider dictionaries={{en:{...globalEnglish,...integrationsEnglish,...publicationEnglish,...materialsEnglish,...adminEditorEnglish,...publicEnglish,...canvasEnglish}}}><AppErrorBoundary><AuthProvider>
+    <LocaleProvider dictionaries={{en:{...globalEnglish,...integrationsEnglish,...publicationEnglish,...materialsEnglish,...adminEditorEnglish,...publicEnglish,...canvasEnglish,...creatorEnglish}}}><AppErrorBoundary><AuthProvider>
       <App />
     </AuthProvider></AppErrorBoundary></LocaleProvider>
   </StrictMode>,
