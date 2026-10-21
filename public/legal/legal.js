@@ -6,6 +6,16 @@ if (form) {
   const consent = form.elements.namedItem('consent');
   const consentBox = document.querySelector('#contact-consent');
   const status = document.querySelector('#contact-status');
+  // Explain a closed pilot before the visitor enters personal information.
+  void fetch('/api/legal/catalog').then(async response => {
+    if (!response.ok) return;
+    const config = await response.json();
+    if (config.contact_requests_enabled === false) {
+      for (const element of form.elements) element.disabled = true;
+      status.className = 'status'; status.hidden = false;
+      status.textContent = 'Электронная форма в этом контуре пока не включена. Обращения принимаются по почтовому адресу, указанному выше.';
+    }
+  }).catch(() => { /* Submission still provides a retry and the postal alternative. */ });
   purpose.addEventListener('change', () => {
     consentBox.hidden = purpose.value !== 'enquiry';
     consent.required = purpose.value === 'enquiry';
