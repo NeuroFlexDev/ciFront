@@ -1,6 +1,7 @@
 import { useLocale, getLocale } from "@/i18n/useLocale";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { FileUp, LayoutTemplate, Plus } from "lucide-react";
 import Menu from "@/Components/Menu/Menu";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -505,7 +506,7 @@ export default function CourseWizard() {
               <h2>{t("Как вы хотите создать курс?")}</h2>
               <div className={styles.modes}>
                 <button onClick={() => go(2)}>
-                  <span>↥</span>
+                  <FileUp className={styles.modeIcon} aria-hidden="true" />
                   <h3>{t("Из документов")}</h3>
                   <p>
                     {t(
@@ -514,7 +515,7 @@ export default function CourseWizard() {
                   </p>
                 </button>
                 <Link to="/templates">
-                  <span>▦</span>
+                  <LayoutTemplate className={styles.modeIcon} aria-hidden="true" />
                   <h3>{t("По сценарию")}</h3>
                   <p>
                     {t(
@@ -535,7 +536,7 @@ export default function CourseWizard() {
                     })
                   }
                 >
-                  <span>＋</span>
+                  <Plus className={styles.modeIcon} aria-hidden="true" />
                   <h3>{t("Вручную")}</h3>
                   <p>
                     {t(
