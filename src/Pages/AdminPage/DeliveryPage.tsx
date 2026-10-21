@@ -11,12 +11,7 @@ import { Shell, styles } from "@/Pages/Workspace/shared";
 import StatusPage from "@/Pages/AccessPage/StatusPage";
 import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
-type Policy = {
-  disk_bytes_limit: number;
-  image_monthly_limit: number;
-  chat_monthly_limit: number;
-  used_disk_bytes: number;
-};
+import OrganizationResourcePolicy from "@/Components/OrganizationResourcePolicy";
 const features: Record<string, string> = {
   learning: "Обучение и назначения",
   authoring: "Создание и редактирование курсов",
@@ -39,11 +34,6 @@ export default function DeliveryPage() {
   const { user } = useAuth();
   const data = useLearningData<TeamSettings>(
     user?.is_admin ? `/admin/organizations/${organizationId}/delivery` : null,
-  );
-  const policy = useLearningData<Policy>(
-    user?.is_admin
-      ? `/admin/organizations/${organizationId}/material-policy`
-      : null,
   );
   if (!user?.is_admin)
     return (
@@ -80,19 +70,8 @@ export default function DeliveryPage() {
           reload={data.reload}
         />
       )}
-      {!!policy.error && (
-        <RequestError
-          error={policy.error}
-          onRetry={() => void policy.reload()}
-        />
-      )}{" "}
-      {policy.data && (
-        <QuotaForm
-          key={`quota:${organizationId}`}
-          organizationId={organizationId!}
-          server={policy.data}
-          reload={policy.reload}
-        />
+      {organizationId && (
+        <OrganizationResourcePolicy organizationId={organizationId} />
       )}
     </Shell>
   );
@@ -335,128 +314,6 @@ function DeliveryForm({
         </fieldset>
         <button className={styles.primary} disabled={busy || conflict}>
           {busy ? t("Сохраняем…") : t("Сохранить состав поставки")}
-        </button>
-      </form>
-    </section>
-  );
-}
-function QuotaForm({
-  organizationId,
-  server,
-  reload,
-}: {
-  organizationId: string;
-  server: Policy;
-  reload: () => Promise<unknown>;
-}) {
-  const { t, locale } = useLocale();
-  const [form, setForm, clearForm] = useDurableState(
-    `material-quota:${organizationId}`,
-    {
-      disk_bytes_limit: server.disk_bytes_limit,
-      image_monthly_limit: server.image_monthly_limit,
-      chat_monthly_limit: server.chat_monthly_limit,
-    },
-  );
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<unknown>(null);
-  const [notice, setNotice] = useState("");
-  async function save() {
-    if (busy) return;
-    setBusy(true);
-    setError(null);
-    setNotice("");
-    try {
-      await api.put(
-        `/admin/organizations/${organizationId}/material-policy`,
-        form,
-      );
-      clearForm(form);
-      setNotice(t("Квоты сохранены"));
-      await reload();
-    } catch (reason) {
-      setError(reason);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <section className={styles.panel}>
-      <h2>{t("Материалы и ИИ")}</h2>
-      <p>
-        {t("Занято хранилища:")}{" "}
-        {(server.used_disk_bytes / 1024 ** 3).toLocaleString(
-          locale === "en" ? "en-GB" : "ru-RU",
-          { maximumFractionDigits: 3 },
-        )}{" "}
-        {t("ГиБ. Снижение лимита не удаляет существующие файлы.")}
-      </p>
-      <DraftNotice />
-      {!!error && <RequestError error={error} />}{" "}
-      {notice && <p role="status">{notice}</p>}
-      <form
-        className={styles.form}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void save();
-        }}
-      >
-        <label>
-          {t("Лимит хранилища, ГиБ")}
-          <input
-            type="number"
-            min={0}
-            max={1048576}
-            step={0.001}
-            disabled={busy}
-            required
-            value={form.disk_bytes_limit / 1024 ** 3}
-            onChange={(event) =>
-              setForm({
-                ...form,
-                disk_bytes_limit: Math.round(
-                  Number(event.target.value) * 1024 ** 3,
-                ),
-              })
-            }
-          />
-        </label>
-        <label>
-          {t("Генераций изображений в месяц")}
-          <input
-            type="number"
-            min={0}
-            max={1000000}
-            disabled={busy}
-            required
-            value={form.image_monthly_limit}
-            onChange={(event) =>
-              setForm({
-                ...form,
-                image_monthly_limit: Number(event.target.value),
-              })
-            }
-          />
-        </label>
-        <label>
-          {t("Запросов к помощнику в месяц")}
-          <input
-            type="number"
-            min={0}
-            max={10000000}
-            disabled={busy}
-            required
-            value={form.chat_monthly_limit}
-            onChange={(event) =>
-              setForm({
-                ...form,
-                chat_monthly_limit: Number(event.target.value),
-              })
-            }
-          />
-        </label>
-        <button className={styles.primary} disabled={busy}>
-          {busy ? t("Сохраняем…") : t("Сохранить квоты")}
         </button>
       </form>
     </section>

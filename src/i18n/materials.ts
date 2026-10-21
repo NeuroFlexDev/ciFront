@@ -137,4 +137,42 @@ export const materialsEnglish: Record<string, string> = {
   "Принять в канву": "Accept into canvas",
   "Сначала выберите курс, чтобы сохранять и проверять его иллюстрации.":
     "Select a course first to save and review its images.",
+  "Ресурсы организации": "Organization resources",
+  "Лимиты применяются ко всей организации. Снижение лимита сохраняет существующие материалы.":
+    "Limits apply to the whole organization. Reducing a limit preserves existing materials.",
+  "Загружаем расход ресурсов…": "Loading resource usage…",
+  "Расчётный месяц:": "Accounting month:",
+  Ресурс: "Resource",
+  "Использовано / зарезервировано": "Used / reserved",
+  Лимит: "Limit",
+  "Токены AI": "AI tokens",
+  "Страницы OCR": "OCR pages",
+  "Верхняя оценка расходов, ₽": "Upper cost estimate, RUB",
+  "Хранилище, ГиБ": "Storage, GiB",
+  "Изображения за месяц": "Images this month",
+  "Учтённые запросы к помощнику": "Recorded assistant requests",
+  "Фоновые задания сейчас": "Background jobs running",
+  "Интерактивные запросы сейчас": "Interactive requests running",
+  "Задания в очереди": "Queued jobs",
+  "Стоимость включает резерв незавершённых и неопределённых запросов. Это верхняя оценка, а не счёт провайдера. История до включения учёта может быть неполной.":
+    "Cost includes reservations for unfinished requests and unknown outcomes. This is an upper estimate, not a provider invoice. History before accounting was enabled may be incomplete.",
+  "Чат использует отдельные слоты и не ждёт окончания генерации курса. При исчерпании бюджета чтение уроков и отправка ответов остаются доступны.":
+    "Chat uses separate slots and does not wait for course generation. Reading lessons and submitting answers remain available when the AI budget runs out.",
+  "Обновить расход": "Refresh usage",
+  "Загружаем квоты…": "Loading limits…",
+  "Заданий в очереди организации": "Organization queued jobs",
+  "Одновременных фоновых заданий": "Concurrent background jobs",
+  "Одновременных запросов к помощнику": "Concurrent assistant requests",
+  "Токенов AI в месяц": "AI tokens per month",
+  "Страниц OCR в месяц": "OCR pages per month",
+  "Бюджет AI в месяц, ₽": "Monthly AI budget, RUB",
+  "Эти квоты действуют только для выбранной организации. Общие ограничения установки остаются верхней границей.":
+    "These limits apply only to the selected organization. Installation limits still apply.",
+  "Квоты изменены другим оператором": "Another operator changed these limits",
+  "Ваш черновик сохранён. Сравните текущие значения перед повторным сохранением.":
+    "Your draft is saved. Compare the current values before saving again.",
+  "Применить мой черновик к текущей версии":
+    "Apply my draft to the current version",
+  "Нулевой лимит блокирует новые операции этого типа. Резервы неизвестных ответов сохраняются; автоматических платных повторов нет.":
+    "A zero limit blocks new operations of that type. Reservations for unknown outcomes remain; paid requests are never retried automatically.",
 };
