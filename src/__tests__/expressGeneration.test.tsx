@@ -54,7 +54,7 @@ it('keeps the old draft revision on reload and never generates after a conflicti
   expect(screen.getByLabelText('Название курса')).toHaveValue('Local plan');
   fireEvent.click(screen.getByRole('button',{name:'Сохранить и продолжить →'}));
   await waitFor(()=>expect(api.put).toHaveBeenCalledWith('/courses/9/generation-settings',expect.objectContaining({expected_revision:2,title:'Local plan'})));
-  expect(api.post).not.toHaveBeenCalled();
+  expect(vi.mocked(api.post).mock.calls.filter(([path])=>path.includes('generation-preflight') || path.includes('generation-runs'))).toEqual([]);
   expect(screen.getByLabelText('Название курса')).toHaveValue('Local plan');
 });
 
@@ -79,7 +79,7 @@ it('locks editable settings while a save is pending so its receipt cannot overwr
   render(<MemoryRouter initialEntries={['/express?course=17']}><ExpressPage/></MemoryRouter>);
   const title=await screen.findByLabelText('Название курса');await waitFor(()=>expect(title).toHaveValue('Original'));
   fireEvent.change(title,{target:{value:'Submitted title'}});fireEvent.click(screen.getByRole('button',{name:'Сохранить и продолжить →'}));
-  await waitFor(()=>expect(api.put).toHaveBeenCalled());expect(title).toBeDisabled();expect(screen.getByLabelText('Цель курса')).toBeDisabled();expect(screen.getByLabelText('Язык курса')).toBeDisabled();
+  await waitFor(()=>expect(api.put).toHaveBeenCalled());expect(title).toBeDisabled();expect(screen.getByLabelText('Описание и цель курса')).toBeDisabled();expect(screen.getByLabelText('Язык курса')).toBeDisabled();
   fireEvent.change(title,{target:{value:'Must not overwrite'}});expect(title).toHaveValue('Submitted title');
   await act(async()=>resolveSave({data:{...settings,title:'Submitted title',revision:5}}));
   await screen.findByRole('button',{name:'Сгенерировать курс'});

@@ -281,7 +281,8 @@ export default function CourseWizard() {
   }, [courseId, offset, version]);
   useEffect(() => {
     if (!courseId || !sourceSelection || runId) { setSuggestionState("idle"); return; }
-    if (!initialDraft.current.hadLocal && settingsLoadedFor !== courseId) return;
+    if (busy || step > 3) return;
+    if (settingsLoadedFor !== courseId) { setSuggestionState("loading"); return; }
     let active = true;
     setSuggestionState("loading");
     api.post<SourceSuggestion>(`/courses/${courseId}/source-suggestion`, {
@@ -295,7 +296,7 @@ export default function CourseWizard() {
     return () => { active = false; };
     // The durable setter reads the latest form. Late source responses never overwrite manual edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, sourceSelection, runId, version, settingsLoadedFor]);
+  }, [courseId, sourceSelection, runId, version, settingsLoadedFor, busy, step]);
   useEffect(() => {
     if (!runId) return;
     let active = true;
