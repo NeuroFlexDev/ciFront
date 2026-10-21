@@ -4,6 +4,7 @@ import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 import { CanvasLeftPanel } from '@/Components/canvas/CanvasLeftPanel';
 import { CanvasSidebar } from '@/Components/canvas/CanvasSidebar';
+import AIProposalReview from '@/Components/ai/AIProposalReview';
 import { CanvasToolbar } from '@/Components/canvas/CanvasToolbar';
 import { CanvasView, type CanvasViewApi } from '@/Components/canvas/CanvasView';
 import { useCanvasActions } from '@/hooks/useCanvasActions';
@@ -175,6 +176,7 @@ function LerniumCanvasPage() {
             </span>
           </div>
 
+          <AIProposalReview />
           <CanvasView onReady={handleCanvasReady} />
 
           <div className={styles.workspaceStatusBar}>
@@ -190,7 +192,7 @@ function LerniumCanvasPage() {
             </button>
           </div>
 
-          {aiNotice && <div role="status" style={{padding: '12px 16px', background: '#eef4ff', borderRadius: 12}}>{aiNotice}</div>}
+          {aiNotice && <div role="status" style={{padding: '12px 16px', background: '#20241a', color:'#dce7c0', borderRadius: 12}}>{aiNotice}</div>}
           {lastError ? (
             <div className={styles.errorBanner} role="alert">
               <AlertCircle size={16} />

@@ -17,6 +17,7 @@ import {ApiError} from '@/shared/errors';
 import { EDGE_TYPE_DEFINITIONS } from '@/utils/canvasAdapters';
 import type {
   CanvasAiActionType,
+  CanvasAiResult,
   CanvasInteractionMode,
   CanvasNodeData,
   CanvasNodeType,
@@ -28,6 +29,8 @@ import type {
 import { createInitialCanvas } from '@/utils/canvasAdapters.persistence';
 import { createCanvasEdge, edgeFromConnection } from '@/utils/edgeFactory';
 import { createCanvasNode, duplicateNode } from '@/utils/nodeFactory';
+
+type PendingAiProposal = {result: CanvasAiResult; anchorIds: string[]};
 
 type SelectionPayload = {
   nodeIds: string[];
@@ -51,6 +54,9 @@ type CanvasStoreState = {
   recoveredDraft: boolean;
   hasUnsavedChanges: boolean;
   aiNotice: string | null;
+  aiProposal: PendingAiProposal | null;
+  acceptAiProposal: () => void;
+  rejectAiProposal: () => void;
   pendingFocusNodeId: string | null;
   loadCourse: (courseId: string, courseTitle?: string) => Promise<void>;
   saveCourse: () => Promise<void>;
@@ -114,14 +120,6 @@ function getAbsolutePosition(node: LerniumNode, nodes: LerniumNode[]): { x: numb
   };
 }
 
-function setAiState(nodes: LerniumNode[], selectedIds: string[], aiState: CanvasNodeData['aiState']) {
-  return nodes.map((node) => (
-    selectedIds.includes(node.id)
-      ? { ...node, data: { ...node.data, aiState } }
-      : node
-  ));
-}
-
 export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
   courseId: null,
   courseTitle: 'Новый курс',
@@ -139,6 +137,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
   recoveredDraft: false,
   hasUnsavedChanges: false,
   aiNotice: null,
+  aiProposal: null,
   pendingFocusNodeId: null,
 
   async loadCourse(courseId, courseTitle = `Курс ${courseId}`) {
@@ -169,6 +168,7 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
       recoveredDraft: Boolean(draft),
       hasUnsavedChanges: Boolean(draft),
       aiNotice: null,
+      aiProposal: readDraft<PendingAiProposal>(`canvas-ai:${courseId}`,owner)?.value ?? null,
       lastSavedAt: snapshot.updatedAt ?? null,
     });
     } finally {if(sequence===loadSequence)hydrating=false;}
@@ -466,59 +466,40 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
     });
   },
 
+  acceptAiProposal() {
+    const state=get();const proposal=state.aiProposal;
+    if(!proposal||!state.courseId)return;
+    if(proposal.anchorIds.some(id=>!state.nodes.some(node=>node.id===id))){set({lastError:'Исходный узел удалён. Отклоните предложение и повторите действие для актуальных узлов.'});return;}
+    if(state.nodes.length+proposal.result.nodes.length>1000||state.edges.length+proposal.result.edges.length>3000){set({lastError:'Предложение превышает допустимый размер канвы. Сократите схему перед применением.'});return;}
+    const ids=new Set(proposal.result.nodes.map(node=>node.id));
+    set({nodes:[...state.nodes,...proposal.result.nodes].map(node=>({...node,selected:ids.has(node.id)})),
+      edges:[...state.edges,...proposal.result.edges],selectedNodeIds:Array.from(ids),selectedEdgeIds:[],aiProposal:null,
+      pendingFocusNodeId:proposal.result.nodes[0]?.id??null,aiNotice:'Предложение добавлено в рабочую схему. Сохраните канву после проверки.',lastError:null});
+    clearDraft(`canvas-ai:${state.courseId}`,proposal);
+  },
+
+  rejectAiProposal() {
+    const state=get();if(!state.aiProposal||!state.courseId)return;
+    clearDraft(`canvas-ai:${state.courseId}`,state.aiProposal);
+    set({aiProposal:null,aiNotice:'Предложение отклонено. Содержимое канвы сохранено без изменений.',lastError:null});
+  },
+
   async runAiAction(action) {
-    const state = get();
-    const selectedNodes = state.nodes.filter((node) => state.selectedNodeIds.includes(node.id));
-
-    if (!selectedNodes.length) {
-      set({ lastError: 'Для AI-действия нужно выделить хотя бы один узел' });
-      return;
-    }
-
-    set({
-      isAiRunning: true,
-      lastError: null,
-      aiNotice: null,
-      nodes: setAiState(state.nodes, state.selectedNodeIds, 'loading'),
-    });
-
+    const state=get();const owner=getDraftOwner();
+    if(state.isAiRunning)return;
+    if(state.aiProposal){set({lastError:'Сначала примите или отклоните текущее предложение.'});return;}
+    const selectedNodes=state.nodes.filter(node=>state.selectedNodeIds.includes(node.id));
+    if(!selectedNodes.length){set({lastError:'Для AI-действия выделите хотя бы один узел'});return;}
+    set({isAiRunning:true,lastError:null,aiNotice:null});
     try {
-      const result = await requestAiAction({
-        courseId: state.courseId!,
-        action,
-        selectedNodes,
-      });
-
-      if (result.degraded) {
-        set((current) => ({isAiRunning: false, aiNotice: result.summary,
-          nodes: setAiState(current.nodes, current.selectedNodeIds, 'idle')}));
-        return;
-      }
-
-      set((current) => ({
-        isAiRunning: false,
-        nodes: setAiState(
-          [
-            ...current.nodes,
-            ...result.nodes,
-          ],
-          current.selectedNodeIds,
-          'generated',
-        ).map((node) => ({
-          ...node,
-          selected: result.nodes.some((generatedNode) => generatedNode.id === node.id),
-        })),
-        edges: [...current.edges, ...result.edges],
-        selectedNodeIds: result.nodes.map((node) => node.id),
-        selectedEdgeIds: [],
-        pendingFocusNodeId: result.nodes[0]?.id ?? null,
-      }));
-    } catch (error) {
-      set((current) => ({
-        isAiRunning: false,
-        lastError: error instanceof Error ? error.message : 'Не удалось выполнить AI-действие',
-        nodes: setAiState(current.nodes, current.selectedNodeIds, 'error'),
-      }));
+      const result=await requestAiAction({courseId:state.courseId!,action,selectedNodes});
+      const proposal={result,anchorIds:selectedNodes.map(node=>node.id)};
+      if(!result.degraded&&result.nodes.length)writeDraft(`canvas-ai:${state.courseId}`,proposal,undefined,owner);
+      if(get().courseId!==state.courseId||getDraftOwner()!==owner)return;
+      if(result.degraded){set({isAiRunning:false,aiNotice:result.summary});return;}
+      set({isAiRunning:false,aiProposal:proposal,aiNotice:null});
+    } catch(error) {
+      if(get().courseId===state.courseId&&getDraftOwner()===owner)set({isAiRunning:false,lastError:error instanceof Error?error.message:'Не удалось подготовить предложение. Содержимое канвы не изменено.'});
     }
   },
 }));
