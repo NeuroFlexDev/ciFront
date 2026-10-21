@@ -1,0 +1,311 @@
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { apiFetch } from "@/shared/api";
+import { ApiError } from "@/shared/errors";
+import { Shell } from "@/Pages/Workspace/shared";
+import { LoadingState, RequestError } from "@/Components/RequestState";
+import { useLearningData } from "../Learning/useLearningData";
+import { type Assignment, dateLabel, stateLabel } from "../Learning/types";
+import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
+import { type Group, type Team } from "./types";
+import s from "../Learning/learning.module.css";
+
+type Report = {
+  items: Assignment[];
+  metrics: {
+    assigned: number;
+    completed: number;
+    in_progress: number;
+    overdue: number;
+    pending_reviews: number;
+    average_score_percent: number | null;
+  };
+};
+export default function LearningAnalytics() {
+  const [params, setParams] = useSearchParams();
+  const [query, setQuery] = useState("");
+  const course = params.get("course_id") ?? "";
+  const group = params.get("group_id") ?? "";
+  const user = params.get("user_id") ?? "";
+  const filters = new URLSearchParams();
+  if (course) filters.set("course_id", course);
+  if (group) filters.set("group_id", group);
+  if (user) filters.set("user_id", user);
+  const report = useLearningData<Report>("/team/results?" + filters);
+  const all = useLearningData<Report>("/team/results");
+  const team = useLearningData<Team>("/team");
+  const groups = useLearningData<{ items: Group[] }>("/team/groups");
+  const reminders = useLearningData<{ items: Assignment[] }>(
+    "/team/learning-reminders",
+  );
+  const action = useTeamAction();
+  const choose = (key: string, value: string) =>
+    setParams((previous) => {
+      const next = new URLSearchParams(previous);
+      if (value) next.set(key, value);
+      else next.delete(key);
+      return next;
+    });
+  const courses = Array.from(
+    new Map(
+      (all.data?.items ?? []).map((a) => [
+        a.course_id,
+        { id: a.course_id, title: a.title },
+      ]),
+    ).values(),
+  );
+  const visible = (report.data?.items ?? []).filter((a) =>
+    (a.full_name + " " + a.email + " " + a.title)
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const exportResults = () =>
+    void action.run(async () => {
+      const response = await apiFetch("/team/results/export?" + filters);
+      if (!response.ok)
+        throw new ApiError(
+          "Не удалось подготовить выгрузку. Повторите запрос.",
+          response.status,
+          "http",
+        );
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "learning-results.csv";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, "Выгрузка подготовлена с выбранными фильтрами");
+  return (
+    <Shell
+      title="Результаты обучения"
+      description="Подтверждённые назначения и оценки в вашей области ответственности."
+    >
+      <div className={s.page}>
+        <TeamTabs />
+        {[report, all, team, groups, reminders].map((r, i) =>
+          r.error ? (
+            <RequestError
+              key={i}
+              error={r.error}
+              onRetry={() => void r.reload()}
+            />
+          ) : null,
+        )}
+        {report.loading && !report.data && (
+          <LoadingState>Собираем результаты…</LoadingState>
+        )}
+        {report.data && (
+          <>
+            <section className={s.stats}>
+              <div className={s.stat}>
+                <span>Назначено / завершено</span>
+                <strong>
+                  {report.data.metrics.assigned} /{" "}
+                  {report.data.metrics.completed}
+                </strong>
+              </div>
+              <div className={s.stat}>
+                <span>Ожидают проверки</span>
+                <strong>{report.data.metrics.pending_reviews}</strong>
+              </div>
+              <div className={s.stat}>
+                <span>Средний результат</span>
+                <strong>
+                  {report.data.metrics.average_score_percent !== null
+                    ? report.data.metrics.average_score_percent + "%"
+                    : "—"}
+                </strong>
+              </div>
+            </section>
+            <div className={s.card}>
+              <div className={s.spread}>
+                <h2>Назначения и результаты</h2>
+                <button
+                  className={s.primary}
+                  disabled={action.busy || !report.data.items.length}
+                  onClick={exportResults}
+                >
+                  Скачать CSV ↓
+                </button>
+              </div>
+              <div className={s.formGrid}>
+                <label className={s.field}>
+                  Курс
+                  <select
+                    value={course}
+                    onChange={(e) => choose("course_id", e.target.value)}
+                  >
+                    <option value="">Все доступные курсы</option>
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={s.field}>
+                  Группа
+                  <select
+                    value={group}
+                    onChange={(e) => choose("group_id", e.target.value)}
+                  >
+                    <option value="">Все группы</option>
+                    {groups.data?.items.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {g.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={s.field}>
+                  Участник
+                  <select
+                    value={user}
+                    onChange={(e) => choose("user_id", e.target.value)}
+                  >
+                    <option value="">Все участники</option>
+                    {team.data?.members.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.full_name || m.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className={s.field}>
+                  Поиск
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Имя, почта или курс"
+                  />
+                </label>
+              </div>
+              <p className={s.caption}>
+                В процессе: {report.data.metrics.in_progress}. Просрочено:{" "}
+                {report.data.metrics.overdue}. Отозванные назначения остаются в
+                истории и не учитываются в активной сводке.
+              </p>
+              <ActionStatus action={action} />
+              <div className={s.tableWrap}>
+                <table className={s.table}>
+                  <thead>
+                    <tr>
+                      <th>Участник</th>
+                      <th>Курс / версия</th>
+                      <th>Прогресс</th>
+                      <th>Результат</th>
+                      <th>Статус и срок</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visible.map((a) => (
+                      <tr key={a.id}>
+                        <td>
+                          <strong>{a.full_name || a.email}</strong>
+                          <p className={s.caption}>{a.email}</p>
+                        </td>
+                        <td>
+                          {a.title}
+                          <p className={s.caption}>
+                            Версия {a.revision} · назначение {a.id}
+                          </p>
+                        </td>
+                        <td>
+                          {a.progress_percent}%
+                          <progress
+                            className={s.progress}
+                            max={100}
+                            value={a.progress_percent}
+                            aria-label={`Прогресс ${a.full_name}`}
+                          />
+                        </td>
+                        <td>
+                          {a.max_points
+                            ? `${a.points} / ${a.max_points}`
+                            : "Без балльной оценки"}
+                          <p className={s.caption}>
+                            {a.score_percent !== null
+                              ? `${a.score_percent}%`
+                              : ""}
+                            {a.pending_reviews
+                              ? ` · На проверке: ${a.pending_reviews}`
+                              : ""}
+                          </p>
+                        </td>
+                        <td>
+                          <span className={s.badge}>
+                            {stateLabel[a.status] ?? a.status}
+                          </span>
+                          <p className={s.caption}>
+                            {a.completed_at
+                              ? "Завершено: " + dateLabel(a.completed_at)
+                              : "Срок: " + dateLabel(a.due_at)}
+                          </p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {!visible.length && (
+                <div className={s.empty}>
+                  <h3>
+                    {report.data.items.length
+                      ? "По вашему поиску ничего не найдено"
+                      : "Назначений с такими условиями нет"}
+                  </h3>
+                  <p>
+                    Измените фильтры или назначьте участникам опубликованный
+                    курс.
+                  </p>
+                  <Link className={s.secondary} to="/assignments">
+                    К назначениям
+                  </Link>
+                </div>
+              )}
+            </div>
+            <section className={s.card} style={{ marginTop: 28 }}>
+              <h2>Ближайшие сроки и просроченные назначения</h2>
+              <p className={s.muted}>
+                Для программ учитывается интервал предупреждения из назначенной
+                редакции; для отдельных курсов — три дня.
+              </p>
+              {reminders.data?.items.length ? (
+                <div className={s.tableWrap}>
+                  <table className={s.table}>
+                    <thead>
+                      <tr>
+                        <th>Участник</th>
+                        <th>Курс</th>
+                        <th>Срок</th>
+                        <th>Прогресс</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reminders.data.items.map((a) => (
+                        <tr key={a.id}>
+                          <td>
+                            {team.data?.members.find((m) => m.id === a.user_id)
+                              ?.full_name || `Участник ${a.user_id}`}
+                          </td>
+                          <td>{a.title}</td>
+                          <td>{dateLabel(a.due_at)}</td>
+                          <td>{a.progress_percent}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className={s.muted}>
+                  Назначений с приближающимся сроком нет.
+                </p>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </Shell>
+  );
+}
