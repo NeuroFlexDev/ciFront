@@ -8,6 +8,7 @@ import { useDurableState } from "@/hooks/useDurableState";
 import { Shell } from "@/Pages/Workspace/shared";
 import { LoadingState, RequestError } from "@/Components/RequestState";
 import ResourceUsagePanel from "@/Components/ResourceUsagePanel";
+import { resourceProfiles } from "./resourceProfiles";
 import { useLearningData } from "../Learning/useLearningData";
 import { dateLabel } from "../Learning/types";
 import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
@@ -29,6 +30,20 @@ export default function TeamSettingsPage() {
     >
       <div className={s.page}>
         <TeamTabs />
+        {settings.data && (
+          <p className={s.caption}>
+            {t("Профиль ресурсов")}:{" "}
+            <strong>
+              {t(
+                resourceProfiles[
+                  String(settings.data.delivery.resource_profile ?? "custom")
+                ] ?? "Индивидуальный",
+              )}
+            </strong>
+            .{" "}
+            {t("Действуют индивидуально установленные квоты, показанные ниже.")}
+          </p>
+        )}
         {permission.data?.can_manage_team && <ResourceUsagePanel />}
         {!!settings.error && (
           <RequestError

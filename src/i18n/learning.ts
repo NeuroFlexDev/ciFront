@@ -1,5 +1,12 @@
 /** Interface text only. Course content, names, answers and review comments are never translated. */
 export const learningEnglish: Record<string, string> = {
+  "Профиль ресурсов": "Resource profile",
+  Индивидуальный: "Custom",
+  Пилот: "Pilot",
+  "Название описывает масштаб подключения. Оно не меняет квоты, стоимость и включённые функции.":
+    "The name describes rollout scope. It does not change quotas, pricing or enabled features.",
+  "Действуют индивидуально установленные квоты, показанные ниже.":
+    "The individually configured quotas shown below apply.",
   "Доступ поддержки": "Support access",
   "Временное чтение одного курса или назначения по разрешению владельца организации.":
     "Temporary read access to one course or assignment, approved by the organization owner.",

@@ -12,6 +12,7 @@ import StatusPage from "@/Pages/AccessPage/StatusPage";
 import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import OrganizationResourcePolicy from "@/Components/OrganizationResourcePolicy";
+import { resourceProfiles } from "@/Pages/TeamLearning/resourceProfiles";
 const features: Record<string, string> = {
   learning: "Обучение и назначения",
   authoring: "Создание и редактирование курсов",
@@ -182,6 +183,35 @@ function DeliveryForm({
               </option>
             ))}
           </select>
+        </label>
+        <label>
+          <span id="resource-profile-label">{t("Профиль ресурсов")}</span>
+          <select
+            aria-labelledby="resource-profile-label"
+            aria-describedby="resource-profile-description"
+            value={String(form.delivery.resource_profile ?? "custom")}
+            disabled={busy}
+            onChange={(event) =>
+              setForm({
+                ...form,
+                delivery: {
+                  ...form.delivery,
+                  resource_profile: event.target.value,
+                },
+              })
+            }
+          >
+            {Object.entries(resourceProfiles).map(([key, title]) => (
+              <option key={key} value={key}>
+                {t(title)}
+              </option>
+            ))}
+          </select>
+          <small id="resource-profile-description">
+            {t(
+              "Название описывает масштаб подключения. Оно не меняет квоты, стоимость и включённые функции.",
+            )}
+          </small>
         </label>
         <fieldset>
           <legend>{t("Языки интерфейса и обучения")}</legend>
