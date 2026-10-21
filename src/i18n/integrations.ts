@@ -79,7 +79,7 @@ export const integrationsEnglish:Record<string,string> = {
   "Интеграции": "Integrations",
   "Подключайте приложения, корпоративный вход и учебные системы.": "Connect applications, corporate sign-in and learning systems.",
   "Управление подключениями": "Manage connections",
-  "Настраивать интеграции может владелец организации. Попросите его подключить нужный сервис.": "Only the organization owner can configure integrations. Ask them to connect the service you need.",
+  "Настраивать интеграции может владелец или администратор организации. Попросите их подключить нужный сервис.": "The organization owner or administrator can configure integrations. Ask them to connect the service you need.",
   "Открыть профиль": "Open profile",
   "Разделы интеграций": "Integration sections",
   "Ключи API": "API keys",
