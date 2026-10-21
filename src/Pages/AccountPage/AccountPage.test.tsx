@@ -17,6 +17,7 @@ import { persistLocale } from "@/i18n/locale";
 import AccountPage from "./AccountPage";
 
 const auth = vi.hoisted(() => ({
+  logout: vi.fn(),
   user: {
     id: 3,
     full_name: "Current Person",
@@ -28,13 +29,14 @@ const auth = vi.hoisted(() => ({
 vi.mock("@/auth/useAuth", () => ({
   useAuth: () => ({
     user: auth.user,
-    logout: vi.fn(),
+    logout: auth.logout,
     refreshUser: vi.fn(),
   }),
 }));
 vi.mock("@/shared/api", () => ({
   api: { get: vi.fn(), post: vi.fn(), patch: vi.fn() },
   apiFetch: vi.fn(),
+  getAuthToken: () => null,
   setAuthToken: vi.fn(),
   captureAuthSession: vi.fn(),
   assertAuthSession: vi.fn(),
@@ -55,6 +57,15 @@ function team(
   };
 }
 function otherRead(path: string) {
+  if (path === "/team/permissions")
+    return {
+      data: {
+        can_author: false,
+        can_review: false,
+        can_report: false,
+        can_manage_team: false,
+      },
+    };
   if (path.startsWith("/team/settings"))
     return {
       data: {
@@ -154,7 +165,12 @@ it("keeps the setup offer only for a personal account and does not request a tea
     organization().getByRole("link", { name: "Обсудить подключение ↗" }),
   ).toHaveAttribute("href", "/legal/contacts/#request");
   expect(
-    vi.mocked(api.get).mock.calls.some(([path]) => path.startsWith("/team")),
+    vi
+      .mocked(api.get)
+      .mock.calls.some(
+        ([path]) =>
+          path.startsWith("/team?") || path.startsWith("/team/settings"),
+      ),
   ).toBe(false);
 });
 
@@ -222,4 +238,90 @@ it("localizes organization labels and configured role names in English", async (
   expect(
     screen.queryByText(/Discuss organization setup/),
   ).not.toBeInTheDocument();
+});
+
+it("uses the shared learner navigation without author-only links", async () => {
+  auth.user.organization_role = "member";
+  render(page());
+  await screen.findByText("Connected organization");
+  const navigation = within(
+    screen.getByRole("navigation", { name: "Разделы платформы" }),
+  );
+  expect(
+    navigation.getByRole("link", { name: "Моё обучение" }),
+  ).toHaveAttribute("href", "/learning");
+  expect(navigation.getByRole("link", { name: "Дашборд" })).toHaveAttribute(
+    "href",
+    "/dashboard",
+  );
+  expect(
+    navigation.queryByRole("link", { name: "Создать курс" }),
+  ).not.toBeInTheDocument();
+  expect(
+    navigation.queryByRole("link", { name: "Курсы" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: "Мои курсы" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Помощь и контакты" }),
+  ).toHaveAttribute("href", "/legal/contacts/");
+});
+
+it("shows server-granted author navigation without resetting an edited profile draft", async () => {
+  auth.user.organization_role = "member";
+  let finish!: (result: {
+    data: {
+      can_author: boolean;
+      can_review: boolean;
+      can_report: boolean;
+      can_manage_team: boolean;
+    };
+  }) => void;
+  vi.mocked(api.get).mockImplementation(async (path) => {
+    if (path === "/team/permissions")
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    return path.startsWith("/team?") ? { data: team() } : otherRead(path);
+  });
+  render(page());
+  const input = screen.getByRole("textbox", { name: "Имя и фамилия" });
+  fireEvent.change(input, { target: { value: "Edited profile name" } });
+  expect(
+    screen.queryByRole("link", { name: "Создать курс" }),
+  ).not.toBeInTheDocument();
+  await act(async () => {
+    finish({
+      data: {
+        can_author: true,
+        can_review: false,
+        can_report: false,
+        can_manage_team: false,
+      },
+    });
+  });
+  const navigation = within(
+    screen.getByRole("navigation", { name: "Разделы платформы" }),
+  );
+  expect(
+    navigation.getByRole("link", { name: "Создать курс" }),
+  ).toHaveAttribute("href", "/express");
+  expect(navigation.getByRole("link", { name: "Курсы" })).toHaveAttribute(
+    "href",
+    "/courses",
+  );
+  expect(input).toHaveValue("Edited profile name");
+  expect(api.patch).not.toHaveBeenCalled();
+});
+
+it("keeps logout in the working shared account dropdown", async () => {
+  render(page());
+  await screen.findByText("Connected organization");
+  const menu = screen.getByRole("banner");
+  fireEvent.click(menu.querySelector("summary")!);
+  fireEvent.click(
+    within(menu).getByRole("button", { name: "Выйти из аккаунта ↗" }),
+  );
+  expect(auth.logout).toHaveBeenCalledOnce();
 });
