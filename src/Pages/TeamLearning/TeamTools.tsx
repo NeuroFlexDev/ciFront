@@ -7,7 +7,10 @@ export function TeamTabs() {
   const { t } = useLocale();
 
   return (
-    <nav className={s.tablist} aria-label={t("Управление обучением")}>
+    <nav
+      className={`${s.tablist} ${s.teamNavigation}`}
+      aria-label={t("Управление обучением")}
+    >
       {[
         ["/groups", t("Команда и группы")],
         ["/assignments", t("Назначения")],

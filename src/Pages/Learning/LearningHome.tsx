@@ -1,6 +1,7 @@
 import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ArrowUpRight, BookOpen } from "lucide-react";
 import { Shell } from "@/Pages/Workspace/shared";
 import { LoadingState, RequestError } from "@/Components/RequestState";
 import { useLearningData } from "./useLearningData";
@@ -31,7 +32,7 @@ export default function LearningHome() {
       )}
     >
       <div className={s.page}>
-        <div className={s.spread}>
+        <div className={`${s.spread} ${s.filterBar}`}>
           <label className={s.check}>
             <input
               type="checkbox"
@@ -133,35 +134,51 @@ export default function LearningHome() {
             </Link>
           </section>
         )}
-        <div className={s.grid} style={{ marginTop: 28 }}>
+        <div className={`${s.grid} ${s.listSection}`}>
           {courses.data?.items.map((a) => (
-            <article className={s.card} key={a.id}>
+            <article className={`${s.card} ${s.courseCard}`} key={a.id}>
+              {a.status !== "locked" && (
+                <Link
+                  className={s.cornerAction}
+                  to={`/learning/${a.id}${a.state !== "active" ? "?view=results" : ""}`}
+                  aria-label={`${a.title} · ${a.state !== "active" ? t("Посмотреть результаты") : t("Продолжить")}`}
+                >
+                  <ArrowUpRight
+                    size={26}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </Link>
+              )}
               <span className={s.badge}>
                 {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
               </span>
-              <h2 style={{ marginTop: 20 }}>{a.title}</h2>
-              <p className={s.muted}>
+              <h2>{a.title}</h2>
+              <p className={`${s.muted} ${s.courseMeta}`}>
+                <BookOpen size={17} strokeWidth={1.5} aria-hidden="true" />
                 {t("Версия") + " "}
                 {a.revision} · {a.lesson_count}
                 {" " + t("уроков")}
               </p>
-              <progress
-                className={s.progress}
-                value={a.progress_percent}
-                max={100}
-                aria-label={t("Прогресс курса {v0}", { v0: a.title })}
-              />
-              <div className={s.spread}>
-                <span>
-                  {a.progress_percent}
-                  {t("% пройдено")}
-                </span>
-                {a.max_points > 0 && (
+              <div className={s.courseProgress}>
+                <progress
+                  className={s.progress}
+                  value={a.progress_percent}
+                  max={100}
+                  aria-label={t("Прогресс курса {v0}", { v0: a.title })}
+                />
+                <div className={s.spread}>
                   <span>
-                    {a.points} / {a.max_points}
-                    {" " + t("баллов")}
+                    {a.progress_percent}
+                    {t("% пройдено")}
                   </span>
-                )}
+                  {a.max_points > 0 && (
+                    <span>
+                      {a.points} / {a.max_points}
+                      {" " + t("баллов")}
+                    </span>
+                  )}
+                </div>
               </div>
               <p className={s.muted}>
                 {t("Срок:") + " "}

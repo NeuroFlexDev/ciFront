@@ -1,6 +1,7 @@
 import { useRoleNames } from "./useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { api, apiFetch } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -35,6 +36,11 @@ export default function GroupsPage() {
   const [tab, setTab] = useState("groups");
   const [selected, setSelected] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const personPanel = useRef<HTMLDivElement>(null);
+  const selectPerson = (id: number) => {
+    setSelected(id);
+    requestAnimationFrame(() => personPanel.current?.focus());
+  };
   const exportAction = useTeamAction();
   const exportPeople = () =>
     void exportAction.run(async () => {
@@ -207,53 +213,66 @@ export default function GroupsPage() {
                           .includes(query.toLowerCase()),
                       )
                       .map((m) => (
-                        <article className={s.person} key={m.id}>
+                        <article
+                          className={`${s.person} ${s.personCard}`}
+                          key={m.id}
+                        >
+                          <button
+                            className={s.cornerAction}
+                            aria-label={`${t("Карточка и права")} · ${m.full_name || m.email}`}
+                            aria-expanded={selected === m.id}
+                            aria-controls="team-person-details"
+                            onClick={() => selectPerson(m.id)}
+                          >
+                            <ArrowUpRight
+                              size={26}
+                              strokeWidth={1.5}
+                              aria-hidden="true"
+                            />
+                          </button>
                           <div className={s.avatar}>
                             {initials(m.full_name || m.email)}
                           </div>
                           <h3>{m.full_name || m.email}</h3>
                           <p className={s.muted}>{m.email}</p>
-                          <p>
+                          <p className={s.accent}>
                             {people.data?.items.find((p) => p.user_id === m.id)
                               ?.position || roleName(m.organization_role)}
                           </p>
                           <span className={s.badge}>
                             {m.is_active ? t("Активен") : t("Доступ отозван")}
                           </span>
-                          <div className={s.row} style={{ marginTop: 18 }}>
-                            <button
-                              className={s.secondary}
-                              onClick={() =>
-                                setSelected(selected === m.id ? null : m.id)
-                              }
-                            >
-                              {t("Карточка и права")}
-                            </button>
-                            <Link
-                              className={s.primary}
-                              to={`/assignments?user=${m.id}`}
-                            >
-                              {t("Назначить")}
-                            </Link>
-                          </div>
+                          <Link
+                            className={s.primary}
+                            to={`/assignments?user=${m.id}`}
+                          >
+                            {t("Назначить")}
+                          </Link>
                         </article>
                       ))}
                   </div>
                   {selected &&
                     team.data.members.find((m) => m.id === selected) && (
-                      <PersonForm
-                        key={selected}
-                        member={team.data.members.find(
-                          (m) => m.id === selected,
-                        )!}
-                        person={people.data?.items.find(
-                          (p) => p.user_id === selected,
-                        )}
-                        departments={departments.data?.items ?? []}
-                        groups={groups.data?.items ?? []}
-                        canManage={team.data.can_manage}
-                        reload={reload}
-                      />
+                      <div
+                        id="team-person-details"
+                        ref={personPanel}
+                        tabIndex={-1}
+                        className={s.selectionPanel}
+                      >
+                        <PersonForm
+                          key={selected}
+                          member={team.data.members.find(
+                            (m) => m.id === selected,
+                          )!}
+                          person={people.data?.items.find(
+                            (p) => p.user_id === selected,
+                          )}
+                          departments={departments.data?.items ?? []}
+                          groups={groups.data?.items ?? []}
+                          canManage={team.data.can_manage}
+                          reload={reload}
+                        />
+                      </div>
                     )}
                 </>
               )}

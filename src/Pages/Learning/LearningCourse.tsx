@@ -209,7 +209,12 @@ export default function LearningCourse() {
                 </strong>
               </div>
             </div>
-            {!resultsOnly && data.content && <LearnerSources assignmentId={data.id} sources={data.content.sources ?? []} />}
+            {!resultsOnly && data.content && (
+              <LearnerSources
+                assignmentId={data.id}
+                sources={data.content.sources ?? []}
+              />
+            )}
             <div className={s.tablist}>
               <button
                 aria-selected={!resultsOnly}
@@ -313,6 +318,7 @@ export default function LearningCourse() {
                           key={l.id}
                           className={s.railItem}
                           aria-current={key === `lesson:${l.id}`}
+                          data-complete={data.completed_lessons.includes(l.id)}
                           disabled={busy}
                           onClick={() => void choose(`lesson:${l.id}`)}
                         >

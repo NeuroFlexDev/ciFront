@@ -1,6 +1,11 @@
 .page {
   color: #f5f5f6;
   font-family: "GolosText", sans-serif;
+  --learning-accent: #caf432;
+  --learning-surface: #141414;
+  --learning-canvas: var(--ui-bg, #0b0c0f);
+  --learning-fast: var(--ui-motion-fast, 160ms);
+  --learning-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .page * {
   box-sizing: border-box;
@@ -19,14 +24,14 @@
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 28px;
 }
 .card {
   background: #141414;
-  border: 1px solid #292a2b;
-  border-radius: 28px;
-  padding: 26px;
+  border: 1px solid #242526;
+  border-radius: 30px;
+  padding: clamp(22px, 2.2vw, 34px);
   min-width: 0;
 }
 .card h2,
@@ -43,7 +48,7 @@
   line-height: 1.5;
 }
 .accent {
-  color: #c9f331;
+  color: var(--learning-accent, #caf432) !important;
 }
 .row {
   display: flex;
@@ -72,11 +77,16 @@
   border: 1px solid transparent;
   border-radius: 100px;
   padding: 13px 23px;
-  min-height: 46px;
+  min-height: 48px;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
   text-decoration: none;
+  transition:
+    background-color var(--learning-fast, 160ms),
+    border-color var(--learning-fast, 160ms),
+    transform var(--learning-fast, 160ms) var(--learning-ease, ease),
+    box-shadow var(--learning-fast, 160ms);
 }
 .primary {
   background: #c9f331;
@@ -88,9 +98,9 @@
   border-color: #404145;
 }
 .danger {
-  background: #452020;
-  color: #ffbdbd;
-  border-color: #854141;
+  background: #ff4c4c;
+  color: #141414;
+  border-color: #ff4c4c;
 }
 .primary:hover {
   background: #d8ff57;
@@ -113,36 +123,43 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-  margin: 0 0 32px;
+  gap: 28px;
+  margin: 0 0 38px;
+  max-width: 1220px;
 }
 .stat {
   border-radius: 22px;
   background: radial-gradient(
-    ellipse at 110% 0%,
-    #c9f33180 0%,
-    #202415 36%,
-    #141414 70%
+    ellipse at 125% 12%,
+    #caf432 0%,
+    #788e2199 26%,
+    #1d2112 50%,
+    #141414 75%
   );
-  box-shadow: inset 0 0 8px #c9f33150;
-  padding: 25px;
+  box-shadow:
+    inset -3px 0 14px #c9f33166,
+    0 12px 28px #00000018;
+  padding: clamp(22px, 2.1vw, 32px);
+  min-width: 0;
 }
 .stat span {
   display: block;
   color: #d5d6d5;
-  font-size: 15px;
+  font-family: "Days", "GolosText", sans-serif;
+  font-size: clamp(16px, 1.35vw, 21px);
+  line-height: 1.4;
 }
 .stat strong {
   display: block;
   font-family: "Days", sans-serif;
-  font-size: 34px;
+  font-size: clamp(30px, 3vw, 46px);
   line-height: 1.4;
   margin-top: 12px;
 }
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 26px;
+  grid-template-columns: minmax(0, 2.08fr) minmax(285px, 1fr);
+  gap: 28px;
   align-items: start;
 }
 .rail {
@@ -150,6 +167,12 @@
   top: 24px;
   display: grid;
   gap: 12px;
+  min-width: 0;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #45483b transparent;
+  padding: 4px;
 }
 .railSection {
   font-size: 14px;
@@ -161,14 +184,19 @@
   display: flex;
   align-items: center;
   text-align: left;
-  gap: 18px;
+  gap: 16px;
   border: 1px solid transparent;
   background: #141414;
   color: #f5f5f6;
   border-radius: 60px;
-  padding: 18px 20px;
+  padding: 8px 22px 8px 8px;
+  min-height: 76px;
   font: inherit;
   cursor: pointer;
+  transition:
+    background-color var(--learning-fast),
+    border-color var(--learning-fast),
+    transform var(--learning-fast) var(--learning-ease);
 }
 .railItem[aria-current="true"] {
   border-color: #c9f331;
@@ -177,7 +205,16 @@
 .railItem strong {
   font-family: "Days", sans-serif;
   font-size: 25px;
-  min-width: 30px;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  border-radius: 50%;
+  background: #1c1d18;
+  transition:
+    background-color var(--learning-fast),
+    color var(--learning-fast);
 }
 .railItem span {
   font-size: 14px;
@@ -187,12 +224,32 @@
   display: block;
   color: #c9f331;
 }
+.railItem[data-complete="true"] strong {
+  color: var(--learning-accent);
+  box-shadow: inset 0 0 0 1px #caf43255;
+}
+.railItem[aria-current="true"] strong {
+  color: #141414;
+  background: var(--learning-accent);
+}
 .article {
   background: #141414;
   border-radius: 28px;
-  padding: 30px;
+  padding: clamp(24px, 2.5vw, 40px);
   overflow-wrap: anywhere;
-  line-height: 1.65;
+  line-height: 1.7;
+  font-size: 17px;
+}
+.page .article p {
+  font-size: inherit;
+  line-height: inherit;
+}
+.page .article h2 {
+  font-size: clamp(24px, 2vw, 30px);
+  margin: 12px 0 22px;
+}
+.page .article h3 {
+  margin-top: 28px;
 }
 .article img {
   max-width: 100%;
@@ -228,6 +285,25 @@
   accent-color: #c9f331;
   height: 9px;
   margin: 16px 0;
+  display: block;
+  appearance: none;
+  border: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #30312c;
+}
+.progress::-webkit-progress-bar {
+  background: #30312c;
+  border-radius: 12px;
+}
+.progress::-webkit-progress-value {
+  background: var(--learning-accent);
+  border-radius: 12px;
+  transition: width 360ms var(--learning-ease);
+}
+.progress::-moz-progress-bar {
+  background: var(--learning-accent);
+  border-radius: 12px;
 }
 .badge {
   display: inline-block;
@@ -276,6 +352,16 @@
   background: #0b0c0f;
   padding: 16px;
   cursor: pointer;
+  min-height: 60px;
+  font-size: 16px;
+  line-height: 1.55;
+  transition:
+    border-color var(--learning-fast),
+    background-color var(--learning-fast);
+}
+.choice:focus-within {
+  outline: 2px solid var(--learning-accent);
+  outline-offset: 3px;
 }
 .choice:has(input:checked) {
   border-color: #c9f331;
@@ -327,8 +413,9 @@
   position: relative;
   background: #141414;
   border-radius: 28px;
-  padding: 26px;
+  padding: 30px;
   border: 1px solid #292a2b;
+  min-width: 0;
 }
 .person[aria-checked="true"] {
   border-color: #c9f331;
@@ -337,8 +424,8 @@
 .avatar {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: #303527;
   color: #d5f479;
@@ -348,6 +435,7 @@
 }
 .person h3 {
   margin: 0 0 8px;
+  overflow-wrap: anywhere;
 }
 .person input[type="checkbox"] {
   position: absolute;
@@ -376,11 +464,18 @@
   color: #aaa;
   font-weight: 500;
 }
+.table tbody tr {
+  transition: background-color var(--learning-fast);
+}
+.table tbody tr:hover {
+  background: #ffffff04;
+}
 .tablist {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 24px;
+  align-items: center;
 }
 .tablist a,
 .tablist button {
@@ -388,10 +483,15 @@
   border-radius: 80px;
   background: #141414;
   color: #ddd;
-  padding: 10px 18px;
+  padding: 12px 20px;
+  min-height: 46px;
   text-decoration: none;
   font: inherit;
   cursor: pointer;
+  transition:
+    color var(--learning-fast),
+    background-color var(--learning-fast),
+    border-color var(--learning-fast);
 }
 .tablist [aria-current="page"],
 .tablist [aria-selected="true"] {
@@ -565,7 +665,7 @@
   color: #eee;
 }
 .page .danger {
-  color: #ffbdbd;
+  color: #141414;
 }
 .page .tablist [aria-current="page"],
 .page .tablist [aria-selected="true"] {
@@ -581,6 +681,10 @@
 .page .field select,
 .page .field textarea {
   border-radius: 15px;
+  min-height: 52px;
+  transition:
+    border-color var(--learning-fast),
+    box-shadow var(--learning-fast);
 }
 .page .person {
   display: block;
@@ -588,4 +692,278 @@
 .page .person input[type="checkbox"] {
   min-height: 24px;
   padding: 0;
+}
+.courseCard,
+.personCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-color: transparent;
+  min-width: 0;
+}
+.courseCard::before,
+.personCard::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 69px;
+  height: 69px;
+  border-bottom-left-radius: 30px;
+  background: var(--learning-canvas);
+}
+.courseCard .badge {
+  align-self: flex-start;
+  max-width: calc(100% - 42px);
+  white-space: normal;
+}
+.courseCard h2 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+  font-size: 21px;
+  overflow-wrap: anywhere;
+}
+.courseCard .primary {
+  width: 100%;
+  margin-top: auto;
+}
+.courseCard .muted {
+  flex: 0;
+}
+.cornerAction {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--learning-accent);
+  color: #111 !important;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--learning-fast) var(--learning-ease),
+    background-color var(--learning-fast);
+}
+.courseMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.courseProgress {
+  margin: 12px 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+.courseProgress .progress {
+  margin: 0 0 12px;
+}
+.personCard .primary {
+  width: 100%;
+  margin-top: 22px;
+}
+.page .personCard {
+  display: flex;
+}
+.personCard .badge {
+  align-self: flex-start;
+}
+.personCard .avatar {
+  margin-bottom: 22px;
+}
+.page .personCard .accent {
+  margin-top: 0;
+}
+.page .personCard .muted {
+  overflow-wrap: anywhere;
+}
+.teamNavigation {
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px;
+  border-radius: 32px;
+  background: var(--learning-surface);
+  margin-bottom: 30px;
+}
+.teamNavigation a {
+  border-color: transparent;
+  background: transparent;
+}
+.settingsPage .formGrid {
+  gap: 22px;
+}
+.settingsPage .field {
+  font-size: 15px;
+}
+.settingsPage .field input,
+.settingsPage .field select,
+.settingsPage .field textarea {
+  padding: 16px 18px;
+}
+.settingsPage .check {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #0b0c0f;
+}
+.settingsPage .check input {
+  margin-top: 3px;
+}
+.filterBar {
+  margin-bottom: 28px;
+}
+.listSection {
+  margin-top: 30px;
+}
+.selectionPanel {
+  scroll-margin-top: 28px;
+}
+.page .person:has(> input[type="checkbox"]) {
+  background: #0b0c0f;
+  border-color: transparent;
+  padding-top: 30px;
+  padding-right: 70px;
+  cursor: pointer;
+  transition:
+    border-color var(--learning-fast),
+    background-color var(--learning-fast);
+}
+.page .person:has(> input[type="checkbox"]:checked) {
+  background: #1b1e13;
+  border-color: #caf432;
+}
+.page .person:has(> input[type="checkbox"]:focus-visible) {
+  outline: 2px solid #caf432;
+  outline-offset: 4px;
+}
+.page .person input[type="checkbox"] {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #6b6d66;
+  border-radius: 50%;
+  background: transparent;
+  top: 22px;
+  right: 20px;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition:
+    border-color var(--learning-fast),
+    background-color var(--learning-fast);
+}
+.page .person input[type="checkbox"]::before {
+  content: "";
+  width: 16px;
+  height: 9px;
+  border-left: 2px solid #85877e;
+  border-bottom: 2px solid #85877e;
+  transform: rotate(-45deg) translate(1px, -2px);
+}
+.page .person input[type="checkbox"]:checked {
+  background: #caf432;
+  border-color: #caf432;
+}
+.page .person input[type="checkbox"]:checked::before {
+  border-color: #141414;
+}
+.courseCard,
+.personCard,
+.dialog {
+  animation: learning-enter 300ms var(--learning-ease) both;
+}
+@keyframes learning-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (hover: hover) {
+  .primary:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 18px #caf4321f;
+  }
+  .secondary:not(:disabled):hover,
+  .railItem:not(:disabled):hover {
+    border-color: #caf43288;
+    background-color: #20231a;
+  }
+  .cornerAction:hover {
+    transform: rotate(8deg);
+    background: #ddff72;
+  }
+  .choice:hover {
+    border-color: #667a30;
+  }
+  .tablist a:not([aria-current="page"]):hover,
+  .tablist button:not([aria-selected="true"]):not(:disabled):hover {
+    border-color: #7b903a;
+    background-color: #20231a;
+  }
+}
+.primary:not(:disabled):active,
+.secondary:not(:disabled):active,
+.cornerAction:active {
+  transform: translateY(1px);
+}
+@media (max-width: 720px) {
+  .page .stats {
+    margin-bottom: 24px;
+  }
+  .rail {
+    padding: 4px 4px 10px;
+    max-height: min(36dvh, 320px);
+  }
+  .railItem {
+    min-height: 66px;
+  }
+  .railItem strong {
+    height: 48px;
+    width: 48px;
+    flex-basis: 48px;
+    font-size: 22px;
+  }
+  .teamNavigation {
+    border-radius: 24px;
+    width: 100%;
+  }
+  .teamNavigation a {
+    flex: 1 0 auto;
+    text-align: center;
+  }
+  .courseCard h2 {
+    font-size: 20px;
+  }
+  .person {
+    padding: 24px;
+  }
+  .settingsPage .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .page .article {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page *,
+  .page *::before,
+  .page *::after,
+  .dialog {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .page button:hover,
+  .page a:hover,
+  .page button:active,
+  .page a:active {
+    transform: none !important;
+  }
 }

@@ -28,7 +28,7 @@ export default function TeamSettingsPage() {
         "Правила организации, её учебный контекст и управление владением.",
       )}
     >
-      <div className={s.page}>
+      <div className={`${s.page} ${s.settingsPage}`}>
         <TeamTabs />
         {settings.data && (
           <p className={s.caption}>
