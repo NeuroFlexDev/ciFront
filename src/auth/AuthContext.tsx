@@ -12,7 +12,7 @@ import {
   type AuthResponse,
   type AuthUser,
 } from "@/auth/auth-context";
-import { apiFetch, getAuthToken, setAuthToken } from "@/shared/api";
+import { apiFetch, getAuthToken, setAuthToken, bindAuthSession, authSessionChanged, AUTH_TOKEN_KEY, LEGACY_AUTH_TOKEN_KEY } from "@/shared/api";
 import {ApiError,errorMessage} from '@/shared/errors';
 import {setDraftOwner,downloadDrafts} from '@/shared/drafts';
 import {RequestError} from '@/Components/RequestState';
@@ -38,6 +38,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [sessionChanged, setSessionChanged] = useState(false);
   const [password, setPassword] = useState('');
   const [renewError, setRenewError] = useState('');
   const [renewing, setRenewing] = useState(false);
@@ -51,11 +52,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useDialogFocus(renewDialog,{active:sessionExpired&&Boolean(user),busy:renewing,onClose:()=>setSessionExpired(false)});
   useReconnect(()=>{if(authError&&!user)setCheckVersion(v=>v+1);});
   useEffect(() => {
+    const releaseBinding = bindAuthSession();
     const expire = () => { setSessionExpired(true); };
+    const changed = () => { setSessionChanged(true); setSessionExpired(true); setRenewChallenge(null); setPassword(''); };
+    const storage = (event: StorageEvent) => {
+      if ((event.key === null || event.key === AUTH_TOKEN_KEY || event.key === LEGACY_AUTH_TOKEN_KEY) && authSessionChanged()) changed();
+    };
+    window.addEventListener('storage', storage);
+    window.addEventListener('lernium-session-changed', changed);
     window.addEventListener('lernium-session-expired', expire);
     const stepUp=(event:Event)=>setMfaRequired((event as CustomEvent<string>).detail);
     window.addEventListener('lernium-mfa-required',stepUp);
-    return () => {window.removeEventListener('lernium-session-expired', expire);window.removeEventListener('lernium-mfa-required',stepUp);};
+    return () => {releaseBinding();window.removeEventListener('storage',storage);window.removeEventListener('lernium-session-changed',changed);window.removeEventListener('lernium-session-expired', expire);window.removeEventListener('lernium-mfa-required',stepUp);};
   }, []);
 
   useEffect(() => {
@@ -106,11 +114,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   function completeAuthentication(data:AuthResponse){
     if(!data.access_token||!data.user?.id)throw new Error('Сервис входа вернул неполный ответ. Повторите вход.');
+    if(user&&data.user.id!==user.id)throw new Error('Для продолжения войдите в аккаунт этой страницы. Черновик остаётся у исходного владельца.');
     setAuthToken(data.access_token);
     setUser(data.user);
     setDraftOwner(data.user.id);
     setAuthError(null);
     setSessionExpired(false);
+    setSessionChanged(false);
     setRenewChallenge(null);
     setMfaRequired(null);
     setPassword('');
@@ -149,7 +159,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
           catch (error) { if(error instanceof MFAChallengeError){setRenewChallenge(error.challenge);setPassword('');}else setRenewError(errorMessage(error)); }
           finally { setRenewing(false); }
         }}>
-        <h2 id="renew-title">{t('Сессия истекла')}</h2>
+        <h2 id="renew-title">{t(sessionChanged?'Сеанс изменился в другой вкладке':'Сессия истекла')}</h2>
+        {sessionChanged&&<p>{t('Запросы этой страницы приостановлены, чтобы изменения не попали в другой аккаунт. Черновик остаётся у исходного владельца.')}</p>}
         <p>{t('Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.',{email:user.email})}</p>
         <label>{t('Пароль')}<input required disabled={renewing} type="password" autoComplete="current-password" value={password}
           onChange={event => setPassword(event.target.value)} /></label>

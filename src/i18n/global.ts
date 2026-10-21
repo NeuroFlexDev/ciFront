@@ -1,4 +1,8 @@
 export const globalEnglish: Record<string, string> = {
+  'Сеанс изменился в другой вкладке': 'The session changed in another tab',
+  'Запросы этой страницы приостановлены, чтобы изменения не попали в другой аккаунт. Черновик остаётся у исходного владельца.': 'Requests from this page are paused to prevent changes being sent to another account. The draft stays with its original owner.',
+  'В другой вкладке изменился аккаунт или сеанс. Войдите снова в аккаунт этой страницы. Черновик сохранён.': 'The account or session changed in another tab. Sign in again to the account on this page. Your draft is preserved.',
+  'Для продолжения войдите в аккаунт этой страницы. Черновик остаётся у исходного владельца.': 'Sign in to the account on this page to continue. The draft stays with its original owner.',
   ". Курсов организации:": ". Organization courses:",
   ". Резерв выходных токенов:": ". Reserved output tokens:",
   "{v0} МБ": "{v0} MB",

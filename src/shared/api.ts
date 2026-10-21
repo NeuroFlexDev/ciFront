@@ -2,6 +2,7 @@ import {ApiError} from './errors';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 export const AUTH_TOKEN_KEY = "lernium_auth_token";
 export const LEGACY_AUTH_TOKEN_KEY = "access_token";
+let boundToken: string | null | undefined;
 
 type ApiResponse<T = unknown> = {
   data: T;
@@ -44,7 +45,7 @@ export function apiUrl(path: string): string {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-export function getAuthToken(): string | null {
+function storedAuthToken(): string | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -55,10 +56,28 @@ export function getAuthToken(): string | null {
   );
 }
 
+/** A mounted workspace must never borrow another tab's account credentials. */
+export function bindAuthSession(): () => void {
+  boundToken = storedAuthToken();
+  return () => { boundToken = undefined; };
+}
+
+export function authSessionChanged(): boolean {
+  return boundToken !== undefined && storedAuthToken() !== boundToken;
+}
+
+export function getAuthToken(): string | null {
+  return boundToken === undefined ? storedAuthToken() : boundToken;
+}
+
 export function setAuthToken(token: string | null): void {
   if (typeof window === "undefined") {
     return;
   }
+  const changedElsewhere = authSessionChanged();
+  if (boundToken !== undefined) boundToken = token;
+  // Logging out an old tab must not delete a different tab's new session.
+  if (!token && changedElsewhere) return;
 
   if (token) {
     window.localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -71,6 +90,15 @@ export function setAuthToken(token: string | null): void {
 }
 
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  // Check synchronously as well as on storage events: a user can click Save
+  // before the event from a different tab has reached this document.
+  const publicCredentialFlow = ['/auth/login', '/auth/register', '/auth/mfa/verify',
+    '/auth/password-reset', '/auth/password-reset/confirm', '/auth/invitations/inspect',
+    '/auth/invitations/accept', '/auth/oidc/exchange', '/lti/exchange'].includes(path);
+  if (authSessionChanged() && !publicCredentialFlow) {
+    window.dispatchEvent(new Event('lernium-session-changed'));
+    throw new ApiError('В другой вкладке изменился аккаунт или сеанс. Войдите снова в аккаунт этой страницы. Черновик сохранён.',401,'http');
+  }
   const headers = new Headers(init.headers);
   const token = getAuthToken();
 
