@@ -52,11 +52,13 @@
 .steps li:last-child {
   clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 22px 50%);
 }
-.steps button {
+.steps li > button {
+  display: block;
   border: 0;
-  background: none;
+  background: transparent;
   color: inherit;
   width: 100%;
+  height: 100%;
   text-align: left;
   padding: 14px 18px 14px 34px;
   border-radius: 0;
@@ -66,6 +68,7 @@
 }
 .steps span {
   display: block;
+  white-space: nowrap;
   margin-bottom: 4px;
   font-size: 13px;
 }
@@ -125,7 +128,9 @@
 .modes > button {
   display: flex;
   align-items: flex-start;
+  justify-content: flex-start;
   flex-direction: column;
+  gap: 0;
   text-align: left;
   white-space: normal;
   padding: 32px;
@@ -139,12 +144,20 @@
 .modes > button:hover {
   border-color: #caf432;
 }
-.modes span {
-  font-size: 42px;
+.modeIcon {
+  display: block;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  stroke-width: 1.6;
   color: #caf432;
 }
 .modes p {
+  margin: 24px 0 0;
   font-weight: 400;
+}
+.modes h3 {
+  margin: 28px 0 0;
 }
 .uploadCard {
   position: relative;
@@ -351,7 +364,7 @@
   .steps {
     margin-bottom: 72px;
   }
-  .steps button {
+  .steps li > button {
     font-size: 20px;
     min-height: 84px;
   }
@@ -370,7 +383,7 @@
   .steps li {
     flex: 0 0 200px;
   }
-  .steps button {
+  .steps li > button {
     padding: 12px 20px 12px 30px;
   }
   .modes {
@@ -445,9 +458,12 @@
     border-color: #d8ff52;
     box-shadow: 0 5px 24px #caf43218;
   }
-  .page button:not(.primary):not(:disabled):hover {
+  .page button:not(.primary):not(:disabled):not(.steps button):hover {
     background: #202020;
     border-color: #656565;
+  }
+  .steps li > button:not(:disabled):hover {
+    background: #ffffff12;
   }
   .difficulty label:hover {
     background: #1e1e1e;

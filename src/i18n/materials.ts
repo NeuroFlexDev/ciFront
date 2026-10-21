@@ -1,5 +1,17 @@
 /** Interface copy only; course content, messages and filenames remain untouched. */
 export const materialsEnglish: Record<string, string> = {
+  "Проверяем доступность помощника…": "Checking assistant availability…",
+  "Помощник отключён в настройках вашей организации. Обратитесь к администратору.":
+    "The assistant is disabled for your organization. Contact your administrator.",
+  "Установлен нулевой лимит запросов к помощнику. Обратитесь к администратору.":
+    "The assistant request allowance is set to zero. Contact your administrator.",
+  "Месячный лимит запросов к помощнику исчерпан. Обратитесь к администратору или дождитесь нового расчётного месяца.":
+    "The monthly assistant request allowance has been used. Contact your administrator or wait for the next billing month.",
+  "Не удалось проверить доступность помощника. Обновите проверку перед отправкой.":
+    "Assistant availability could not be checked. Refresh the check before sending.",
+  "История доступна для чтения. Вы можете подготовить и сохранить черновик сообщения.":
+    "You can read your history and prepare and save a message draft.",
+  "Обновить доступность": "Refresh availability",
   "Утверждение недоступно для вашей роли или правил организации.":
     "Approval is unavailable for your role or organization rules.",
   "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.":
