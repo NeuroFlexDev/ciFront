@@ -1,5 +1,7 @@
+import { useLocale } from '@/i18n/useLocale';
 import { Link, Save, Search, Sparkles, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
+import LanguageSwitch from '@/Components/LanguageSwitch';
 
 import { AIActionsMenu } from '@/Components/ai/AIActionsMenu';
 import styles from '@/Components/canvas/styles.module.css';
@@ -30,6 +32,8 @@ export function CanvasToolbar({
   onFitView,
   onAiAction,
 }: CanvasToolbarProps) {
+  const { t, locale } = useLocale();
+
   const [searchValue, setSearchValue] = useState('');
 
   return (
@@ -42,7 +46,7 @@ export function CanvasToolbar({
       <div className={styles.toolbarSearch}>
         <Search size={16} />
         <input
-          type="search"
+          type='search'
           value={searchValue}
           onChange={(event) => setSearchValue(event.target.value)}
           onKeyDown={(event) => {
@@ -51,37 +55,61 @@ export function CanvasToolbar({
               onSearch(searchValue);
             }
           }}
-          placeholder="Найти узел по названию"
+          placeholder={t('Найти узел по названию')}
+          aria-label={t('Найти узел по названию')}
         />
       </div>
 
       <div className={styles.toolbarControls}>
-        <button type="button" className={styles.toolbarButton} onClick={onZoomOut}>
+        <button
+          type='button'
+          className={styles.toolbarButton}
+          onClick={onZoomOut}
+          aria-label={t('Уменьшить масштаб')}
+        >
           <ZoomOut size={16} />
         </button>
-        <button type="button" className={styles.toolbarButton} onClick={onZoomIn}>
+        <button
+          type='button'
+          className={styles.toolbarButton}
+          onClick={onZoomIn}
+          aria-label={t('Увеличить масштаб')}
+        >
           <ZoomIn size={16} />
         </button>
-        <button type="button" className={styles.toolbarButtonWide} onClick={onFitView}>
+        <button type='button' className={styles.toolbarButtonWide} onClick={onFitView}>
           <Link size={16} />
-          Fit view
+          {t('Показать всю схему')}
         </button>
-        <button type="button" className={styles.toolbarButtonWide} onClick={onSave} disabled={isSaving}>
+        <button
+          type='button'
+          className={styles.toolbarButtonWide}
+          onClick={onSave}
+          disabled={isSaving}
+        >
           <Save size={16} />
-          {isSaving ? 'Сохранение...' : 'Сохранить'}
+          {isSaving ? t('Сохранение...') : t('Сохранить')}
         </button>
       </div>
 
       <div className={styles.toolbarAi}>
         <div className={styles.toolbarAiHeader}>
           <Sparkles size={15} />
-          AI-действия
+          {t('AI-действия')}
         </div>
         <AIActionsMenu compact isLoading={isAiRunning} onSelect={onAiAction} />
       </div>
 
       <div className={styles.toolbarStatus}>
-        {lastSavedAt ? `Сохранено ${new Date(lastSavedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}` : 'Черновик'}
+        <LanguageSwitch />
+        {lastSavedAt
+          ? t('Сохранено {v0}', {
+              v0: new Date(lastSavedAt).toLocaleTimeString(locale === 'en' ? 'en-US' : 'ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            })
+          : t('Черновик')}
       </div>
     </header>
   );

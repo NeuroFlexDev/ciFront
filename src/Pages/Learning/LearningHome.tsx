@@ -1,0 +1,241 @@
+import { useLocale } from "@/i18n/useLocale";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight, BookOpen } from "lucide-react";
+import { Shell } from "@/Pages/Workspace/shared";
+import { LoadingState, RequestError } from "@/Components/RequestState";
+import { useLearningData } from "./useLearningData";
+import {
+  type Assignment,
+  type ProgramEnrollment,
+  dateLabel,
+  stateLabel,
+} from "./types";
+import s from "./learning.module.css";
+
+export default function LearningHome() {
+  const { t } = useLocale();
+
+  const [history, setHistory] = useState(false);
+  const [page, setPage] = useState(0);
+  const courses = useLearningData<{ items: Assignment[]; total: number }>(
+    `/learning/assignments?include_history=${history}&offset=${page * 24}&limit=24`,
+  );
+  const programs = useLearningData<{ items: ProgramEnrollment[] }>(
+    "/learning/programs",
+  );
+  return (
+    <Shell
+      title={t("Моё обучение")}
+      description={t(
+        "Назначенные курсы, ваши ответы и результаты. Прогресс сохранён в аккаунте.",
+      )}
+    >
+      <div className={s.page}>
+        <div className={`${s.spread} ${s.filterBar}`}>
+          <label className={s.check}>
+            <input
+              type="checkbox"
+              checked={history}
+              onChange={(e) => {
+                setHistory(e.target.checked);
+                setPage(0);
+              }}
+            />
+            {t("Показывать историю назначений")}
+          </label>
+          <button
+            className={s.secondary}
+            disabled={courses.loading}
+            onClick={() => void courses.reload()}
+          >
+            {t("Обновить")}
+          </button>
+        </div>
+        {!!courses.error && (
+          <RequestError
+            error={courses.error}
+            onRetry={() => void courses.reload()}
+          />
+        )}
+        {!courses.data && courses.loading && (
+          <LoadingState>{t("Загружаем ваше обучение…")}</LoadingState>
+        )}
+        {programs.data?.items.length ? (
+          <section className={s.stack} style={{ margin: "28px 0" }}>
+            <h2>{t("Программы обучения")}</h2>
+            {programs.data.items.map((p) => (
+              <article key={p.id} className={s.card}>
+                <div className={s.spread}>
+                  <div>
+                    <h3>{p.title}</h3>
+                    <p className={s.muted}>
+                      {
+                        p.assignments.filter((a) => a.status === "completed")
+                          .length
+                      }{" "}
+                      {t("из") + " "}
+                      {p.assignments.length}
+                      {" " + t("этапов · версия программы")}{" "}
+                      {p.program_revision}
+                    </p>
+                  </div>
+                  {p.next_assignment_id ? (
+                    <Link
+                      className={s.primary}
+                      to={`/learning/${p.next_assignment_id}`}
+                    >
+                      {t("Продолжить программу →")}
+                    </Link>
+                  ) : (
+                    <span className={s.badge}>
+                      {t(stateLabel[p.status] ?? String(p.status)) ?? p.status}
+                    </span>
+                  )}
+                </div>
+                <div className={s.row}>
+                  {p.assignments.map((a, i) => (
+                    <span key={a.id} className={s.badge}>
+                      {i + 1}. {a.title} ·{" "}
+                      {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
+                    </span>
+                  ))}
+                </div>
+                {p.next_cycle_at && (
+                  <p className={s.caption}>
+                    {t("Следующее повторное обучение:") + " "}
+                    {dateLabel(p.next_cycle_at)}
+                  </p>
+                )}
+              </article>
+            ))}
+          </section>
+        ) : null}
+        {!!programs.error && (
+          <RequestError
+            error={programs.error}
+            onRetry={() => void programs.reload()}
+          />
+        )}
+        {courses.data && !courses.data.items.length && (
+          <section className={s.empty}>
+            <h2>
+              {history
+                ? t("В истории пока нет курсов")
+                : t("Пока нет назначенных курсов")}
+            </h2>
+            <p>
+              {t(
+                "Ответственный за обучение назначит вам курс или программу. После назначения они появятся здесь.",
+              )}
+            </p>
+            <Link className={s.secondary} to="/employees">
+              {t("Открыть команду")}
+            </Link>
+          </section>
+        )}
+        <div className={`${s.grid} ${s.listSection}`}>
+          {courses.data?.items.map((a) => (
+            <article className={`${s.card} ${s.courseCard}`} key={a.id}>
+              {a.status !== "locked" && (
+                <Link
+                  className={s.cornerAction}
+                  to={`/learning/${a.id}${a.state !== "active" ? "?view=results" : ""}`}
+                  aria-label={`${a.title} · ${a.state !== "active" ? t("Посмотреть результаты") : t("Продолжить")}`}
+                >
+                  <ArrowUpRight
+                    size={26}
+                    strokeWidth={1.5}
+                    aria-hidden="true"
+                  />
+                </Link>
+              )}
+              <span className={s.badge}>
+                {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
+              </span>
+              <h2>{a.title}</h2>
+              <p className={`${s.muted} ${s.courseMeta}`}>
+                <BookOpen size={17} strokeWidth={1.5} aria-hidden="true" />
+                {t("Версия") + " "}
+                {a.revision} · {a.lesson_count}
+                {" " + t("уроков")}
+              </p>
+              <div className={s.courseProgress}>
+                <progress
+                  className={s.progress}
+                  value={a.progress_percent}
+                  max={100}
+                  aria-label={t("Прогресс курса {v0}", { v0: a.title })}
+                />
+                <div className={s.spread}>
+                  <span>
+                    {a.progress_percent}
+                    {t("% пройдено")}
+                  </span>
+                  {a.max_points > 0 && (
+                    <span>
+                      {a.points} / {a.max_points}
+                      {" " + t("баллов")}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <p className={s.muted}>
+                {t("Срок:") + " "}
+                {dateLabel(a.due_at)}
+              </p>
+              {a.status === "locked" ? (
+                <p className={s.notice}>
+                  {t(
+                    "Этот этап откроется после завершения предыдущего курса программы.",
+                  )}
+                </p>
+              ) : (
+                <Link
+                  className={s.primary}
+                  to={`/learning/${a.id}${a.state !== "active" ? "?view=results" : ""}`}
+                >
+                  {a.state !== "active"
+                    ? t("Посмотреть результаты")
+                    : a.status === "completed"
+                      ? t("Открыть пройденный курс")
+                      : a.status === "assigned"
+                        ? t("Начать обучение")
+                        : t("Продолжить")}{" "}
+                  →
+                </Link>
+              )}
+            </article>
+          ))}
+        </div>
+        {!!courses.data && courses.data.total > 24 && (
+          <nav
+            className={s.stickyActions}
+            aria-label={t("Страницы назначений")}
+          >
+            <button
+              className={s.secondary}
+              disabled={page === 0}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              {t("Назад")}
+            </button>
+            <span>
+              {t("Страница") + " "}
+              {page + 1}
+              {" " + t("из") + " "}
+              {Math.ceil(courses.data.total / 24)}
+            </span>
+            <button
+              className={s.secondary}
+              disabled={(page + 1) * 24 >= courses.data.total}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              {t("Далее")}
+            </button>
+          </nav>
+        )}
+      </div>
+    </Shell>
+  );
+}

@@ -2,14 +2,18 @@ import type { CanvasSnapshot, CanvasNodeType } from '@/types/canvas';
 import { api } from '@/shared/api';
 import { createCanvasNode } from '@/utils/nodeFactory';
 import { createCanvasEdge } from '@/utils/edgeFactory';
+import {getDraftOwner} from '@/shared/drafts';
 const versions = new Map<string, number>();
-// Course IDs are global. Keep the revision across access-token renewal.
-const key = (id: string) => id;
+// Renewal keeps a revision; switching accounts never reuses another user's edit base.
+const key = (id: string) => `${getDraftOwner()}:${id}`;
+export const getCanvasRevision=(id:string)=>versions.get(key(id));
+export const adoptCanvasRevision=(id:string,version:number)=>versions.set(key(id),version);
 type Workspace = {version: number; snapshot: CanvasSnapshot | null; course_title?: string};
+export async function fetchCanvasWorkspace(courseId:string){return (await api.get<Workspace>(`/courses/${courseId}/workspace`)).data;}
 type Graph = {nodes: {id: string; type: string; label?: string; title?: string; description?: string; position?: {x:number;y:number}}[];
  edges: {source: string; target: string; relation?: string}[]; updated_at: string | null};
 export async function loadCanvasSnapshot(courseId: string): Promise<CanvasSnapshot | null> {
-  const {data} = await api.get<Workspace>(`/courses/${courseId}/workspace`);
+  const data = await fetchCanvasWorkspace(courseId);
   versions.set(key(courseId),data.version);
   if (data.snapshot) return data.snapshot;
   const graph = (await api.get<Graph>(`/courses/${courseId}/canvas`)).data;

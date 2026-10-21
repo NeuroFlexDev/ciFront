@@ -1,36 +1,198 @@
+import { ArrowUpRight, Network } from 'lucide-react';
+import cs from './myCourses.module.css';
+import { useLocale } from '@/i18n/useLocale';
+import { RequestError, LoadingState } from '@/Components/RequestState';
+import { useReconnect } from '@/hooks/useReconnect';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/shared/api';
-import { Shell, styles, errorText } from '@/Pages/Workspace/shared';
-type Course = {id: number; title: string | null; publication_status: string; module_count: number; lesson_count: number};
+import { Shell, styles } from '@/Pages/Workspace/shared';
+type Course = {
+  id: number;
+  title: string | null;
+  description?: string | null;
+  publication_status: string;
+  module_count: number;
+  lesson_count: number;
+};
 export default function MyCoursesPage() {
-  const [courses,setCourses] = useState<Course[]>([]);
-  const [offset,setOffset] = useState(0);
-  const [filter,setFilter] = useState('');
-  const [version,setVersion] = useState(0);
-  const [error,setError] = useState('');
-  const [loading,setLoading] = useState(true);
-  const [removing,setRemoving] = useState<number|null>(null);
+  const { t } = useLocale();
+
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [offset, setOffset] = useState(0);
+  const [filter, setFilter] = useState('');
+  const [version, setVersion] = useState(0);
+  const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState<number | null>(null);
+  useReconnect(() => setVersion((v) => v + 1));
   useEffect(() => {
-    let stopped = false;setLoading(true);
-    api.get<Course[]>(`/courses/?limit=20&offset=${offset}${filter?'&publication_status='+filter:''}`).then(({data}) => {if (!stopped) {setCourses(data);setError('');}})
-      .catch(e => {if (!stopped) setError(errorText(e));})
-      .finally(() => {if (!stopped) setLoading(false);});
-    return () => {stopped=true;};
-  },[offset,filter,version]);
-  async function remove(course:Course){
-    if(!window.confirm(`Удалить курс «${course.title||'Черновик №'+course.id}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.`))return;
-    setRemoving(course.id);setError('');
-    try{await api.delete(`/courses/${course.id}`);if(courses.length===1&&offset>0)setOffset(n=>n-20);else setVersion(n=>n+1);}catch(e){setError(errorText(e));}finally{setRemoving(null);}
+    let stopped = false;
+    setLoading(true);
+    api
+      .get<Course[]>(
+        `/courses/?limit=20&offset=${offset}${filter ? '&publication_status=' + filter : ''}`,
+      )
+      .then(({ data }) => {
+        if (!stopped) {
+          setCourses(data);
+          setError(null);
+        }
+      })
+      .catch((e) => {
+        if (!stopped) setError(e);
+      })
+      .finally(() => {
+        if (!stopped) setLoading(false);
+      });
+    return () => {
+      stopped = true;
+    };
+  }, [offset, filter, version]);
+  async function remove(course: Course) {
+    if (
+      !window.confirm(
+        t(
+          'Удалить курс «{v0}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.',
+          { v0: course.title || t('Черновик №') + course.id },
+        ),
+      )
+    )
+      return;
+    setRemoving(course.id);
+    setError(null);
+    try {
+      await api.delete(`/courses/${course.id}`);
+      if (courses.length === 1 && offset > 0) setOffset((n) => n - 20);
+      else setVersion((n) => n + 1);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setRemoving(null);
+    }
   }
-  return <Shell title="Мои курсы" description="Ваши материалы, черновики и опубликованные курсы." action={<Link className={styles.primary} to="/express">Создать курс +</Link>}>
-    <div className={styles.tabs} aria-label="Фильтр курсов">{[['','Все курсы'],['draft','Черновики'],['published','Опубликованные']].map(([value,label])=><button key={value} aria-pressed={filter===value} aria-selected={filter===value} onClick={()=>{setFilter(value);setOffset(0);}}>{label}</button>)}</div>
-    {error&&<p className={styles.error} role="alert">{error}</p>}{loading&&<p role="status">Загружаем курсы…</p>}
-    {!loading&&!courses.length&&!error&&<section className={styles.empty}><h2>{filter?'В этом разделе пока пусто':'Создайте первый курс'}</h2><p>Начните со своих документов или выберите готовый сценарий настройки.</p><Link className={styles.primary} to="/templates">Выбрать сценарий</Link></section>}
-    {!loading&&<div className={styles.grid}>{courses.map(c=><article className={styles.card} key={c.id}>
-      <span className={styles.badge}>{c.publication_status==='published'?'Опубликован':'Черновик'}</span><h2 style={{marginTop:18}}>{c.title||`Черновик №${c.id}`}</h2><p>{c.module_count} модулей · {c.lesson_count} уроков</p>
-      <div className={styles.row}><Link className={styles.primary} to={c.lesson_count?`/courses/${c.id}/edit`:`/express?course=${c.id}`}>{c.lesson_count?'Открыть курс':'Продолжить создание'}</Link><Link className={styles.secondary} to={`/courses/${c.id}/canvas`}>Канва</Link><button className={styles.danger} disabled={removing!==null} onClick={()=>void remove(c)}>{removing===c.id?'Удаляем…':'Удалить'}</button></div>
-    </article>)}</div>}
-    <div className={styles.row} style={{marginTop:28}}><button className={styles.secondary} disabled={offset===0||loading} onClick={()=>setOffset(n=>Math.max(0,n-20))}>Назад</button><button className={styles.secondary} disabled={courses.length<20||loading} onClick={()=>setOffset(n=>n+20)}>Далее</button></div>
-  </Shell>;
+  return (
+    <Shell
+      title={t('Мои курсы')}
+      description={t('Ваши материалы, черновики и опубликованные курсы.')}
+      action={
+        <Link className={styles.primary} to='/express'>
+          {t('Создать курс +')}
+        </Link>
+      }
+    >
+      <div className={styles.tabs} aria-label={t('Фильтр курсов')}>
+        {[
+          ['', t('Все курсы')],
+          ['draft', t('Черновики')],
+          ['published', t('Опубликованные')],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            aria-pressed={filter === value}
+            aria-selected={filter === value}
+            onClick={() => {
+              setFilter(value);
+              setOffset(0);
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {!!error && <RequestError error={error} onRetry={() => setVersion((v) => v + 1)} />}
+      {loading && <LoadingState>{t('Загружаем курсы…')}</LoadingState>}
+      {!loading && !courses.length && !error && (
+        <section className={styles.empty}>
+          <h2>{filter ? t('В этом разделе пока пусто') : t('Создайте первый курс')}</h2>
+          <p>{t('Начните со своих документов или выберите готовый сценарий настройки.')}</p>
+          <Link className={styles.primary} to='/templates'>
+            {t('Выбрать сценарий')}
+          </Link>
+        </section>
+      )}
+      {!loading && (
+        <div className={cs.grid}>
+          {courses.map((c) => {
+            const href = c.lesson_count ? `/courses/${c.id}/edit` : `/express?course=${c.id}`;
+            return (
+              <article className={cs.card} key={c.id}>
+                <div className={cs.cardTop}>
+                  <div className={cs.status}>
+                    <span className={cs.eyebrow}>{t('Курс')}</span>
+                    <span>
+                      {c.publication_status === 'published' ? t('Опубликован') : t('Черновик')}
+                    </span>
+                  </div>
+                  <div className={cs.quickActions}>
+                    <Link
+                      className={cs.circle}
+                      to={`/courses/${c.id}/canvas`}
+                      aria-label={`${t('Канва')}: ${c.title || c.id}`}
+                      title={t('Канва')}
+                    >
+                      <Network size={23} strokeWidth={1.5} />
+                    </Link>
+                    <Link
+                      className={cs.circle}
+                      to={href}
+                      aria-label={`${t('Открыть курс')}: ${c.title || c.id}`}
+                      title={t('Открыть курс')}
+                    >
+                      <ArrowUpRight size={27} strokeWidth={1.6} />
+                    </Link>
+                  </div>
+                </div>
+                <div className={cs.cardBody}>
+                  <h2>
+                    <Link to={href}>{c.title || t('Черновик №{v0}', { v0: c.id })}</Link>
+                  </h2>
+                  <dl className={cs.metrics}>
+                    <div>
+                      <dt>{t('Уроки')}</dt>
+                      <dd>{c.lesson_count}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('Модули')}</dt>
+                      <dd>{c.module_count}</dd>
+                    </div>
+                  </dl>
+                  {c.description && <p className={cs.description}>{c.description}</p>}
+                  <div className={cs.actions}>
+                    <Link className={cs.open} to={href}>
+                      {c.lesson_count ? t('Открыть курс') : t('Продолжить создание')}{' '}
+                      <span aria-hidden='true'>↗</span>
+                    </Link>
+                    <button
+                      className={cs.remove}
+                      disabled={removing !== null}
+                      onClick={() => void remove(c)}
+                    >
+                      {removing === c.id ? t('Удаляем…') : t('Удалить')}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+      <div className={styles.row} style={{ marginTop: 28 }}>
+        <button
+          className={styles.secondary}
+          disabled={offset === 0 || loading}
+          onClick={() => setOffset((n) => Math.max(0, n - 20))}
+        >
+          {t('Назад')}
+        </button>
+        <button
+          className={styles.secondary}
+          disabled={courses.length < 20 || loading}
+          onClick={() => setOffset((n) => n + 20)}
+        >
+          {t('Далее')}
+        </button>
+      </div>
+    </Shell>
+  );
 }

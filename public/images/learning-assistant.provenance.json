@@ -1,0 +1,18 @@
+{
+  "source_repository": "NeuroFlexDev/lernium-docs",
+  "source_file": "инструкции/материалы/svg/board-3.svg",
+  "source_image_id": "image0_75_1209",
+  "source_size": [
+    2048,
+    2048
+  ],
+  "optimization": {
+    "size": [
+      480,
+      480
+    ],
+    "format": "webp",
+    "quality": 85
+  },
+  "purpose": "Original dashboard assistant illustration"
+}

@@ -1,11 +1,8 @@
 import type { XYPosition } from '@xyflow/react';
+import { getLocale, translate } from '@/i18n/locale';
+import { canvasEnglish } from '@/i18n/canvas';
 
-import type {
-  CanvasNodeData,
-  CanvasNodeType,
-  CanvasStatus,
-  LerniumNode,
-} from '@/types/canvas';
+import type { CanvasNodeData, CanvasNodeType, CanvasStatus, LerniumNode } from '@/types/canvas';
 
 type CreateNodeOptions = {
   id?: string;
@@ -45,7 +42,9 @@ export function createCanvasNode(
   const data: CanvasNodeData = {
     id,
     nodeType,
-    title: options.title ?? DEFAULT_TITLES[nodeType],
+    title:
+      options.title ??
+      translate(getLocale(), DEFAULT_TITLES[nodeType], undefined, { en: canvasEnglish }),
     description: options.description ?? '',
     difficulty: 'beginner',
     status: options.status ?? 'draft',
@@ -88,7 +87,7 @@ export function duplicateNode(node: LerniumNode): LerniumNode {
     data: {
       ...node.data,
       id: createId('data'),
-      title: `${node.data.title} копия`,
+      title: `${node.data.title} ${translate(getLocale(), 'копия', undefined, { en: canvasEnglish })}`,
       aiState: 'idle',
     },
     selected: false,

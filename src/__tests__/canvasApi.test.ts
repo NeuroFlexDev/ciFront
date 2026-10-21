@@ -3,10 +3,39 @@ import { loadCanvasSnapshot, saveCanvasSnapshot } from '@/api/canvasApi';
 import { requestAiAction } from '@/api/aiApi';
 import { createCanvasNode } from '@/utils/nodeFactory';
 import { useCanvasStore } from '@/store/canvasStore';
+import {setDraftOwner,readDraft} from '@/shared/drafts';
 const fetchMock = vi.fn();
-beforeEach(() => {vi.stubGlobal('fetch',fetchMock);fetchMock.mockReset();localStorage.clear();});
+beforeEach(() => {vi.stubGlobal('fetch',fetchMock);fetchMock.mockReset();localStorage.clear();setDraftOwner(null);useCanvasStore.setState({aiProposal:null,isAiRunning:false});});
 const json = (data: unknown, status=200) => new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json'}});
 describe('server canvas persistence', () => {
+  it('keeps an AI proposal separate and durable until explicit acceptance',async()=>{
+    setDraftOwner(42);
+    const anchor=createCanvasNode('module',{x:0,y:0},{title:'Author material'});
+    useCanvasStore.setState({courseId:'9',nodes:[anchor],edges:[],selectedNodeIds:[anchor.id],selectedEdgeIds:[],lastError:null});
+    fetchMock.mockResolvedValueOnce(json({nodes:[{kind:'lesson',title:'Proposed lesson',description:'Source grounded content',source_ref_ids:[17]}],summary:'One new lesson'}));
+    await useCanvasStore.getState().runAiAction('split_module');
+    expect(useCanvasStore.getState().nodes).toEqual([anchor]);
+    expect(useCanvasStore.getState().aiProposal?.result.nodes).toHaveLength(1);
+    expect(readDraft('canvas-ai:9',42)).not.toBeNull();
+    useCanvasStore.getState().acceptAiProposal();
+    expect(useCanvasStore.getState().nodes).toHaveLength(2);
+    expect(useCanvasStore.getState().edges).toHaveLength(1);
+    expect(readDraft('canvas-ai:9',42)).toBeNull();
+    useCanvasStore.getState().acceptAiProposal();
+    expect(useCanvasStore.getState().nodes).toHaveLength(2);
+  });
+  it('rejects proposals without changing author content and guards a deleted anchor',async()=>{
+    const anchor=createCanvasNode('module',{x:0,y:0},{title:'Keep this'});
+    const proposed=createCanvasNode('lesson',{x:320,y:0},{title:'New'});
+    const proposal={result:{nodes:[proposed],edges:[],summary:'Review'},anchorIds:[anchor.id]};
+    useCanvasStore.setState({courseId:'9',nodes:[anchor],edges:[],aiProposal:proposal});
+    useCanvasStore.getState().rejectAiProposal();
+    expect(useCanvasStore.getState().nodes).toEqual([anchor]);
+    useCanvasStore.setState({nodes:[],aiProposal:proposal});
+    useCanvasStore.getState().acceptAiProposal();
+    expect(useCanvasStore.getState().nodes).toEqual([]);
+    expect(useCanvasStore.getState().lastError).toContain('Исходный узел удалён');
+  });
   it('imports generated nodes and saves with server revision',async () => {
     fetchMock.mockResolvedValueOnce(json({version:3,snapshot:null})).mockResolvedValueOnce(json({nodes:[{id:'lesson:42',type:'lesson',label:'Реальный урок',description:'Из документов'}],edges:[],updated_at:null}));
     const snapshot = await loadCanvasSnapshot('9');

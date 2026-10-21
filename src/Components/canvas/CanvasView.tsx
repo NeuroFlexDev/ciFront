@@ -5,6 +5,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from '@xyflow/react';
+import { useLocale } from '@/i18n/useLocale';
 import '@xyflow/react/dist/style.css';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -27,6 +28,7 @@ type InnerCanvasViewProps = {
 };
 
 function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
+  const { t } = useLocale();
   const flow = useReactFlow();
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -64,11 +66,10 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
 
   useEffect(() => {
     const currentViewport = flow.getViewport();
-    const differs = (
-      Math.abs(currentViewport.x - viewport.x) > 0.01
-      || Math.abs(currentViewport.y - viewport.y) > 0.01
-      || Math.abs(currentViewport.zoom - viewport.zoom) > 0.0001
-    );
+    const differs =
+      Math.abs(currentViewport.x - viewport.x) > 0.01 ||
+      Math.abs(currentViewport.y - viewport.y) > 0.01 ||
+      Math.abs(currentViewport.zoom - viewport.zoom) > 0.0001;
 
     if (!differs) {
       return;
@@ -108,19 +109,22 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
     });
   }, []);
 
-  const handleCreateFromMenu = useCallback((nodeType: CanvasNodeType) => {
-    if (!contextMenu || !wrapperRef.current) {
-      return;
-    }
+  const handleCreateFromMenu = useCallback(
+    (nodeType: CanvasNodeType) => {
+      if (!contextMenu || !wrapperRef.current) {
+        return;
+      }
 
-    const bounds = wrapperRef.current.getBoundingClientRect();
-    const position = flow.screenToFlowPosition({
-      x: bounds.left + contextMenu.x,
-      y: bounds.top + contextMenu.y,
-    });
-    createNode(nodeType, position);
-    setContextMenu(null);
-  }, [contextMenu, createNode, flow]);
+      const bounds = wrapperRef.current.getBoundingClientRect();
+      const position = flow.screenToFlowPosition({
+        x: bounds.left + contextMenu.x,
+        y: bounds.top + contextMenu.y,
+      });
+      createNode(nodeType, position);
+      setContextMenu(null);
+    },
+    [contextMenu, createNode, flow],
+  );
 
   return (
     <div className={styles.canvasStage} ref={wrapperRef}>
@@ -133,12 +137,18 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
         onEdgesChange={onEdgesChange}
         onConnect={(connection) => onConnect(connection)}
         onMoveEnd={(_, nextViewport) => setViewport(nextViewport)}
-        onSelectionChange={({ nodes: selectedNodes, edges: selectedEdges }) => setSelection({
-          nodeIds: selectedNodes.map((node) => node.id),
-          edgeIds: selectedEdges.map((edge) => edge.id),
-        })}
+        onSelectionChange={({ nodes: selectedNodes, edges: selectedEdges }) =>
+          setSelection({
+            nodeIds: selectedNodes.map((node) => node.id),
+            edgeIds: selectedEdges.map((edge) => edge.id),
+          })
+        }
         onPaneClick={() => setContextMenu(null)}
-        onPaneContextMenu={handlePaneContextMenu as (event: MouseEvent | React.MouseEvent<Element, MouseEvent>) => void}
+        onPaneContextMenu={
+          handlePaneContextMenu as (
+            event: MouseEvent | React.MouseEvent<Element, MouseEvent>,
+          ) => void
+        }
         fitView
         minZoom={0.3}
         maxZoom={1.8}
@@ -150,7 +160,12 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
         deleteKeyCode={null}
         proOptions={{ hideAttribution: true }}
       >
-        <Background gap={24} size={1.1} color="rgba(128, 149, 173, 0.12)" variant={BackgroundVariant.Lines} />
+        <Background
+          gap={24}
+          size={1.1}
+          color='rgba(128, 149, 173, 0.12)'
+          variant={BackgroundVariant.Lines}
+        />
       </ReactFlow>
 
       <CanvasMinimap />
@@ -164,12 +179,12 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
             return (
               <button
                 key={nodeType}
-                type="button"
+                type='button'
                 className={styles.contextMenuButton}
                 onClick={() => handleCreateFromMenu(nodeType)}
               >
                 <Icon size={15} />
-                {definition.label}
+                {t(definition.label)}
               </button>
             );
           })}
