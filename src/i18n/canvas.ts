@@ -1,4 +1,12 @@
 export const canvasEnglish: Record<string, string> = {
+  'Найти узел': 'Find node',
+  'Панели канвы': 'Canvas panels',
+  'Схема': 'Diagram',
+  'Схема курса': 'Course diagram',
+  'Инструменты': 'Tools',
+  'Теги и компетенции': 'Tags and competencies',
+  'Есть несохранённые изменения': 'Unsaved changes',
+  'Сначала выделите узлы на схеме': 'Select nodes in the diagram first',
   'Введите название узла для поиска.': 'Enter a node title to search.',
   'Найден узел: {v0}': 'Node found: {v0}',
   'По запросу «{v0}» узлов не найдено. Измените запрос.':

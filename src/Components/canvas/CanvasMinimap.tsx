@@ -1,8 +1,8 @@
-import { useLocale } from '@/i18n/useLocale';
-import { MiniMap } from '@xyflow/react';
+import { useLocale } from "@/i18n/useLocale";
+import { MiniMap } from "@xyflow/react";
 
-import { useCanvasStore } from '@/store/canvasStore';
-import styles from '@/Components/canvas/styles.module.css';
+import { useCanvasStore } from "@/store/canvasStore";
+import styles from "@/Components/canvas/styles.module.css";
 
 export function CanvasMinimap() {
   const { t } = useLocale();
@@ -18,17 +18,18 @@ export function CanvasMinimap() {
         zoomable
         className={styles.minimap}
         nodeStrokeWidth={2}
-        nodeColor='#182638'
-        maskColor='rgba(3, 7, 14, 0.45)'
+        nodeColor="#697544"
+        nodeStrokeColor="#caf432"
+        maskColor="rgba(11, 12, 15, 0.65)"
       />
       <div className={styles.minimapStats}>
         <span>
           {nodes.length}
-          {' ' + t('узлов')}
+          {" " + t("узлов")}
         </span>
         <span>
           {edges.length}
-          {' ' + t('связей')}
+          {" " + t("связей")}
         </span>
         <span>{Math.round(viewport.zoom * 100)}%</span>
       </div>
