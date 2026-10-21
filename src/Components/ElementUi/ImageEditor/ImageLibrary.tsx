@@ -20,8 +20,18 @@ type Asset = {
   height: number | null;
   review_comment: string | null;
   created_at: string;
+  can_approve?: boolean;
+  can_reject?: boolean;
 };
-type Page = { items: Asset[]; total: number; offset: number; limit: number };
+type Page = {
+  items: Asset[];
+  total: number;
+  offset: number;
+  limit: number;
+  can_upload?: boolean;
+  can_generate?: boolean;
+  independent_review_required?: boolean;
+};
 type Capabilities = {
   image_max_bytes: number;
   image_max_pixels: number;
@@ -124,7 +134,7 @@ function AssetCard({
             <div className={styles.actions}>
               <button
                 className={styles.primary}
-                disabled={busy}
+                disabled={busy || asset.can_approve === false}
                 onClick={async () => {
                   setBusy(true);
                   try {
@@ -138,7 +148,7 @@ function AssetCard({
               </button>
               <button
                 className={styles.secondary}
-                disabled={busy}
+                disabled={busy || asset.can_reject === false}
                 onClick={async () => {
                   setBusy(true);
                   try {
@@ -151,6 +161,13 @@ function AssetCard({
                 <X size={16} /> {t("Отклонить")}
               </button>
             </div>
+            {asset.can_approve === false && (
+              <p className={styles.help}>
+                {t(
+                  "Утверждение недоступно для вашей роли или правил организации.",
+                )}
+              </p>
+            )}
           </>
         )}
         {asset.status === "approved" && onInsert && (
@@ -249,7 +266,7 @@ export default function ImageLibrary({
               ? {
                   ...old,
                   items: old.items.map((item) =>
-                    item.id === data.id ? data : item,
+                    item.id === data.id ? { ...item, ...data } : item,
                   ),
                 }
               : old,
@@ -277,6 +294,14 @@ export default function ImageLibrary({
   }, [page, load]);
   const upload = async (file?: File) => {
     if (!file || busy) return;
+    if (page?.can_upload === false) {
+      setNotice(
+        t(
+          "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.",
+        ),
+      );
+      return;
+    }
     if (!capabilities) {
       setNotice(t("Подождите загрузки допустимых размеров файла."));
       return;
@@ -318,7 +343,7 @@ export default function ImageLibrary({
   const generating =
     !!draft.requestId && (!current || !terminal(current.status));
   const generate = async () => {
-    if (busy) return;
+    if (busy || page?.can_generate === false) return;
     const pending = generating
       ? draft
       : {
@@ -390,6 +415,20 @@ export default function ImageLibrary({
       <div className={styles.content}>
         {!!error && <RequestError error={error} onRetry={() => void load()} />}
         {notice && <p role="status">{notice}</p>}
+        {page?.independent_review_required && (
+          <p className={styles.help}>
+            {t(
+              "Иллюстрацию утверждает независимый проверяющий курса, который не является автором курса или изображения.",
+            )}
+          </p>
+        )}
+        {page?.can_upload === false && (
+          <p className={styles.help}>
+            {t(
+              "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.",
+            )}
+          </p>
+        )}
         <div
           className={styles.drop}
           onDragOver={(e) => e.preventDefault()}
@@ -410,6 +449,7 @@ export default function ImageLibrary({
             className={styles.primary}
             disabled={
               busy ||
+              page?.can_upload === false ||
               !capabilities ||
               capabilities.image_library_available === false
             }
@@ -451,6 +491,7 @@ export default function ImageLibrary({
             className={styles.send}
             disabled={
               busy ||
+              page?.can_generate === false ||
               (!capabilities?.image_generation_available && !generating) ||
               draft.prompt.trim().length < 3
             }

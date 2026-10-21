@@ -35,6 +35,43 @@ function SwitchLocale() {
   return <button onClick={() => setLocale("ru")}>Switch language</button>;
 }
 describe("image author workflow", () => {
+  it("explains unavailable author actions and requires permitted independent approval", async () => {
+    const asset = {
+      id: 7,
+      course_id: 2,
+      status: "pending_review",
+      content_url: "/api/images/7/content",
+      can_approve: false,
+      can_reject: true,
+    };
+    mocked.get.mockImplementation(async (path: string) => ({
+      data: path.includes("capabilities")
+        ? caps
+        : {
+            items: [asset],
+            total: 1,
+            limit: 12,
+            offset: 0,
+            can_upload: false,
+            can_generate: false,
+            independent_review_required: true,
+          },
+    }));
+    render(<ImageLibrary courseId={2} />);
+    expect(await screen.findByText("Утвердить")).toBeDisabled();
+    expect(screen.getByText("Отклонить")).toBeEnabled();
+    expect(screen.getByText("Выбрать файл")).toBeDisabled();
+    expect(screen.getByLabelText("Сгенерировать изображение")).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Загрузить изображение"), {
+      target: {
+        files: [new File(["png"], "lesson.png", { type: "image/png" })],
+      },
+    });
+    expect(mocked.post).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/Иллюстрацию утверждает независимый/),
+    ).toBeInTheDocument();
+  });
   it("localizes controls and statuses while preserving the image prompt and review comment", async () => {
     localStorage.setItem("lernium_locale", "en");
     const asset = {

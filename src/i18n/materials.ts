@@ -1,5 +1,11 @@
 /** Interface copy only; course content, messages and filenames remain untouched. */
 export const materialsEnglish: Record<string, string> = {
+  "Утверждение недоступно для вашей роли или правил организации.":
+    "Approval is unavailable for your role or organization rules.",
+  "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.":
+    "Upload and generation are unavailable for your role or installation. Saved images remain available to view.",
+  "Иллюстрацию утверждает независимый проверяющий курса, который не является автором курса или изображения.":
+    "Images must be approved by an independent course reviewer who is neither the course author nor the image author.",
   "В очереди": "Queued",
   Генерация: "Generating",
   "Ожидает вашей проверки": "Awaiting review",
