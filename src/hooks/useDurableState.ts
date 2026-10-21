@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState,type SetStateAction} from 'react';
+import {useRef,useState,type SetStateAction} from 'react';
 import {useAuth} from '@/auth/useAuth';
 import {readDraft,writeDraft,clearDraft} from '@/shared/drafts';
 
@@ -13,17 +13,9 @@ export function useDurableState<T>(resource:string,initial:T){
     current.current={key,value:readDraft<T>(resource,id)?.value??initial};
     setState(current.current);
   }
-  useEffect(()=>{
-    const recover=()=>{
-      const latest=readDraft<T>(resource,id);
-      if(latest&&JSON.stringify(latest.value)!==JSON.stringify(current.current.value)){
-        current.current={key,value:latest.value};setState(current.current);
-      }
-    };
-    window.addEventListener('lernium-drafts-changed',recover);
-    window.addEventListener('storage',recover);
-    return()=>{window.removeEventListener('lernium-drafts-changed',recover);window.removeEventListener('storage',recover);};
-  },[resource,id,key]);
+  // Recover only when this form opens or its owner/resource changes. Storage
+  // events from another tab must not replace a live form after a save clears
+  // this tab's copy and leaves an older sibling draft in storage.
   const update=(next:SetStateAction<T>)=>{
     const result=typeof next==='function'?(next as (p:T)=>T)(current.current.value):next;
     current.current={key,value:result};
