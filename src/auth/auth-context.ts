@@ -28,6 +28,7 @@ export type AuthContextValue = {
   login: (payload: AuthPayload) => Promise<void>;
   register: (payload: RegistrationPayload) => Promise<void>;
   logout: () => void;
+  refreshUser?: () => Promise<void>;
 };
 
 export type AuthResponse = {

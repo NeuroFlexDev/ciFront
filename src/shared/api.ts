@@ -1,3 +1,4 @@
+import {ApiError} from './errors';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 export const AUTH_TOKEN_KEY = "lernium_auth_token";
 export const LEGACY_AUTH_TOKEN_KEY = "access_token";
@@ -7,9 +8,11 @@ type ApiResponse<T = unknown> = {
 };
 
 async function parseResponseData(response: Response): Promise<unknown> {
+  if(response.status===204)return null;
   const contentType = response.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
-    return response.json();
+    try{return await response.json();}
+    catch{throw new ApiError('Сервер прислал неполный ответ. Проверьте результат перед повторным сохранением.',response.ok?502:response.status,'invalid_response');}
   }
 
   return response.text();
@@ -22,15 +25,15 @@ async function request<T = unknown>(path: string, init: RequestInit = {}): Promi
   if (!response.ok) {
     const detail = typeof data === 'object' && data !== null && 'detail' in data
       ? (data as {detail: unknown}).detail : null;
-    const message = typeof detail === 'string' ? detail
+    const message = response.status >= 500 ? 'Сервер не смог обработать запрос. Ваши несохранённые изменения не отправлены повторно. Попробуйте ещё раз.' : typeof detail === 'string' ? detail
       : typeof detail === 'object' && detail !== null && 'message' in detail && typeof detail.message === 'string'
         ? detail.message
         : Array.isArray(detail) ? detail.map(item => `${item.loc?.slice(1).join('.') ?? ''}: ${item.msg ?? 'Некорректное значение'}`).join('; ')
-          : `Ошибка запроса (${response.status})`;
+          : response.status===403 ? 'У вашего аккаунта нет доступа к этому материалу. Обратитесь к администратору организации.'
+            : response.status===404 ? 'Материал удалён или недоступен по этому адресу.'
+              : response.status===401 ? 'Войдите снова, затем повторите действие.' : `Ошибка запроса (${response.status})`;
 
-    const error = new Error(message) as Error & { response?: { data: unknown; status: number } };
-    error.response = { data, status: response.status };
-    throw error;
+    throw new ApiError(message,response.status,'http',data);
   }
 
   return { data: data as T };
@@ -79,14 +82,24 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(apiUrl(path), {
-    ...init,
-    headers,
-  });
-  if (response.status === 401 && !path.startsWith('/auth/')) {
-    window.dispatchEvent(new CustomEvent('lernium-session-expired'));
+  const controller=new AbortController();
+  let timedOut=false;
+  const abort=()=>controller.abort();
+  if(init.signal?.aborted) controller.abort();
+  init.signal?.addEventListener('abort',abort,{once:true});
+  const timer=setTimeout(()=>{timedOut=true;controller.abort();}, init.method && init.method!=='GET' ? 120000 : 30000);
+  try {
+    const response = await fetch(apiUrl(path), {...init,headers,signal:controller.signal});
+    if(response.status<500) window.dispatchEvent(new Event('lernium-network-restored'));
+    if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new CustomEvent('lernium-session-expired'));
+    return response;
+  } catch(error) {
+    if(init.signal?.aborted) throw error;
+    window.dispatchEvent(new Event('lernium-network-failed'));
+    throw new ApiError(timedOut?'Сервер не ответил вовремя. Проверьте результат перед повторным сохранением.':'Нет связи с сервером. Проверьте подключение и повторите действие.',0,timedOut?'timeout':'network');
+  } finally {
+    clearTimeout(timer);init.signal?.removeEventListener('abort',abort);
   }
-  return response;
 }
 
 export const api = {

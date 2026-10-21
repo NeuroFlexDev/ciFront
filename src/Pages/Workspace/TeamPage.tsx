@@ -1,16 +1,19 @@
+import {RequestError,LoadingState} from '@/Components/RequestState';
+import {useReconnect} from '@/hooks/useReconnect';
 import {useEffect,useState,type FormEvent} from 'react';
 import {Link} from 'react-router-dom';
 import {api} from '@/shared/api';
 import {useAuth} from '@/auth/useAuth';
-import {Shell,CopyLink,styles,errorText,statuses,dateText} from './shared';
+import {Shell,CopyLink,styles,statuses,dateText} from './shared';
 import type {Organization,Member,Invitation} from '@/Pages/AdminPage/AdminPage';
 type Team={organization:Organization|null;members:Member[];invitations:Invitation[];can_manage:boolean};
 export default function TeamPage(){
- const {user}=useAuth();const [team,setTeam]=useState<Team|null>(null);const [version,setVersion]=useState(0);const [error,setError]=useState('');const [busy,setBusy]=useState(false);const [email,setEmail]=useState('');const [role,setRole]=useState('member');const [url,setUrl]=useState('');
- useEffect(()=>{let active=true;api.get<Team>('/team').then(r=>{if(active){setTeam(r.data);setError('');}}).catch(e=>{if(active)setError(errorText(e));});return()=>{active=false;};},[version]);
- async function perform(action:()=>Promise<void>){setBusy(true);setError('');try{await action();setVersion(v=>v+1);}catch(e){setError(errorText(e));}finally{setBusy(false);}}
+ const {user}=useAuth();const [team,setTeam]=useState<Team|null>(null);const [version,setVersion]=useState(0);const [error,setError]=useState<unknown>(null);const [busy,setBusy]=useState(false);const [email,setEmail]=useState('');const [role,setRole]=useState('member');const [url,setUrl]=useState('');
+ useReconnect(()=>setVersion(v=>v+1));
+ useEffect(()=>{let active=true;api.get<Team>('/team').then(r=>{if(active){setTeam(r.data);setError(null);}}).catch(e=>{if(active)setError(e);});return()=>{active=false;};},[version]);
+ async function perform(action:()=>Promise<void>){setBusy(true);setError(null);try{await action();setVersion(v=>v+1);}catch(e){setError(e);}finally{setBusy(false);}}
  function invite(e:FormEvent){e.preventDefault();void perform(async()=>{const r=await api.post<{url:string}>('/team/invitations',{email,role,organization_id:team?.organization?.id});setUrl(r.data.url);setEmail('');});}
- return <Shell title="Команда" description={team?.organization?.name||'Участники вашей организации'}>{error&&<p className={styles.error} role="alert">{error}</p>}{!team&&!error&&<p>Загружаем команду…</p>}
+ return <Shell title="Команда" description={team?.organization?.name||'Участники вашей организации'}>{!!error&&<RequestError error={error} onRetry={()=>setVersion(v=>v+1)}/>}{!team&&!error&&<LoadingState>Загружаем команду…</LoadingState>}
  {team&&!team.organization&&<section className={styles.empty}><h2>У вас личный аккаунт</h2><p>Команда появится после подключения к организации. Вы уже можете создавать собственные курсы.</p><Link className={styles.primary} to={user?.is_admin?'/admin?tab=organizations':'/courses'}>{user?.is_admin?'Создать организацию':'Мои курсы'}</Link></section>}
  {team?.organization&&<><p>Занято мест с приглашениями: {team.organization.reserved_seats} из {team.organization.seat_limit}. Курсов организации: {team.organization.courses} из {team.organization.course_limit}.</p>{url&&<CopyLink url={url} key={url}/>}{team.can_manage&&<section className={styles.panel}><h2>Пригласить участника</h2><form className={styles.form} onSubmit={invite}><label>Email<input required type="email" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Роль<select value={role} onChange={e=>setRole(e.target.value)}><option value="member">Участник</option><option value="owner">Администратор организации</option></select></label><button className={styles.primary} disabled={busy}>Создать приглашение</button></form><p>Передайте полученную ссылку сотруднику лично. Он задаст пароль и примет условия при первом входе.</p></section>}
  <div className={styles.grid}>{team.members.map(m=><article key={m.id} className={styles.card}><h2>{m.full_name||'Без имени'}</h2><p>{m.email}</p><span className={styles.badge}>{m.organization_role==='owner'?'Администратор организации':'Участник'}</span><p>{m.is_active?'Доступ включён':'Доступ приостановлен'}</p>{team.can_manage&&m.id!==user?.id&&!m.is_admin&&<div className={styles.row}><button className={styles.secondary} disabled={busy} onClick={()=>void perform(async()=>{await api.put(`/team/members/${m.id}`,{organization_id:team.organization!.id,organization_role:m.organization_role,is_active:!m.is_active});})}>{m.is_active?'Приостановить доступ':'Включить доступ'}</button><button className={styles.secondary} disabled={busy} onClick={()=>void perform(async()=>{await api.put(`/team/members/${m.id}`,{organization_id:team.organization!.id,organization_role:m.organization_role==='owner'?'member':'owner',is_active:m.is_active});})}>{m.organization_role==='owner'?'Сделать участником':'Сделать администратором'}</button></div>}</article>)}</div>

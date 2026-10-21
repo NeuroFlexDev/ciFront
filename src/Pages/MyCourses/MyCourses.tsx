@@ -1,31 +1,34 @@
+import {RequestError,LoadingState} from '@/Components/RequestState';
+import {useReconnect} from '@/hooks/useReconnect';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/shared/api';
-import { Shell, styles, errorText } from '@/Pages/Workspace/shared';
+import { Shell, styles } from '@/Pages/Workspace/shared';
 type Course = {id: number; title: string | null; publication_status: string; module_count: number; lesson_count: number};
 export default function MyCoursesPage() {
   const [courses,setCourses] = useState<Course[]>([]);
   const [offset,setOffset] = useState(0);
   const [filter,setFilter] = useState('');
   const [version,setVersion] = useState(0);
-  const [error,setError] = useState('');
+  const [error,setError] = useState<unknown>(null);
   const [loading,setLoading] = useState(true);
   const [removing,setRemoving] = useState<number|null>(null);
-  useEffect(() => {
+  useReconnect(()=>setVersion(v=>v+1));
+ useEffect(() => {
     let stopped = false;setLoading(true);
-    api.get<Course[]>(`/courses/?limit=20&offset=${offset}${filter?'&publication_status='+filter:''}`).then(({data}) => {if (!stopped) {setCourses(data);setError('');}})
-      .catch(e => {if (!stopped) setError(errorText(e));})
+    api.get<Course[]>(`/courses/?limit=20&offset=${offset}${filter?'&publication_status='+filter:''}`).then(({data}) => {if (!stopped) {setCourses(data);setError(null);}})
+      .catch(e => {if (!stopped) setError(e);})
       .finally(() => {if (!stopped) setLoading(false);});
     return () => {stopped=true;};
   },[offset,filter,version]);
   async function remove(course:Course){
     if(!window.confirm(`Удалить курс «${course.title||'Черновик №'+course.id}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.`))return;
-    setRemoving(course.id);setError('');
-    try{await api.delete(`/courses/${course.id}`);if(courses.length===1&&offset>0)setOffset(n=>n-20);else setVersion(n=>n+1);}catch(e){setError(errorText(e));}finally{setRemoving(null);}
+    setRemoving(course.id);setError(null);
+    try{await api.delete(`/courses/${course.id}`);if(courses.length===1&&offset>0)setOffset(n=>n-20);else setVersion(n=>n+1);}catch(e){setError(e);}finally{setRemoving(null);}
   }
   return <Shell title="Мои курсы" description="Ваши материалы, черновики и опубликованные курсы." action={<Link className={styles.primary} to="/express">Создать курс +</Link>}>
     <div className={styles.tabs} aria-label="Фильтр курсов">{[['','Все курсы'],['draft','Черновики'],['published','Опубликованные']].map(([value,label])=><button key={value} aria-pressed={filter===value} aria-selected={filter===value} onClick={()=>{setFilter(value);setOffset(0);}}>{label}</button>)}</div>
-    {error&&<p className={styles.error} role="alert">{error}</p>}{loading&&<p role="status">Загружаем курсы…</p>}
+    {!!error&&<RequestError error={error} onRetry={()=>setVersion(v=>v+1)}/>}{loading&&<LoadingState>Загружаем курсы…</LoadingState>}
     {!loading&&!courses.length&&!error&&<section className={styles.empty}><h2>{filter?'В этом разделе пока пусто':'Создайте первый курс'}</h2><p>Начните со своих документов или выберите готовый сценарий настройки.</p><Link className={styles.primary} to="/templates">Выбрать сценарий</Link></section>}
     {!loading&&<div className={styles.grid}>{courses.map(c=><article className={styles.card} key={c.id}>
       <span className={styles.badge}>{c.publication_status==='published'?'Опубликован':'Черновик'}</span><h2 style={{marginTop:18}}>{c.title||`Черновик №${c.id}`}</h2><p>{c.module_count} модулей · {c.lesson_count} уроков</p>
