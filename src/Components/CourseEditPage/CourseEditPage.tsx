@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import MarkdownContent from '@/Components/MarkdownContent';
 import EntityEditor,{type EditableEntity} from './EntityEditor';
 import AssessmentEditor,{type AssessmentTarget} from './AssessmentEditor';
+import ImageLibrary from '@/Components/ElementUi/ImageEditor/ImageLibrary';
 import {WizardSteps} from '@/Pages/ExpressPage/CourseWizard';
 import { api } from '@/shared/api';
 import Menu from '@/Components/Menu/Menu';
@@ -13,6 +14,7 @@ import {ApiError} from '@/shared/errors';
 import {RequestError,LoadingState} from '@/Components/RequestState';
 import DraftNotice from '@/Components/DraftNotice';
 import {useReconnect} from '@/hooks/useReconnect';
+import {PublicationHistory} from '@/Pages/Learning/CourseReviewsPage';
 
 type Lesson = {id: number; title: string; description: string; content: string; revision: number};
 type ReviewTest = {id: number; question: string; answers: string[]; correct_answer: string;revision:number};
@@ -39,6 +41,8 @@ export default function CourseEditPage() {
   const [loading, setLoading] = useState(true);
   const [editing,setEditing]=useState<EditableEntity|null>(null);
   const [assessment,setAssessment]=useState<AssessmentTarget|null>(null);
+  const [showImages,setShowImages]=useState(false);
+  const [publicationProblems,setPublicationProblems]=useState<{id:string;question:string;message:string}[]>([]);
   const textInput=useRef<HTMLTextAreaElement>(null);
   const lesson = modules.flatMap(m => m.lessons).find(l => l.id === selected);
   const dirty = Boolean(lesson && draft !== lesson.content);
@@ -105,9 +109,9 @@ export default function CourseEditPage() {
   }
   async function publish() {
     if(pendingLessons.length){setError(new Error('Сначала сохраните все изменённые уроки.'));return;}
-    setBusy(true); setError(null);
+    setBusy(true); setError(null);setPublicationProblems([]);
     try {await api.post(`/courses/${id}/publish`);setNotice('Курс опубликован');setStructure(s => s ? {...s,status:'published'} : s);}
-    catch(e) {setError(e);} finally {setBusy(false);}
+    catch(e) {setError(e);if(e instanceof ApiError&&e.data&&typeof e.data==='object'&&'detail' in e.data){const detail=e.data.detail;if(detail&&typeof detail==='object'&&'assessments' in detail&&Array.isArray(detail.assessments))setPublicationProblems(detail.assessments);}} finally {setBusy(false);}
   }
   async function modify(action:()=>Promise<unknown>){
     if(busy)return;setBusy(true);setError(null);setNotice('');
@@ -136,12 +140,14 @@ export default function CourseEditPage() {
   if(error&&!structure)return <><Menu/><RequestError error={error} fullPage onRetry={()=>setVersion(v=>v+1)} retrying={loading}/></>;
   return <><Menu/><main className={styles.container}>
     <WizardSteps step={5}/>
-    <p><Link to="/courses">Мои курсы</Link> · <Link to={`/courses/${id}/canvas`}>Канва</Link></p>
+    <p><Link to="/courses">Мои курсы</Link> · <Link to={`/courses/${id}/canvas`}>Канва</Link>{user?.organization_id&&<> · <Link to={`/course-reviews?course=${id}`}>Ссылка для назначенного проверяющего</Link></>}</p>
     <h1>{structure?.title ?? 'Проверка курса'}</h1>
     {structure&&<div className={styles.toolbar}><button disabled={busy} onClick={()=>setEditing({kind:'course',courseId:Number(id),id:Number(id),revision:structure.content_revision,title:structure.title,description:structure.description})}>Настройки курса</button><button disabled={busy} onClick={()=>setEditing({kind:'module',courseId:Number(id),title:''})}>Добавить модуль +</button><button disabled={busy} onClick={()=>setEditing({kind:'test',courseId:Number(id),title:''})}>Добавить итоговый вопрос</button></div>}
     {loading && <LoadingState>Загружаем содержание курса…</LoadingState>}
     {Boolean(error) && <RequestError error={error} onRetry={()=>setVersion(v=>v+1)} retrying={loading}/>}
     {notice && <p role="status">{notice}</p>}
+    {user?.organization_id&&structure&&<details><summary>История согласования курса</summary><PublicationHistory key={version} courseId={Number(id)}/></details>}
+    {publicationProblems.length>0&&<section className="request-state"><h2>Задания, требующие настройки</h2><ul>{publicationProblems.map(problem=><li key={problem.id}><strong>{problem.question}</strong><p>{problem.message}</p><button onClick={()=>{const [kind,key]=problem.id.split(':');const found=[...finalTests,...modules.flatMap(module=>module.tests)].find(item=>item.id===Number(key));setAssessment({kind:kind==='task'?'task':'test',id:Number(key),title:problem.question,answers:kind==='test'?found?.answers??[]:[]});}}>Настроить оценивание</button></li>)}</ul></section>}
     {dirty&&<DraftNotice restored={restored}/>}
     {pendingLessons.length>0&&<p>Несохранённых уроков: {pendingLessons.length}. {pendingLessons.map(item=><button key={item.id} disabled={busy} onClick={()=>select(item)}>{item.title}</button>)}</p>}
     {!loading&&!modules.some(m=>m.lessons.length)&&<section className="request-state"><h2>В курсе пока нет уроков</h2><p>Добавьте модуль и уроки вручную или подготовьте содержание из документов.</p><Link to={`/express?course=${id}&step=2`}>Создать из документов</Link></section>}
@@ -162,6 +168,8 @@ export default function CourseEditPage() {
         <label>Текст урока (Markdown)<textarea ref={textInput} value={draft} onChange={e => edit(e.target.value)} disabled={busy} rows={18} style={{width:'100%',padding:16}}/></label>
         <button disabled={busy || !dirty} onClick={() => void save()}>Сохранить урок</button>
         {serverLesson&&<section className="request-state"><h2>На сервере другая версия</h2><p>Ваш текст сохранён в черновике. Сравните версии и внесите нужные изменения в поле выше.</p><details><summary>Показать текст сервера (версия {serverLesson.revision})</summary><pre style={{whiteSpace:'pre-wrap'}}>{serverLesson.content}</pre></details><button disabled={busy} onClick={()=>void save(serverLesson.revision)}>Сохранить мой текст вместо этой версии</button></section>}
+        <div className={styles.toolbar}><button disabled={busy} onClick={()=>setShowImages(value=>!value)} aria-expanded={showImages}>{showImages?'Закрыть иллюстрации':'Добавить иллюстрацию'}</button></div>
+        {showImages&&<ImageLibrary courseId={id!} onInsert={markdown=>{insertMarkdown('\n'+markdown+'\n');setShowImages(false);}}/>}
         <h3>Предпросмотр</h3><MarkdownContent>{draft}</MarkdownContent>
       </> : null}</section>
     </div>

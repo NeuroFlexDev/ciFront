@@ -15,11 +15,24 @@ const TemplatesPage = lazy(() => import('./Pages/Workspace/Templates'));
 const Dashboard = lazy(() => import('./Pages/Workspace/Dashboard'));
 const TeamPage = lazy(() => import('./Pages/Workspace/TeamPage'));
 const AdminPage = lazy(() => import('./Pages/AdminPage/AdminPage'));
+const DeliveryPage = lazy(() => import('./Pages/AdminPage/DeliveryPage'));
+const IntegrationsPage = lazy(() => import('./Pages/Integrations/IntegrationsPage'));
+const AdminOperationsPage = lazy(() => import('./Pages/Integrations/AdminOperationsPage'));
+const BillingPage = lazy(() => import('./Pages/Billing/BillingPage'));
 const InvitePage = lazy(() => import('./Pages/InvitePage/InvitePage'));
 const ExpressPage = lazy(() => import('./Pages/ExpressPage/ExpressPage'));
 const MyCoursesPage = lazy(() => import('./Pages/MyCourses/MyCourses'));
 const CourseEditPage = lazy(() => import('./Components/CourseEditPage/CourseEditPage'));
 const LerniumCanvasPage = lazy(() => import('./Pages/LerniumCanvasPage/LerniumCanvasPage'));
+const LearningHome = lazy(() => import('./Pages/Learning/LearningHome'));
+const LearningCourse = lazy(() => import('./Pages/Learning/LearningCourse'));
+const ReviewsPage = lazy(() => import('./Pages/Learning/ReviewsPage'));
+const CourseReviewsPage = lazy(() => import('./Pages/Learning/CourseReviewsPage'));
+const GroupsPage = lazy(() => import('./Pages/TeamLearning/GroupsPage'));
+const AssignmentsPage = lazy(() => import('./Pages/TeamLearning/AssignmentsPage'));
+const ProgramsPage = lazy(() => import('./Pages/TeamLearning/ProgramsPage'));
+const TeamSettingsPage = lazy(() => import('./Pages/TeamLearning/TeamSettingsPage'));
+const LearningAnalytics = lazy(() => import('./Pages/TeamLearning/LearningAnalytics'));
 
 function AppFallback() {
   return (
@@ -64,6 +77,20 @@ function App() {
           <Route path="/analytics" element={<ProtectedRoute><Dashboard analytics /></ProtectedRoute>} />
           <Route path="/employees" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/admin/organizations/:organizationId/delivery" element={<ProtectedRoute><DeliveryPage /></ProtectedRoute>} />
+          <Route path="/admin/organizations/:organizationId/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
+          <Route path="/admin/operations" element={<ProtectedRoute><AdminOperationsPage /></ProtectedRoute>} />
+          <Route path="/integrations" element={<ProtectedRoute><IntegrationsPage /></ProtectedRoute>} />
+          <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
+          <Route path="/learning" element={<ProtectedRoute><LearningHome /></ProtectedRoute>} />
+          <Route path="/learning/:id" element={<ProtectedRoute><LearningCourse /></ProtectedRoute>} />
+          <Route path="/reviews" element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>} />
+          <Route path="/course-reviews" element={<ProtectedRoute><CourseReviewsPage /></ProtectedRoute>} />
+          <Route path="/groups" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
+          <Route path="/assignments" element={<ProtectedRoute><AssignmentsPage /></ProtectedRoute>} />
+          <Route path="/programs" element={<ProtectedRoute><ProgramsPage /></ProtectedRoute>} />
+          <Route path="/team-settings" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
+          <Route path="/learning-analytics" element={<ProtectedRoute><LearningAnalytics /></ProtectedRoute>} />
           <Route path="/invite" element={<InvitePage />} />
           <Route path="*" element={<StatusPage />} />
           <Route path="/ai-helper" element={<ProtectedRoute><AiHelperPage /></ProtectedRoute>} />

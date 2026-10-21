@@ -5,6 +5,7 @@ export type Draft<T>={value:T;updatedAt:number;baseRevision?:number;storageKey:s
 const PREFIX='lernium-draft:v1:';
 let owner:number|null=null;
 let tab:string|undefined;
+let previousTab:string|null=null;
 let storageError='';
 const memory=new Map<string,Draft<unknown>>();
 export function setDraftOwner(id:number|null){owner=id;storageError='';notify();}
@@ -12,7 +13,9 @@ export function getDraftOwner(){return owner;}
 const notify=()=>window.dispatchEvent(new Event('lernium-drafts-changed'));
 function tabId(){
   if(tab)return tab;
-  try{tab=sessionStorage.getItem('lernium-draft-tab')||crypto.randomUUID();sessionStorage.setItem('lernium-draft-tab',tab);}
+  // Duplicating a browser tab clones sessionStorage. Each document must own a
+  // fresh writing key; the previous key is used only to recover its last draft.
+  try{previousTab=sessionStorage.getItem('lernium-draft-tab');tab=crypto.randomUUID();sessionStorage.setItem('lernium-draft-tab',tab);}
   catch{tab=crypto.randomUUID();}
   return tab;
 }
@@ -33,7 +36,7 @@ function entries(start:string):Draft<unknown>[] {
 export function readDraft<T>(resource:string,id=owner):Draft<T>|null {
   const start=prefix(resource,id);if(!start)return null;
   const list=entries(start);
-  return (list.find(r=>r.storageKey===start+tabId())??list[0]??null) as Draft<T>|null;
+  return (list.find(r=>r.storageKey===start+tabId())??list.find(r=>previousTab&&r.storageKey===start+previousTab)??list[0]??null) as Draft<T>|null;
 }
 export function writeDraft<T>(resource:string,value:T,baseRevision?:number,id=owner):boolean {
   const start=prefix(resource,id);if(!start)return false;
