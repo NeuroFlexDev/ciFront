@@ -1,0 +1,82 @@
+.editor {
+  background: #141519;
+  border: 1px solid #3c3e43;
+  border-radius: 24px;
+  padding: 24px;
+  margin: 20px 0;
+  min-width: 0;
+  color: #f0f1ed;
+}
+.editor h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+.editor p {
+  color: #bfc3bc;
+  line-height: 1.5;
+}
+.editor label {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+.editor textarea,
+.editor select {
+  background: #0c0d10;
+  border: 1px solid #45484c;
+  border-radius: 12px;
+  padding: 12px;
+  color: #eee;
+  font: inherit;
+}
+.editor textarea {
+  resize: vertical;
+  font-family: monospace;
+}
+.templates {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.templates button,
+.insert {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #46494c;
+  border-radius: 100px;
+  background: #22242a;
+  color: #eee;
+  font: inherit;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+.editor .insert {
+  background: #b0ee66;
+  color: #10130b;
+  border-color: #b0ee66;
+  font-weight: 600;
+}
+.editor button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+.editor :is(button, textarea, select):focus-visible {
+  outline: 2px solid #b0ee66;
+  outline-offset: 3px;
+}
+.editor .hint {
+  font-size: 13px;
+}
+@media (max-width: 600px) {
+  .editor {
+    padding: 16px;
+  }
+  .templates button {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+}

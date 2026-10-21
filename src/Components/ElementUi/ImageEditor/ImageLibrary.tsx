@@ -36,6 +36,8 @@ type Capabilities = {
   image_max_bytes: number;
   image_max_pixels: number;
   image_generation_available: boolean;
+  image_generation_error?: string | null;
+  image_price_rub_upper_bound?: string | null;
   image_library_available?: boolean;
   image_monthly_limit: number;
 };
@@ -54,6 +56,20 @@ const labels: Record<string, string> = {
   failed: "Не удалось создать",
 };
 const errors: Record<string, string> = {
+  image_price_unconfigured:
+    "Администратор ещё не настроил бюджет генерации изображений.",
+  image_configuration_changed:
+    "Настройки генератора изменились. Запрос не отправлялся; описание сохранено для нового запуска.",
+  image_url_blocked:
+    "Провайдер вернул изображение с неразрешённого адреса. Администратору нужно проверить разрешённые адреса сервиса.",
+  image_download_failed:
+    "Провайдер создал результат, но файл не удалось получить. Автоматического платного повтора не было.",
+  invalid_image_response:
+    "Провайдер вернул недопустимое изображение. Автоматического платного повтора не было.",
+  image_access_revoked:
+    "Доступ изменился во время генерации. Обновите библиотеку или обратитесь к администратору.",
+  image_capacity_unavailable:
+    "Очередь занята. Этот запрос не отправлен провайдеру; можно запустить новую попытку.",
   image_queue_unavailable:
     "Очередь временно недоступна. Можно запустить новую попытку.",
   image_result_unknown:
@@ -306,8 +322,8 @@ export default function ImageLibrary({
       setNotice(t("Подождите загрузки допустимых размеров файла."));
       return;
     }
-    if (!["image/png", "image/jpeg"].includes(file.type)) {
-      setNotice(t("Выберите PNG или JPEG."));
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setNotice(t("Выберите PNG, JPEG или WebP."));
       return;
     }
     if (file.size > capabilities.image_max_bytes) {
@@ -439,7 +455,7 @@ export default function ImageLibrary({
         >
           <h3>{t("Перетащите изображение сюда")}</h3>
           <p>
-            PNG, JPEG
+            PNG, JPEG, WebP
             {capabilities &&
               t(" · до {v0} МБ", {
                 v0: Math.floor(capabilities.image_max_bytes / 1024 / 1024),
@@ -462,7 +478,7 @@ export default function ImageLibrary({
             aria-label={t("Загрузить изображение")}
             ref={input}
             type="file"
-            accept="image/png,image/jpeg"
+            accept="image/png,image/jpeg,image/webp"
             hidden
             onChange={(e) => void upload(e.target.files?.[0])}
           />
@@ -503,10 +519,20 @@ export default function ImageLibrary({
         {capabilities && !capabilities.image_generation_available && (
           <p className={styles.help}>
             {t(
-              "Генерация не настроена на этой установке. Загрузите готовую иллюстрацию или обратитесь к администратору для подключения сервиса изображений.",
+              errors[capabilities.image_generation_error ?? ""] ||
+                "Генерация не настроена на этой установке. Загрузите готовую иллюстрацию или обратитесь к администратору для подключения сервиса изображений.",
             )}
           </p>
         )}
+        {capabilities?.image_generation_available &&
+          capabilities.image_price_rub_upper_bound != null && (
+            <p className={styles.help}>
+              {t(
+                "На один запуск резервируется до {v0} ₽ из бюджета организации. Это верхняя граница резерва, а не точная стоимость счёта провайдера.",
+                { v0: capabilities.image_price_rub_upper_bound },
+              )}
+            </p>
+          )}
         {generating && (
           <p role="status">
             {current

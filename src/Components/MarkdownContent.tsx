@@ -1,5 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
-import { useEffect, useState } from "react";
+import { Children, isValidElement, useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -7,13 +7,17 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { apiFetch } from "@/shared/api";
 import { ApiError, errorMessage } from "@/shared/errors";
+import DiagramBlock from "./DiagramBlock";
+import { DIAGRAM_LANGUAGES } from "@/shared/diagrams";
 
 export function ProtectedImage({ src, alt }: { src?: string; alt?: string }) {
   const { t } = useLocale();
   const [blob, setBlob] = useState<string>();
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
-  const protectedPath = src?.match(/^(?:\/api)?(\/(?:images\/\d+\/content|support\/grants\/\d+\/images\/\d+\/content))$/)?.[1];
+  const protectedPath = src?.match(
+    /^(?:\/api)?(\/(?:images\/\d+\/content|support\/grants\/\d+\/images\/\d+\/content))$/,
+  )?.[1];
   useEffect(() => {
     if (!protectedPath) return;
     let active = true;
@@ -80,8 +84,28 @@ export default function MarkdownContent({ children }: { children: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[[rehypeKatex, {trust:false, maxSize:20, maxExpand:1000}]]}
+      rehypePlugins={[
+        [rehypeKatex, { trust: false, maxSize: 20, maxExpand: 1000 }],
+      ]}
       components={{
+        pre: ({ children }) => {
+          const child = Children.toArray(children)[0];
+          if (
+            isValidElement<{ className?: string; children?: string }>(child)
+          ) {
+            const kind = /(?:^|\s)language-(\w+)/
+              .exec(child.props.className ?? "")?.[1]
+              ?.toLowerCase();
+            if (kind && DIAGRAM_LANGUAGES.has(kind))
+              return (
+                <DiagramBlock
+                  source={String(child.props.children ?? "")}
+                  kind={kind}
+                />
+              );
+          }
+          return <pre>{children}</pre>;
+        },
         img: ({ src, alt }) => <ProtectedImage src={src} alt={alt} />,
         a: ({ href, children }) => (
           <a href={href} rel="noopener noreferrer">

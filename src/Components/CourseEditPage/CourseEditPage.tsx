@@ -5,6 +5,7 @@ import MarkdownContent from "@/Components/MarkdownContent";
 import EntityEditor, { type EditableEntity } from "./EntityEditor";
 import AssessmentEditor, { type AssessmentTarget } from "./AssessmentEditor";
 import ImageLibrary from "@/Components/ElementUi/ImageEditor/ImageLibrary";
+import DiagramEditor from "@/Components/DiagramEditor";
 import { WizardSteps } from "@/Pages/ExpressPage/CourseWizard";
 import { api } from "@/shared/api";
 import Menu from "@/Components/Menu/Menu";
@@ -78,6 +79,7 @@ export default function CourseEditPage() {
   const [editing, setEditing] = useState<EditableEntity | null>(null);
   const [assessment, setAssessment] = useState<AssessmentTarget | null>(null);
   const [showImages, setShowImages] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
   const [publicationProblems, setPublicationProblems] = useState<
     { id: string; question: string; message: string }[]
   >([]);
@@ -672,7 +674,11 @@ export default function CourseEditPage() {
                       ? t("Закрыть иллюстрации")
                       : t("Добавить иллюстрацию")}
                   </button>
+                  <button disabled={busy} onClick={() => setShowDiagram(value => !value)} aria-expanded={showDiagram}>
+                    {showDiagram ? t("Закрыть редактор схемы") : t("Добавить схему")}
+                  </button>
                 </div>
+                {showDiagram && <DiagramEditor key={lesson.id} draftKey={`${id}:${lesson.id}`} onInsert={markdown => { insertMarkdown(markdown); setShowDiagram(false); }}/>}
                 {showImages && (
                   <ImageLibrary
                     courseId={id!}
