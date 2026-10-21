@@ -7,6 +7,7 @@ import { useAuth } from "@/auth/useAuth";
 import { useDurableState } from "@/hooks/useDurableState";
 import { Shell } from "@/Pages/Workspace/shared";
 import { LoadingState, RequestError } from "@/Components/RequestState";
+import ResourceUsagePanel from "@/Components/ResourceUsagePanel";
 import { useLearningData } from "../Learning/useLearningData";
 import { dateLabel } from "../Learning/types";
 import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
@@ -28,6 +29,7 @@ export default function TeamSettingsPage() {
     >
       <div className={s.page}>
         <TeamTabs />
+        {permission.data?.can_manage_team && <ResourceUsagePanel />}
         {!!settings.error && (
           <RequestError
             error={settings.error}
@@ -52,6 +54,11 @@ export default function TeamSettingsPage() {
           )
         )}
         <Ownership isOwner={!!permission.data?.can_manage_admins} />
+        {permission.data?.can_manage_admins && (
+          <Link className={s.secondary} to="/support-access">
+            {t("Доступ поддержки")}
+          </Link>
+        )}
         {permission.data?.can_manage_team && <Audit />}
       </div>
     </Shell>

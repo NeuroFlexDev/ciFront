@@ -15,7 +15,7 @@ export type Criterion = {
   title: string;
   description?: string;
   max_points: number;
-  levels?: {title:string;description:string;points:number}[];
+  levels?: { title: string; description: string; points: number }[];
 };
 export type Assessment = {
   id: string;
@@ -89,6 +89,7 @@ export type Assignment = {
   completed_lessons: number[];
   lesson_count: number;
   last_lesson_id: number | null;
+  last_item_key?: string | null;
   progress_revision: number;
   progress_percent: number;
   points: number;

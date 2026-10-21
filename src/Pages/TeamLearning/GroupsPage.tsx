@@ -2,7 +2,8 @@ import { useRoleNames } from "./useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "@/shared/api";
+import { api, apiFetch } from "@/shared/api";
+import { ApiError } from "@/shared/errors";
 import { useAuth } from "@/auth/useAuth";
 import { useDurableState } from "@/hooks/useDurableState";
 import { Shell } from "@/Pages/Workspace/shared";
@@ -34,6 +35,23 @@ export default function GroupsPage() {
   const [tab, setTab] = useState("groups");
   const [selected, setSelected] = useState<number | null>(null);
   const [query, setQuery] = useState("");
+  const exportAction = useTeamAction();
+  const exportPeople = () =>
+    void exportAction.run(async () => {
+      const response = await apiFetch("/team/people/export");
+      if (!response.ok)
+        throw new ApiError(
+          t("Не удалось выгрузить участников"),
+          response.status,
+          "http",
+        );
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "learning-people.csv";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, t("Список участников выгружен. Выгрузка записана в журнал."));
   const reload = async () => {
     await Promise.all([
       team.reload(),
@@ -84,10 +102,22 @@ export default function GroupsPage() {
                     </button>
                   ))}
                 </div>
-                <Link className={s.secondary} to="/team">
-                  {t("Пригласить участника")}
-                </Link>
+                <div className={s.row}>
+                  {team.data.can_manage && (
+                    <button
+                      className={s.secondary}
+                      disabled={exportAction.busy}
+                      onClick={exportPeople}
+                    >
+                      {t("Скачать участников CSV ↓")}
+                    </button>
+                  )}
+                  <Link className={s.secondary} to="/team">
+                    {t("Пригласить участника")}
+                  </Link>
+                </div>
               </div>
+              <ActionStatus action={exportAction} />
               {tab === "groups" && (
                 <div className={s.layout}>
                   <div className={s.stack}>

@@ -1,5 +1,64 @@
 /** Interface text only. Course content, names, answers and review comments are never translated. */
 export const learningEnglish: Record<string, string> = {
+  "Доступ поддержки": "Support access",
+  "Временное чтение одного курса или назначения по разрешению владельца организации.":
+    "Temporary read access to one course or assignment, approved by the organization owner.",
+  "Доступ ограничен": "Access restricted",
+  "Запрос отправляет оператор, решение принимает владелец организации.":
+    "A platform operator submits the request and the organization owner decides.",
+  "Разрешение не позволяет изменять курс, ответы, оценки или права. Каждый просмотр записывается в журнал.":
+    "This permission does not allow changes to courses, answers, grades or access rights. Every view is logged.",
+  "Запросы и разрешения": "Requests and permissions",
+  "Загружаем разрешения…": "Loading permissions…",
+  "Запросов поддержки пока нет.": "No support requests yet.",
+  "Запрос отправлен владельцу. До подтверждения содержание недоступно.":
+    "The request has been sent to the owner. Content remains unavailable until approved.",
+  "Запросить разрешение": "Request permission",
+  "Выберите организацию": "Select an organization",
+  "Объект доступа": "Access scope",
+  "Курс: материалы без ключей ответов": "Course: materials without answer keys",
+  "Назначение: материалы, ответы и результаты одного участника":
+    "Assignment: materials, answers and results for one learner",
+  "Номер курса или назначения": "Course or assignment number",
+  "Номер из адреса страницы, которую указал владелец.":
+    "The number from the page address provided by the owner.",
+  "Срок доступа, часов": "Access duration, hours",
+  "Зачем нужен доступ": "Reason for access",
+  "Отправить запрос владельцу": "Send request to owner",
+  "Ожидает владельца": "Awaiting owner",
+  Разрешён: "Approved",
+  Отклонён: "Rejected",
+  Отозван: "Revoked",
+  "Срок истёк": "Expired",
+  "Доступ разрешён на указанный срок":
+    "Access approved for the specified duration",
+  "Запрос отклонён": "Request rejected",
+  Назначение: "Assignment",
+  "Оператор:": "Operator:",
+  "Запрошено часов:": "Requested hours:",
+  "Доступ до:": "Access until:",
+  "Будут доступны тексты уроков, иллюстрации и условия заданий этого курса. Ключи ответов скрыты.":
+    "Lesson text, images and assessment instructions for this course will be visible. Answer keys remain hidden.",
+  "Будут доступны учебные материалы, ответы и результаты только этого назначения. Другие участники и ключи ответов недоступны.":
+    "Only the materials, answers and results for this assignment will be visible. Other learners and answer keys remain inaccessible.",
+  "Разрешить на часов": "Approve for hours",
+  "Комментарий к решению": "Decision comment",
+  "Разрешить чтение": "Approve read access",
+  "Отклонить запрос": "Reject request",
+  "Открыть разрешённые данные": "Open approved data",
+  "Закрыть запрос и доступ": "Close request and access",
+  "Просмотр для поддержки": "Support view",
+  "Проверяем разрешение и загружаем данные…":
+    "Checking permission and loading data…",
+  "Срок разрешения истёк. Для нового просмотра нужен новый запрос владельцу.":
+    "Permission has expired. A new request to the owner is needed to view again.",
+  "Только чтение. Этот просмотр записан в журнал организации.":
+    "Read only. This view is recorded in the organization audit log.",
+  "Максимум баллов:": "Maximum points:",
+  "Не удалось выгрузить участников": "Could not export participants",
+  "Список участников выгружен. Выгрузка записана в журнал.":
+    "The participant list was exported. The export is recorded in the audit log.",
+  "Скачать участников CSV ↓": "Download participants CSV ↓",
   " · На проверке: {v0}": " · Awaiting review: {v0}",
   " · ранее {v0} балл.": " · previously {v0} points",
   "% пройдено": "% complete",

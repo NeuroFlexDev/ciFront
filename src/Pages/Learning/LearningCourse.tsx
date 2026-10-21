@@ -1,5 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/shared/api";
 import { Shell } from "@/Pages/Workspace/shared";
@@ -24,6 +24,8 @@ export default function LearningCourse() {
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [assistant, setAssistant] = useState(false);
+  const requestedBookmarks = useRef(new Set<string>());
+  const writing = useRef(false);
   const data = query.data;
   const lessons =
     data?.content?.modules.flatMap((m) =>
@@ -37,6 +39,7 @@ export default function LearningCourse() {
     : [];
   const key =
     params.get("item") ??
+    data?.last_item_key ??
     (data?.last_lesson_id
       ? `lesson:${data.last_lesson_id}`
       : lessons[0]
@@ -44,28 +47,82 @@ export default function LearningCourse() {
         : assessments[0]?.id);
   const lesson = lessons.find((l) => `lesson:${l.id}` === key);
   const assessment = assessments.find((a) => a.id === key);
+  const directItem = params.get("item");
+  const validDirectItem = Boolean(lesson || assessment);
+  const { reload } = query;
+  const assignmentId = data?.id;
+  const revision = data?.progress_revision;
+  const savedItem = data?.last_item_key;
+  const active = data?.state === "active";
+  useEffect(() => {
+    if (
+      !directItem ||
+      !validDirectItem ||
+      !assignmentId ||
+      revision === undefined ||
+      !active ||
+      resultsOnly ||
+      busy ||
+      writing.current
+    )
+      return;
+    const marker = `${assignmentId}:${directItem}`;
+    if (savedItem === directItem || requestedBookmarks.current.has(marker))
+      return;
+    // A deep link is an explicit navigation. Try once; a conflict must never
+    // silently retry an old location using another device's newer revision.
+    requestedBookmarks.current.add(marker);
+    writing.current = true;
+    setBusy(true);
+    void api
+      .put(`/learning/assignments/${assignmentId}/bookmark`, {
+        expected_revision: revision,
+        item_key: directItem,
+      })
+      .then(() => reload())
+      .catch(setError)
+      .finally(() => {
+        writing.current = false;
+        setBusy(false);
+      });
+  }, [
+    directItem,
+    validDirectItem,
+    assignmentId,
+    revision,
+    active,
+    savedItem,
+    resultsOnly,
+    busy,
+    reload,
+  ]);
   const choose = async (item: string) => {
-    if (busy) return;
+    if (busy || writing.current) return;
     setParams({ item });
     setError(null);
-    const target = lessons.find((value) => `lesson:${value.id}` === item);
-    if (!data || !target) return;
+    const valid =
+      lessons.some((value) => `lesson:${value.id}` === item) ||
+      assessments.some((value) => value.id === item);
+    if (!data || !valid) return;
+    requestedBookmarks.current.add(`${data.id}:${item}`);
+    writing.current = true;
     setBusy(true);
     try {
-      await api.put<Assignment>(`/learning/assignments/${id}/progress`, {
+      await api.put<Assignment>(`/learning/assignments/${id}/bookmark`, {
         expected_revision: data.progress_revision,
-        lesson_id: target.id,
-        completed: false,
+        item_key: item,
       });
       await query.reload();
     } catch (reason) {
       setError(reason);
     } finally {
+      writing.current = false;
       setBusy(false);
     }
   };
   const markComplete = async () => {
-    if (!data || !lesson) return;
+    if (!data || !lesson || writing.current) return;
+    writing.current = true;
     setBusy(true);
     setError(null);
     try {
@@ -79,18 +136,20 @@ export default function LearningCourse() {
       );
       const index = lessons.findIndex((l) => l.id === lesson.id);
       const next = lessons[index + 1];
-      if (next) {
-        await api.put<Assignment>(`/learning/assignments/${id}/progress`, {
+      const nextItem = next ? `lesson:${next.id}` : assessments[0]?.id;
+      if (nextItem) {
+        requestedBookmarks.current.add(`${data.id}:${nextItem}`);
+        await api.put<Assignment>(`/learning/assignments/${id}/bookmark`, {
           expected_revision: saved.data.progress_revision,
-          lesson_id: next.id,
-          completed: false,
+          item_key: nextItem,
         });
-        setParams({ item: `lesson:${next.id}` });
-      } else if (assessments[0]) setParams({ item: assessments[0].id });
+        setParams({ item: nextItem });
+      }
       await query.reload();
     } catch (e) {
       setError(e);
     } finally {
+      writing.current = false;
       setBusy(false);
     }
   };
