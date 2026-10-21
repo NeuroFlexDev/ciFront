@@ -23,6 +23,10 @@ import { ApiError } from "@/shared/errors";
 import { useDurableState } from "@/hooks/useDurableState";
 import { useReconnect } from "@/hooks/useReconnect";
 import styles from "./styles.module.css";
+import {
+  useAssistantAvailability,
+  type AssistantAvailability,
+} from "./useAssistantAvailability";
 
 type Chat = { id: number; name: string; course_id: number | null };
 type Message = {
@@ -108,14 +112,41 @@ function SourceLink({ courseId, id }: { courseId: number; id: number }) {
   );
 }
 
+function AvailabilityNotice({
+  availability,
+}: {
+  availability: AssistantAvailability;
+}) {
+  const { t } = useLocale();
+  if (!availability.blocked) return null;
+  return (
+    <div className={styles.notice} id="chat-availability" role="status">
+      <p>{t(availability.reason ?? "Проверяем доступность помощника…")}</p>
+      <p>
+        {t("История доступна для чтения. Вы можете подготовить и сохранить черновик сообщения.")}
+      </p>
+      <button
+        type="button"
+        className={styles.secondary}
+        disabled={availability.status === "loading"}
+        onClick={() => void availability.reload()}
+      >
+        {t("Обновить доступность")}
+      </button>
+    </div>
+  );
+}
+
 function ChatSession({
   chat,
   onRename,
   onDelete,
+  availability,
 }: {
   chat: Chat;
   onRename: (name: string) => Promise<void>;
   onDelete: () => Promise<void>;
+  availability: AssistantAvailability;
 }) {
   const { t } = useLocale();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -208,6 +239,7 @@ function ChatSession({
       await check();
       return;
     }
+    if (availability.blocked) return;
     const pending = draft.requestId
       ? draft
       : {
@@ -246,6 +278,7 @@ function ChatSession({
     } finally {
       sending.current = false;
       if (alive.current) setBusy(false);
+      void availability.reload();
     }
   };
   const older = async () => {
@@ -266,6 +299,9 @@ function ChatSession({
     (message) =>
       !search.trim() ||
       message.text.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  );
+  const checkingReceipt = Boolean(
+    draft.requestId && receiptStatus !== "not_received",
   );
   return (
     <section className={styles.session} aria-label={t("Диалог с помощником")}>
@@ -475,6 +511,7 @@ function ChatSession({
           )}
         </div>
       )}
+      <AvailabilityNotice availability={availability} />
       <form
         className={styles.composer}
         onSubmit={(e) => {
@@ -489,9 +526,11 @@ function ChatSession({
           maxLength={12000}
           disabled={!!draft.requestId}
           aria-describedby={
-            draft.requestId
-              ? "chat-request-status chat-composer-hint"
-              : "chat-composer-hint"
+            [
+              draft.requestId && "chat-request-status",
+              "chat-composer-hint",
+              availability.blocked && "chat-availability",
+            ].filter(Boolean).join(" ")
           }
           onChange={(e) => setDraft({ ...draft, text: e.target.value })}
           onKeyDown={(e) => {
@@ -506,23 +545,31 @@ function ChatSession({
           className={styles.send}
           aria-busy={busy}
           aria-describedby={
-            draft.requestId ? "chat-request-status" : "chat-composer-hint"
+            [
+              draft.requestId ? "chat-request-status" : "chat-composer-hint",
+              availability.blocked && "chat-availability",
+            ].filter(Boolean).join(" ")
           }
           title={
             busy
               ? t("Ответ готовится")
               : receiptStatus === "failed"
                 ? t("Подготовить новую попытку")
-                : !draft.text.trim()
-                  ? t("Задайте вопрос или опишите учебную задачу")
-                  : draft.requestId
-                    ? t("Проверить отправку")
-                    : t("Отправить сообщение")
+                : availability.blocked && !checkingReceipt
+                  ? t(availability.reason ?? "Проверяем доступность помощника…")
+                  : !draft.text.trim()
+                    ? t("Задайте вопрос или опишите учебную задачу")
+                    : draft.requestId
+                      ? t("Проверить отправку")
+                      : t("Отправить сообщение")
           }
           aria-label={
             draft.requestId ? t("Проверить отправку") : t("Отправить сообщение")
           }
-          disabled={busy || !draft.text.trim() || receiptStatus === "failed"}
+          disabled={
+            busy || !draft.text.trim() || receiptStatus === "failed" ||
+            (!checkingReceipt && availability.blocked)
+          }
         >
           {draft.requestId || busy ? (
             <RefreshCw size={21} />
@@ -544,6 +591,7 @@ function ChatSession({
 
 export default function AiHelperPage() {
   const { t } = useLocale();
+  const availability = useAssistantAvailability();
   const [params] = useSearchParams();
   const raw = params.get("course");
   const courseId =
@@ -693,6 +741,7 @@ export default function AiHelperPage() {
               <ChatSession
                 key={current.id}
                 chat={current}
+                availability={availability}
                 onRename={async (name) => {
                   await api.patch(`/chat/${current.id}`, { name });
                   setChats((items) =>
@@ -716,6 +765,7 @@ export default function AiHelperPage() {
                       "Создайте диалог. Обсудите структуру курса, формулировки уроков и вопросы для проверки знаний.",
                     )}
                   </p>
+                  <AvailabilityNotice availability={availability} />
                   <button
                     className={styles.primary}
                     disabled={busy}

@@ -40,7 +40,9 @@ function SwitchLocale() {
 it("switches interface language without translating history, renaming chats or losing an unsent question", async () => {
   localStorage.setItem("lernium_locale", "en");
   mocked.get.mockImplementation(async (path: string) => ({
-    data: path.startsWith("/chat/?")
+    data: path === "/materials/resource-usage"
+      ? { chat_monthly_limit: 1000, interactive_requests_this_month: 0 }
+      : path.startsWith("/chat/?")
       ? [{ id: 5, name: "Мой исходный диалог", course_id: 2 }]
       : [{ id: 1, author: "bot", text: "Русский учебный ответ" }],
   }));
@@ -76,6 +78,8 @@ it("recovers a completed author request after a lost response without sending or
     { id: 2, author: "bot", text: "Сохранённый ответ помощника" },
   ];
   mocked.get.mockImplementation(async (path: string) => {
+    if (path === "/materials/resource-usage")
+      return { data: { chat_monthly_limit: 1000, interactive_requests_this_month: 0 } };
     if (path.startsWith("/chat/?"))
       return { data: [{ id: 5, name: "План курса", course_id: 2 }] };
     if (path.startsWith("/chat/requests/"))
