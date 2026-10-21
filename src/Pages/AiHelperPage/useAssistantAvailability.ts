@@ -75,10 +75,11 @@ export function useAssistantAvailability() {
       }
     }
   }, [context, organizationId]);
+  const invalidate = useCallback(() => { sequence.current += 1; }, []);
   useEffect(() => {
     void reload();
-    return () => { sequence.current++; };
-  }, [reload]);
+    return invalidate;
+  }, [reload, invalidate]);
   useReconnect(() => void reload());
   const current: Availability = state.context === context ? state : {
     context,
