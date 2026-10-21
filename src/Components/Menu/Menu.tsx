@@ -3,7 +3,7 @@ import { useLocale } from '@/i18n/useLocale';
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
-import { api } from '@/shared/api';
+import { api, getAuthToken } from '@/shared/api';
 import logo from '@/assets/icons/logo.svg';
 import styles from './styles.module.css';
 type Permissions = {
@@ -12,6 +12,10 @@ type Permissions = {
   can_review: boolean;
   can_report: boolean;
 };
+// Retain the menu between routed pages; the API still checks every operation.
+// A different session never inherits a previous account's navigation cache.
+let navigationCache: { userId: number; token: string; at: number; value: Permissions } | null =
+  null;
 export default function Menu() {
   const { t, locale, setLocale } = useLocale();
   const roleName = useRoleNames();
@@ -41,21 +45,33 @@ export default function Menu() {
       document.removeEventListener('keydown', escape);
     };
   }, []);
-  const [permissions, setPermissions] = useState<Permissions | null>(null);
+  const [permissions, setPermissions] = useState<Permissions | null>(() =>
+    navigationCache?.userId === user?.id &&
+    navigationCache?.token === getAuthToken() &&
+    Date.now() - navigationCache.at < 60_000
+      ? navigationCache.value
+      : null,
+  );
   const [failed, setFailed] = useState(false);
   const [version, setVersion] = useState(0);
   useEffect(() => {
     let active = true;
+    const token = getAuthToken();
     api
       .get<Permissions>('/team/permissions')
       .then(({ data }) => {
-        if (active) {
+        if (active && token === getAuthToken()) {
+          if (user?.id && token)
+            navigationCache = { userId: user.id, token, at: Date.now(), value: data };
           setPermissions(data);
           setFailed(false);
         }
       })
       .catch(() => {
-        if (active) setFailed(true);
+        if (active) {
+          navigationCache = null;
+          setFailed(true);
+        }
       });
     return () => {
       active = false;
