@@ -21,18 +21,23 @@ type Message = {
 export default function LearningAssistant({
   assignmentId,
   lessonId,
+  allowSend = true,
   onLesson,
 }: {
   assignmentId: number;
   lessonId: number;
+  allowSend?: boolean;
   onLesson: (id: number) => void;
 }) {
   const { t } = useLocale();
 
   const path = `/learning/assignments/${assignmentId}/assistant/messages`;
-  const history = useLearningData<{ items: Message[]; total: number }>(
-    path + "?limit=50",
-  );
+  const history = useLearningData<{
+    items: Message[];
+    total: number;
+    can_send?: boolean;
+    disabled_reason?: string | null;
+  }>(path + "?limit=50");
   const [draft, setDraft, clear] = useDurableState(
     `learning-assistant:${assignmentId}:${lessonId}`,
     { question: "", requestId: null as string | null },
@@ -40,7 +45,9 @@ export default function LearningAssistant({
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const canSend = Boolean(history.data && (history.data.can_send ?? allowSend));
   const send = async () => {
+    if (!canSend || busy) return;
     setBusy(true);
     setError(null);
     const sent = {
@@ -65,6 +72,7 @@ export default function LearningAssistant({
       }
     } catch (e) {
       setError(e);
+      void history.reload();
     } finally {
       setBusy(false);
     }
@@ -142,11 +150,18 @@ export default function LearningAssistant({
           </article>
         ))}
       </div>
+      {history.data && !canSend && (
+        <p className={s.notice}>
+          {t(
+            "Новые вопросы помощнику сейчас отключены правилами организации. История диалога и ваши учебные ответы сохранены.",
+          )}
+        </p>
+      )}
       <label className={s.field}>
         {t("Вопрос по открытому уроку")}
         <textarea
           value={draft.question}
-          disabled={busy}
+          disabled={busy || !canSend}
           maxLength={12000}
           onChange={(e) =>
             setDraft({ question: e.target.value, requestId: null })
@@ -164,7 +179,7 @@ export default function LearningAssistant({
         </button>
         <button
           className={s.primary}
-          disabled={busy || !draft.question.trim()}
+          disabled={busy || !canSend || !draft.question.trim()}
           onClick={() => void send()}
         >
           {busy

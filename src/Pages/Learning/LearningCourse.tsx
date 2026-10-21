@@ -168,7 +168,7 @@ export default function LearningCourse() {
                           </button>
                         </div>
                       </article>
-                      {data.rules.allow_ai_assistant && (
+                      {
                         <>
                           <button
                             className={s.secondary}
@@ -177,7 +177,9 @@ export default function LearningCourse() {
                           >
                             {assistant
                               ? t("Свернуть помощника")
-                              : t("✧ Задать вопрос по уроку")}
+                              : data.rules.allow_ai_assistant
+                                ? t("✧ Задать вопрос по уроку")
+                                : t("История помощника")}
                           </button>
                           {assistant && (
                             <LearningAssistant
@@ -190,7 +192,7 @@ export default function LearningCourse() {
                             />
                           )}
                         </>
-                      )}
+                      }
                     </>
                   ) : assessment ? (
                     <AssessmentAnswer

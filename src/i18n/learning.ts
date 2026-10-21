@@ -536,4 +536,7 @@ export const learningEnglish: Record<string, string> = {
   "✧ Задать вопрос по уроку": "✧ Ask about this lesson",
   "Профиль специалиста": "Specialist role",
   "Отрасль организации": "Organization industry",
+  "Новые вопросы помощнику сейчас отключены правилами организации. История диалога и ваши учебные ответы сохранены.":
+    "New assistant questions are currently disabled by organization rules. Your conversation history and learning answers are preserved.",
+  "История помощника": "Assistant history",
 };
