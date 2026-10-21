@@ -3,14 +3,19 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
 import { AppErrorBoundary } from './Components/AppErrorBoundary';
 import { ProtectedRoute } from './auth/ProtectedRoute';
-import {useLocale} from '@/i18n/useLocale';
+import { useLocale } from '@/i18n/useLocale';
+import { LoadingState } from './Components/RequestState';
+import logo from './assets/icons/logo.svg';
 
 const MainPage = lazy(() => import('./Pages/MainPage/MainPage'));
 const AuthPage = lazy(() => import('./Pages/AuthPage/AuthPage'));
 const AccountPage = lazy(() => import('./Pages/AccountPage/AccountPage'));
 const AccessPage = lazy(() => import('./Pages/AccessPage/AccessPage'));
 const StatusPage = lazy(() => import('./Pages/AccessPage/StatusPage'));
-function PrivacyRedirect() { window.location.replace('/legal/privacy/'); return null; }
+function PrivacyRedirect() {
+  window.location.replace('/legal/privacy/');
+  return null;
+}
 const AiHelperPage = lazy(() => import('./Pages/AiHelperPage/AiHelperPage'));
 const TemplatesPage = lazy(() => import('./Pages/Workspace/Templates'));
 const Dashboard = lazy(() => import('./Pages/Workspace/Dashboard'));
@@ -37,28 +42,12 @@ const LearningAnalytics = lazy(() => import('./Pages/TeamLearning/LearningAnalyt
 const SupportAccessPage = lazy(() => import('./Pages/TeamLearning/SupportAccessPage'));
 
 function AppFallback() {
-  const {t}=useLocale();
+  const { t } = useLocale();
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        padding: '18px 16px 32px',
-        background: 'linear-gradient(180deg, var(--ui-bg-secondary), var(--ui-bg) 38%, #050d16 100%)',
-        color: 'var(--ui-text)',
-      }}
-    >
-      <div
-        style={{
-          width: 'min(calc(100% - 4px), 1360px)',
-          margin: '0 auto',
-          borderRadius: '32px',
-          padding: '28px 32px',
-          background: 'color-mix(in srgb, var(--ui-surface-strong) 90%, transparent)',
-          boxShadow: 'var(--ui-shadow)',
-        }}
-      >
-        <div style={{ textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.76rem' }}>Lernium</div>
-        <div style={{ marginTop: '16px', color: 'var(--ui-muted)' }}>{t('Загружаем интерфейс...')}</div>
+    <div className='app-loading'>
+      <div className='app-loading__panel'>
+        <img className='app-loading__brand' src={logo} alt={t('Лерниум')} />
+        <LoadingState>{t('Загружаем интерфейс...')}</LoadingState>
       </div>
     </div>
   );
@@ -67,47 +56,229 @@ function AppFallback() {
 function App() {
   return (
     <AppErrorBoundary>
-    <BrowserRouter>
-      <Suspense fallback={<AppFallback />}>
-        <Routes>
-          <Route path="/" element={<MainPage/>} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/privacy" element={<PrivacyRedirect />} />
-          <Route path="/account" element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
-          <Route path="/forgot-password" element={<AccessPage />} />
-          <Route path="/reset-password" element={<AccessPage reset />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><Dashboard analytics /></ProtectedRoute>} />
-          <Route path="/employees" element={<ProtectedRoute><TeamPage /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/organizations/:organizationId/delivery" element={<ProtectedRoute><DeliveryPage /></ProtectedRoute>} />
-          <Route path="/admin/organizations/:organizationId/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
-          <Route path="/admin/operations" element={<ProtectedRoute><AdminOperationsPage /></ProtectedRoute>} />
-          <Route path="/integrations" element={<ProtectedRoute><IntegrationsPage /></ProtectedRoute>} />
-          <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
-          <Route path="/learning" element={<ProtectedRoute><LearningHome /></ProtectedRoute>} />
-          <Route path="/learning/:id" element={<ProtectedRoute><LearningCourse /></ProtectedRoute>} />
-          <Route path="/reviews" element={<ProtectedRoute><ReviewsPage /></ProtectedRoute>} />
-          <Route path="/course-reviews" element={<ProtectedRoute><CourseReviewsPage /></ProtectedRoute>} />
-          <Route path="/groups" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} />
-          <Route path="/assignments" element={<ProtectedRoute><AssignmentsPage /></ProtectedRoute>} />
-          <Route path="/programs" element={<ProtectedRoute><ProgramsPage /></ProtectedRoute>} />
-          <Route path="/team-settings" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
-          <Route path="/support-access" element={<ProtectedRoute><SupportAccessPage /></ProtectedRoute>} />
-          <Route path="/learning-analytics" element={<ProtectedRoute><LearningAnalytics /></ProtectedRoute>} />
-          <Route path="/invite" element={<InvitePage />} />
-          <Route path="*" element={<StatusPage />} />
-          <Route path="/ai-helper" element={<ProtectedRoute><AiHelperPage /></ProtectedRoute>} />
-          <Route path="/templates" element={<ProtectedRoute><TemplatesPage /></ProtectedRoute>} />
-          <Route path="/express" element={<ProtectedRoute><ExpressPage /></ProtectedRoute>} />
-          <Route path="/courses" element={<ProtectedRoute><MyCoursesPage /></ProtectedRoute>} />
-          <Route path="/courses/:id/edit" element={<ProtectedRoute><CourseEditPage /></ProtectedRoute>} />
-          <Route path="/courses/:id/canvas" element={<ProtectedRoute><LerniumCanvasPage /></ProtectedRoute>} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Suspense fallback={<AppFallback />}>
+          <Routes>
+            <Route path='/' element={<MainPage />} />
+            <Route path='/auth' element={<AuthPage />} />
+            <Route path='/privacy' element={<PrivacyRedirect />} />
+            <Route
+              path='/account'
+              element={
+                <ProtectedRoute>
+                  <AccountPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path='/forgot-password' element={<AccessPage />} />
+            <Route path='/reset-password' element={<AccessPage reset />} />
+            <Route
+              path='/dashboard'
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/analytics'
+              element={
+                <ProtectedRoute>
+                  <Dashboard analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/employees'
+              element={
+                <ProtectedRoute>
+                  <TeamPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/admin'
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/admin/organizations/:organizationId/delivery'
+              element={
+                <ProtectedRoute>
+                  <DeliveryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/admin/organizations/:organizationId/billing'
+              element={
+                <ProtectedRoute>
+                  <BillingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/admin/operations'
+              element={
+                <ProtectedRoute>
+                  <AdminOperationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/integrations'
+              element={
+                <ProtectedRoute>
+                  <IntegrationsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/billing'
+              element={
+                <ProtectedRoute>
+                  <BillingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/learning'
+              element={
+                <ProtectedRoute>
+                  <LearningHome />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/learning/:id'
+              element={
+                <ProtectedRoute>
+                  <LearningCourse />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/reviews'
+              element={
+                <ProtectedRoute>
+                  <ReviewsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/course-reviews'
+              element={
+                <ProtectedRoute>
+                  <CourseReviewsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/groups'
+              element={
+                <ProtectedRoute>
+                  <GroupsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/assignments'
+              element={
+                <ProtectedRoute>
+                  <AssignmentsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/programs'
+              element={
+                <ProtectedRoute>
+                  <ProgramsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/team-settings'
+              element={
+                <ProtectedRoute>
+                  <TeamSettingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/support-access'
+              element={
+                <ProtectedRoute>
+                  <SupportAccessPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/learning-analytics'
+              element={
+                <ProtectedRoute>
+                  <LearningAnalytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route path='/invite' element={<InvitePage />} />
+            <Route path='*' element={<StatusPage />} />
+            <Route
+              path='/ai-helper'
+              element={
+                <ProtectedRoute>
+                  <AiHelperPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/templates'
+              element={
+                <ProtectedRoute>
+                  <TemplatesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/express'
+              element={
+                <ProtectedRoute>
+                  <ExpressPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/courses'
+              element={
+                <ProtectedRoute>
+                  <MyCoursesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/courses/:id/edit'
+              element={
+                <ProtectedRoute>
+                  <CourseEditPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path='/courses/:id/canvas'
+              element={
+                <ProtectedRoute>
+                  <LerniumCanvasPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
     </AppErrorBoundary>
-  )
+  );
 }
 
-export default App
+export default App;

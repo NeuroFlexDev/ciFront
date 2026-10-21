@@ -2,7 +2,7 @@
   width: min(calc(100% - 64px), 1760px);
   margin: 64px auto 70px;
   color: #fff;
-  font-family: "GolosText", sans-serif;
+  font-family: 'GolosText', sans-serif;
 }
 .scope {
   display: flex;
@@ -24,10 +24,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-template-rows: minmax(350px, auto) minmax(200px, auto) minmax(
-      265px,
-      auto
-    );
+  grid-template-rows: minmax(350px, auto) minmax(200px, auto) minmax(265px, auto);
   gap: 28px;
 }
 .card {
@@ -98,7 +95,7 @@
   background: #0c0d12;
   color: #eee;
   font:
-    14px "GolosText",
+    14px 'GolosText',
     sans-serif;
   padding: 10px 13px;
   border-radius: 25px;
@@ -208,20 +205,12 @@
 }
 .ticks {
   height: 82px;
-  background: repeating-linear-gradient(
-    90deg,
-    #d5d5d5 0 4px,
-    transparent 4px 12px
-  );
+  background: repeating-linear-gradient(90deg, #d5d5d5 0 4px, transparent 4px 12px);
   border-radius: 4px;
   margin-top: auto;
 }
 .accentMetric .ticks {
-  background: repeating-linear-gradient(
-    90deg,
-    #caf432 0 4px,
-    transparent 4px 12px
-  );
+  background: repeating-linear-gradient(90deg, #caf432 0 4px, transparent 4px 12px);
 }
 .assistantBody {
   display: flex;
@@ -365,11 +354,7 @@
   border-bottom: 1px solid #303030;
 }
 .bar {
-  background: repeating-linear-gradient(
-    135deg,
-    transparent 0 8px,
-    #657d1a 8px 9px
-  );
+  background: repeating-linear-gradient(135deg, transparent 0 8px, #657d1a 8px 9px);
   border-radius: 17px 17px 4px 4px;
   width: 100%;
 }
@@ -461,10 +446,7 @@
 }
 @media (min-width: 1800px) {
   .grid {
-    grid-template-rows: minmax(410px, auto) minmax(230px, auto) minmax(
-        300px,
-        auto
-      );
+    grid-template-rows: minmax(410px, auto) minmax(230px, auto) minmax(300px, auto);
     gap: 32px;
   }
   .card {
@@ -623,5 +605,73 @@
   }
   .footer {
     font-size: 12px;
+  }
+}
+
+/* Calm entrance and clear feedback, without looping decoration on the dashboard. */
+.card {
+  border: 1px solid transparent;
+}
+.fill {
+  transition: stroke-dasharray 650ms var(--ui-ease);
+}
+.bar {
+  transition: height 500ms var(--ui-ease);
+  transform-origin: bottom;
+}
+.scope button {
+  border-radius: 18px;
+}
+@media (hover: hover) {
+  .roundLink:hover {
+    background: #caf432;
+    color: #141414;
+  }
+  .assistantActions a:hover {
+    background: #262a1c;
+    color: #caf432;
+  }
+  .assistantFooter:hover {
+    background: #20231a;
+    color: #fff !important;
+  }
+  .scope button:hover {
+    background: #1d2116;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: ui-enter 480ms var(--ui-ease) backwards;
+  }
+  .courses {
+    animation-delay: 40ms;
+  }
+  .assistant,
+  .people {
+    animation-delay: 70ms;
+  }
+  .lessons,
+  .activity {
+    animation-delay: 110ms;
+  }
+  .roundLink {
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 260ms var(--ui-ease);
+  }
+  .roundLink:hover {
+    transform: translateY(-2px);
+  }
+  .bar {
+    animation: bar-grow 600ms var(--ui-ease);
+  }
+  @keyframes bar-grow {
+    from {
+      transform: scaleY(0);
+    }
+    to {
+      transform: scaleY(1);
+    }
   }
 }

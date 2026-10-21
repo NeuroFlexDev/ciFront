@@ -3,10 +3,10 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: clamp(16px, 1.5vw, 28px);
   width: min(calc(100% - 64px), 1760px);
   margin: 34px auto 0;
-  font-family: "GolosText", sans-serif;
+  font-family: 'GolosText', sans-serif;
   color: #fff;
 }
 .brand {
@@ -28,11 +28,11 @@
   border-radius: 48px;
 }
 .navText {
-  padding: 18px 21px;
+  padding: 18px clamp(14px, 1.25vw, 24px);
   border-radius: 40px;
   color: #dadada;
   text-decoration: none;
-  font-size: 15px;
+  font-size: clamp(14px, 1.05vw, 20px);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -70,7 +70,7 @@
   color: #fff;
   max-width: 210px;
   overflow-wrap: anywhere;
-  font-size: 14px;
+  font-size: clamp(14px, 1.1vw, 19px);
 }
 .userRole {
   color: #caf432;
@@ -105,7 +105,7 @@
 }
 .dropdown a:hover,
 .dropdown button:hover,
-.dropdown a[aria-current="page"] {
+.dropdown a[aria-current='page'] {
   background: #2c2c2c;
   color: #caf432;
 }
@@ -113,7 +113,7 @@
   outline: 2px solid #caf432;
   outline-offset: 3px;
 }
-@media (max-width: 1360px) {
+@media (max-width: 1180px) {
   .menuContainer {
     gap: 18px;
   }
@@ -175,4 +175,98 @@
   font: inherit;
   padding: 6px;
   min-width: 100px;
+}
+
+.navigationContainer {
+  min-width: 0;
+}
+.chevron {
+  flex-shrink: 0;
+  transition: transform var(--ui-motion-base) var(--ui-ease);
+}
+.accountBlock[open] .chevron {
+  transform: rotate(180deg);
+}
+.accountBlock summary {
+  border: 1px solid transparent;
+  min-height: 64px;
+}
+.accountBlock[open] summary {
+  border-color: #454545;
+}
+.dropdown {
+  max-height: min(72vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #4b4b4b transparent;
+}
+.userName {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (hover: hover) {
+  .brand:hover {
+    opacity: 0.85;
+  }
+  .accountBlock summary:hover {
+    background: #202020;
+  }
+  .navText.active:hover {
+    background: #d8ff52;
+    color: #101010;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .navText {
+    transition:
+      background-color 180ms ease,
+      color 180ms ease,
+      box-shadow 220ms ease;
+  }
+  .accountBlock[open] .dropdown {
+    animation: ui-enter 220ms var(--ui-ease);
+  }
+}
+@media (min-width: 1181px) {
+  .navigationContainer {
+    flex: 1;
+    justify-content: space-between;
+  }
+  .accountBlock {
+    margin-left: 0;
+    max-width: 265px;
+  }
+  .brand img {
+    width: clamp(170px, 14vw, 280px);
+  }
+}
+@media (max-width: 600px) {
+  .navigationContainer {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    border-radius: 32px;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+  }
+  .navText {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+  .accountBlock summary {
+    min-height: 58px;
+  }
+  .dropdown {
+    max-height: 65vh;
+    min-width: min(300px, calc(100vw - 32px));
+  }
+  .brand img {
+    width: clamp(112px, 30vw, 145px);
+  }
+  .userInfo {
+    max-width: 120px;
+  }
 }

@@ -1,18 +1,210 @@
-.page {
-    width: min(calc(100% - 30px), 1360px);
-    margin: 40px auto 0;
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
 }
-
-@media (max-width: 900px) {
-    .page {
-        width: min(calc(100% - 24px), 700px);
-        margin-top: 20px;
-    }
+.card {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
 }
-
-@media (max-width: 520px) {
-    .page {
-        width: calc(100% - 20px);
-        margin-top: 16px;
-    }
+.cardTop {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+.status {
+  flex: 1;
+  min-width: 0;
+  border-radius: 32px 32px 0 0;
+  background: #141414;
+  padding: 26px 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+.status:after {
+  content: '';
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  right: -32px;
+  bottom: 0;
+  background: radial-gradient(circle at top right, transparent 32px, #141414 32.5px);
+  z-index: -1;
+}
+.eyebrow {
+  color: #caf432;
+  font-size: 14px;
+}
+.status > span:last-child {
+  font-size: 18px;
+  color: #eee;
+  overflow-wrap: anywhere;
+}
+.quickActions {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 12px;
+  align-self: flex-start;
+}
+.card .circle {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  background: #caf432;
+  color: #111;
+  border-radius: 50%;
+  text-decoration: none;
+}
+.cardBody {
+  background: #141414;
+  border-radius: 0 32px 32px 32px;
+  padding: 36px 30px 28px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.card h2 {
+  font:
+    400 clamp(19px, 1.6vw, 28px)/1.35 Days,
+    sans-serif;
+  margin: 0 0 30px;
+  overflow-wrap: anywhere;
+}
+.card h2 a {
+  color: #fff;
+  text-decoration: none;
+}
+.metrics {
+  display: flex;
+  gap: 36px;
+  margin: 0 0 26px;
+}
+.metrics div {
+  display: grid;
+  gap: 12px;
+}
+.metrics dt {
+  color: #caf432;
+  font-size: 14px;
+}
+.metrics dd {
+  margin: 0;
+  font:
+    400 clamp(38px, 3.7vw, 62px)/1 Days,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.card .description {
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 0 0 24px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+}
+.card .open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  border-radius: 30px;
+  background: #caf432;
+  color: #111;
+  padding: 10px 16px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 42px;
+}
+.open span {
+  font-size: 20px;
+  line-height: 1;
+}
+.remove {
+  border: 0;
+  background: none;
+  border-radius: 20px;
+  color: #aaa;
+  padding: 10px;
+  cursor: pointer;
+  font:
+    13px GolosText,
+    sans-serif;
+}
+@media (hover: hover) {
+  .card .circle:hover,
+  .card .open:hover {
+    background: #deff66;
+    box-shadow: 0 8px 25px #caf43215;
+  }
+  .card h2 a:hover {
+    color: #caf432;
+  }
+  .remove:hover {
+    background: #382220;
+    color: #ffb5aa;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card {
+    animation: ui-enter 440ms var(--ui-ease) backwards;
+  }
+  .card:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .card:nth-child(n + 3) {
+    animation-delay: 80ms;
+  }
+  .circle {
+    transition:
+      transform 220ms var(--ui-ease),
+      background-color 160ms ease;
+  }
+  .circle:hover {
+    transform: translateY(-2px);
+  }
+}
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .status {
+    padding: 24px 24px 16px;
+  }
+  .cardBody {
+    padding: 28px 24px 24px;
+  }
+  .card h2 {
+    font-size: 23px;
+  }
+  .metrics dd {
+    font-size: 52px;
+  }
+  .card .circle {
+    width: 50px;
+    height: 50px;
+  }
+  .quickActions {
+    gap: 8px;
+  }
 }

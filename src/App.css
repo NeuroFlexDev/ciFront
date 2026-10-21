@@ -1,4 +1,25 @@
 #root {
   min-height: 100vh;
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'GolosText', sans-serif;
+}
+
+.app-loading {
+  min-height: 100vh;
+  padding: 34px 32px;
+  background: var(--ui-bg);
+}
+.app-loading__panel {
+  max-width: 1760px;
+  margin: auto;
+  padding: 32px;
+  border-radius: 32px;
+  background: var(--ui-surface);
+}
+.app-loading__brand {
+  width: 190px;
+  height: auto;
+  margin-bottom: 28px;
+}
+.app-loading__panel p {
+  color: var(--ui-muted);
 }
