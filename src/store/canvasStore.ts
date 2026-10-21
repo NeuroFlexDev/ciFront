@@ -9,6 +9,8 @@ import {
   type Viewport,
 } from '@xyflow/react';
 import { create } from 'zustand';
+import { getLocale, translate } from '@/i18n/locale';
+import { canvasEnglish } from '@/i18n/canvas';
 
 import { requestAiAction } from '@/api/aiApi';
 import { loadCanvasSnapshot, saveCanvasSnapshot, getCanvasRevision, adoptCanvasRevision } from '@/api/canvasApi';
@@ -403,8 +405,8 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
     }, {
       width: maxX - minX + framePadding * 2,
       height: maxY - minY + framePadding * 2,
-      title: 'Группа',
-      description: 'Контур для объединения узлов',
+      title: translate(getLocale(), 'Группа', undefined, { en: canvasEnglish }),
+      description: translate(getLocale(), 'Контур для объединения узлов', undefined, { en: canvasEnglish }),
     });
 
     const nextNodes = state.nodes.map((node) => {

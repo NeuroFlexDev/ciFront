@@ -83,6 +83,9 @@ export default function Menu() {
       ? [["/billing", t("Договор и оплата")]]
       : []),
     ...(user?.is_admin ? [["/admin", t("Управление платформой")]] : []),
+    ...(user?.is_admin || user?.organization_role === "owner"
+      ? [["/support-access", t("Доступ поддержки")]]
+      : []),
   ];
   return (
     <header className={styles.menuContainer}>

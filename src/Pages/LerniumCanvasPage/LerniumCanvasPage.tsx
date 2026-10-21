@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/useLocale';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -12,20 +13,24 @@ import { useCanvasKeyboard } from '@/hooks/useCanvasKeyboard';
 import { useCanvasStore } from '@/store/canvasStore';
 import styles from '@/Components/canvas/styles.module.css';
 import type { CanvasAiActionType, CanvasNodeType } from '@/types/canvas';
-import {RequestError,LoadingState} from '@/Components/RequestState';
+import { RequestError, LoadingState } from '@/Components/RequestState';
 import DraftNotice from '@/Components/DraftNotice';
-import {useReconnect} from '@/hooks/useReconnect';
-import {fetchCanvasWorkspace,adoptCanvasRevision} from '@/api/canvasApi';
+import { useReconnect } from '@/hooks/useReconnect';
+import { fetchCanvasWorkspace, adoptCanvasRevision } from '@/api/canvasApi';
 
 function LerniumCanvasPage() {
+  const { t } = useLocale();
+
   const { id } = useParams<{ id: string }>();
   const courseId = id ?? 'draft';
 
   const [pageLoading, setPageLoading] = useState(true);
   const [loadError, setLoadError] = useState<unknown>(null);
-  const [loadVersion,setLoadVersion]=useState(0);
-  const [searchNotice,setSearchNotice]=useState('');
-  const [conflict,setConflict]=useState<Awaited<ReturnType<typeof fetchCanvasWorkspace>>|null>(null);
+  const [loadVersion, setLoadVersion] = useState(0);
+  const [searchNotice, setSearchNotice] = useState('');
+  const [conflict, setConflict] = useState<Awaited<ReturnType<typeof fetchCanvasWorkspace>> | null>(
+    null,
+  );
   const viewApiRef = useRef<CanvasViewApi | null>(null);
 
   const courseTitle = useCanvasStore((state) => state.courseTitle);
@@ -43,11 +48,19 @@ function LerniumCanvasPage() {
   const hasUnsavedChanges = useCanvasStore((state) => state.hasUnsavedChanges);
   const aiNotice = useCanvasStore((state) => state.aiNotice);
   const loadCourse = useCanvasStore((state) => state.loadCourse);
-  useReconnect(()=>{if(loadError)setLoadVersion(v=>v+1);});
-  useEffect(()=>{
-    const guard=(event:BeforeUnloadEvent)=>{if(hasUnsavedChanges){event.preventDefault();event.returnValue='';}};
-    window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);
-  },[hasUnsavedChanges]);
+  useReconnect(() => {
+    if (loadError) setLoadVersion((v) => v + 1);
+  });
+  useEffect(() => {
+    const guard = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [hasUnsavedChanges]);
 
   const {
     clearFrameForSelection,
@@ -61,13 +74,15 @@ function LerniumCanvasPage() {
     setInteractionMode,
   } = useCanvasActions();
 
-  const selectedNode = useMemo(() => (
-    nodes.find((node) => selectedNodeIds.includes(node.id)) ?? null
-  ), [nodes, selectedNodeIds]);
+  const selectedNode = useMemo(
+    () => nodes.find((node) => selectedNodeIds.includes(node.id)) ?? null,
+    [nodes, selectedNodeIds],
+  );
 
-  const selectedEdge = useMemo(() => (
-    edges.find((edge) => selectedEdgeIds.includes(edge.id)) ?? null
-  ), [edges, selectedEdgeIds]);
+  const selectedEdge = useMemo(
+    () => edges.find((edge) => selectedEdgeIds.includes(edge.id)) ?? null,
+    [edges, selectedEdgeIds],
+  );
 
   useEffect(() => {
     let ignore = false;
@@ -90,7 +105,7 @@ function LerniumCanvasPage() {
     return () => {
       ignore = true;
     };
-  }, [courseId, loadCourse,loadVersion]);
+  }, [courseId, loadCourse, loadVersion]);
 
   useCanvasKeyboard({
     onCreateNode: () => createNode('module'),
@@ -104,29 +119,33 @@ function LerniumCanvasPage() {
   function handleSearch(value: string) {
     const normalized = value.trim().toLowerCase();
     if (!normalized) {
-      setSearchNotice('Введите название узла для поиска.');
+      setSearchNotice(t('Введите название узла для поиска.'));
       return;
     }
 
     const match = nodes.find((node) => node.data.title.toLowerCase().includes(normalized));
     if (match) {
       requestFocusNode(match.id);
-      setSearchNotice(`Найден узел: ${match.data.title}`);
-    }else setSearchNotice(`По запросу «${value}» узлов не найдено. Измените запрос.`);
+      setSearchNotice(t('Найден узел: {v0}', { v0: match.data.title }));
+    } else
+      setSearchNotice(t('По запросу «{v0}» узлов не найдено. Измените запрос.', { v0: value }));
   }
 
   const handleCanvasReady = useCallback((api: CanvasViewApi) => {
     viewApiRef.current = api;
   }, []);
 
-  if (loadError) return <main className={styles.workspacePage}>
-    <RequestError error={loadError} fullPage onRetry={()=>setLoadVersion(v=>v+1)}/>
-  </main>;
+  if (loadError)
+    return (
+      <main className={styles.workspacePage}>
+        <RequestError error={loadError} fullPage onRetry={() => setLoadVersion((v) => v + 1)} />
+      </main>
+    );
 
   if (pageLoading) {
     return (
       <main className={styles.workspacePage}>
-        <LoadingState>Загрузка канвы…</LoadingState>
+        <LoadingState>{t('Загрузка канвы…')}</LoadingState>
       </main>
     );
   }
@@ -159,20 +178,27 @@ function LerniumCanvasPage() {
         />
 
         <section className={styles.workspaceMain}>
-          {hasUnsavedChanges&&<DraftNotice restored={recoveredDraft}/>}
-          {searchNotice&&<p role="status">{searchNotice}</p>}
+          {hasUnsavedChanges && <DraftNotice restored={recoveredDraft} />}
+          {searchNotice && <p role='status'>{searchNotice}</p>}
           <div className={styles.workspaceBreadcrumbs}>
-            <Link to="/courses" className={styles.backLink}>
+            <Link to='/courses' className={styles.backLink}>
               <ArrowLeft size={16} />
-              Назад к курсам
+              {t('Назад к курсам')}
             </Link>
-            <Link to={`/courses/${courseId}/edit`} className={styles.backLink}>Содержание курса</Link>
-            <span className={styles.workspaceHint} title="Канва сохраняет рабочую схему и AI-предложения. Уроки и публикация доступны в содержании курса.">
+            <Link to={`/courses/${courseId}/edit`} className={styles.backLink}>
+              {t('Содержание курса')}
+            </Link>
+            <span
+              className={styles.workspaceHint}
+              title={t(
+                'Канва сохраняет рабочую схему и AI-предложения. Уроки и публикация доступны в содержании курса.',
+              )}
+            >
               {interactionMode === 'connect'
-                ? 'Режим связей: тяните от handle к handle.'
+                ? t('Режим связей: тяните от handle к handle.')
                 : interactionMode === 'hand'
-                  ? 'Режим навигации: канва перетаскивается как карта.'
-                  : 'Режим выбора: выделяйте, двигайте, редактируйте и группируйте узлы.'}
+                  ? t('Режим навигации: канва перетаскивается как карта.')
+                  : t('Режим выбора: выделяйте, двигайте, редактируйте и группируйте узлы.')}
             </span>
           </div>
 
@@ -182,25 +208,101 @@ function LerniumCanvasPage() {
           <div className={styles.workspaceStatusBar}>
             <div className={styles.workspaceStatusItem}>
               <CheckCircle2 size={14} />
-              {selectedNodeIds.length} узлов выбрано
+              {selectedNodeIds.length}
+              {' ' + t('узлов выбрано')}
             </div>
             <div className={styles.workspaceStatusItem}>
-              {selectedEdgeIds.length} связей выбрано
+              {selectedEdgeIds.length}
+              {' ' + t('связей выбрано')}
             </div>
-            <button type="button" className={styles.statusAction} disabled={!selectedNodeIds.some(id=>nodes.find(node=>node.id===id)?.parentId)} onClick={clearFrameForSelection}>
-              Убрать выбранные узлы из группы
+            <button
+              type='button'
+              className={styles.statusAction}
+              disabled={
+                !selectedNodeIds.some((id) => nodes.find((node) => node.id === id)?.parentId)
+              }
+              onClick={clearFrameForSelection}
+            >
+              {t('Убрать выбранные узлы из группы')}
             </button>
           </div>
 
-          {aiNotice && <div role="status" style={{padding: '12px 16px', background: '#20241a', color:'#dce7c0', borderRadius: 12}}>{aiNotice}</div>}
+          {aiNotice && (
+            <div
+              role='status'
+              style={{
+                padding: '12px 16px',
+                background: '#20241a',
+                color: '#dce7c0',
+                borderRadius: 12,
+              }}
+            >
+              {t(aiNotice)}
+            </div>
+          )}
           {lastError ? (
-            <div className={styles.errorBanner} role="alert">
+            <div className={styles.errorBanner} role='alert'>
               <AlertCircle size={16} />
-              {lastError}
+              {t(lastError)}
             </div>
           ) : null}
-          {lastErrorStatus===409&&<section className="request-state"><h2>Канва изменена в другом окне</h2><p>Ваш черновик сохранён на этом устройстве. Сравните его с текущей версией перед сохранением.</p><button onClick={async()=>{try{setConflict(await fetchCanvasWorkspace(courseId));}catch(error){useCanvasStore.setState({lastError:error instanceof Error?error.message:'Не удалось загрузить версию'});}}}>Сравнить версии</button></section>}
-          {conflict&&<section className="request-state"><h2>Сравнение канвы</h2><p>На сервере версия {conflict.version}: {conflict.snapshot?.nodes.length??0} узлов. В вашем черновике: {nodes.length}.</p><details><summary>Содержание актуальной версии</summary><pre style={{whiteSpace:'pre-wrap',maxHeight:300,overflow:'auto'}}>{JSON.stringify(conflict.snapshot,null,2)}</pre></details><p>Сохранение заменит текущую канву вашим черновиком. Если версия снова изменится, сервер остановит запись.</p><button disabled={isSaving} onClick={async()=>{adoptCanvasRevision(courseId,conflict.version);await saveCourse();setConflict(null);}}>Сохранить мой черновик вместо этой версии</button><button onClick={()=>setConflict(null)}>Продолжить сравнение позже</button></section>}
+          {lastErrorStatus === 409 && (
+            <section className='request-state'>
+              <h2>{t('Канва изменена в другом окне')}</h2>
+              <p>
+                {t(
+                  'Ваш черновик сохранён на этом устройстве. Сравните его с текущей версией перед сохранением.',
+                )}
+              </p>
+              <button
+                onClick={async () => {
+                  try {
+                    setConflict(await fetchCanvasWorkspace(courseId));
+                  } catch (error) {
+                    useCanvasStore.setState({
+                      lastError:
+                        error instanceof Error ? error.message : t('Не удалось загрузить версию'),
+                    });
+                  }
+                }}
+              >
+                {t('Сравнить версии')}
+              </button>
+            </section>
+          )}
+          {conflict && (
+            <section className='request-state'>
+              <h2>{t('Сравнение канвы')}</h2>
+              <p>
+                {t('На сервере версия') + ' '}
+                {conflict.version}: {conflict.snapshot?.nodes.length ?? 0}
+                {' ' + t('узлов. В вашем черновике:') + ' '}
+                {nodes.length}.
+              </p>
+              <details>
+                <summary>{t('Содержание актуальной версии')}</summary>
+                <pre style={{ whiteSpace: 'pre-wrap', maxHeight: 300, overflow: 'auto' }}>
+                  {JSON.stringify(conflict.snapshot, null, 2)}
+                </pre>
+              </details>
+              <p>
+                {t(
+                  'Сохранение заменит текущую канву вашим черновиком. Если версия снова изменится, сервер остановит запись.',
+                )}
+              </p>
+              <button
+                disabled={isSaving}
+                onClick={async () => {
+                  adoptCanvasRevision(courseId, conflict.version);
+                  await saveCourse();
+                  setConflict(null);
+                }}
+              >
+                {t('Сохранить мой черновик вместо этой версии')}
+              </button>
+              <button onClick={() => setConflict(null)}>{t('Продолжить сравнение позже')}</button>
+            </section>
+          )}
         </section>
 
         <CanvasSidebar

@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/useLocale';
 import { type CSSProperties } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Plus } from 'lucide-react';
@@ -8,6 +9,8 @@ import type { LerniumNode } from '@/types/canvas';
 import styles from '@/Components/canvas/styles.module.css';
 
 export function LerniumCanvasNode({ id, data, selected }: NodeProps<LerniumNode>) {
+  const { t } = useLocale();
+
   const createConnectedNode = useCanvasStore((state) => state.createConnectedNode);
   const definition = NODE_TYPE_DEFINITIONS[data.nodeType];
   const Icon = definition.icon;
@@ -26,39 +29,74 @@ export function LerniumCanvasNode({ id, data, selected }: NodeProps<LerniumNode>
   return (
     <div
       className={`${styles.canvasNode} ${selected ? styles.canvasNodeSelected : ''}`}
-      style={{
-        '--node-accent': definition.accent,
-        '--node-surface': definition.surface,
-      } as CSSProperties}
+      style={
+        {
+          '--node-accent': definition.accent,
+          '--node-surface': definition.surface,
+        } as CSSProperties
+      }
     >
-      <Handle className={styles.nodeHandle} type="target" position={Position.Left} />
-      <Handle className={styles.nodeHandle} type="target" position={Position.Top} />
+      <Handle className={styles.nodeHandle} type='target' position={Position.Left} />
+      <Handle className={styles.nodeHandle} type='target' position={Position.Top} />
 
       <div className={styles.nodeHeader}>
         <span className={styles.nodeTypeBadge}>
           <Icon size={14} />
-          {definition.label}
+          {t(definition.label)}
         </span>
         {data.aiState && data.aiState !== 'idle' ? (
           <span className={`${styles.nodeAiState} ${styles[`nodeAiState${data.aiState}`]}`}>
-            {data.aiState === 'loading' ? 'AI...' : data.aiState === 'generated' ? 'AI' : 'Ошибка'}
+            {data.aiState === 'loading'
+              ? 'AI...'
+              : data.aiState === 'generated'
+                ? 'AI'
+                : t('Ошибка')}
           </span>
         ) : null}
       </div>
 
       <div className={styles.nodeTitle}>{data.title}</div>
-      <div className={styles.nodeDescription}>{data.description || definition.description}</div>
+      <div className={styles.nodeDescription}>{data.description || t(definition.description)}</div>
 
       <div className={styles.nodeMetaRow}>
-        {data.status ? <span>{data.status}</span> : null}
-        {typeof data.duration === 'number' ? <span>{data.duration} мин</span> : null}
-        {data.difficulty ? <span>{data.difficulty}</span> : null}
+        {data.status ? (
+          <span>
+            {t(
+              (
+                { draft: 'Черновик', in_progress: 'В работе', ready: 'Готово' } as Record<
+                  string,
+                  string
+                >
+              )[data.status] ?? data.status,
+            )}
+          </span>
+        ) : null}
+        {typeof data.duration === 'number' ? (
+          <span>
+            {data.duration}
+            {' ' + t('мин')}
+          </span>
+        ) : null}
+        {data.difficulty ? (
+          <span>
+            {t(
+              (
+                {
+                  beginner: 'Начальный',
+                  intermediate: 'Средний',
+                  advanced: 'Продвинутый',
+                } as Record<string, string>
+              )[data.difficulty] ?? data.difficulty,
+            )}
+          </span>
+        ) : null}
       </div>
 
       {selected ? (
         <button
-          type="button"
+          type='button'
           className={styles.nodeQuickAdd}
+          aria-label={t('Добавить связанный узел')}
           onClick={(event) => {
             event.stopPropagation();
             createConnectedNode(id, data.nodeType === 'module' ? 'lesson' : 'practice');
@@ -68,8 +106,8 @@ export function LerniumCanvasNode({ id, data, selected }: NodeProps<LerniumNode>
         </button>
       ) : null}
 
-      <Handle className={styles.nodeHandle} type="source" position={Position.Right} />
-      <Handle className={styles.nodeHandle} type="source" position={Position.Bottom} />
+      <Handle className={styles.nodeHandle} type='source' position={Position.Right} />
+      <Handle className={styles.nodeHandle} type='source' position={Position.Bottom} />
     </div>
   );
 }

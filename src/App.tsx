@@ -34,6 +34,7 @@ const AssignmentsPage = lazy(() => import('./Pages/TeamLearning/AssignmentsPage'
 const ProgramsPage = lazy(() => import('./Pages/TeamLearning/ProgramsPage'));
 const TeamSettingsPage = lazy(() => import('./Pages/TeamLearning/TeamSettingsPage'));
 const LearningAnalytics = lazy(() => import('./Pages/TeamLearning/LearningAnalytics'));
+const SupportAccessPage = lazy(() => import('./Pages/TeamLearning/SupportAccessPage'));
 
 function AppFallback() {
   const {t}=useLocale();
@@ -92,6 +93,7 @@ function App() {
           <Route path="/assignments" element={<ProtectedRoute><AssignmentsPage /></ProtectedRoute>} />
           <Route path="/programs" element={<ProtectedRoute><ProgramsPage /></ProtectedRoute>} />
           <Route path="/team-settings" element={<ProtectedRoute><TeamSettingsPage /></ProtectedRoute>} />
+          <Route path="/support-access" element={<ProtectedRoute><SupportAccessPage /></ProtectedRoute>} />
           <Route path="/learning-analytics" element={<ProtectedRoute><LearningAnalytics /></ProtectedRoute>} />
           <Route path="/invite" element={<InvitePage />} />
           <Route path="*" element={<StatusPage />} />

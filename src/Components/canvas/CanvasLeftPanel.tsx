@@ -1,3 +1,4 @@
+import { useLocale } from '@/i18n/useLocale';
 import { Hand, Link2, MousePointer2, PlusSquare, SquareStack } from 'lucide-react';
 
 import { PRIMARY_NODE_TYPES, NODE_TYPE_DEFINITIONS } from '@/utils/canvasAdapters';
@@ -17,24 +18,29 @@ export function CanvasLeftPanel({
   onAddNode,
   onCreateFrame,
 }: CanvasLeftPanelProps) {
+  const { t } = useLocale();
+
   return (
     <aside className={styles.leftPanel}>
       <div className={styles.leftPanelSection}>
-        <div className={styles.sectionCaption}>Режим</div>
+        <div className={styles.sectionCaption}>{t('Режим')}</div>
         <div className={styles.modeRail}>
           {[
-            { id: 'select', label: 'Выбор', icon: MousePointer2 },
-            { id: 'connect', label: 'Связи', icon: Link2 },
-            { id: 'hand', label: 'Навигация', icon: Hand },
+            { id: 'select', label: t('Выбор'), icon: MousePointer2 },
+            { id: 'connect', label: t('Связи'), icon: Link2 },
+            { id: 'hand', label: t('Навигация'), icon: Hand },
           ].map((item) => {
             const Icon = item.icon;
 
             return (
               <button
                 key={item.id}
-                type="button"
-                className={interactionMode === item.id ? styles.modeRailButtonActive : styles.modeRailButton}
+                type='button'
+                className={
+                  interactionMode === item.id ? styles.modeRailButtonActive : styles.modeRailButton
+                }
                 onClick={() => onModeChange(item.id as CanvasInteractionMode)}
+                aria-pressed={interactionMode === item.id}
               >
                 <Icon size={15} />
                 {item.label}
@@ -45,7 +51,7 @@ export function CanvasLeftPanel({
       </div>
 
       <div className={styles.leftPanelSection}>
-        <div className={styles.sectionCaption}>Добавить узел</div>
+        <div className={styles.sectionCaption}>{t('Добавить узел')}</div>
         <div className={styles.paletteGrid}>
           {PRIMARY_NODE_TYPES.map((nodeType) => {
             const definition = NODE_TYPE_DEFINITIONS[nodeType];
@@ -54,12 +60,12 @@ export function CanvasLeftPanel({
             return (
               <button
                 key={nodeType}
-                type="button"
+                type='button'
                 className={styles.paletteButton}
                 onClick={() => onAddNode(nodeType)}
               >
                 <Icon size={16} />
-                <span>{definition.label}</span>
+                <span>{t(definition.label)}</span>
               </button>
             );
           })}
@@ -67,13 +73,14 @@ export function CanvasLeftPanel({
       </div>
 
       <div className={styles.leftPanelSection}>
-        <button type="button" className={styles.utilityButton} onClick={onCreateFrame}>
+        <button type='button' className={styles.utilityButton} onClick={onCreateFrame}>
           <SquareStack size={16} />
-          Создать frame из выделения
+          {t('Создать frame из выделения')}
         </button>
         <div className={styles.leftPanelHint}>
           <PlusSquare size={14} />
-          Узел можно добавить также через контекстное меню и горячую клавишу <kbd>N</kbd>.
+          {t('Узел можно добавить также через контекстное меню и горячую клавишу') + ' '}
+          <kbd>N</kbd>.
         </div>
       </div>
     </aside>

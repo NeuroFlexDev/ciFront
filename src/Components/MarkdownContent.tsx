@@ -13,7 +13,7 @@ export function ProtectedImage({ src, alt }: { src?: string; alt?: string }) {
   const [blob, setBlob] = useState<string>();
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
-  const protectedPath = src?.match(/^(?:\/api)?(\/images\/\d+\/content)$/)?.[1];
+  const protectedPath = src?.match(/^(?:\/api)?(\/(?:images\/\d+\/content|support\/grants\/\d+\/images\/\d+\/content))$/)?.[1];
   useEffect(() => {
     if (!protectedPath) return;
     let active = true;

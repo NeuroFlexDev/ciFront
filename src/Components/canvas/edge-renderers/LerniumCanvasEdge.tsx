@@ -1,15 +1,12 @@
-import {
-  BaseEdge,
-  EdgeLabelRenderer,
-  getBezierPath,
-  type EdgeProps,
-} from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from '@xyflow/react';
+import { useLocale } from '@/i18n/useLocale';
 
 import { EDGE_TYPE_DEFINITIONS } from '@/utils/canvasAdapters';
 import type { LerniumEdge } from '@/types/canvas';
 import styles from '@/Components/canvas/styles.module.css';
 
 export function LerniumCanvasEdge(props: EdgeProps<LerniumEdge>) {
+  const { t } = useLocale();
   const [path, labelX, labelY] = getBezierPath(props);
   const definition = EDGE_TYPE_DEFINITIONS[props.data?.edgeType ?? 'contains'];
 
@@ -24,7 +21,9 @@ export function LerniumCanvasEdge(props: EdgeProps<LerniumEdge>) {
             color: definition.stroke,
           }}
         >
-          {props.data?.label ?? definition.label}
+          {!props.data?.label || props.data.label === definition.label
+            ? t(definition.label)
+            : props.data.label}
         </div>
       </EdgeLabelRenderer>
     </>
