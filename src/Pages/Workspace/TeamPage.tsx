@@ -1,3 +1,4 @@
+import { useRoleNames } from "@/Pages/TeamLearning/useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { RequestError, LoadingState } from "@/Components/RequestState";
 import { useDurableState } from "@/hooks/useDurableState";
@@ -21,6 +22,7 @@ type Team = {
 };
 export default function TeamPage() {
   const { t } = useLocale();
+  const roleName = useRoleNames();
 
   const { user } = useAuth();
   const [team, setTeam] = useState<Team | null>(null);
@@ -154,12 +156,12 @@ export default function TeamPage() {
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                   >
-                    <option value="member">{t("Участник")}</option>
-                    <option value="author">{t("Автор")}</option>
-                    <option value="reviewer">{t("Проверяющий")}</option>
-                    <option value="manager">{t("Руководитель")}</option>
+                    <option value="member">{roleName("member")}</option>
+                    <option value="author">{roleName("author")}</option>
+                    <option value="reviewer">{roleName("reviewer")}</option>
+                    <option value="manager">{roleName("manager")}</option>
                     {user?.organization_role === "owner" && (
-                      <option value="admin">{t("Администратор")}</option>
+                      <option value="admin">{roleName("admin")}</option>
                     )}
                   </select>
                 </label>
@@ -214,14 +216,7 @@ export default function TeamPage() {
                   <h2>{m.full_name || t("Без имени")}</h2>
                   <p>{m.email}</p>
                   <span className={styles.badge}>
-                    {{
-                      owner: t("Владелец"),
-                      admin: t("Администратор"),
-                      author: t("Автор"),
-                      reviewer: t("Проверяющий"),
-                      manager: t("Руководитель"),
-                      member: t("Участник"),
-                    }[m.organization_role] ?? m.organization_role}
+                    {roleName(m.organization_role)}
                   </span>
                   <p>
                     {m.is_active

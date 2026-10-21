@@ -539,4 +539,34 @@ export const learningEnglish: Record<string, string> = {
   "Новые вопросы помощнику сейчас отключены правилами организации. История диалога и ваши учебные ответы сохранены.":
     "New assistant questions are currently disabled by organization rules. Your conversation history and learning answers are preserved.",
   "История помощника": "Assistant history",
+  "Правила этого назначения": "Rules for this assignment",
+  "Версия правил организации: {v0}. Исключения сохраняются только в новом назначении; старые результаты не меняются.":
+    "Organization rules version: {v0}. Overrides apply only to the new assignment; earlier results remain unchanged.",
+  "Попыток: {v0} · проходной балл: {v1}%":
+    "Attempts: {v0} · passing score: {v1}%",
+  "Организация больше не разрешает часть сохранённых исключений. Уберите их перед назначением.":
+    "Your organization no longer permits some saved overrides. Remove them before assigning.",
+  "Убрать недоступные исключения": "Remove unavailable overrides",
+  "Для этого пространства индивидуальные исключения не разрешены.":
+    "Individual overrides are not permitted in this workspace.",
+  "После успешной попытки": "After a passing attempt",
+  "Название роли для английского интерфейса":
+    "Role label for the English interface",
+  "Названия дополнительных полей должны быть заполнены и не повторяться.":
+    "Additional field names must be filled in and unique.",
+  "Дополнительные учебные атрибуты": "Additional learning attributes",
+  "Например: направление подготовки, квалификация или рабочая площадка. Эти поля не изменяют права доступа.":
+    "For example: study area, qualification or work site. These fields do not change permissions.",
+  "Название поля": "Field name",
+  Значение: "Value",
+  "Удалить поле": "Remove field",
+  "Добавить поле": "Add field",
+  Тренер: "Trainer",
+  Сотрудник: "Employee",
+  Преподаватель: "Teacher",
+  Методист: "Learning reviewer",
+  Студент: "Student",
+  Ведущий: "Instructor",
+  Слушатель: "Learner",
+  "Обновить правила организации": "Refresh organization rules",
 };

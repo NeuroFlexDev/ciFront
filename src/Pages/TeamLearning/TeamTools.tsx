@@ -1,5 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { RequestError } from "@/Components/RequestState";
 import s from "../Learning/learning.module.css";
@@ -28,12 +28,15 @@ export function useTeamAction() {
   const { t } = useLocale();
 
   const [busy, setBusy] = useState(false);
+  const inFlight = useRef(false);
   const [error, setError] = useState<unknown>(null);
   const [notice, setNotice] = useState("");
   const run = async (
     action: () => Promise<unknown>,
     message = t("Изменения сохранены"),
   ) => {
+    if (inFlight.current) return false;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     setNotice("");
@@ -45,6 +48,7 @@ export function useTeamAction() {
       setError(e);
       return false;
     } finally {
+      inFlight.current = false;
       setBusy(false);
     }
   };

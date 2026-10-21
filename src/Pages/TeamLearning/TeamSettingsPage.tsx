@@ -118,6 +118,7 @@ function SettingsForm({
             const clean = { ...draft, expected_revision: r.data.revision };
             setDraft(clean);
             clear(clean);
+            window.dispatchEvent(new Event("lernium-team-settings-changed"));
             await reload();
           } catch (e) {
             if (e instanceof ApiError && e.status === 409) await reload();
@@ -126,290 +127,330 @@ function SettingsForm({
         }, t("Настройки сохранены. Уже выданные назначения используют зафиксированные правила."));
       }}
     >
-      {conflict && (
-        <section className={s.conflict}>
-          <h3>{t("Настройки изменились")}</h3>
-          <p>
-            {t("Ваш черновик относится к редакции") + " "}
-            {draft.expected_revision}
-            {t(". На сервере редакция") + " "}
-            {settings.revision}.
-          </p>
-          <details>
-            <summary>{t("Сравнить текущие настройки сервера")}</summary>
-            <pre>{JSON.stringify(initial, null, 2)}</pre>
-          </details>
-          <div className={s.row}>
-            <button
-              type="button"
-              className={s.secondary}
-              onClick={() => setDraft(initial)}
-            >
-              {t("Взять настройки сервера")}
-            </button>
-            <button
-              type="button"
-              className={s.secondary}
-              disabled={!canManage}
-              onClick={() =>
-                setDraft({ ...draft, expected_revision: settings.revision })
-              }
-            >
-              {t("Применить мои после сравнения")}
-            </button>
-          </div>
-        </section>
-      )}
-      <section className={s.card}>
-        <h2>{t("Профиль организации")}</h2>
-        <div className={s.formGrid}>
-          <label className={s.field}>
-            {t("Тип учебной среды")}
-            <select
-              disabled={!canManage}
-              value={draft.profile}
-              onChange={(e) => setDraft({ ...draft, profile: e.target.value })}
-            >
-              {Object.entries(profileLabels).map(([v, n]) => (
-                <option key={v} value={v}>
-                  {t(String(n))}
-                </option>
+      <fieldset
+        disabled={action.busy}
+        style={{
+          border: 0,
+          padding: 0,
+          margin: 0,
+          minWidth: 0,
+          display: "contents",
+        }}
+      >
+        {conflict && (
+          <section className={s.conflict}>
+            <h3>{t("Настройки изменились")}</h3>
+            <p>
+              {t("Ваш черновик относится к редакции") + " "}
+              {draft.expected_revision}
+              {t(". На сервере редакция") + " "}
+              {settings.revision}.
+            </p>
+            <details>
+              <summary>{t("Сравнить текущие настройки сервера")}</summary>
+              <pre>{JSON.stringify(initial, null, 2)}</pre>
+            </details>
+            <div className={s.row}>
+              <button
+                type="button"
+                className={s.secondary}
+                onClick={() => setDraft(initial)}
+              >
+                {t("Взять настройки сервера")}
+              </button>
+              <button
+                type="button"
+                className={s.secondary}
+                disabled={!canManage}
+                onClick={() =>
+                  setDraft({ ...draft, expected_revision: settings.revision })
+                }
+              >
+                {t("Применить мои после сравнения")}
+              </button>
+            </div>
+          </section>
+        )}
+        <section className={s.card}>
+          <h2>{t("Профиль организации")}</h2>
+          <div className={s.formGrid}>
+            <label className={s.field}>
+              {t("Тип учебной среды")}
+              <select
+                disabled={!canManage}
+                value={draft.profile}
+                onChange={(e) =>
+                  setDraft({ ...draft, profile: e.target.value })
+                }
+              >
+                {Object.entries(profileLabels).map(([v, n]) => (
+                  <option key={v} value={v}>
+                    {t(String(n))}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className={s.field}>
+              <span>{t("Языки материалов и приглашений")}</span>
+              {[
+                ["ru", t("Русский")],
+                ["en", "English"],
+              ].map(([code, label]) => (
+                <label className={s.check} key={code}>
+                  <input
+                    type="checkbox"
+                    disabled={
+                      !canManage ||
+                      (draft.languages.length === 1 &&
+                        draft.languages.includes(code))
+                    }
+                    checked={draft.languages.includes(code)}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        languages: e.target.checked
+                          ? [...draft.languages, code]
+                          : draft.languages.filter((l) => l !== code),
+                      })
+                    }
+                  />
+                  {t(String(label))}
+                </label>
               ))}
-            </select>
-          </label>
-          <div className={s.field}>
-            <span>{t("Языки материалов и приглашений")}</span>
-            {[
-              ["ru", t("Русский")],
-              ["en", "English"],
-            ].map(([code, label]) => (
-              <label className={s.check} key={code}>
+            </div>
+          </div>
+          <h3>{t("Названия ролей в вашей организации")}</h3>
+          <div className={s.formGrid}>
+            {Object.entries(roles).map(([key, title]) => (
+              <label key={key} className={s.field}>
+                {t(String(title))} · RU
                 <input
-                  type="checkbox"
-                  disabled={
-                    !canManage ||
-                    (draft.languages.length === 1 &&
-                      draft.languages.includes(code))
+                  disabled={!canManage}
+                  maxLength={100}
+                  value={
+                    draft.role_labels[`${key}_ru`] ??
+                    draft.role_labels[key] ??
+                    ""
                   }
-                  checked={draft.languages.includes(code)}
+                  placeholder={t(String(title))}
                   onChange={(e) =>
                     setDraft({
                       ...draft,
-                      languages: e.target.checked
-                        ? [...draft.languages, code]
-                        : draft.languages.filter((l) => l !== code),
+                      role_labels: {
+                        ...draft.role_labels,
+                        [`${key}_ru`]: e.target.value,
+                      },
                     })
                   }
                 />
-                {t(String(label))}
+              </label>
+            ))}
+            {Object.entries(roles).map(([key, title]) => (
+              <label key={`${key}_en`} className={s.field}>
+                {t(String(title))} · EN
+                <input
+                  disabled={!canManage}
+                  maxLength={100}
+                  value={draft.role_labels[`${key}_en`] ?? ""}
+                  placeholder={t("Название роли для английского интерфейса")}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      role_labels: {
+                        ...draft.role_labels,
+                        [`${key}_en`]: event.target.value,
+                      },
+                    })
+                  }
+                />
               </label>
             ))}
           </div>
-        </div>
-        <h3>{t("Названия ролей в вашей организации")}</h3>
-        <div className={s.formGrid}>
-          {Object.entries(roles).map(([key, title]) => (
-            <label key={key} className={s.field}>
-              {t(String(title))}
+        </section>
+        <section className={s.card}>
+          <h2>{t("Правила новых назначений")}</h2>
+          <p className={s.muted}>
+            {t(
+              "При назначении участник получает конкретную опубликованную версию и копию правил. Изменение этих настроек не меняет его уже начатую попытку.",
+            )}
+          </p>
+          <div className={s.formGrid}>
+            <label className={s.field}>
+              {t("Максимум попыток")}
               <input
                 disabled={!canManage}
-                maxLength={100}
-                value={draft.role_labels[key] ?? ""}
-                placeholder={t(String(title))}
-                onChange={(e) =>
-                  setDraft({
-                    ...draft,
-                    role_labels: {
-                      ...draft.role_labels,
-                      [key]: e.target.value,
-                    },
-                  })
-                }
-              />
-            </label>
-          ))}
-        </div>
-      </section>
-      <section className={s.card}>
-        <h2>{t("Правила новых назначений")}</h2>
-        <p className={s.muted}>
-          {t(
-            "При назначении участник получает конкретную опубликованную версию и копию правил. Изменение этих настроек не меняет его уже начатую попытку.",
-          )}
-        </p>
-        <div className={s.formGrid}>
-          <label className={s.field}>
-            {t("Максимум попыток")}
-            <input
-              disabled={!canManage}
-              type="number"
-              required
-              min={1}
-              max={100}
-              value={draft.rules.max_attempts}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  rules: {
-                    ...draft.rules,
-                    max_attempts: Number(e.target.value),
-                  },
-                })
-              }
-            />
-          </label>
-          <label className={s.field}>
-            {t("Проходной результат, %")}
-            <input
-              disabled={!canManage}
-              type="number"
-              required
-              min={0}
-              max={100}
-              step="0.1"
-              value={draft.rules.pass_percent}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  rules: {
-                    ...draft.rules,
-                    pass_percent: Number(e.target.value),
-                  },
-                })
-              }
-            />
-          </label>
-          <label className={s.field}>
-            {t("Когда показывать правильные ответы")}
-            <select
-              disabled={!canManage}
-              value={draft.rules.reveal_answers}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  rules: {
-                    ...draft.rules,
-                    reveal_answers: e.target
-                      .value as typeof draft.rules.reveal_answers,
-                  },
-                })
-              }
-            >
-              <option value="never">{t("Не показывать")}</option>
-              <option value="after_pass">
-                {t("После достижения проходного результата")}
-              </option>
-              <option value="after_final_attempt">
-                {t("После последней попытки")}
-              </option>
-            </select>
-          </label>
-        </div>
-        <div className={s.stack} style={{ marginTop: 24 }}>
-          {Object.entries(boolRules).map(([raw, label]) => {
-            const key = raw as keyof typeof boolRules;
-            const unavailable =
-              (key === "allow_ai_grading" && !settings.features.ai_grading) ||
-              (key === "allow_ai_assistant" &&
-                settings.features.assistant === false);
-            return (
-              <label key={key} className={s.check}>
-                <input
-                  disabled={!canManage || unavailable}
-                  type="checkbox"
-                  checked={draft.rules[key]}
-                  onChange={(e) =>
-                    setDraft({
-                      ...draft,
-                      rules: { ...draft.rules, [key]: e.target.checked },
-                    })
-                  }
-                />
-                <span>
-                  {t(String(label))}
-                  {unavailable && (
-                    <small className={s.caption}>
-                      {" "}
-                      {t("· Функция не включена в поставку")}
-                    </small>
-                  )}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-        <h3>{t("Что разрешено менять в отдельном назначении")}</h3>
-        <div className={s.formGrid}>
-          {Object.entries(overrideNames).map(([key, title]) => (
-            <label key={key} className={s.check}>
-              <input
-                type="checkbox"
-                disabled={!canManage}
-                checked={draft.rules.assignment_overrides.includes(key)}
+                type="number"
+                required
+                min={1}
+                max={100}
+                value={draft.rules.max_attempts}
                 onChange={(e) =>
                   setDraft({
                     ...draft,
                     rules: {
                       ...draft.rules,
-                      assignment_overrides: e.target.checked
-                        ? [...draft.rules.assignment_overrides, key]
-                        : draft.rules.assignment_overrides.filter(
-                            (v) => v !== key,
-                          ),
+                      max_attempts: Number(e.target.value),
                     },
                   })
                 }
               />
-              {t(String(title))}
             </label>
-          ))}
-        </div>
-      </section>
-      <section className={s.card}>
-        <h2>{t("Учебный контекст для AI")}</h2>
-        <p className={s.muted}>
-          {t(
-            "Контекст организации помогает учитывать аудиторию и терминологию при работе с материалами. Он не заменяет критерии оценки.",
-          )}
-        </p>
-        <div className={s.stack}>
-          {[
-            ["audience", t("Кого обучаем")],
-            ["terminology", t("Терминология и стиль")],
-            ["goals", t("Учебные цели")],
-            ["constraints", t("Требования к содержанию")],
-            ["specialist_role", t("Профиль специалиста")],
-            ["industry", t("Отрасль организации")],
-          ].map(([key, label]) => (
-            <label key={key} className={s.field}>
-              {t(String(label))}
-              <textarea
+            <label className={s.field}>
+              {t("Проходной результат, %")}
+              <input
                 disabled={!canManage}
-                maxLength={2000}
-                value={draft.ai_context[key] ?? ""}
+                type="number"
+                required
+                min={0}
+                max={100}
+                step="0.1"
+                value={draft.rules.pass_percent}
                 onChange={(e) =>
                   setDraft({
                     ...draft,
-                    ai_context: { ...draft.ai_context, [key]: e.target.value },
+                    rules: {
+                      ...draft.rules,
+                      pass_percent: Number(e.target.value),
+                    },
                   })
                 }
               />
             </label>
-          ))}
-        </div>
-      </section>
-      <ActionStatus action={action} />
-      {canManage ? (
-        <button className={s.primary} disabled={action.busy || conflict}>
-          {t("Сохранить настройки")}
-        </button>
-      ) : (
-        <p className={s.notice}>
-          {t(
-            "Вы видите действующие правила. Изменить их может администратор организации.",
-          )}
-        </p>
-      )}
+            <label className={s.field}>
+              {t("Когда показывать правильные ответы")}
+              <select
+                disabled={!canManage}
+                value={draft.rules.reveal_answers}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    rules: {
+                      ...draft.rules,
+                      reveal_answers: e.target
+                        .value as typeof draft.rules.reveal_answers,
+                    },
+                  })
+                }
+              >
+                <option value="never">{t("Не показывать")}</option>
+                <option value="after_pass">
+                  {t("После достижения проходного результата")}
+                </option>
+                <option value="after_final_attempt">
+                  {t("После последней попытки")}
+                </option>
+              </select>
+            </label>
+          </div>
+          <div className={s.stack} style={{ marginTop: 24 }}>
+            {Object.entries(boolRules).map(([raw, label]) => {
+              const key = raw as keyof typeof boolRules;
+              const unavailable =
+                (key === "allow_ai_grading" && !settings.features.ai_grading) ||
+                (key === "allow_ai_assistant" &&
+                  settings.features.assistant === false);
+              return (
+                <label key={key} className={s.check}>
+                  <input
+                    disabled={!canManage || unavailable}
+                    type="checkbox"
+                    checked={draft.rules[key]}
+                    onChange={(e) =>
+                      setDraft({
+                        ...draft,
+                        rules: { ...draft.rules, [key]: e.target.checked },
+                      })
+                    }
+                  />
+                  <span>
+                    {t(String(label))}
+                    {unavailable && (
+                      <small className={s.caption}>
+                        {" "}
+                        {t("· Функция не включена в поставку")}
+                      </small>
+                    )}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          <h3>{t("Что разрешено менять в отдельном назначении")}</h3>
+          <div className={s.formGrid}>
+            {Object.entries(overrideNames).map(([key, title]) => (
+              <label key={key} className={s.check}>
+                <input
+                  type="checkbox"
+                  disabled={!canManage}
+                  checked={draft.rules.assignment_overrides.includes(key)}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      rules: {
+                        ...draft.rules,
+                        assignment_overrides: e.target.checked
+                          ? [...draft.rules.assignment_overrides, key]
+                          : draft.rules.assignment_overrides.filter(
+                              (v) => v !== key,
+                            ),
+                      },
+                    })
+                  }
+                />
+                {t(String(title))}
+              </label>
+            ))}
+          </div>
+        </section>
+        <section className={s.card}>
+          <h2>{t("Учебный контекст для AI")}</h2>
+          <p className={s.muted}>
+            {t(
+              "Контекст организации помогает учитывать аудиторию и терминологию при работе с материалами. Он не заменяет критерии оценки.",
+            )}
+          </p>
+          <div className={s.stack}>
+            {[
+              ["audience", t("Кого обучаем")],
+              ["terminology", t("Терминология и стиль")],
+              ["goals", t("Учебные цели")],
+              ["constraints", t("Требования к содержанию")],
+              ["specialist_role", t("Профиль специалиста")],
+              ["industry", t("Отрасль организации")],
+            ].map(([key, label]) => (
+              <label key={key} className={s.field}>
+                {t(String(label))}
+                <textarea
+                  disabled={!canManage}
+                  maxLength={2000}
+                  value={draft.ai_context[key] ?? ""}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      ai_context: {
+                        ...draft.ai_context,
+                        [key]: e.target.value,
+                      },
+                    })
+                  }
+                />
+              </label>
+            ))}
+          </div>
+        </section>
+        <ActionStatus action={action} />
+        {canManage ? (
+          <button className={s.primary} disabled={action.busy || conflict}>
+            {t("Сохранить настройки")}
+          </button>
+        ) : (
+          <p className={s.notice}>
+            {t(
+              "Вы видите действующие правила. Изменить их может администратор организации.",
+            )}
+          </p>
+        )}
+      </fieldset>
     </form>
   );
 }

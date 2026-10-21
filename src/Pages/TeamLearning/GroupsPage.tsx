@@ -1,3 +1,4 @@
+import { useRoleNames } from "./useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -16,11 +17,12 @@ import {
   type Team,
   type TeamMember,
   initials,
-  roles,
 } from "./types";
 import s from "../Learning/learning.module.css";
 
 export default function GroupsPage() {
+  const roleName = useRoleNames();
+
   const { t } = useLocale();
 
   const team = useLearningData<Team>("/team");
@@ -183,11 +185,7 @@ export default function GroupsPage() {
                           <p className={s.muted}>{m.email}</p>
                           <p>
                             {people.data?.items.find((p) => p.user_id === m.id)
-                              ?.position ||
-                              t(
-                                roles[m.organization_role] ??
-                                  String(m.organization_role),
-                              )}
+                              ?.position || roleName(m.organization_role)}
                           </p>
                           <span className={s.badge}>
                             {m.is_active ? t("Активен") : t("Доступ отозван")}
@@ -317,6 +315,8 @@ function GroupForm({
   reload: () => Promise<void>;
   onArchive: () => void;
 }) {
+  const roleName = useRoleNames();
+
   const { t } = useLocale();
 
   const [draft, setDraft, clear] = useDurableState(
@@ -459,7 +459,7 @@ function GroupForm({
             <p key={g.id}>
               {members.find((m) => m.id === g.user_id)?.full_name ||
                 t("Участник {v0}", { v0: g.user_id })}{" "}
-              · {t(roles[g.role] ?? String(g.role))}
+              · {roleName(g.role)}
             </p>
           ))}
           <p className={s.caption}>
@@ -644,7 +644,7 @@ function Departments({
   );
 }
 
-function PersonForm({
+export function PersonForm({
   member,
   person,
   departments,
@@ -669,9 +669,13 @@ function PersonForm({
       department_id: person?.department_id ? String(person.department_id) : "",
       external_id: person?.external_id ?? "",
       attributes: person?.attributes ?? {},
+      attributeRows: undefined as { key: string; value: string }[] | undefined,
     },
   );
   const action = useTeamAction();
+  const attributeRows =
+    draft.attributeRows ??
+    Object.entries(draft.attributes).map(([key, value]) => ({ key, value }));
   return (
     <section className={s.card} style={{ marginTop: 28 }}>
       <h2>{member.full_name || member.email}</h2>
@@ -680,8 +684,23 @@ function PersonForm({
         onSubmit={(e) => {
           e.preventDefault();
           void action.run(async () => {
+            if (
+              attributeRows.some((row) => !row.key.trim()) ||
+              new Set(attributeRows.map((row) => row.key.trim())).size !==
+                attributeRows.length
+            )
+              throw new Error(
+                t(
+                  "Названия дополнительных полей должны быть заполнены и не повторяться.",
+                ),
+              );
+            const { attributeRows: rows, ...payload } = draft;
+            void rows;
             await api.put(`/team/people/${member.id}`, {
-              ...draft,
+              ...payload,
+              attributes: Object.fromEntries(
+                attributeRows.map((row) => [row.key.trim(), row.value]),
+              ),
               department_id: draft.department_id
                 ? Number(draft.department_id)
                 : null,
@@ -696,7 +715,7 @@ function PersonForm({
           <label className={s.field}>
             {t("Должность")}
             <input
-              disabled={!canManage}
+              disabled={!canManage || action.busy}
               maxLength={200}
               value={draft.position}
               onChange={(e) => setDraft({ ...draft, position: e.target.value })}
@@ -705,7 +724,7 @@ function PersonForm({
           <label className={s.field}>
             {t("Подразделение")}
             <select
-              disabled={!canManage}
+              disabled={!canManage || action.busy}
               value={draft.department_id}
               onChange={(e) =>
                 setDraft({ ...draft, department_id: e.target.value })
@@ -722,7 +741,7 @@ function PersonForm({
           <label className={s.field}>
             {t("Идентификатор в организации")}
             <input
-              disabled={!canManage}
+              disabled={!canManage || action.busy}
               maxLength={200}
               value={draft.external_id}
               onChange={(e) =>
@@ -731,6 +750,86 @@ function PersonForm({
             />
           </label>
         </div>
+        <fieldset
+          disabled={!canManage || action.busy}
+          style={{ border: 0, padding: 0, margin: 0 }}
+        >
+          <legend>{t("Дополнительные учебные атрибуты")}</legend>
+          <p className={s.muted}>
+            {t(
+              "Например: направление подготовки, квалификация или рабочая площадка. Эти поля не изменяют права доступа.",
+            )}
+          </p>
+          {attributeRows.map((row, index) => (
+            <div className={s.formGrid} key={index}>
+              <label className={s.field}>
+                {t("Название поля")}
+                <input
+                  required
+                  maxLength={80}
+                  value={row.key}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      attributeRows: attributeRows.map((item, i) =>
+                        i === index
+                          ? { ...item, key: event.target.value }
+                          : item,
+                      ),
+                    })
+                  }
+                />
+              </label>
+              <label className={s.field}>
+                {t("Значение")}
+                <input
+                  maxLength={2000}
+                  value={row.value}
+                  onChange={(event) =>
+                    setDraft({
+                      ...draft,
+                      attributeRows: attributeRows.map((item, i) =>
+                        i === index
+                          ? { ...item, value: event.target.value }
+                          : item,
+                      ),
+                    })
+                  }
+                />
+              </label>
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      attributeRows: attributeRows.filter(
+                        (_, i) => i !== index,
+                      ),
+                    })
+                  }
+                >
+                  {t("Удалить поле")} {index + 1}
+                </button>
+              )}
+            </div>
+          ))}
+          {canManage && (
+            <button
+              type="button"
+              className={s.secondary}
+              disabled={attributeRows.length >= 50}
+              onClick={() =>
+                setDraft({
+                  ...draft,
+                  attributeRows: [...attributeRows, { key: "", value: "" }],
+                })
+              }
+            >
+              {t("Добавить поле")}
+            </button>
+          )}
+        </fieldset>
         {canManage && (
           <button className={s.primary} disabled={action.busy}>
             {t("Сохранить карточку")}
@@ -761,6 +860,8 @@ function Roles({
   departments: Department[];
   own: boolean;
 }) {
+  const roleName = useRoleNames();
+
   const { t } = useLocale();
 
   const grants = useLearningData<{ role: string; items: RoleGrant[] }>(
@@ -795,10 +896,7 @@ function Roles({
       <h3>{t("Права доступа")}</h3>
       <p className={s.muted}>
         {t("Основная роль:") + " "}
-        {t(
-          roles[grants.data?.role ?? member.organization_role] ??
-            String(grants.data?.role ?? member.organization_role),
-        )}
+        {roleName(grants.data?.role ?? member.organization_role)}
         {t(
           ". Автор работает с содержанием; проверяющий оценивает работы; руководитель видит результаты в своей области.",
         )}
@@ -818,7 +916,7 @@ function Roles({
       {grants.data?.items.map((g) => (
         <div className={s.spread} key={g.id}>
           <span>
-            {t(roles[g.role] ?? String(g.role))} ·{" "}
+            {roleName(g.role)} ·{" "}
             {scopeLabel(g) || `${g.scope_type} ${g.scope_id}`}
           </span>
           <button
@@ -889,7 +987,7 @@ function Roles({
                   ...(permission.data?.can_manage_admins ? ["admin"] : []),
                 ].map((r) => (
                   <option key={r} value={r}>
-                    {t(roles[r] ?? String(r))}
+                    {roleName(r)}
                   </option>
                 ))}
               </select>

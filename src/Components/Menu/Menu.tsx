@@ -1,3 +1,4 @@
+import { useRoleNames } from "@/Pages/TeamLearning/useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
@@ -11,16 +12,9 @@ type Permissions = {
   can_review: boolean;
   can_report: boolean;
 };
-const roleLabels: Record<string, string> = {
-  owner: "Владелец организации",
-  admin: "Администратор",
-  author: "Автор",
-  reviewer: "Проверяющий",
-  manager: "Руководитель",
-  member: "Участник",
-};
 export default function Menu() {
   const { t, locale, setLocale } = useLocale();
+  const roleName = useRoleNames();
 
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -82,11 +76,11 @@ export default function Menu() {
           ["/team-settings", t("Настройки организации")],
         ]
       : []),
+    ...(permissions?.can_manage_team
+      ? [["/integrations", t("Интеграции")]]
+      : []),
     ...(user?.organization_role === "owner"
-      ? [
-          ["/integrations", t("Интеграции")],
-          ["/billing", t("Договор и оплата")],
-        ]
+      ? [["/billing", t("Договор и оплата")]]
       : []),
     ...(user?.is_admin ? [["/admin", t("Управление платформой")]] : []),
   ];
@@ -120,10 +114,9 @@ export default function Menu() {
             <span className={styles.userRole}>
               {user?.is_admin
                 ? t("Оператор платформы")
-                : t(
-                    roleLabels[user?.organization_role ?? ""] ??
-                      "Личный профиль",
-                  )}
+                : user?.organization_id
+                  ? roleName(user.organization_role ?? "member")
+                  : t("Личный профиль")}
             </span>
           </span>
           <span aria-hidden="true">⌄</span>

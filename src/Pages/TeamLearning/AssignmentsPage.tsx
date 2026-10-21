@@ -1,3 +1,5 @@
+import AssignmentRules, { type RuleOverrides } from "./AssignmentRules";
+import { useRoleNames } from "./useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -8,12 +10,14 @@ import { LoadingState, RequestError } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useLearningData } from "../Learning/useLearningData";
 import { type Assignment, dateLabel, stateLabel } from "../Learning/types";
-import type { CatalogueItem, Group, Person, Team } from "./types";
-import { initials, roles } from "./types";
+import type { CatalogueItem, Group, Person, Team, TeamSettings } from "./types";
+import { initials } from "./types";
 import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
 import s from "../Learning/learning.module.css";
 
 export default function AssignmentsPage() {
+  const roleName = useRoleNames();
+
   const { t } = useLocale();
 
   const [params] = useSearchParams();
@@ -23,6 +27,7 @@ export default function AssignmentsPage() {
     "/team/catalogue",
   );
   const team = useLearningData<Team>("/team");
+  const settings = useLearningData<TeamSettings>("/team/settings");
   const groups = useLearningData<{ items: Group[] }>("/team/groups");
   const people = useLearningData<{ items: Person[] }>("/team/people");
   const [draft, setDraft, clear] = useDurableState(
@@ -34,6 +39,7 @@ export default function AssignmentsPage() {
       due: "",
       future: false,
       cycleKey: "initial",
+      overrides: {} as RuleOverrides,
     },
   );
   const selected = draft.versionId
@@ -49,7 +55,8 @@ export default function AssignmentsPage() {
   const [confirmRevoke, setConfirmRevoke] = useState<number | null>(null);
   const action = useTeamAction();
   const submit = async () => {
-    if (!selected) return;
+    if (!selected || !settings.data || action.busy) return;
+    const rulesRevision = settings.data.revision;
     const ok = await action.run(async () => {
       const response = await api.post<{ created: number; items: Assignment[] }>(
         `/courses/${selected.course_id}/assignments`,
@@ -60,6 +67,8 @@ export default function AssignmentsPage() {
           due_at: draft.due ? new Date(draft.due).toISOString() : null,
           include_future_members: draft.future,
           cycle_key: draft.cycleKey,
+          expected_rules_revision: rulesRevision,
+          rule_overrides: draft.overrides ?? {},
         },
       );
       await assignments.reload();
@@ -91,6 +100,12 @@ export default function AssignmentsPage() {
     >
       <div className={s.page}>
         <TeamTabs />
+        {!!settings.error && (
+          <RequestError
+            error={settings.error}
+            onRetry={() => void settings.reload()}
+          />
+        )}
         {!!catalogue.error && (
           <RequestError
             error={catalogue.error}
@@ -237,6 +252,14 @@ export default function AssignmentsPage() {
                   </div>
                 </details>
               </section>
+              {settings.data && (
+                <AssignmentRules
+                  settings={settings.data}
+                  value={draft.overrides ?? {}}
+                  onChange={(overrides) => setDraft({ ...draft, overrides })}
+                  disabled={action.busy}
+                />
+              )}
               <section className={s.card} style={{ marginTop: 24 }}>
                 <label className={s.field}>
                   {t("Поиск сотрудника или должности")}
@@ -288,10 +311,7 @@ export default function AssignmentsPage() {
                           <h3>{m.full_name || m.email}</h3>
                           <p className={s.accent}>
                             {person?.position ||
-                              t(
-                                roles[m.organization_role] ??
-                                  String(m.organization_role),
-                              ) ||
+                              roleName(m.organization_role) ||
                               t("Участник")}
                           </p>
                           <span className={s.muted}>{m.email}</span>
@@ -348,11 +368,26 @@ export default function AssignmentsPage() {
                   <DraftNotice />
                 )}
                 <ActionStatus action={action} />
+                {!!action.error && (
+                  <button
+                    className={s.secondary}
+                    onClick={() => void settings.reload()}
+                  >
+                    {t("Обновить правила организации")}
+                  </button>
+                )}
                 <div className={s.stickyActions}>
                   <button
                     className={s.primary}
                     disabled={
                       action.busy ||
+                      !settings.data ||
+                      Object.keys(draft.overrides ?? {}).some(
+                        (key) =>
+                          !settings.data?.rules.assignment_overrides.includes(
+                            key,
+                          ),
+                      ) ||
                       (!draft.users.length && !draft.groups.length)
                     }
                     onClick={() => void submit()}

@@ -44,25 +44,50 @@ export default function LearningCourse() {
         : assessments[0]?.id);
   const lesson = lessons.find((l) => `lesson:${l.id}` === key);
   const assessment = assessments.find((a) => a.id === key);
-  const choose = (item: string) => {
+  const choose = async (item: string) => {
+    if (busy) return;
     setParams({ item });
     setError(null);
+    const target = lessons.find((value) => `lesson:${value.id}` === item);
+    if (!data || !target) return;
+    setBusy(true);
+    try {
+      await api.put<Assignment>(`/learning/assignments/${id}/progress`, {
+        expected_revision: data.progress_revision,
+        lesson_id: target.id,
+        completed: false,
+      });
+      await query.reload();
+    } catch (reason) {
+      setError(reason);
+    } finally {
+      setBusy(false);
+    }
   };
   const markComplete = async () => {
     if (!data || !lesson) return;
     setBusy(true);
     setError(null);
     try {
-      await api.put<Assignment>(`/learning/assignments/${id}/progress`, {
-        expected_revision: data.progress_revision,
-        lesson_id: lesson.id,
-        completed: true,
-      });
-      await query.reload();
+      const saved = await api.put<Assignment>(
+        `/learning/assignments/${id}/progress`,
+        {
+          expected_revision: data.progress_revision,
+          lesson_id: lesson.id,
+          completed: true,
+        },
+      );
       const index = lessons.findIndex((l) => l.id === lesson.id);
       const next = lessons[index + 1];
-      if (next) choose(`lesson:${next.id}`);
-      else if (assessments[0]) choose(assessments[0].id);
+      if (next) {
+        await api.put<Assignment>(`/learning/assignments/${id}/progress`, {
+          expected_revision: saved.data.progress_revision,
+          lesson_id: next.id,
+          completed: false,
+        });
+        setParams({ item: `lesson:${next.id}` });
+      } else if (assessments[0]) setParams({ item: assessments[0].id });
+      await query.reload();
     } catch (e) {
       setError(e);
     } finally {
@@ -186,9 +211,9 @@ export default function LearningCourse() {
                               key={lesson.id}
                               assignmentId={data.id}
                               lessonId={lesson.id}
-                              onLesson={(lessonId) =>
-                                choose(`lesson:${lessonId}`)
-                              }
+                              onLesson={(lessonId) => {
+                                void choose(`lesson:${lessonId}`);
+                              }}
                             />
                           )}
                         </>
@@ -227,7 +252,8 @@ export default function LearningCourse() {
                           key={l.id}
                           className={s.railItem}
                           aria-current={key === `lesson:${l.id}`}
-                          onClick={() => choose(`lesson:${l.id}`)}
+                          disabled={busy}
+                          onClick={() => void choose(`lesson:${l.id}`)}
                         >
                           <strong>{n + 1}</strong>
                           <span>
@@ -243,7 +269,8 @@ export default function LearningCourse() {
                           key={a.id}
                           className={s.railItem}
                           aria-current={key === a.id}
-                          onClick={() => choose(a.id)}
+                          disabled={busy}
+                          onClick={() => void choose(a.id)}
                         >
                           <strong>✓</strong>
                           <span>
@@ -261,7 +288,8 @@ export default function LearningCourse() {
                       key={a.id}
                       className={s.railItem}
                       aria-current={key === a.id}
-                      onClick={() => choose(a.id)}
+                      disabled={busy}
+                      onClick={() => void choose(a.id)}
                     >
                       <strong>✓</strong>
                       <span>
