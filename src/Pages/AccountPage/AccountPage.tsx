@@ -11,6 +11,9 @@ import catalog from '@/legal/catalog.json';
 import styles from './styles.module.css';
 import IdentityLinks from './IdentityLinks';
 import MFASettings from './MFASettings';
+import { useLearningData } from '@/Pages/Learning/useLearningData';
+import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
+import { ApiError } from '@/shared/errors';
 type Receipt = {
     id: number;
     slug: string;
@@ -111,7 +114,7 @@ export default function AccountPage() {
     <div className={styles.container}><h1>{t("Личный профиль")}</h1><p className={styles.subtitle}>{t("Управляйте аккаунтом, безопасностью и согласиями.")}</p>
       <div className={styles.tabs} aria-label={t("Разделы профиля")}>{[['profile', t("Основные настройки")], ['security', t("Безопасность")], ['documents', t("Документы и согласия")]].map(([id, label]) => <button key={id} className={tab === id ? styles.active : ''} onClick={() => { setTab(id); setMessage(''); setError(''); }} aria-pressed={tab === id}>{t(label)}</button>)}</div>
       {message && <p className={styles.success} role="status">{message}</p>}{error && <p className={styles.error} role="alert">{error}</p>}
-      {tab === 'profile' && <div className={styles.grid}><section className={styles.card}><div className={styles.identity}><div className={styles.avatar}>{(name || user?.email || t("Л")).slice(0, 2).toUpperCase()}</div><div><h2>{name || t("Ваш аккаунт")}</h2><p>{user?.email}</p><span className={styles.badge}>{t("Личный профиль")}</span></div></div><hr /><h3>{t("Данные организации")}</h3><p>{t("Подключение организации и состав доступа оформляются индивидуально.")}</p><a href="/legal/contacts/#request">{t("Обсудить подключение ↗")}</a></section>
+      {tab === 'profile' && <div className={styles.grid}><section className={styles.card}><div className={styles.identity}><div className={styles.avatar}>{(name || user?.email || t("Л")).slice(0, 2).toUpperCase()}</div><div><h2>{name || t("Ваш аккаунт")}</h2><p>{user?.email}</p><span className={styles.badge}>{t("Личный профиль")}</span></div></div><hr /><OrganizationDetails /></section>
         <section className={styles.card}><h2>{t("Личные данные")}</h2><DraftNotice /><form onSubmit={profile}><label>{t("Имя и фамилия")}<input autoComplete="name" value={name} onChange={e => setName(e.target.value)} maxLength={160} minLength={1} required/></label><label>{t("Электронная почта")}<input type="email" value={user?.email ?? ''} readOnly/></label><p className={styles.muted}>{t("Для изменения почты обратитесь в поддержку: сначала потребуется подтвердить владение аккаунтом.")}</p><button className={styles.primary} disabled={busy}>{t("Сохранить изменения")}</button></form></section></div>}
       {tab === 'security' && <div className={styles.grid}><section className={styles.card}><h2>{t("Изменить пароль")}</h2><form onSubmit={password}><label>{t("Текущий пароль")}<input type="password" autoComplete="current-password" required value={oldPassword} onChange={e => setOldPassword(e.target.value)}/></label><label>{t("Новый пароль")}<input type="password" autoComplete="new-password" minLength={12} maxLength={128} required value={newPassword} onChange={e => setNewPassword(e.target.value)}/></label><p className={styles.muted}>{t("Минимум 12 символов. После смены остальные сеансы завершатся.")}</p><button className={styles.primary} disabled={busy}>{t("Изменить пароль")}</button></form></section><section className={styles.card}><h2>{t("Сеансы и доступ")}</h2><p>{t("Если вы входили на чужом устройстве, завершите все сеансы. Затем войдите снова на своём устройстве.")}</p><button className={styles.secondary} disabled={busy} onClick={() => void perform(async () => { await api.post('/auth/logout-all'); logout(); })}>{t("Завершить все сеансы")}</button><hr /><h3>{t("Закрыть аккаунт")}</h3><p>{t("Перед закрытием сохраните нужные материалы. Отправьте запрос, чтобы мы проверили принадлежность аккаунта и обработали его данные.")}</p><a href="/legal/contacts/#request">{t("Отправить запрос ↗")}</a></section></div>}
       {tab === 'security' && <IdentityLinks />}
@@ -125,4 +128,47 @@ export default function AccountPage() {
       <footer className={styles.footer}><a href="/legal/privacy/">{t("Политика обработки данных")}</a><a href="/legal/contacts/">{t("Помощь и контакты")}</a><a href="/legal/cookies/">{t("Данные браузера")}</a></footer>
     </div>
   </main>;
+}
+
+type AccountTeam = {
+    organization: {id: number; name: string; kind: string; is_active: boolean} | null;
+    members: {id: number; organization_role: string}[];
+    can_manage: boolean;
+};
+
+function OrganizationDetails() {
+    const {user} = useAuth();
+    const {t} = useLocale();
+    const roleName = useRoleNames();
+    const organizationId = user?.organization_id;
+    // The authenticated /team endpoint chooses the tenant. Query keys only
+    // invalidate the local read when account/membership changes.
+    const team = useLearningData<AccountTeam>(organizationId
+        ? `/team?account=${user?.id}&workspace=${organizationId}` : null);
+    const organization = team.data?.organization;
+    const currentOrganization = organization?.id === organizationId ? organization : null;
+    const kinds: Record<string,string> = {business:'Компания', education:'Образовательная организация',
+        government:'Государственная организация', individual:'Индивидуальное обучение'};
+    return <section aria-labelledby="account-organization-heading">
+        <h3 id="account-organization-heading">{t('Данные организации')}</h3>
+        {!organizationId ? <>
+            <p>{t('У вас личный аккаунт')}</p>
+            <p>{t('Подключение организации и состав доступа оформляются индивидуально.')}</p>
+            <a href="/legal/contacts/#request">{t('Обсудить подключение ↗')}</a>
+        </> : <>
+            {team.loading && !team.data && <LoadingState />}
+            {!!team.error && <RequestError error={team.error} onRetry={() => void team.reload()} retrying={team.loading} />}
+            {team.data && !currentOrganization && !team.error && <RequestError
+                error={new ApiError(t('Не удалось выполнить действие. Попробуйте ещё раз.'),409)}
+                onRetry={() => void team.reload()} retrying={team.loading} />}
+            {currentOrganization && <>
+                <p><strong>{currentOrganization.name}</strong><br />{t(kinds[currentOrganization.kind] ?? 'Организация')}</p>
+                <p>{t('Роль')}: <span className={styles.badge}>{roleName(team.data?.members.find(member => member.id === user?.id)?.organization_role ?? user?.organization_role ?? 'member')}</span></p>
+                {!currentOrganization.is_active && <p>{t('Доступ приостановлен')}</p>}
+                <p><Link className={styles.secondary} to="/employees">{t('Открыть команду')}</Link>{' '}
+                    {team.data?.can_manage && <Link className={styles.secondary} to="/team-settings">{t('Роли и настройки')}</Link>}
+                </p>
+            </>}
+        </>}
+    </section>;
 }
