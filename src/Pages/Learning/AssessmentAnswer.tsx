@@ -1,19 +1,14 @@
-import { useLocale } from "@/i18n/useLocale";
-import { useEffect, useState } from "react";
-import { api } from "@/shared/api";
-import { ApiError } from "@/shared/errors";
-import { useDurableState } from "@/hooks/useDurableState";
-import DraftNotice from "@/Components/DraftNotice";
-import MarkdownContent from "@/Components/MarkdownContent";
-import { RequestError } from "@/Components/RequestState";
-import type {
-  Answer,
-  Assessment,
-  AssignmentDetail,
-  LearnerResponse,
-} from "./types";
-import { dateLabel, stateLabel } from "./types";
-import s from "./learning.module.css";
+import { useLocale } from '@/i18n/useLocale';
+import { useEffect, useState } from 'react';
+import { api } from '@/shared/api';
+import { ApiError } from '@/shared/errors';
+import { useDurableState } from '@/hooks/useDurableState';
+import DraftNotice from '@/Components/DraftNotice';
+import MarkdownContent from '@/Components/MarkdownContent';
+import { RequestError } from '@/Components/RequestState';
+import type { Answer, Assessment, AssignmentDetail, LearnerResponse } from './types';
+import { dateLabel, stateLabel } from './types';
+import s from './learning.module.css';
 
 type AnswerDraft = {
   answer: Answer;
@@ -22,7 +17,7 @@ type AnswerDraft = {
   submission_key: string | null;
   dirty: boolean;
 };
-const answerText = (a: Answer) => a.text ?? a.selected?.join("\n") ?? "";
+const answerText = (a: Answer) => a.text ?? a.selected?.join('\n') ?? '';
 
 export function AnswerForm({
   assignmentId,
@@ -43,38 +38,36 @@ export function AnswerForm({
     `learning:${assignmentId}:${assessment.id}:attempt:${attempt}`,
     {
       answer:
-        server?.answer ??
-        (assessment.question_type === "open" ? { text: "" } : { selected: [] }),
+        server?.answer ?? (assessment.question_type === 'open' ? { text: '' } : { selected: [] }),
       expected_revision: server?.revision ?? 0,
       attempt,
       submission_key: null,
       dirty: false,
     },
   );
-  const [busy, setBusy] = useState(false);
+  const [operation, setOperation] = useState<'save' | 'submit' | null>(null);
+  const busy = operation !== null;
+  const [restored, setRestored] = useState(() => draft.dirty);
   const [error, setError] = useState<unknown>(null);
   const [conflict, setConflict] = useState<LearnerResponse | null>(null);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState('');
   const [confirmed, setConfirmed] = useState<LearnerResponse | null>(null);
-  const drift =
-    server && server.revision > draft.expected_revision && draft.dirty;
+  const drift = server && server.revision > draft.expected_revision && draft.dirty;
   useEffect(() => {
     if (!draft.dirty) return;
     const guard = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = "";
+      e.returnValue = '';
     };
-    window.addEventListener("beforeunload", guard);
-    return () => window.removeEventListener("beforeunload", guard);
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
   }, [draft.dirty]);
   const change = (answer: Answer) => {
     setDraft({ ...draft, answer, dirty: true, submission_key: null });
-    setNotice("");
+    setNotice('');
   };
   const refreshConflict = async () => {
-    const latest = await api.get<AssignmentDetail>(
-      `/learning/assignments/${assignmentId}`,
-    );
+    const latest = await api.get<AssignmentDetail>(`/learning/assignments/${assignmentId}`);
     const found = latest.data.responses.find(
       (r) => r.assessment_id === assessment.id && r.attempt === attempt,
     );
@@ -83,14 +76,12 @@ export function AnswerForm({
   };
   const save = async (submit: boolean) => {
     if (busy) return;
-    setBusy(true);
+    setOperation(submit ? 'submit' : 'save');
     setError(null);
-    setNotice("");
+    setNotice('');
     const sent = {
       ...draft,
-      submission_key: submit
-        ? (draft.submission_key ?? crypto.randomUUID())
-        : null,
+      submission_key: submit ? (draft.submission_key ?? crypto.randomUUID()) : null,
     };
     setDraft(sent);
     try {
@@ -117,13 +108,10 @@ export function AnswerForm({
       };
       setDraft(clean);
       clearDraft(clean);
+      setRestored(false);
       setConflict(null);
-      setNotice(
-        submit
-          ? t("Ответ принят сервером.")
-          : t("Черновик сохранён на сервере."),
-      );
-      if (result.data.status !== "draft") setConfirmed(result.data);
+      setNotice(submit ? t('Ответ принят сервером.') : t('Черновик сохранён на сервере.'));
+      if (result.data.status !== 'draft') setConfirmed(result.data);
       await onSaved();
     } catch (e) {
       setError(e);
@@ -135,62 +123,55 @@ export function AnswerForm({
         }
       }
     } finally {
-      setBusy(false);
+      setOperation(null);
     }
   };
   const remote = conflict ?? (drift ? server : null);
   if (confirmed)
     return (
-      <section className={s.notice} role="status">
-        <h3>{t("Ответ принят сервером")}</h3>
+      <section className={s.notice} role='status'>
+        <h3>{t('Ответ принят сервером')}</h3>
         <p>
-          {t("Попытка") + " "}
-          {confirmed.attempt} ·{" "}
-          {t(stateLabel[confirmed.status] ?? String(confirmed.status))}
-          {t(". Отправка этой попытки завершена.")}
+          {t('Попытка') + ' '}
+          {confirmed.attempt} · {t(stateLabel[confirmed.status] ?? String(confirmed.status))}
+          {t('. Отправка этой попытки завершена.')}
         </p>
-        <pre style={{ whiteSpace: "pre-wrap" }}>
-          {answerText(confirmed.answer)}
-        </pre>
+        <pre style={{ whiteSpace: 'pre-wrap' }}>{answerText(confirmed.answer)}</pre>
         {confirmed.points !== null && (
           <p>
             {confirmed.points} / {confirmed.max_points}
-            {" " + t("баллов")}
+            {' ' + t('баллов')}
           </p>
         )}
         <button className={s.secondary} onClick={() => void onSaved()}>
-          {t("Обновить результат")}
+          {t('Обновить результат')}
         </button>
       </section>
     );
   return (
     <div className={s.stack}>
-      {draft.dirty && <DraftNotice restored />}
+      {draft.dirty && <DraftNotice restored={restored} />}
       {remote && (
-        <section className={s.conflict} role="alert">
-          <h3>{t("Есть другая сохранённая версия ответа")}</h3>
-          <p>
-            {t(
-              "Сравните тексты перед продолжением. Ваш черновик остаётся на устройстве.",
-            )}
-          </p>
+        <section className={s.conflict} role='alert'>
+          <h3>{t('Есть другая сохранённая версия ответа')}</h3>
+          <p>{t('Сравните тексты перед продолжением. Ваш черновик остаётся на устройстве.')}</p>
           <div className={s.compare}>
             <div>
-              <strong>{t("Ваш текст")}</strong>
-              <pre>{answerText(draft.answer) || t("Ответ не заполнен")}</pre>
+              <strong>{t('Ваш текст')}</strong>
+              <pre>{answerText(draft.answer) || t('Ответ не заполнен')}</pre>
             </div>
             <div>
               <strong>
-                {t("Сервер ·") + " "}
+                {t('Сервер ·') + ' '}
                 {t(stateLabel[remote.status] ?? String(remote.status))}
               </strong>
               <pre>{answerText(remote.answer)}</pre>
             </div>
           </div>
           <div className={s.row}>
-            {remote.status === "draft" && (
+            {remote.status === 'draft' && (
               <button
-                type="button"
+                type='button'
                 className={s.primary}
                 disabled={busy}
                 onClick={() => {
@@ -204,11 +185,11 @@ export function AnswerForm({
                   setError(null);
                 }}
               >
-                {t("Продолжить с моим текстом")}
+                {t('Продолжить с моим текстом')}
               </button>
             )}
             <button
-              type="button"
+              type='button'
               className={s.secondary}
               disabled={busy}
               onClick={() => {
@@ -226,50 +207,46 @@ export function AnswerForm({
                 void onSaved();
               }}
             >
-              {t("Использовать подтверждённый ответ")}
+              {t('Использовать подтверждённый ответ')}
             </button>
           </div>
         </section>
       )}
-      {assessment.question_type === "open" ? (
+      {assessment.question_type === 'open' ? (
         <label className={s.field}>
-          {t("Ваш ответ")}
+          {t('Ваш ответ')}
           <textarea
             className={s.answer}
             disabled={busy}
             maxLength={100000}
-            value={draft.answer.text ?? ""}
+            value={draft.answer.text ?? ''}
             onChange={(e) => change({ text: e.target.value })}
-            placeholder={t("Опишите решение своими словами…")}
+            placeholder={t('Опишите решение своими словами…')}
           />
         </label>
       ) : (
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className={s.muted}>
-            {assessment.question_type === "single"
-              ? t("Выберите один ответ")
-              : t("Выберите все подходящие ответы")}
+            {assessment.question_type === 'single'
+              ? t('Выберите один ответ')
+              : t('Выберите все подходящие ответы')}
           </legend>
           <div className={s.stack} style={{ gap: 10, marginTop: 14 }}>
             {assessment.answers.map((option, i) => (
               <label className={s.choice} key={i}>
                 <input
-                  type={
-                    assessment.question_type === "single" ? "radio" : "checkbox"
-                  }
+                  type={assessment.question_type === 'single' ? 'radio' : 'checkbox'}
                   name={`${assessment.id}-${attempt}`}
                   disabled={busy}
                   checked={(draft.answer.selected ?? []).includes(option)}
                   onChange={(e) =>
                     change({
                       selected:
-                        assessment.question_type === "single"
+                        assessment.question_type === 'single'
                           ? [option]
                           : e.target.checked
                             ? [...(draft.answer.selected ?? []), option]
-                            : (draft.answer.selected ?? []).filter(
-                                (v) => v !== option,
-                              ),
+                            : (draft.answer.selected ?? []).filter((v) => v !== option),
                     })
                   }
                 />
@@ -279,45 +256,43 @@ export function AnswerForm({
           </div>
         </fieldset>
       )}
-      {!!error && <RequestError error={error} />}{" "}
+      {!!error && <RequestError error={error} />}{' '}
       {notice && (
-        <p className={s.notice} role="status">
+        <p className={s.notice} role='status'>
           {notice}
         </p>
       )}
       <div className={s.row}>
         <button
           className={s.secondary}
-          type="button"
+          type='button'
           disabled={busy || !!remote}
           onClick={() => void save(false)}
         >
-          {busy ? t("Сохраняем…") : t("Сохранить черновик")}
+          {operation === 'save' ? t('Сохраняем…') : t('Сохранить черновик')}
         </button>
         <button
           className={s.primary}
-          type="button"
+          type='button'
           disabled={
-            busy ||
-            !!remote ||
-            !(draft.answer.text?.trim() || draft.answer.selected?.length)
+            busy || !!remote || !(draft.answer.text?.trim() || draft.answer.selected?.length)
           }
           onClick={() => void save(true)}
         >
-          {busy
-            ? t("Отправляем…")
+          {operation === 'submit'
+            ? t('Отправляем…')
             : draft.submission_key
-              ? t("Проверить и повторить отправку")
-              : t("Отправить на проверку →")}
+              ? t('Проверить и повторить отправку')
+              : t('Отправить на проверку →')}
         </button>
         <span className={s.muted}>
-          {t("Попытка") + " "}
+          {t('Попытка') + ' '}
           {attempt}
         </span>
       </div>
       <p className={s.caption}>
         {t(
-          "После отправки эта попытка остаётся в истории. При обрыве связи повтор использует тот же идентификатор отправки.",
+          'После отправки эта попытка остаётся в истории. При обрыве связи повтор использует тот же идентификатор отправки.',
         )}
       </p>
     </div>
@@ -342,11 +317,8 @@ export default function AssessmentAnswer({
     .filter((r) => r.assessment_id === assessment.id)
     .sort((a, b) => a.attempt - b.attempt);
   const latest = attempts.at(-1);
-  const showForm = !latest || latest.status === "draft" || newAttempt;
-  const attempt =
-    latest && latest.status !== "draft"
-      ? latest.attempt + 1
-      : (latest?.attempt ?? 1);
+  const showForm = !latest || latest.status === 'draft' || newAttempt;
+  const attempt = latest && latest.status !== 'draft' ? latest.attempt + 1 : (latest?.attempt ?? 1);
   const afterSave = async () => {
     await onSaved();
     setNewAttempt(false);
@@ -355,44 +327,51 @@ export default function AssessmentAnswer({
     <section className={s.article}>
       <div className={s.spread}>
         <span className={s.badge}>
-          {assessment.question_type === "open"
-            ? t("Практика")
-            : assessment.question_type === "multiple"
-              ? t("Несколько ответов")
-              : t("Один ответ")}
+          {assessment.question_type === 'open'
+            ? t('Практика')
+            : assessment.question_type === 'multiple'
+              ? t('Несколько ответов')
+              : t('Один ответ')}
         </span>
         <span>
           {assessment.max_points}
-          {" " + t("балл.")}
+          {' ' + t('балл.')}
         </span>
       </div>
       <h2>{assessment.question}</h2>
-      {assessment.description && (
-        <MarkdownContent>{assessment.description}</MarkdownContent>
-      )}
+      {assessment.description && <MarkdownContent>{assessment.description}</MarkdownContent>}
       {!!assessment.criteria.length && (
         <details>
-          <summary>{t("Критерии проверки")}</summary>
+          <summary>{t('Критерии проверки')}</summary>
           <ul>
             {assessment.criteria.map((c) => (
               <li key={c.id}>
                 <strong>{c.title}</strong>
-                {" " + t("— до") + " "}
+                {' ' + t('— до') + ' '}
                 {c.max_points}
-                {" " + t("балл.")} {c.description}
-                {!!c.levels?.length&&<ul>{c.levels.map((level,index)=><li key={index}><strong>{level.title}</strong> — {level.points} {t('баллов')}. {level.description}</li>)}</ul>}
+                {' ' + t('балл.')} {c.description}
+                {!!c.levels?.length && (
+                  <ul>
+                    {c.levels.map((level, index) => (
+                      <li key={index}>
+                        <strong>{level.title}</strong> — {level.points} {t('баллов')}.{' '}
+                        {level.description}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ))}
           </ul>
         </details>
       )}
       {attempts
-        .filter((r) => r.status !== "draft")
+        .filter((r) => r.status !== 'draft')
         .map((r) => (
-          <div key={r.id} className={s.card} style={{ margin: "18px 0" }}>
+          <div key={r.id} className={s.card} style={{ margin: '18px 0' }}>
             <div className={s.spread}>
               <span>
-                {t("Попытка") + " "}
+                {t('Попытка') + ' '}
                 {r.attempt} · {t(stateLabel[r.status] ?? String(r.status))}
               </span>
               {r.points !== null && (
@@ -403,16 +382,14 @@ export default function AssessmentAnswer({
             </div>
             <p className={s.muted}>{dateLabel(r.submitted_at)}</p>
             <details>
-              <summary>{t("Ваш отправленный ответ")}</summary>
-              <pre style={{ whiteSpace: "pre-wrap" }}>
-                {answerText(r.answer)}
-              </pre>
+              <summary>{t('Ваш отправленный ответ')}</summary>
+              <pre style={{ whiteSpace: 'pre-wrap' }}>{answerText(r.answer)}</pre>
             </details>
             {r.feedback && <p>{r.feedback}</p>}
             {r.correct_answers && (
               <div className={s.notice}>
-                <strong>{t("Разбор открыт по правилам обучения")}</strong>
-                <p>{r.correct_answers.join(" · ")}</p>
+                <strong>{t('Разбор открыт по правилам обучения')}</strong>
+                <p>{r.correct_answers.join(' · ')}</p>
               </div>
             )}
           </div>
@@ -423,26 +400,20 @@ export default function AssessmentAnswer({
           assignmentId={assignmentId}
           assessment={assessment}
           attempt={attempt}
-          server={latest?.status === "draft" ? latest : undefined}
+          server={latest?.status === 'draft' ? latest : undefined}
           onSaved={afterSave}
         />
       ) : latest?.can_retry ? (
-        <button
-          type="button"
-          className={s.secondary}
-          onClick={() => setNewAttempt(true)}
-        >
-          {t("Начать следующую попытку")}
+        <button type='button' className={s.secondary} onClick={() => setNewAttempt(true)}>
+          {t('Начать следующую попытку')}
         </button>
       ) : (
         <p className={s.muted}>
-          {latest?.status === "pending_review"
+          {latest?.status === 'pending_review'
             ? t(
-                "Проверяющий увидит вашу работу в очереди. Ответ сохранён; можно продолжать обучение.",
+                'Проверяющий увидит вашу работу в очереди. Ответ сохранён; можно продолжать обучение.',
               )
-            : t(
-                "Дополнительная попытка сейчас недоступна по правилам назначения.",
-              )}
+            : t('Дополнительная попытка сейчас недоступна по правилам назначения.')}
         </p>
       )}
     </section>

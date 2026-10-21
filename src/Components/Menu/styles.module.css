@@ -227,7 +227,7 @@
       box-shadow 220ms ease;
   }
   .accountBlock[open] .dropdown {
-    animation: ui-enter 220ms var(--ui-ease);
+    animation: var(--ui-enter-animation) 220ms var(--ui-ease);
   }
 }
 @media (min-width: 1181px) {

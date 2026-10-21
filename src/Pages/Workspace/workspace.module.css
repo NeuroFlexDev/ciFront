@@ -427,7 +427,7 @@
   .stats > .stat,
   .panel,
   .empty {
-    animation: ui-enter 420ms var(--ui-ease) backwards;
+    animation: var(--ui-enter-animation) 420ms var(--ui-ease) backwards;
   }
   .grid > .card:nth-child(2),
   .stats > .stat:nth-child(2) {

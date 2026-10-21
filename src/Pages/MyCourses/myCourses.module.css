@@ -161,7 +161,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .card {
-    animation: ui-enter 440ms var(--ui-ease) backwards;
+    animation: var(--ui-enter-animation) 440ms var(--ui-ease) backwards;
   }
   .card:nth-child(2) {
     animation-delay: 40ms;

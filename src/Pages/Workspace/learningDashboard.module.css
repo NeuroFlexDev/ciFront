@@ -641,7 +641,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .card {
-    animation: ui-enter 480ms var(--ui-ease) backwards;
+    animation: var(--ui-enter-animation) 480ms var(--ui-ease) backwards;
   }
   .courses {
     animation-delay: 40ms;

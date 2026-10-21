@@ -473,7 +473,7 @@
   .uploadCard,
   .form,
   .panel {
-    animation: ui-enter 380ms var(--ui-ease);
+    animation: var(--ui-enter-animation) 380ms var(--ui-ease);
   }
   .modes > a,
   .modes > button,
