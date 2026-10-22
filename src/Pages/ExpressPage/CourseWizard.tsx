@@ -155,6 +155,11 @@ export default function CourseWizard() {
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const { run, error: progressError, connection, receivedAt } = useGenerationProgress(runId, version);
   const [submission, setSubmission] = useState<"idle" | "submitting" | "uncertain">("idle");
+  const pageRef = useRef<HTMLElement>(null);
+  const showingProgress = Boolean(runId || submission !== "idle");
+  useEffect(() => {
+    pageRef.current?.scrollIntoView?.({ block: "start", behavior: "instant" });
+  }, [step, showingProgress]);
   const [stoppingRun, setStoppingRun] = useState<number | null>(null);
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [notice, setNotice] = useState("");
@@ -488,7 +493,7 @@ export default function CourseWizard() {
   return (
     <>
       <Menu />
-      <main className={`${styles.page} ${runId || submission !== "idle" ? styles.generationPage : ""}`}>
+      <main ref={pageRef} className={`${styles.page} ${showingProgress ? styles.generationPage : ""}`}>
         <h1 className={styles.srOnly}>{t("Создать курс по документам")}</h1>
         <WizardSteps step={submission !== "idle" ? 4 : step} onStep={runId || busy || submission !== "idle" ? undefined : go} />
         <div className={styles.content}>

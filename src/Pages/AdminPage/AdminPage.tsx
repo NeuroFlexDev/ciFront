@@ -19,6 +19,8 @@ import {
 } from "@/Pages/Workspace/shared";
 import adminStyles from "./admin.module.css";
 import AdminOverview from "./AdminOverview";
+import AdminCoursePanel, { type ManagedCourse } from "./AdminCoursePanel";
+import AdminRequestPanel, { type ManagedRequest } from "./AdminRequestPanel";
 import {
   ArrowUpRight,
   LayoutDashboard,
@@ -53,6 +55,7 @@ export type Organization = {
   active_users: number;
   reserved_seats: number;
   courses: number;
+  state_token?: string;
 };
 export type Member = {
   id: number;
@@ -63,6 +66,7 @@ export type Member = {
   organization_id: number | null;
   organization_role: string;
   organization_name: string | null;
+  auth_version?: number;
 };
 export type Invitation = {
   id: number;
@@ -72,22 +76,8 @@ export type Invitation = {
   status: string;
   expires_at: string;
 };
-type Course = {
-  id: number;
-  title: string | null;
-  owner_id: number | null;
-  status: string;
-  publication_status: string;
-};
-type RequestItem = {
-  reference: string;
-  purpose: string;
-  email: string;
-  name: string;
-  message: string;
-  created_at: string;
-  status: string;
-};
+type Course = ManagedCourse;
+type RequestItem = ManagedRequest;
 type EventItem = {
   id: number;
   actor_id: number | null;
@@ -106,6 +96,7 @@ type OrgForm = {
   course_limit: number;
   source_limit: number;
   generation_limit: number;
+  state_token?: string;
 };
 type AdminOverview = Overview & {
   users: number;
@@ -146,6 +137,17 @@ const tabs = [
   ["audit", "Журнал действий"],
 ];
 const eventTitles: Record<string, string> = {
+  "organization.archived": "Приостановлена организация",
+  "organization.restored": "Восстановлена организация",
+  "invitation.reissued": "Перевыпущено приглашение",
+  "course.created_by_operator": "Оператор создал курс",
+  "course.metadata_updated": "Изменены метаданные курса",
+  "course.archived": "Курс архивирован",
+  "course.restored": "Курс восстановлен",
+  "request.recorded_by_operator": "Оператор записал обращение",
+  "request.reopened": "Обращение открыто повторно",
+  "request.note_added": "Добавлен комментарий к обращению",
+  "request.archived": "Обращение архивировано",
   "organization.created": "Создан заказчик",
   "organization.updated": "Изменены условия заказчика",
   "user.access_changed": "Изменён доступ пользователя",
@@ -169,6 +171,17 @@ export default function AdminPage() {
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
   const [unassigned, setUnassigned] = useState(false);
+  const [archivedCourses, setArchivedCourses] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    explanation: string;
+    path: string;
+    body: Record<string, unknown>;
+  } | null>(null);
+  const [latestOrg, setLatestOrg] = useState<Organization | null>(null);
+  const [latestUser, setLatestUser] = useState<Member | null>(null);
+  const [reissueRoles, setReissueRoles] = useState<Record<number, string>>({});
+  const [managementReady, setManagementReady] = useState<boolean | null>(null);
   const [requestStatus, setRequestStatus] = useState("open");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -207,11 +220,15 @@ export default function AdminPage() {
     "admin:invite-role",
     "member",
   );
-  const [assign, setAssign] = useDurableState<{
-    course: number;
-    user: string;
-  } | null>("admin:assign-course", null);
   useReconnect(() => setVersion((v) => v + 1));
+  useEffect(() => {
+    if (!user?.is_admin) return;
+    let active = true;
+    api.get<{version: number}>('/admin/management-capabilities')
+      .then(result => { if (active) setManagementReady(result.data.version === 1); })
+      .catch(() => { if (active) setManagementReady(false); });
+    return () => { active = false; };
+  }, [version, user?.is_admin]);
   useEffect(() => {
     if (!user?.is_admin) return;
     let active = true;
@@ -280,7 +297,9 @@ export default function AdminPage() {
           }
           if (tab === "courses") {
             const r = await api.get<{ items: Course[]; total: number }>(
-              "/admin/courses" + suffix + `&unassigned=${unassigned}`,
+              "/admin/courses" +
+                suffix +
+                `&unassigned=${unassigned}&archived=${archivedCourses}`,
             );
             if (active) {
               setCourses(r.data.items);
@@ -317,7 +336,16 @@ export default function AdminPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [tab, version, q, offset, unassigned, requestStatus, user?.is_admin]);
+  }, [
+    tab,
+    version,
+    q,
+    offset,
+    unassigned,
+    archivedCourses,
+    requestStatus,
+    user?.is_admin,
+  ]);
   async function perform(action: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
@@ -370,9 +398,14 @@ export default function AdminPage() {
   function saveOrg(e: FormEvent) {
     e.preventDefault();
     if (!orgForm) return;
+    if (orgForm.id && (!orgForm.state_token || !managementReady)) return;
     void perform(async () => {
-      const { id, ...body } = orgForm;
-      if (id) await api.put(`/admin/organizations/${id}`, body);
+      const { id, state_token, ...body } = orgForm;
+      if (id)
+        await api.put(`/admin/organizations/${id}`, {
+          ...body,
+          expected_state: state_token,
+        });
       else await api.post("/admin/organizations", body);
       clearDraft(`admin:org:${orgForm.id ?? "new"}`, orgForm, user?.id ?? null);
       setMessage(
@@ -386,11 +419,14 @@ export default function AdminPage() {
   function saveUser(e: FormEvent) {
     e.preventDefault();
     if (!userForm) return;
+    if (userForm.auth_version == null || !managementReady) return;
     void perform(async () => {
       await api.put(`/admin/users/${userForm.id}`, {
         is_active: userForm.is_active,
         organization_id: userForm.organization_id,
         organization_role: userForm.organization_role,
+        full_name: userForm.full_name || undefined,
+        expected_auth_version: userForm.auth_version,
       });
       clearDraft(`admin:user:${userForm.id}`, userForm, user?.id ?? null);
       setMessage(
@@ -426,7 +462,7 @@ export default function AdminPage() {
   if (!user?.is_admin)
     return (
       <StatusPage
-        code="403"
+        code='403'
         title={t("Доступ заблокирован")}
         description={t(
           "У вашего аккаунта нет прав на управление платформой. Перейдите в рабочее пространство или обратитесь к администратору организации.",
@@ -445,7 +481,7 @@ export default function AdminPage() {
           onClick={() => setVersion((v) => v + 1)}
           disabled={loading}
         >
-          <RefreshCw size={16} aria-hidden="true" />
+          <RefreshCw size={16} aria-hidden='true' />
           {t("Обновить данные")}
         </button>
       }
@@ -457,7 +493,7 @@ export default function AdminPage() {
           </div>
           <div
             className={styles.tabs}
-            role="tablist"
+            role='tablist'
             aria-label={t("Разделы админки")}
             onKeyDown={(event) => {
               const keys = [
@@ -483,7 +519,10 @@ export default function AdminPage() {
                         tabs.length) %
                       tabs.length;
               switchTab(tabs[next][0]);
-              const controls = event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+              const controls =
+                event.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  '[role="tab"]',
+                );
               controls[next]?.focus();
             }}
           >
@@ -493,32 +532,63 @@ export default function AdminPage() {
                 <button
                   key={key}
                   id={`admin-tab-${key}`}
-                  role="tab"
+                  role='tab'
                   aria-selected={tab === key}
-                  aria-controls="admin-content"
+                  aria-controls='admin-content'
                   tabIndex={tab === key ? 0 : -1}
                   onClick={() => switchTab(key)}
                 >
-                  <Icon size={18} aria-hidden="true" />
+                  <Icon size={18} aria-hidden='true' />
                   {t(label)}
-                  <ArrowUpRight size={16} aria-hidden="true" />
+                  <ArrowUpRight size={16} aria-hidden='true' />
                 </button>
               );
             })}
           </div>
-          <Link className={styles.operationsLink} to="/admin/operations">
-            <Settings2 size={18} aria-hidden="true" />
+          <Link className={styles.operationsLink} to='/admin/operations'>
+            <Settings2 size={18} aria-hidden='true' />
             {t("Состояние установки и доставки")}
-            <ArrowUpRight size={16} aria-hidden="true" />
+            <ArrowUpRight size={16} aria-hidden='true' />
           </Link>
         </aside>
         <div
-          id="admin-content"
-          role="tabpanel"
+          id='admin-content'
+          role='tabpanel'
           aria-labelledby={`admin-tab-${tab}`}
           className={styles.content}
         >
           <DraftNotice />
+          {managementReady === false && <p role="status">{t('Сервер ещё не поддерживает новые действия админки или временно недоступен. Обновите данные после завершения обновления. Черновики сохранены.')}</p>}
+          {confirmAction && (
+            <section
+              className={styles.panel}
+              aria-label={t("Подтверждение действия")}
+            >
+              <h2>{confirmAction.title}</h2>
+              <p>{confirmAction.explanation}</p>
+              <div className={styles.row}>
+                <button
+                  className={styles.primary}
+                  disabled={busy || !managementReady}
+                  onClick={() =>
+                    void perform(async () => {
+                      await api.post(confirmAction.path, confirmAction.body);
+                      setConfirmAction(null);
+                      setMessage(t("Состояние изменено. История сохранена."));
+                    })
+                  }
+                >
+                  {t("Подтвердить")}
+                </button>
+                <button
+                  className={styles.secondary}
+                  onClick={() => setConfirmAction(null)}
+                >
+                  {t("Отмена")}
+                </button>
+              </div>
+            </section>
+          )}
           {!!error && (
             <RequestError
               error={error}
@@ -526,7 +596,7 @@ export default function AdminPage() {
             />
           )}
           {message && (
-            <p className={styles.success} role="status">
+            <p className={styles.success} role='status'>
               {message}
             </p>
           )}
@@ -545,7 +615,7 @@ export default function AdminPage() {
               <label className={styles.search}>
                 {t("Поиск")}
                 <input
-                  type="search"
+                  type='search'
                   value={q}
                   onChange={(e) => {
                     setQ(e.target.value);
@@ -566,6 +636,14 @@ export default function AdminPage() {
                   {t("Добавить заказчика +")}
                 </button>
               )}
+              {tab === "users" && (
+                <button
+                  className={styles.primary}
+                  onClick={() => switchTab("invitations")}
+                >
+                  {t("Создать через приглашение")}
+                </button>
+              )}
             </div>
           )}
           {tab === "organizations" && orgForm && (
@@ -574,6 +652,59 @@ export default function AdminPage() {
                 {orgForm.id ? t("Условия заказчика") : t("Новый заказчик")}
               </h2>
               <form className={styles.form} onSubmit={saveOrg}>
+                {(!!error || !orgForm.state_token) && orgForm.id && managementReady && (
+                  <button
+                    type='button'
+                    className={styles.secondary}
+                    onClick={() =>
+                      void perform(async () => {
+                        const result = await api.get<Organization>(
+                          `/admin/organizations/${orgForm.id}`,
+                        );
+                        setLatestOrg(result.data);
+                      })
+                    }
+                  >
+                    {t("Сравнить с текущей записью")}
+                  </button>
+                )}
+                {latestOrg && latestOrg.id === orgForm.id && (
+                  <section className={styles.span}>
+                    <h3>{t("Текущая запись на сервере")}</h3>
+                    <p>
+                      {latestOrg.name} ·{" "}
+                      {t(
+                        latestOrg.is_active
+                          ? "Доступ включён"
+                          : "Приостановлен",
+                      )}
+                    </p>
+                    <p>
+                      {t("Участники и приглашения:")} {latestOrg.seat_limit} ·{" "}
+                      {t("Курсы:")} {latestOrg.course_limit} ·{" "}
+                      {t("Источников на курс:")} {latestOrg.source_limit} ·{" "}
+                      {t("Генераций в месяц:")} {latestOrg.generation_limit}
+                    </p>
+                    <button
+                      type='button'
+                      className={styles.secondary}
+                      onClick={() => {
+                        setOrgForm({
+                          ...orgForm,
+                          state_token: latestOrg.state_token,
+                        });
+                        setLatestOrg(null);
+                      }}
+                    >
+                      {t("Сохранить мои поля поверх этой версии")}
+                    </button>
+                    <p>
+                      {t(
+                        "Затем нажмите сохранение. Ваш введённый текст останется в форме.",
+                      )}
+                    </p>
+                  </section>
+                )}
                 <label>
                   {t("Название")}
                   <input
@@ -612,7 +743,7 @@ export default function AdminPage() {
                   <label key={key}>
                     {label}
                     <input
-                      type="number"
+                      type='number'
                       required
                       min={key === "generation_limit" ? 0 : 1}
                       max={key === "source_limit" ? 1000 : 100000}
@@ -628,7 +759,7 @@ export default function AdminPage() {
                 ))}
                 <label className={styles.check}>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={orgForm.is_active}
                     onChange={(e) =>
                       setOrgForm({ ...orgForm, is_active: e.target.checked })
@@ -642,11 +773,11 @@ export default function AdminPage() {
                   )}
                 </p>
                 <div className={styles.row}>
-                  <button className={styles.primary} disabled={busy}>
+                  <button className={styles.primary} disabled={busy || (!!orgForm.id && (!orgForm.state_token || !managementReady))}>
                     {t("Сохранить заказчика")}
                   </button>
                   <button
-                    type="button"
+                    type='button'
                     className={styles.secondary}
                     onClick={() => setOrgForm(null)}
                   >
@@ -665,7 +796,7 @@ export default function AdminPage() {
                     to={`/admin/organizations/${o.id}/delivery`}
                     aria-label={`${o.name} · ${t("Функции и профиль")}`}
                   >
-                    <ArrowUpRight size={24} aria-hidden="true" />
+                    <ArrowUpRight size={24} aria-hidden='true' />
                   </Link>
                   <span className={styles.badge}>
                     {o.is_active ? t("Доступ включён") : t("Приостановлен")}
@@ -719,10 +850,27 @@ export default function AdminPage() {
                           course_limit: o.course_limit,
                           source_limit: o.source_limit,
                           generation_limit: o.generation_limit,
+                          state_token: o.state_token,
                         })
                       }
                     >
                       {t("Настроить лимиты")}
+                    </button>
+                    <button
+                      className={o.is_active ? styles.danger : styles.secondary}
+                      disabled={!managementReady || !o.state_token}
+                      onClick={() =>
+                        setConfirmAction({
+                          title: `${t(o.is_active ? "Приостановить организацию?" : "Восстановить организацию?")} ${o.name}`,
+                          explanation: t(
+                            "Участники, курсы и история сохранятся. Приостановленная организация не сможет работать до восстановления.",
+                          ),
+                          path: `/admin/organizations/${o.id}/${o.is_active ? "archive" : "restore"}`,
+                          body: { expected_state: o.state_token },
+                        })
+                      }
+                    >
+                      {t(o.is_active ? "Приостановить" : "Восстановить")}
                     </button>
                     <Link
                       className={styles.secondary}
@@ -765,10 +913,69 @@ export default function AdminPage() {
                 {t("Доступ:")} {userForm.email}
               </h2>
               <form className={styles.form} onSubmit={saveUser}>
+                {(!!error || userForm.auth_version == null) && managementReady && (
+                  <button
+                    type='button'
+                    className={styles.secondary}
+                    onClick={() =>
+                      void perform(async () => {
+                        const result = await api.get<Member>(
+                          `/admin/users/${userForm.id}`,
+                        );
+                        setLatestUser(result.data);
+                      })
+                    }
+                  >
+                    {t("Сравнить с текущей записью")}
+                  </button>
+                )}
+                {latestUser?.id === userForm.id && (
+                  <section className={styles.span}>
+                    <h3>{t("Текущая запись на сервере")}</h3>
+                    <p>
+                      {latestUser.full_name} ·{" "}
+                      {latestUser.organization_name || t("Личный аккаунт")} ·{" "}
+                      {t(
+                        roleLabels[latestUser.organization_role] ??
+                          latestUser.organization_role,
+                      )}{" "}
+                      · {t(latestUser.is_active ? "Активен" : "Отключён")}
+                    </p>
+                    <button
+                      type='button'
+                      className={styles.secondary}
+                      onClick={() => {
+                        setUserForm({
+                          ...userForm,
+                          auth_version: latestUser.auth_version,
+                        });
+                        setLatestUser(null);
+                      }}
+                    >
+                      {t("Сохранить мои поля поверх этой версии")}
+                    </button>
+                    <p>
+                      {t(
+                        "Затем нажмите сохранение. Ваш введённый текст останется в форме.",
+                      )}
+                    </p>
+                  </section>
+                )}
+                <label>
+                  {t("Имя пользователя")}
+                  <input
+                    required
+                    maxLength={160}
+                    value={userForm.full_name}
+                    onChange={(e) =>
+                      setUserForm({ ...userForm, full_name: e.target.value })
+                    }
+                  />
+                </label>
                 <label>
                   {t("Поиск организации")}
                   <input
-                    type="search"
+                    type='search'
                     value={orgSearch}
                     onChange={(e) => setOrgSearch(e.target.value)}
                     placeholder={t("Найти по названию")}
@@ -787,7 +994,7 @@ export default function AdminPage() {
                       })
                     }
                   >
-                    <option value="">{t("Личный аккаунт")}</option>
+                    <option value=''>{t("Личный аккаунт")}</option>
                     {orgOptions.map((o) => (
                       <option key={o.id} value={o.id}>
                         {o.name}
@@ -806,13 +1013,13 @@ export default function AdminPage() {
                       })
                     }
                   >
-                    <option value="member">{t("Участник")}</option>
-                    <option value="admin">{t("Администратор")}</option>
-                    <option value="author">{t("Автор")}</option>
-                    <option value="reviewer">{t("Проверяющий")}</option>
-                    <option value="manager">{t("Руководитель")}</option>
+                    <option value='member'>{t("Участник")}</option>
+                    <option value='admin'>{t("Администратор")}</option>
+                    <option value='author'>{t("Автор")}</option>
+                    <option value='reviewer'>{t("Проверяющий")}</option>
+                    <option value='manager'>{t("Руководитель")}</option>
                     <option
-                      value="owner"
+                      value='owner'
                       disabled={
                         users.find((item) => item.id === userForm.id)
                           ?.organization_role !== "owner"
@@ -824,7 +1031,7 @@ export default function AdminPage() {
                 </label>
                 <label className={styles.check}>
                   <input
-                    type="checkbox"
+                    type='checkbox'
                     checked={userForm.is_active}
                     onChange={(e) =>
                       setUserForm({ ...userForm, is_active: e.target.checked })
@@ -838,11 +1045,11 @@ export default function AdminPage() {
                   )}
                 </p>
                 <div className={styles.row}>
-                  <button className={styles.primary} disabled={busy}>
+                  <button className={styles.primary} disabled={busy || userForm.auth_version == null || !managementReady}>
                     {t("Сохранить доступ")}
                   </button>
                   <button
-                    type="button"
+                    type='button'
                     className={styles.secondary}
                     onClick={() => setUserForm(null)}
                   >
@@ -898,6 +1105,26 @@ export default function AdminPage() {
                               {t("Изменить доступ")}
                             </button>
                             <button
+                              className={
+                                u.is_active ? styles.danger : styles.secondary
+                              }
+                              disabled={!managementReady || u.auth_version == null}
+                              onClick={() =>
+                                setConfirmAction({
+                                  title: `${t(u.is_active ? "Отключить пользователя?" : "Восстановить пользователя?")} ${u.email}`,
+                                  explanation: t(
+                                    "Курсы, ответы и история сохранятся. Отключение завершает сеансы; восстановление проверяет доступные места.",
+                                  ),
+                                  path: `/admin/users/${u.id}/${u.is_active ? "archive" : "restore"}`,
+                                  body: {
+                                    expected_auth_version: u.auth_version,
+                                  },
+                                })
+                              }
+                            >
+                              {t(u.is_active ? "Отключить" : "Восстановить")}
+                            </button>
+                            <button
                               className={styles.secondary}
                               disabled={busy || !u.is_active}
                               onClick={() =>
@@ -932,11 +1159,16 @@ export default function AdminPage() {
             <>
               <section className={styles.panel}>
                 <h2>{t("Пригласить нового пользователя")}</h2>
+                <p>
+                  {t(
+                    "Аккаунт создаётся после принятия приглашения. Ссылка доступна сразу; очередь письма не означает подтверждённую доставку.",
+                  )}
+                </p>
                 <form className={styles.form} onSubmit={createInvite}>
                   <label>
                     {t("Поиск организации")}
                     <input
-                      type="search"
+                      type='search'
                       value={orgSearch}
                       onChange={(e) => setOrgSearch(e.target.value)}
                       placeholder={t("Найти по названию")}
@@ -949,7 +1181,7 @@ export default function AdminPage() {
                       value={inviteOrg}
                       onChange={(e) => setInviteOrg(e.target.value)}
                     >
-                      <option value="">{t("Выберите заказчика")}</option>
+                      <option value=''>{t("Выберите заказчика")}</option>
                       {orgOptions
                         .filter((o) => o.is_active)
                         .map((o) => (
@@ -963,7 +1195,7 @@ export default function AdminPage() {
                     Email
                     <input
                       required
-                      type="email"
+                      type='email'
                       maxLength={255}
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
@@ -975,12 +1207,12 @@ export default function AdminPage() {
                       value={inviteRole}
                       onChange={(e) => setInviteRole(e.target.value)}
                     >
-                      <option value="member">{t("Участник")}</option>
-                      <option value="admin">{t("Администратор")}</option>
-                      <option value="author">{t("Автор")}</option>
-                      <option value="reviewer">{t("Проверяющий")}</option>
-                      <option value="manager">{t("Руководитель")}</option>
-                      <option value="owner">{t("Владелец организации")}</option>
+                      <option value='member'>{t("Участник")}</option>
+                      <option value='admin'>{t("Администратор")}</option>
+                      <option value='author'>{t("Автор")}</option>
+                      <option value='reviewer'>{t("Проверяющий")}</option>
+                      <option value='manager'>{t("Руководитель")}</option>
+                      <option value='owner'>{t("Владелец организации")}</option>
                     </select>
                   </label>
                   <button className={styles.primary} disabled={busy}>
@@ -1036,6 +1268,62 @@ export default function AdminPage() {
                               {t("Отозвать")}
                             </button>
                           )}
+                          {i.status !== "accepted" && (
+                            <>
+                              <label>
+                                {t("Роль нового приглашения")}
+                                <select
+                                  value={reissueRoles[i.id] ?? i.role}
+                                  onChange={(event) =>
+                                    setReissueRoles({
+                                      ...reissueRoles,
+                                      [i.id]: event.target.value,
+                                    })
+                                  }
+                                >
+                                  {Object.entries(roleLabels).map(
+                                    ([key, value]) => (
+                                      <option key={key} value={key}>
+                                        {t(value)}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </label>
+                              <button
+                                className={styles.secondary}
+                                disabled={busy || !managementReady}
+                                onClick={() =>
+                                  void perform(async () => {
+                                    const result = await api.post<{
+                                      url: string;
+                                      mail_status: string;
+                                    }>(`/admin/invitations/${i.id}/resend`, {
+                                      locale,
+                                      role: reissueRoles[i.id] ?? i.role,
+                                    });
+                                    setLink(result.data.url);
+                                    setLinkTitle(
+                                      t(
+                                        "Новое приглашение · прежняя ссылка отозвана",
+                                      ),
+                                    );
+                                    setMessage(
+                                      result.data.mail_status === "queued"
+                                        ? t(
+                                            "Ссылка создана, письмо поставлено в очередь доставки.",
+                                          )
+                                        : t(
+                                            "Ссылка создана. Почта пока не настроена: передайте ссылку адресату лично.",
+                                          ),
+                                    );
+                                  })
+                                }
+                              >
+                                {t("Выдать новую ссылку")}
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1049,9 +1337,11 @@ export default function AdminPage() {
           )}
           {tab === "courses" && (
             <>
+              <AdminCoursePanel
+                filters={
               <label className={styles.check}>
                 <input
-                  type="checkbox"
+                  type='checkbox'
                   checked={unassigned}
                   onChange={(e) => {
                     setUnassigned(e.target.checked);
@@ -1060,173 +1350,33 @@ export default function AdminPage() {
                 />
                 {t("Только без владельца")}
               </label>
-              {assign && (
-                <section className={styles.panel}>
-                  <h2>
-                    {t("Назначить владельца курса №")}
-                    {assign.course}
-                  </h2>
-                  <p>
-                    {t(
-                      "Убедитесь, что материалы принадлежат выбранному пользователю. Курс появится только в его аккаунте.",
-                    )}
-                  </p>
-                  <form
-                    className={styles.form}
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void perform(async () => {
-                        await api.post(
-                          `/admin/courses/${assign.course}/assign-owner`,
-                          { user_id: Number(assign.user) },
-                        );
-                        setAssign(null);
-                        setMessage(t("Владелец курса назначен."));
-                      });
-                    }}
-                  >
-                    <label>
-                      {t("Поиск владельца")}
-                      <input
-                        type="search"
-                        value={userSearch}
-                        onChange={(e) => setUserSearch(e.target.value)}
-                        placeholder={t("Имя или email")}
-                      />
-                    </label>
-                    <label>
-                      {t("Пользователь")}
-                      <select
-                        required
-                        value={assign.user}
-                        onChange={(e) =>
-                          setAssign({ ...assign, user: e.target.value })
-                        }
-                      >
-                        <option value="">{t("Выберите владельца")}</option>
-                        {userOptions
-                          .filter((u) => u.is_active)
-                          .map((u) => (
-                            <option key={u.id} value={u.id}>
-                              {u.email}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
-                    <button className={styles.primary} disabled={busy}>
-                      {t("Назначить владельца")}
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.secondary}
-                      onClick={() => setAssign(null)}
-                    >
-                      {t("Отмена")}
-                    </button>
-                  </form>
-                </section>
-              )}
-              <div className={styles.tableWrap}>
-                <table className={styles.table}>
-                  <thead>
-                    <tr>
-                      <th>{t("Курс")}</th>
-                      <th>{t("Владелец")}</th>
-                      <th>{t("Состояние")}</th>
-                      <th>{t("Действие")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {courses.map((c) => (
-                      <tr key={c.id}>
-                        <td>
-                          {c.title || t("Без названия")}
-                          <small>№{c.id}</small>
-                        </td>
-                        <td>
-                          {c.owner_id === null
-                            ? t("Не назначен")
-                            : userOptions.find((u) => u.id === c.owner_id)
-                                ?.email ||
-                              t("Пользователь №{v0}", { v0: c.owner_id })}
-                        </td>
-                        <td>
-                          {t(statuses[c.status] ?? c.status)}
-                          <small>
-                            {t(
-                              statuses[c.publication_status] ??
-                                c.publication_status,
-                            )}
-                          </small>
-                        </td>
-                        <td>
-                          {c.owner_id === null && (
-                            <button
-                              className={styles.secondary}
-                              onClick={() =>
-                                setAssign({ course: c.id, user: "" })
-                              }
-                            >
-                              {t("Назначить владельца")}
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                }
+                capable={managementReady === true}
+                courses={courses}
+                users={userOptions}
+                archived={archivedCourses}
+                setArchived={(value) => {
+                  setArchivedCourses(value);
+                  setOffset(0);
+                }}
+                onChanged={() => setVersion((v) => v + 1)}
+                userSearch={userSearch}
+                setUserSearch={setUserSearch}
+              />
             </>
           )}
           {tab === "requests" && (
-            <>
-              <label className={styles.search}>
-                {t("Показывать")}
-                <select
-                  value={requestStatus}
-                  onChange={(e) => {
-                    setRequestStatus(e.target.value);
-                    setOffset(0);
-                  }}
-                >
-                  <option value="open">{t("Открытые обращения")}</option>
-                  <option value="closed">{t("Обработанные")}</option>
-                </select>
-              </label>
-              {requests.map((r) => (
-                <section className={styles.panel} key={r.reference}>
-                  <h2>{r.name || r.email}</h2>
-                  <p>
-                    {r.email} · {dateText(r.created_at)}
-                  </p>
-                  <p style={{ whiteSpace: "pre-wrap" }}>{r.message}</p>
-                  <p>
-                    {t("Номер:")} {r.reference}
-                  </p>
-                  {r.status === "open" && (
-                    <button
-                      className={styles.secondary}
-                      disabled={busy}
-                      onClick={() =>
-                        void perform(async () => {
-                          await api.post(
-                            `/admin/requests/${r.reference}/close`,
-                          );
-                          setMessage(t("Обращение отмечено как обработанное."));
-                        })
-                      }
-                    >
-                      {t("Отметить обработанным")}
-                    </button>
-                  )}
-                </section>
-              ))}
-              {!requests.length && !loading && (
-                <div className={styles.empty}>
-                  {t("Обращений в этом списке нет.")}
-                </div>
-              )}
-            </>
+            <AdminRequestPanel
+              capable={managementReady === true}
+              requests={requests}
+              status={requestStatus}
+              setStatus={(value) => {
+                setRequestStatus(value);
+                setOffset(0);
+              }}
+              onChanged={() => setVersion((v) => v + 1)}
+              loading={loading}
+            />
           )}
           {tab === "audit" && (
             <div className={styles.tableWrap}>

@@ -25,10 +25,11 @@ export type Group = {
   name: string;
   description: string;
   is_archived: boolean;
+  state_token: string;
   user_ids: number[];
   staff: { id: number; user_id: number; role: string }[];
 };
-export type Department = { id: number; name: string; parent_id: number | null };
+export type Department = { id: number; name: string; parent_id: number | null; is_archived: boolean; state_token: string };
 export type Person = {
   user_id: number;
   department_id: number | null;

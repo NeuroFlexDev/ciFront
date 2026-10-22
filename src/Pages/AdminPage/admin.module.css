@@ -463,8 +463,8 @@
   grid-column: 1/-1;
   padding-top: 6px;
 }
-.form .check,
-.check {
+.layout label.check,
+.deliveryPage label.check {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -472,6 +472,42 @@
   color: #d8e1cd;
   font-size: 13px;
   line-height: 1.6;
+}
+.filterRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+.layout .form :is(input:not([type="checkbox"]), select, textarea) {
+  background: #1a1a1a;
+  border-color: #424242;
+}
+.content > :global(.draft-notice) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 18px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 12px 16px;
+  background: #1a1a1a;
+  border-color: #353535;
+  color: #b8b8b8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.content > :global(.draft-notice) button {
+  flex-shrink: 0;
+  margin: 0;
+  background: #252525;
+  color: #d8dfc9;
+  border: 1px solid #45483e;
+}
+.content > :global(.draft-notice--error) {
+  background: #302020;
+  border-color: #8e5757;
+  color: #ffd6d6;
 }
 .check input {
   width: 19px;
@@ -1001,4 +1037,10 @@
   .cardAction:hover {
     transform: none;
   }
+}
+.layoutReset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }

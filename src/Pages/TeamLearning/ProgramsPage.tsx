@@ -19,16 +19,21 @@ import {
   type TeamMember,
 } from "./types";
 import s from "../Learning/learning.module.css";
+import ArchivePanel from './ArchivePanel';
+import { ManagementCapabilityNotice } from './ManagementCapability';
+import { useManagementCapability } from './useManagementCapability';
 
 export default function ProgramsPage() {
   const { t } = useLocale();
 
+  const capability = useManagementCapability();
   const programs = useLearningData<{ items: Program[] }>("/team/programs");
   const catalogue = useLearningData<{ items: CatalogueItem[] }>(
     "/team/catalogue",
   );
   const team = useLearningData<Team>("/team");
   const [selected, setSelected] = useState<number | null>(null);
+  const [archived, setArchived] = useState(false);
   return (
     <Shell
       title={t("Программы обучения")}
@@ -38,6 +43,9 @@ export default function ProgramsPage() {
     >
       <div className={s.page}>
         <TeamTabs />
+        <ManagementCapabilityNotice capability={capability} />
+        <button className={s.secondary} disabled={!capability.supported} aria-pressed={archived} onClick={() => { setArchived(!archived); setSelected(null); }}>{t(archived ? 'К активным записям' : 'Открыть архив')}</button>
+        {archived && <ArchivePanel kind="programs" onRestored={programs.reload} />}
         {[programs, catalogue, team].map((r, i) =>
           r.error ? (
             <RequestError
@@ -50,7 +58,7 @@ export default function ProgramsPage() {
         {programs.loading && !programs.data ? (
           <LoadingState>{t("Загружаем программы…")}</LoadingState>
         ) : (
-          programs.data &&
+          !archived && programs.data &&
           catalogue.data && (
             <div className={s.layout}>
               <div className={s.stack}>
@@ -59,6 +67,7 @@ export default function ProgramsPage() {
                   program={programs.data.items.find((p) => p.id === selected)}
                   catalogue={catalogue.data.items}
                   reload={programs.reload}
+                  lifecycleSupported={capability.supported}
                   select={setSelected}
                 />
                 {selected && (
@@ -106,11 +115,13 @@ export default function ProgramsPage() {
 }
 
 function ProgramForm({
+  lifecycleSupported,
   program,
   catalogue,
   reload,
   select,
 }: {
+  lifecycleSupported: boolean;
   program?: Program;
   catalogue: CatalogueItem[];
   reload: () => Promise<void>;
@@ -172,6 +183,7 @@ function ProgramForm({
         void save();
       }}
     >
+      <fieldset disabled={action.busy} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
       <h2>{program ? t("Редактирование программы") : t("Новая программа")}</h2>
       {conflict && (
         <div className={s.conflict}>
@@ -415,7 +427,7 @@ function ProgramForm({
             <button
               type="button"
               className={s.danger}
-              disabled={action.busy}
+              disabled={!lifecycleSupported || action.busy}
               onClick={() => {
                 if (
                   confirm(
@@ -425,7 +437,7 @@ function ProgramForm({
                   )
                 )
                   void action.run(async () => {
-                    await api.delete(`/team/programs/${program.id}`);
+                    await api.post(`/team/programs/${program.id}/archive`, { expected_revision: program.revision });
                     await reload();
                     select(null);
                   }, t("Программа архивирована"));
@@ -437,6 +449,7 @@ function ProgramForm({
         </div>
         <ActionStatus action={action} />
       </div>
+      </fieldset>
     </form>
   );
 }

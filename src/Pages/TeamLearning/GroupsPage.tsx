@@ -21,12 +21,16 @@ import {
   initials,
 } from "./types";
 import s from "../Learning/learning.module.css";
+import ArchivePanel from './ArchivePanel';
+import { ManagementCapabilityNotice } from './ManagementCapability';
+import { useManagementCapability } from './useManagementCapability';
 
 export default function GroupsPage() {
   const roleName = useRoleNames();
 
   const { t } = useLocale();
 
+  const capability = useManagementCapability();
   const team = useLearningData<Team>("/team");
   const groups = useLearningData<{ items: Group[] }>("/team/groups");
   const departments = useLearningData<{ items: Department[] }>(
@@ -34,6 +38,7 @@ export default function GroupsPage() {
   );
   const people = useLearningData<{ items: Person[] }>("/team/people");
   const [tab, setTab] = useState("groups");
+  const [archived, setArchived] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const personPanel = useRef<HTMLDivElement>(null);
@@ -101,6 +106,7 @@ export default function GroupsPage() {
                       aria-selected={tab === key}
                       onClick={() => {
                         setTab(key);
+                        setArchived(false);
                         setSelected(null);
                       }}
                     >
@@ -124,7 +130,11 @@ export default function GroupsPage() {
                 </div>
               </div>
               <ActionStatus action={exportAction} />
-              {tab === "groups" && (
+              {team.data.can_manage && tab !== 'people' && <ManagementCapabilityNotice capability={capability} />}
+              {team.data.can_manage && tab !== 'people' && <button className={s.secondary} disabled={!capability.supported} aria-pressed={archived}
+                onClick={() => { setArchived(!archived); setSelected(null); }}>{t(archived ? 'К активным записям' : 'Открыть архив')}</button>}
+              {archived && tab !== 'people' && <ArchivePanel key={tab} kind={tab === 'groups' ? 'groups' : 'departments'} onRestored={reload} />}
+              {!archived && tab === "groups" && (
                 <div className={s.layout}>
                   <div className={s.stack}>
                     {selected &&
@@ -276,7 +286,7 @@ export default function GroupsPage() {
                     )}
                 </>
               )}
-              {tab === "departments" && (
+              {!archived && tab === "departments" && (
                 <Departments
                   data={departments.data?.items ?? []}
                   canManage={team.data.can_manage}
@@ -326,6 +336,7 @@ function GroupCreate({
             required
             maxLength={200}
             value={draft.name}
+            disabled={action.busy}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
           />
         </label>
@@ -334,6 +345,7 @@ function GroupCreate({
           <textarea
             maxLength={10000}
             value={draft.description}
+            disabled={action.busy}
             onChange={(e) =>
               setDraft({ ...draft, description: e.target.value })
             }
@@ -351,7 +363,7 @@ function GroupCreate({
   );
 }
 
-function GroupForm({
+export function GroupForm({
   group,
   members,
   canManage,
@@ -367,24 +379,36 @@ function GroupForm({
   const roleName = useRoleNames();
 
   const { t } = useLocale();
+  const capability = useManagementCapability();
 
   const [draft, setDraft, clear] = useDurableState(
     `learning-group:${group.id}`,
-    { name: group.name, description: group.description },
+    { name: group.name, description: group.description, expected_state: group.state_token },
   );
   const [add, setAdd] = useState<number[]>([]);
   const action = useTeamAction();
+  const conflict = draft.expected_state !== group.state_token || !draft.expected_state;
   return (
     <section className={s.card}>
       <h2>{group.name}</h2>
+      {canManage && <ManagementCapabilityNotice capability={capability} />}
+      {conflict && <div className={s.conflict}><h3>{t('Сравните сохранённую запись')}</h3>
+        <p>{group.name}</p><p>{group.description}</p><p>{t('Ваш черновик сохранён. Подтвердите текущую версию перед записью изменений.')}</p>
+        <button className={s.secondary} disabled={action.busy} onClick={() => setDraft({ ...draft, expected_state: group.state_token })}>{t('Сохранить мои изменения поверх после сравнения')}</button>
+      </div>}
       <form
         className={s.stack}
         onSubmit={(e) => {
           e.preventDefault();
+          if (!capability.supported || conflict) return;
           void action.run(async () => {
-            await api.put(`/team/groups/${group.id}`, draft);
-            clear(draft);
-            await reload();
+            try {
+              const result = await api.put<Group>(`/team/groups/${group.id}`, draft);
+              clear(draft);
+              const saved = { ...draft, expected_state: result.data.state_token };
+              setDraft(saved); clear(saved);
+              await reload();
+            } catch (error) { await reload(); throw error; }
           });
         }}
       >
@@ -411,7 +435,7 @@ function GroupForm({
         </label>
         {canManage && (
           <div className={s.row}>
-            <button className={s.primary} disabled={action.busy}>
+            <button className={s.primary} disabled={!capability.supported || action.busy || conflict}>
               {t("Сохранить")}
             </button>
             <Link className={s.secondary} to="/assignments">
@@ -521,7 +545,7 @@ function GroupForm({
         <button
           className={s.danger}
           style={{ marginTop: 24 }}
-          disabled={action.busy}
+          disabled={!capability.supported || action.busy}
           onClick={() => {
             if (
               confirm(
@@ -531,7 +555,7 @@ function GroupForm({
               )
             )
               void action.run(async () => {
-                await api.delete(`/team/groups/${group.id}`);
+                await api.post(`/team/groups/${group.id}/archive`, { expected_state: group.state_token });
                 await reload();
                 onArchive();
               }, t("Группа архивирована"));
@@ -544,7 +568,7 @@ function GroupForm({
   );
 }
 
-function Departments({
+export function Departments({
   data,
   canManage,
   reload,
@@ -554,18 +578,23 @@ function Departments({
   reload: () => Promise<void>;
 }) {
   const { t } = useLocale();
+  const capability = useManagementCapability();
 
   const [draft, setDraft, clear] = useDurableState("learning-department", {
     id: null as number | null,
     name: "",
     parent_id: "",
+    expected_state: "",
   });
   const id = draft.id ?? null;
+  const current = data.find(row => row.id === id);
+  const conflict = !!id && (!draft.expected_state || draft.expected_state !== current?.state_token);
   const action = useTeamAction();
   return (
     <div className={s.grid}>
       <section className={s.card}>
         <h2>{t("Структура организации")}</h2>
+        {canManage && <ManagementCapabilityNotice capability={capability} />}
         {data.map((d) => (
           <div className={s.spread} key={d.id}>
             <div>
@@ -586,6 +615,7 @@ function Departments({
                       id: d.id,
                       name: d.name,
                       parent_id: String(d.parent_id ?? ""),
+                      expected_state: d.state_token,
                     });
                   }}
                 >
@@ -593,7 +623,7 @@ function Departments({
                 </button>
                 <button
                   className={s.danger}
-                  disabled={action.busy}
+                  disabled={!capability.supported || action.busy}
                   onClick={() => {
                     if (
                       confirm(
@@ -604,7 +634,7 @@ function Departments({
                       )
                     )
                       void action.run(async () => {
-                        await api.delete(`/team/departments/${d.id}`);
+                        await api.post(`/team/departments/${d.id}/archive`, { expected_state: d.state_token });
                         await reload();
                       });
                   }}
@@ -624,20 +654,27 @@ function Departments({
           className={s.card}
           onSubmit={(e) => {
             e.preventDefault();
+            if (id && (!capability.supported || conflict)) return;
             void action.run(async () => {
               const body = {
                 name: draft.name,
                 parent_id: draft.parent_id ? Number(draft.parent_id) : null,
               };
-              if (id) await api.put(`/team/departments/${id}`, body);
+              if (id) await api.put(`/team/departments/${id}`, { ...body, expected_state: draft.expected_state });
               else await api.post("/team/departments", body);
               clear(draft);
-              setDraft({ id: null, name: "", parent_id: "" });
+              setDraft({ id: null, name: "", parent_id: "", expected_state: "" });
               await reload();
             });
           }}
         >
           <h2>{id ? t("Изменить подразделение") : t("Новое подразделение")}</h2>
+          <fieldset disabled={action.busy} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
+          {conflict && <div className={s.conflict}><h3>{t('Сравните сохранённую запись')}</h3><p>{current?.name ?? t('Запись недоступна в активном списке.')}</p>
+            <p>{t('Ваш черновик сохранён. Подтвердите текущую версию перед записью изменений.')}</p>
+            {current && <button type="button" className={s.secondary} onClick={() => setDraft({ ...draft, expected_state: current.state_token })}>{t('Сохранить мои изменения поверх после сравнения')}</button>}
+          </div>}
+          {!!action.error && <button type="button" className={s.secondary} onClick={() => void reload()}>{t('Обновить текущую запись')}</button>}
           <div className={s.stack}>
             <label className={s.field}>
               {t("Название")}
@@ -669,7 +706,7 @@ function Departments({
             <div className={s.row}>
               <button
                 className={s.primary}
-                disabled={action.busy || !draft.name.trim()}
+                disabled={action.busy || conflict || (!!id && !capability.supported) || !draft.name.trim()}
               >
                 {t("Сохранить")}
               </button>
@@ -678,7 +715,7 @@ function Departments({
                   type="button"
                   className={s.secondary}
                   onClick={() => {
-                    setDraft({ id: null, name: "", parent_id: "" });
+                    setDraft({ id: null, name: "", parent_id: "", expected_state: "" });
                   }}
                 >
                   {t("Новое подразделение")}
@@ -687,6 +724,7 @@ function Departments({
             </div>
             <ActionStatus action={action} />
           </div>
+          </fieldset>
         </form>
       )}
     </div>

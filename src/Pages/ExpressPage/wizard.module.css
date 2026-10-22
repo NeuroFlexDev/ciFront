@@ -264,7 +264,7 @@
 .sourceFillNotice > svg { flex: 0 0 auto; color: #caf432; margin-top: 3px; }
 .sourceFillNotice p { margin: 6px 0 0; font-size: 14px; }
 .sourceFillNotice button { margin-top: 12px; }
-.page .planApproval { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.6; }
+.page .planApproval { display: flex; align-items: flex-start; gap: 12px; margin-top: 14px; font-size: 14px; line-height: 1.6; }
 .page .planApproval input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 3px 0 0; padding: 0; accent-color: #caf432; }
 .preflight { padding: clamp(22px, 3.5vw, 44px); border-radius: 32px; background: #141414; }
 .preflightHeader { display: flex; align-items: flex-start; gap: 22px; margin-bottom: 32px; }

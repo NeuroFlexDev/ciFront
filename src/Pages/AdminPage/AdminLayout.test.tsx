@@ -11,7 +11,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import AdminPage from "./AdminPage";
 import { api } from "@/shared/api";
-import { setDraftOwner } from "@/shared/drafts";
+import { setDraftOwner, writeDraft } from "@/shared/drafts";
 
 const identity = vi.hoisted(() => ({ is_admin: true }));
 vi.mock("@/auth/useAuth", () => ({
@@ -32,6 +32,7 @@ const organization = {
   course_limit: 20,
   source_limit: 12,
   generation_limit: 30,
+  state_token: 'a'.repeat(64),
 };
 const overview = {
   users: 17,
@@ -58,7 +59,9 @@ beforeEach(() => {
   identity.is_admin = true;
   vi.mocked(api.get).mockImplementation(async (path) => ({
     data:
-      path === "/admin/overview"
+      path === '/admin/management-capabilities'
+        ? { version: 1 }
+        : path === "/admin/overview"
         ? overview
         : path.startsWith("/admin/organizations")
           ? { items: [organization], total: 1 }
@@ -186,4 +189,44 @@ it("never loads administrator data for an organization member", async () => {
     screen.getByRole("heading", { name: "Доступ заблокирован" }),
   ).toBeVisible();
   expect(api.get).not.toHaveBeenCalled();
+});
+
+it('preserves a legacy organization draft but requires explicit comparison before saving it', async () => {
+  writeDraft('admin:organization-form', { id: 2, name: 'Legacy unsaved name', kind: 'business', is_active: true,
+    seat_limit: 10, course_limit: 20, source_limit: 12, generation_limit: 30 }, undefined, 90);
+  const previousGet = vi.mocked(api.get).getMockImplementation()!;
+  vi.mocked(api.get).mockImplementation(async path => path === '/admin/organizations/2'
+    ? { data: { ...organization, name: 'Current server name', state_token: 'z'.repeat(64) } }
+    : previousGet(path));
+  vi.mocked(api.put).mockResolvedValue({ data: {} });
+  show('organizations');
+  expect(screen.getByRole('textbox', { name: 'Название' })).toHaveValue('Legacy unsaved name');
+  expect(screen.getByRole('button', { name: 'Сохранить заказчика' })).toBeDisabled();
+  fireEvent.click(await screen.findByRole('button', { name: 'Сравнить с текущей записью' }));
+  await screen.findByText(/Current server name/);
+  expect(screen.getByRole('textbox', { name: 'Название' })).toHaveValue('Legacy unsaved name');
+  expect(api.put).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Сохранить мои поля поверх этой версии' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Сохранить заказчика' }));
+  await waitFor(() => expect(api.put).toHaveBeenCalledWith('/admin/organizations/2', expect.objectContaining({
+    name: 'Legacy unsaved name', expected_state: 'z'.repeat(64),
+  })));
+});
+
+it('disables new management mutations on an older server and retains the draft', async () => {
+  const previousGet = vi.mocked(api.get).getMockImplementation()!;
+  vi.mocked(api.get).mockImplementation(async path => {
+    if (path === '/admin/management-capabilities') throw new Error('Not found');
+    return previousGet(path);
+  });
+  writeDraft('admin:organization-form', { id: 2, name: 'Keep my draft', kind: 'business', is_active: true,
+    seat_limit: 10, course_limit: 20, source_limit: 12, generation_limit: 30 }, undefined, 90);
+  show('organizations');
+  await screen.findByText(/Сервер ещё не поддерживает/);
+  expect(screen.getByRole('button', { name: 'Сохранить заказчика' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Название' })).toHaveValue('Keep my draft');
+  await screen.findByRole('button', { name: 'Приостановить' });
+  expect(screen.getByRole('button', { name: 'Приостановить' })).toBeDisabled();
+  expect(api.put).not.toHaveBeenCalled();
+  expect(api.post).not.toHaveBeenCalled();
 });
