@@ -101,6 +101,7 @@ it('owner invites a manager with no employee position or password', async () => 
     data: { url: 'https://example.test/invite#token=opaque', mail_status: 'queued' },
   });
   open();
+  expect(screen.getByRole('link', {name: 'Все регламенты ↗'})).toHaveAttribute('href', '/courses');
   fireEvent.click(await screen.findByRole('button', { name: 'Пригласить в компанию' }));
   fireEvent.change(screen.getByLabelText('Электронная почта'), {
     target: { value: 'manager@example.test' },

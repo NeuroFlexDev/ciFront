@@ -111,6 +111,7 @@ function PlatformMenu() {
         : []),
   ];
   const extra = [
+    ...(manager ? [['/courses', t('Все регламенты')]] : []),
     ...(author
       ? [
           ['/templates', t('Сценарии')],
