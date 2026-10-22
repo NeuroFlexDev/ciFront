@@ -1,7 +1,9 @@
 import { useLocale, getLocale } from "@/i18n/useLocale";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { FileUp, Globe2, LayoutTemplate, Plus, Sparkles } from "lucide-react";
+import { AuthContext } from '@/auth/auth-context';
+import { isBusiness } from '@/shared/business';
 import Menu from "@/Components/Menu/Menu";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -115,7 +117,10 @@ export function WizardSteps({
 export default function CourseWizard() {
   const { t, locale } = useLocale();
 
+  const business = isBusiness(useContext(AuthContext)?.user);
   const [params, setParams] = useSearchParams();
+  const positionId = Number(params.get('position')) || null;
+  const positionParams: Record<string, string> = positionId ? { position: String(positionId) } : {};
   const template = templates.find((item) => item.id === params.get("template"));
   const courseId = Number(params.get("course")) || null;
   const runId = Number(params.get("run")) || null;
@@ -133,8 +138,8 @@ export default function CourseWizard() {
       target_audience: template ? t(template.audience) : "",
       difficulty: "basic",
       language: getLocale(),
-      lesson_count: template?.lessons ?? 6,
-      module_tests_enabled: true,
+      lesson_count: business ? 1 : template?.lessons ?? 6,
+      module_tests_enabled: !business,
       final_test_enabled: true,
       approved_plan: [],
       expected_revision: 0,
@@ -145,6 +150,7 @@ export default function CourseWizard() {
     web_search_enabled: true,
   });
   const { settings } = draft;
+  const singleDocument = business && settings.lesson_count === 1;
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -455,7 +461,7 @@ export default function CourseWizard() {
           `/courses/${courseId}/generation-runs`,
           { settings, document_ids: draft.document_ids, request_id: draft.request_id, ...(draft.generation_search_supported ? { web_search_enabled: draft.web_search_enabled ?? true } : {}) },
         );
-        setParams({ course: String(courseId), run: String(data.run_id) }, { replace: true });
+        setParams({ ...positionParams, course: String(courseId), run: String(data.run_id) }, { replace: true });
         setSubmission("idle");
       } catch (reason) {
         // A lost acceptance response is retried only explicitly, with the same durable request ID.
@@ -472,7 +478,7 @@ export default function CourseWizard() {
       );
       setStoppingRun(null);
       setParams(
-        { course: String(courseId), run: String(data.run_id) },
+        { ...positionParams, course: String(courseId), run: String(data.run_id) },
         { replace: true },
       );
       setVersion((value) => value + 1);
@@ -494,6 +500,7 @@ export default function CourseWizard() {
     <>
       <Menu />
       <main ref={pageRef} className={`${styles.page} ${showingProgress ? styles.generationPage : ""}`}>
+        {business && <p><Link to={positionId ? `/company/positions/${positionId}` : '/company'}>← {t('Персонал')} / {t('Регламенты')}</Link></p>}
         <h1 className={styles.srOnly}>{t("Создать курс по документам")}</h1>
         <WizardSteps step={submission !== "idle" ? 4 : step} onStep={runId || busy || submission !== "idle" ? undefined : go} />
         <div className={styles.content}>
@@ -520,7 +527,7 @@ export default function CourseWizard() {
                     )}
                   </p>
                 </button>
-                <Link to="/templates">
+                {!business && <Link to="/templates">
                   <LayoutTemplate className={styles.modeIcon} aria-hidden="true" />
                   <h3>{t("По сценарию")}</h3>
                   <p>
@@ -528,17 +535,17 @@ export default function CourseWizard() {
                       "Выберите цель обучения и дополните её своими материалами.",
                     )}
                   </p>
-                </Link>
+                </Link>}
                 <button
                   disabled={busy}
                   onClick={() =>
                     void action(async () => {
                       const id = await ensureCourse();
                       setParams(
-                        { course: String(id), step: "2" },
+                        { ...positionParams, course: String(id), step: "2" },
                         { replace: true },
                       );
-                      window.location.assign(`/courses/${id}/edit`);
+                      window.location.assign(`/courses/${id}/edit${positionId ? `?position=${positionId}` : ''}`);
                     })
                   }
                 >
@@ -905,7 +912,7 @@ export default function CourseWizard() {
                       <option value="en">English</option>
                     </select>
                   </label>
-                  <label>
+                  {!singleDocument && <label>
                     {t("Количество уроков в курсе")}
                     <input
                       type="number"
@@ -920,9 +927,9 @@ export default function CourseWizard() {
                         })
                       }
                     />
-                  </label>
+                  </label>}
                 </div>
-                <fieldset>
+                {!singleDocument && <fieldset>
                   <legend>{t("План уроков")}</legend>
                   <p>
                     {t("Можно подготовить план с") + " "}
@@ -991,9 +998,9 @@ export default function CourseWizard() {
                       "Подтверждаю план: использовать эти уроки при генерации",
                     )}
                   </label>
-                </fieldset>
+                </fieldset>}
                 <div className={styles.split}>
-                  <label className={styles.toggle}>
+                  {(!singleDocument || settings.module_tests_enabled) && <label className={styles.toggle}>
                     {t("Тесты после каждого модуля")}
                     <input
                       type="checkbox"
@@ -1003,7 +1010,7 @@ export default function CourseWizard() {
                         change({ module_tests_enabled: event.target.checked })
                       }
                     />
-                  </label>
+                  </label>}
                   <label className={styles.toggle}>
                     {t("Финальный тест")}
                     <input

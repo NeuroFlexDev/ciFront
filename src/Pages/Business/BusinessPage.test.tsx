@@ -43,11 +43,12 @@ const position = {
   employee_count: 1,
   course_count: 1,
 };
-function open() {
+function open(path = '/company') {
   render(
-    <MemoryRouter initialEntries={['/company']}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path='/company' element={<BusinessPage />} />
+        <Route path='/company/positions/:positionId' element={<BusinessPage />} />
         <Route path='/express' element={<h1>Course wizard</h1>} />
       </Routes>
     </MemoryRouter>,
@@ -58,7 +59,7 @@ beforeEach(() => {
   vi.mocked(api.get).mockImplementation(
     async (path) =>
       ({
-        data: path.includes('/courses')
+        data: path === '/business/positions/10' ? position : path.includes('/regulations')
           ? {
               total: 1,
               items: [
@@ -66,7 +67,7 @@ beforeEach(() => {
                   id: 50,
                   name: 'Поддержка клиентов',
                   status: 'ready',
-                  publication_status: 'published',
+                  publication_status: 'published', content_revision: 4,
                 },
               ],
             }
@@ -115,25 +116,27 @@ it('owner invites a manager with no employee position or password', async () => 
     locale: 'ru',
   });
 });
-it('manager creates a course with the reviewed job revision and enters the wizard', async () => {
+it('manager creates a named regulation without curriculum settings', async () => {
   state.role = 'manager';
   vi.mocked(api.post).mockResolvedValue({ data: { url: '/express?course=51&step=1' } });
   open();
   fireEvent.click(await screen.findByRole('button', { name: 'Открыть должность' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Создать курс для должности' }));
-  expect(screen.getByLabelText('Название курса')).toHaveValue('Обучение: Специалист поддержки');
+  fireEvent.click(await screen.findByRole('button', { name: 'Добавить регламент' }));
+  expect(screen.getByLabelText('Название регламента')).toHaveValue('');
+  fireEvent.change(screen.getByLabelText('Название регламента'), {target: {value: '01. Сервис'}});
+  expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Перейти к материалам и настройкам' }));
   await screen.findByRole('heading', { name: 'Course wizard' });
   expect(api.post).toHaveBeenCalledWith(
-    '/business/positions/10/courses',
-    expect.objectContaining({ expected_position_revision: 3, lesson_count: 6, language: 'ru' }),
+    '/business/positions/10/regulations',
+    expect.objectContaining({ expected_position_revision: 3, title: '01. Сервис', language: 'ru' }),
   );
 });
 it('manager cannot appoint another manager and changes employee position with conflict protection', async () => {
   state.role = 'manager';
   vi.mocked(api.put).mockResolvedValue({ data: {} });
   open();
-  fireEvent.click(screen.getByRole('tab', { name: 'Сотрудники и управляющие' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Сотрудники' }));
   const picker = await screen.findByLabelText('Должность: employee@example.test');
   await waitFor(() => expect(picker).toBeEnabled());
   expect(screen.queryByRole('button', { name: 'Назначить управляющим' })).not.toBeInTheDocument();
@@ -163,9 +166,17 @@ it('assigns a published course only after explicit confirmation', async () => {
   fireEvent.click(await screen.findByRole('button', { name: 'Открыть должность' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Назначить сотрудникам' }));
   expect(api.post).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Назначить обучение' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Назначить регламент' }));
   expect(await screen.findByRole('status')).toHaveTextContent('Назначено: 1');
-  expect(api.post).toHaveBeenCalledWith('/business/positions/10/courses/50/assign', {
+  expect(api.post).toHaveBeenCalledWith('/business/positions/10/regulations/50/assign', {
     expected_revision: 3,
   });
+});
+
+it('opens a position directly after reload and preserves material names', async () => {
+  state.role = 'manager';
+  open('/company/positions/10');
+  expect(await screen.findByRole('heading', {name: 'Поддержка клиентов'})).toBeInTheDocument();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.getByRole('link', {name: 'Открыть регламент'})).toHaveAttribute('href', '/courses/50/edit?position=10');
 });

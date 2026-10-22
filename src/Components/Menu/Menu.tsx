@@ -1,5 +1,6 @@
 import {isAdminSurface, adminAppUrl} from '@/shared/surface';
 import AdminMenu from './AdminMenu';
+import { isBusiness, isBusinessManager, businessHome } from '@/shared/business';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
 import { useLocale } from '@/i18n/useLocale';
 import { useEffect, useRef, useState } from 'react';
@@ -86,9 +87,15 @@ function PlatformMenu() {
     };
   }, [user?.id, version]);
   const author = permissions?.can_author ?? !user?.organization_id;
-  const links = [
+  const business = isBusiness(user);
+  const manager = isBusinessManager(user);
+  const links = manager ? [
+    ['/company', t('Персонал')],
+    ...(permissions?.can_report ? [['/learning-analytics', t('Результаты сотрудников')]] : []),
+    ['/learning', t('Мои регламенты')],
+  ] : [
     ['/dashboard', t('Дашборд')],
-    ['/learning', t('Моё обучение')],
+    ['/learning', t(business ? 'Мои регламенты' : 'Моё обучение')],
     ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
     ...(author
       ? [
@@ -133,7 +140,7 @@ function PlatformMenu() {
   ];
   return (
     <header className={styles.menuContainer}>
-      <Link className={styles.brand} to='/dashboard'>
+      <Link className={styles.brand} to={businessHome(user, '/dashboard')}>
         <img src={logo} alt={t('Лерниум')} />
       </Link>
       <nav className={styles.navigationContainer} aria-label={t('Разделы платформы')}>

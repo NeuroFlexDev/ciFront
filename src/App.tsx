@@ -190,6 +190,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path='/company/positions/:positionId' element={<ProtectedRoute><BusinessPage /></ProtectedRoute>} />
             <Route path='/company' element={<ProtectedRoute><BusinessPage /></ProtectedRoute>} />
             <Route path='/invite' element={<InvitePage />} />
             <Route path='*' element={<StatusPage />} />

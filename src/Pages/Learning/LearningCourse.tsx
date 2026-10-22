@@ -1,5 +1,7 @@
 import { useLocale } from '@/i18n/useLocale';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { AuthContext } from '@/auth/auth-context';
+import { isBusiness } from '@/shared/business';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '@/shared/api';
 import { Shell } from '@/Pages/Workspace/shared';
@@ -15,6 +17,7 @@ import s from './learning.module.css';
 
 export default function LearningCourse() {
   const { t } = useLocale();
+  const business = isBusiness(useContext(AuthContext)?.user);
 
   const { id } = useParams();
   const [params, setParams] = useSearchParams();
@@ -231,7 +234,7 @@ export default function LearningCourse() {
                   {lesson ? (
                     <>
                       <article className={s.article}>
-                        <p className={s.accent}>{lesson.module.title}</p>
+                        {!business && <p className={s.accent}>{lesson.module.title}</p>}
                         <h2>{lesson.title}</h2>
                         <MarkdownContent>{lesson.content}</MarkdownContent>
                         <hr className={s.divider} />
@@ -295,10 +298,10 @@ export default function LearningCourse() {
                 <nav className={s.rail} aria-label={t('Уроки и задания курса')}>
                   {data.content.modules.map((m, i) => (
                     <div className={s.stack} style={{ gap: 10 }} key={m.id}>
-                      <div className={s.railSection}>
+                      {!business && <div className={s.railSection}>
                         {t('Модуль') + ' '}
                         {i + 1} · {m.title}
-                      </div>
+                      </div>}
                       {m.lessons.map((l, n) => (
                         <button
                           key={l.id}
