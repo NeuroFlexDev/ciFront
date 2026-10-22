@@ -54,7 +54,7 @@ export default function MyCoursesPage() {
       !window.confirm(
         t(
           'Удалить курс «{v0}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.',
-          { v0: course.title || t('Черновик №') + course.id },
+          { v0: course.title?.trim() || t('Черновик №{v0}', { v0: course.id }) },
         ),
       )
     )
@@ -115,6 +115,7 @@ export default function MyCoursesPage() {
         <div className={cs.grid}>
           {courses.map((c) => {
             const href = c.lesson_count ? `/courses/${c.id}/edit` : `/express?course=${c.id}`;
+            const title = c.title?.trim() || t('Черновик №{v0}', { v0: c.id });
             return (
               <article className={cs.card} key={c.id}>
                 <div className={cs.cardTop}>
@@ -128,7 +129,7 @@ export default function MyCoursesPage() {
                     <Link
                       className={cs.circle}
                       to={`/courses/${c.id}/canvas`}
-                      aria-label={`${t('Канва')}: ${c.title || c.id}`}
+                      aria-label={`${t('Канва')}: ${title}`}
                       title={t('Канва')}
                     >
                       <Network size={23} strokeWidth={1.5} />
@@ -136,7 +137,7 @@ export default function MyCoursesPage() {
                     <Link
                       className={cs.circle}
                       to={href}
-                      aria-label={`${t('Открыть курс')}: ${c.title || c.id}`}
+                      aria-label={`${t('Открыть курс')}: ${title}`}
                       title={t('Открыть курс')}
                     >
                       <ArrowUpRight size={27} strokeWidth={1.6} />
@@ -145,7 +146,7 @@ export default function MyCoursesPage() {
                 </div>
                 <div className={cs.cardBody}>
                   <h2>
-                    <Link to={href}>{c.title || t('Черновик №{v0}', { v0: c.id })}</Link>
+                    <Link to={href}>{title}</Link>
                   </h2>
                   <dl className={cs.metrics}>
                     <div>
