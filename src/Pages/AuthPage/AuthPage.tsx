@@ -1,3 +1,4 @@
+import {isAdminSurface, homePath} from '@/shared/surface';
 import LanguageSwitch from '@/Components/LanguageSwitch';
 import {useLocale} from '@/i18n/useLocale';
 import { FormEvent, useEffect, useRef, useState } from 'react';
@@ -22,7 +23,7 @@ export default function AuthPage() {
     const [ssoPending, setSsoPending] = useState(() => ['sso_code', 'lti_code'].some(key => ssoFragment.current.has(key)));
     const completeAuthentication = useRef(auth.completeAuthentication);
     completeAuthentication.current = auth.completeAuthentication;
-    const isRegistration = params.get('mode') === 'register';
+    const isRegistration = !isAdminSurface && params.get('mode') === 'register';
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
@@ -37,7 +38,7 @@ export default function AuthPage() {
     useEffect(() => {
         // Finish the existing session check before consuming a one-use SSO code.
         // This also avoids a StrictMode mount cycle invalidating its only exchange.
-        if(isLoading)return;
+        if(isLoading || isAdminSurface)return;
         if (ssoStarted.current)
             return;
         ssoStarted.current = true;
@@ -69,7 +70,7 @@ export default function AuthPage() {
             if (!completeAuthentication.current)
                 throw new Error(t("Не удалось завершить вход. Обновите страницу и откройте вход заново."));
             completeAuthentication.current(data,session);
-            navigate(data.assignment_id ? `/learning/${data.assignment_id}` : data.user.is_admin ? '/admin' : '/dashboard', { replace: true });
+            navigate(data.assignment_id ? `/learning/${data.assignment_id}` : homePath, { replace: true });
         }).catch(reason => { setError(t("{value0} Повторите вход из корпоративного сервиса или LMS; ваши материалы и ответы сохранены.", { value0: reason instanceof Error ? reason.message : t("Не удалось завершить вход.") })); }).finally(() => setSsoPending(false));
     }, [navigate,t,isLoading]);
     useEffect(() => {
@@ -88,7 +89,7 @@ export default function AuthPage() {
         if (!isLoading && isAuthenticated && !ssoHandled) {
             const next = params.get('next');
             const safe = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') && !next.startsWith('/auth');
-            navigate(safe ? next : user?.is_admin ? '/admin' : '/dashboard', { replace: true });
+            navigate(safe ? next : homePath, { replace: true });
         }
     }, [isAuthenticated, isLoading, navigate, params, user?.is_admin, ssoHandled]);
     async function submit(event: FormEvent<HTMLFormElement>) {
@@ -130,17 +131,17 @@ export default function AuthPage() {
     <div className={styles.shell}>
       <section className={styles.story}>
         <a className={styles.brand} href="/">{t("ЛЕРНИУМ")}</a>
-        <div className={styles.storyBody}><h1>{isRegistration ? t("Создайте свой первый курс") : t("Ваши идеи. Ваши курсы.")}</h1>
+        <div className={styles.storyBody}><h1>{isAdminSurface ? t("Управление Лерниумом") : isRegistration ? t("Создайте свой первый курс") : t("Ваши идеи. Ваши курсы.")}</h1>
           <p>{isRegistration ? t("От ваших материалов — к новому учебному опыту") : t("Продолжите работу там, где остановились")}</p>
-          <ol className={styles.steps}><li><span>1</span>{t("Создайте")}<br />{t("свой аккаунт")}</li><li><span>2</span>{t("Добавьте")}<br />{t("учебные материалы")}</li><li><span>3</span>{t("Подготовьте")}<br />{t("и проверьте курс")}</li></ol>
+          {!isAdminSurface && <ol className={styles.steps}><li><span>1</span>{t("Создайте")}<br />{t("свой аккаунт")}</li><li><span>2</span>{t("Добавьте")}<br />{t("учебные материалы")}</li><li><span>3</span>{t("Подготовьте")}<br />{t("и проверьте курс")}</li></ol>}
         </div>
       </section>
       <section className={styles.card} aria-labelledby="auth-title">
         <LanguageSwitch/><h2 id="auth-title">{isRegistration ? t("Регистрация") : t("С возвращением")}</h2>
         {ssoPending && <p className={styles.notice} role="status">{t("Проверяем корпоративный вход…")}</p>}
-        {!isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
+        {!isAdminSurface && !isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
         {ssoHandled && !ssoPending && isAuthenticated && <p><Link to="/account">{t("Вернуться к своему профилю")}</Link></p>}
-        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={(data,session)=>{auth.completeAuthentication?.(data,session);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:data.user.is_admin?'/admin':'/dashboard',{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
+        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={(data,session)=>{auth.completeAuthentication?.(data,session);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:homePath,{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
             <form className={styles.form} onSubmit={submit}>
           {isRegistration && <div className={styles.nameRow}>
             <label>{t("Имя") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder={t("Иван")}/></label>
@@ -157,7 +158,7 @@ export default function AuthPage() {
             <label className={styles.checkbox}><input type="checkbox" checked={marketing} onChange={e => setMarketing(e.target.checked)}/><span>{t("Хочу получать новости и предложения Лерниума: даю отдельное") + " "}<a href="/legal/marketing-consent/" target="_blank" rel="noopener">{t("согласие на рассылку")}</a>{t(". Необязательно.")}</span></label>
           </div>}
         </form>}
-        <p className={styles.switch}>{isRegistration ? t("Уже есть аккаунт?") : t("Впервые здесь?")} <button type="button" onClick={switchMode}>{isRegistration ? t("Войти") : t("Зарегистрироваться")}</button></p>
+        {!isAdminSurface && <p className={styles.switch}>{isRegistration ? t("Уже есть аккаунт?") : t("Впервые здесь?")} <button type="button" onClick={switchMode}>{isRegistration ? t("Войти") : t("Зарегистрироваться")}</button></p>}
         <footer className={styles.footer}><a href="/legal/">{t("Все документы")}</a><a href="/legal/contacts/">{t("Помощь и контакты")}</a></footer>
       </section>
     </div>

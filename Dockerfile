@@ -25,6 +25,7 @@ RUN apk upgrade --no-cache
 
 # Копируем готовую сборку из builder-а
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY --from=builder /app/admin-dist /usr/share/nginx/admin
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Открываем порт 80

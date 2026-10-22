@@ -20,10 +20,8 @@ const AiHelperPage = lazy(() => import('./Pages/AiHelperPage/AiHelperPage'));
 const TemplatesPage = lazy(() => import('./Pages/Workspace/Templates'));
 const Dashboard = lazy(() => import('./Pages/Workspace/Dashboard'));
 const TeamPage = lazy(() => import('./Pages/Workspace/TeamPage'));
-const AdminPage = lazy(() => import('./Pages/AdminPage/AdminPage'));
-const DeliveryPage = lazy(() => import('./Pages/AdminPage/DeliveryPage'));
+const BusinessPage = lazy(() => import('./Pages/Business/BusinessPage'));
 const IntegrationsPage = lazy(() => import('./Pages/Integrations/IntegrationsPage'));
-const AdminOperationsPage = lazy(() => import('./Pages/Integrations/AdminOperationsPage'));
 const BillingPage = lazy(() => import('./Pages/Billing/BillingPage'));
 const InvitePage = lazy(() => import('./Pages/InvitePage/InvitePage'));
 const ExpressPage = lazy(() => import('./Pages/ExpressPage/ExpressPage'));
@@ -93,38 +91,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TeamPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/admin'
-              element={
-                <ProtectedRoute>
-                  <AdminPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/admin/organizations/:organizationId/delivery'
-              element={
-                <ProtectedRoute>
-                  <DeliveryPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/admin/organizations/:organizationId/billing'
-              element={
-                <ProtectedRoute>
-                  <BillingPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/admin/operations'
-              element={
-                <ProtectedRoute>
-                  <AdminOperationsPage />
                 </ProtectedRoute>
               }
             />
@@ -224,6 +190,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path='/company' element={<ProtectedRoute><BusinessPage /></ProtectedRoute>} />
             <Route path='/invite' element={<InvitePage />} />
             <Route path='*' element={<StatusPage />} />
             <Route

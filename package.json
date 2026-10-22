@@ -8,12 +8,14 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && npm run build:admin",
     "preview": "vite preview",
     "test": "vitest --passWithNoTests",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix"
+    "lint:fix": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
+    "dev:admin": "vite --mode admin --port 5174",
+    "build:admin": "vite build --mode admin && node -e \"require('node:fs').renameSync('admin-dist/admin.html','admin-dist/index.html')\""
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

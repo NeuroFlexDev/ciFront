@@ -1,3 +1,5 @@
+import {isAdminSurface, adminAppUrl} from '@/shared/surface';
+import AdminMenu from './AdminMenu';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
 import { useLocale } from '@/i18n/useLocale';
 import { useEffect, useRef, useState } from 'react';
@@ -9,6 +11,7 @@ import logo from '@/assets/icons/logo.svg';
 import styles from './styles.module.css';
 type Permissions = {
   can_manage_team: boolean;
+  can_manage_business?: boolean;
   can_author: boolean;
   can_review: boolean;
   can_report: boolean;
@@ -18,6 +21,9 @@ type Permissions = {
 let navigationCache: { userId: number; token: string; at: number; value: Permissions } | null =
   null;
 export default function Menu() {
+  return isAdminSurface ? <AdminMenu /> : <PlatformMenu />;
+}
+function PlatformMenu() {
   const { t, locale, setLocale } = useLocale();
   const roleName = useRoleNames();
 
@@ -83,6 +89,7 @@ export default function Menu() {
   const links = [
     ['/dashboard', t('Дашборд')],
     ['/learning', t('Моё обучение')],
+    ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
     ...(author
       ? [
           ['/courses', t('Курсы')],
@@ -119,8 +126,8 @@ export default function Menu() {
       : []),
     ...(permissions?.can_manage_team ? [['/integrations', t('Интеграции')]] : []),
     ...(user?.organization_role === 'owner' ? [['/billing', t('Договор и оплата')]] : []),
-    ...(user?.is_admin ? [['/admin', t('Управление платформой')]] : []),
-    ...(user?.is_admin || user?.organization_role === 'owner'
+
+    ...(user?.organization_role === 'owner'
       ? [['/support-access', t('Доступ поддержки')]]
       : []),
   ];
@@ -173,6 +180,7 @@ export default function Menu() {
         </summary>
         <nav className={styles.dropdown} aria-label={t('Профиль и дополнительные разделы')}>
           <Link to='/account'>{t('Профиль и безопасность')}</Link>
+          {user?.is_admin && <a href={`${adminAppUrl}/admin`}>{t('Управление платформой')} ↗</a>}
           {extra.map(([path, title]) => (
             <NavLink key={path} to={path}>
               {title}

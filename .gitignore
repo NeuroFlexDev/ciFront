@@ -25,3 +25,5 @@ build/.cache
 *.sw?
 
 node_modules
+
+admin-dist/

@@ -1,3 +1,4 @@
+import {adminAppUrl} from '@/shared/surface';
 import { useLocale, getLocale } from "@/i18n/useLocale";
 import { RequestError, LoadingState } from "@/Components/RequestState";
 import { useReconnect } from "@/hooks/useReconnect";
@@ -203,7 +204,7 @@ export default function AuthorAnalytics({
                     </Link>
                   )}
                   {user?.is_admin && (
-                    <Link className={styles.primary} to="/admin">
+                    <Link className={styles.primary} to={`${adminAppUrl}/admin`}>
                       {t("Админка Лерниума")}
                     </Link>
                   )}

@@ -1,3 +1,4 @@
+import {adminAppUrl} from '@/shared/surface';
 import { useRoleNames } from "@/Pages/TeamLearning/useRoleNames";
 import { useLocale } from "@/i18n/useLocale";
 import { RequestError, LoadingState } from "@/Components/RequestState";
@@ -5,7 +6,7 @@ import { useDurableState } from "@/hooks/useDurableState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowUpRight, ChevronDown, Plus, Search } from "lucide-react";
 import { api } from "@/shared/api";
 import { useAuth } from "@/auth/useAuth";
@@ -24,6 +25,11 @@ type Team = {
   can_manage: boolean;
 };
 export default function TeamPage() {
+  const {user} = useAuth();
+  if (user?.organization_kind === 'business' && ['owner','admin','manager'].includes(user.organization_role ?? '')) return <Navigate to='/company' replace />;
+  return <OrganizationTeamPage />;
+}
+function OrganizationTeamPage() {
   const { t } = useLocale();
   const roleName = useRoleNames();
 
@@ -107,7 +113,7 @@ export default function TeamPage() {
           </p>
           <Link
             className={styles.primary}
-            to={user?.is_admin ? "/admin?tab=organizations" : "/courses"}
+            to={user?.is_admin ? `${adminAppUrl}/admin?tab=organizations` : "/courses"}
           >
             {user?.is_admin ? t("Создать организацию") : t("Мои курсы")}
           </Link>
