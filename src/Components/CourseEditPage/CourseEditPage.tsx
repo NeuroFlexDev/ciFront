@@ -57,6 +57,12 @@ type Structure = {
   status: string;
   modules_timeline: { module_id: number }[];
 };
+type Publication = {
+  id: number;
+  publication_status: "published";
+  revision: number;
+  published_at: string;
+};
 
 export default function CourseEditPage() {
   const { t, locale } = useLocale();
@@ -71,6 +77,7 @@ export default function CourseEditPage() {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<unknown>(null);
   const [version, setVersion] = useState(0);
+  const [publicationRefresh, setPublicationRefresh] = useState(0);
   const [baseRevision, setBaseRevision] = useState<number>();
   const [restored, setRestored] = useState(false);
   const [serverLesson, setServerLesson] = useState<Lesson | null>(null);
@@ -252,11 +259,19 @@ export default function CourseEditPage() {
     }
     setBusy(true);
     setError(null);
+    setNotice("");
     setPublicationProblems([]);
     try {
-      await api.post(`/courses/${id}/publish`);
+      const { data } = await api.post<Publication>(`/courses/${id}/publish`);
       setNotice(t("Курс опубликован"));
-      setStructure((s) => (s ? { ...s, status: "published" } : s));
+      setStructure((s) => (s ? {
+        ...s,
+        status: data.publication_status,
+        content_revision: data.revision,
+      } : s));
+      // The closed export panel is already mounted. Invalidate its version list
+      // without reloading the lesson editor or losing text typed during publish.
+      setPublicationRefresh((value) => value + 1);
     } catch (e) {
       setError(e);
       if (
@@ -1040,7 +1055,7 @@ export default function CourseEditPage() {
         {user?.organization_role === "owner" && !user.is_admin && (
           <details>
             <summary>{t("Экспорт опубликованной версии: PDF и ZIP")}</summary>
-            <CourseTransferPanel key={`${id}:${version}`} courseId={Number(id)} />
+            <CourseTransferPanel key={`${id}:${version}:${publicationRefresh}`} courseId={Number(id)} />
           </details>
         )}
         {assessment && (
