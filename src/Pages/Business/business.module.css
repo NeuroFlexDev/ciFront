@@ -208,6 +208,40 @@
 .prose {
   white-space: pre-wrap;
 }
+.backLink {
+  display: inline-flex;
+  color: #c4c4c4;
+  margin-bottom: 20px;
+  text-decoration: none;
+}
+.backLink:hover { color: #caf432; }
+.positionDetail {
+  background: #151515;
+  border: 1px solid #303030;
+  border-radius: 28px;
+  padding: clamp(20px, 3vw, 36px);
+}
+.positionDetail > section { min-width: 0; }
+.positionDetail h3 { overflow-wrap: anywhere; }
+.positionDetail .course { padding: 24px 0; }
+.positionDetail .course:last-of-type { border-bottom: 0; }
+.positionDetail .form {
+  padding: 24px;
+  background: #1b1b1b;
+  border: 1px solid #3b4426;
+  border-radius: 20px;
+}
+.jobDescription {
+  border-bottom: 1px solid #333;
+  padding: 16px 0 24px;
+  color: #c4c4c4;
+  line-height: 1.6;
+}
+.jobDescription summary { cursor: pointer; color: #eee; }
+.positionDetail a, .positionDetail button { transition: background-color .16s, border-color .16s; }
+@media (prefers-reduced-motion: reduce) {
+  .positionDetail a, .positionDetail button { transition: none; }
+}
 @media (max-width: 700px) {
   .journey {
     gap: 12px;

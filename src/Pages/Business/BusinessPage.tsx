@@ -1,6 +1,6 @@
 import { createContext, useContext, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Plus, BriefcaseBusiness, Users, BookOpen, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { useLocale } from '@/i18n/useLocale';
@@ -9,6 +9,8 @@ import { Shell, CopyLink, styles, errorText, statuses } from '../Workspace/share
 import { useLearningData } from '../Learning/useLearningData';
 import { LoadingState } from '@/Components/RequestState';
 import StatusPage from '../AccessPage/StatusPage';
+import EntityEditor, { type EditableEntity } from '@/Components/CourseEditPage/EntityEditor';
+import { RequestError } from '@/Components/RequestState';
 import ConfirmationDialog from '../TeamLearning/ManagementConfirmation';
 import css from './business.module.css';
 
@@ -35,7 +37,7 @@ type Employee = {
   position_name?: string;
 };
 type Invitation = { id: number; email: string; role: string; position_id: number | null };
-type Course = { id: number; name: string; status: string; publication_status: string };
+type Course = { id: number; name: string; description?: string; content_revision: number; status: string; publication_status: string };
 const blankPosition = { name: '', description: '', responsibilities: '', competencies: '' };
 
 function Pager({
@@ -69,6 +71,7 @@ function Pager({
 }
 
 export default function BusinessPage() {
+  const { positionId } = useParams();
   const { user } = useAuth();
   if (
     user?.organization_kind !== 'business' ||
@@ -77,7 +80,7 @@ export default function BusinessPage() {
     return <StatusPage code='403' title='Действие доступно управляющему компании' />;
   return (
     <PositionOptionsProvider key={`${user.id}:${user.organization_id}`}>
-      <CompanyWorkspace />
+      <>{positionId ? <PositionScreen positionId={Number(positionId)} /> : <CompanyWorkspace />}</>
     </PositionOptionsProvider>
   );
 }
@@ -85,13 +88,15 @@ export default function BusinessPage() {
 function CompanyWorkspace() {
   const { user } = useAuth();
   const { t, locale } = useLocale();
-  const [tab, setTab] = useState<'positions' | 'employees'>('positions');
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const tab = params.get('tab') === 'employees' ? 'employees' : 'positions';
+  const setTab = (value: string) => setParams(value === 'employees' ? { tab: value } : {});
   const [archived, setArchived] = useState(false);
   const [positionOffset, setPositionOffset] = useState(0);
   const [employeeOffset, setEmployeeOffset] = useState(0);
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Position | 'new' | null>(null);
-  const [selected, setSelected] = useState<Position | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invite, setInvite] = useState({ email: '', role: 'member', position_id: '' });
   const [invitationLink, setInvitationLink] = useState('');
@@ -160,9 +165,9 @@ function CompanyWorkspace() {
   }
   return (
     <Shell
-      title={t('Моя компания')}
+      title={t('Персонал')}
       description={t(
-        'Подготовьте сотрудников к их работе: определите должности, добавьте команду и создайте обучение.',
+        'Рабочее пространство руководителя. Управляйте должностями, регламентами и подготовкой сотрудников.',
       )}
       action={
         <button
@@ -185,12 +190,12 @@ function CompanyWorkspace() {
         <span>→</span>
         <span>
           <BriefcaseBusiness size={20} />
-          {t('Должности и навыки')}
+          {t('Должности')}
         </span>
         <span>→</span>
         <span>
           <BookOpen size={20} />
-          {t('Обучение под задачи')}
+          {t('Регламенты')}
         </span>
       </div>
       {error && (
@@ -255,8 +260,8 @@ function CompanyWorkspace() {
           <p>
             {t(
               invite.role === 'manager'
-                ? 'Управляющий создаёт должности, приглашает сотрудников и готовит курсы. Назначать других управляющих может только владелец.'
-                : 'Сотрудник увидит назначенные курсы в разделе «Моё обучение».',
+                ? 'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.'
+                : 'Сотрудник увидит назначенные регламенты в разделе «Мои регламенты».',
             )}
           </p>
           <div className={css.actions}>
@@ -279,7 +284,7 @@ function CompanyWorkspace() {
           {t('Должности')}
         </button>
         <button role='tab' aria-selected={tab === 'employees'} onClick={() => setTab('employees')}>
-          {t('Сотрудники и управляющие')}
+          {t('Сотрудники')}
         </button>
       </div>
       {tab === 'positions' ? (
@@ -313,7 +318,7 @@ function CompanyWorkspace() {
               <h2>{t(archived ? 'В архиве пока нет должностей' : 'Начните с первой должности')}</h2>
               <p>
                 {t(
-                  'Например, менеджер продаж, инженер или специалист поддержки. Опишите обязанности и навыки — на их основе будет подготовлен курс.',
+                  'Добавьте, например, должности «Администратор» и «Старший администратор». В каждой будет свой список регламентов и сотрудников.',
                 )}
               </p>
             </div>
@@ -331,11 +336,11 @@ function CompanyWorkspace() {
                     {t('Сотрудники')}: {position.employee_count}
                   </span>
                   <span>
-                    {t('Курсы')}: {position.course_count}
+                    {t('Регламенты')}: {position.course_count}
                   </span>
                 </div>
                 <div className={css.actions}>
-                  <button className={styles.primary} onClick={() => setSelected(position)}>
+                  <button className={styles.primary} onClick={() => navigate(`/company/positions/${position.id}`)}>
                     {t('Открыть должность')}
                     <ArrowUpRight size={16} />
                   </button>
@@ -352,14 +357,13 @@ function CompanyWorkspace() {
                         label: t(
                           position.is_archived
                             ? 'Восстановить должность?'
-                            : 'Архивировать должность? Курсы и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.',
+                            : 'Архивировать должность? Регламенты и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.',
                         ),
                         action: async () => {
                           await api.put(`/business/positions/${position.id}/state`, {
                             expected_revision: position.revision,
                             is_archived: !position.is_archived,
                           });
-                          if (selected?.id === position.id) setSelected(null);
                         },
                       })
                     }
@@ -554,15 +558,11 @@ function CompanyWorkspace() {
           key={editing === 'new' ? 'new' : `${editing.id}:${editing.revision}`}
           position={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
-          onSaved={async (saved) => {
+          onSaved={async () => {
             setEditing(null);
-            if (selected?.id === saved.id) setSelected(saved);
             await refresh();
           }}
         />
-      )}
-      {selected && !editing && (
-        <PositionDetail position={selected} onClose={() => setSelected(null)} />
       )}
     </Shell>
   );
@@ -708,7 +708,7 @@ function PositionEditor({
               maxLength={200}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={t('Например, специалист поддержки')}
+              placeholder={t('Например, администратор')}
             />
           </label>
           <label>
@@ -759,25 +759,36 @@ function PositionEditor({
   );
 }
 
-function PositionDetail({ position, onClose }: { position: Position; onClose: () => void }) {
+function PositionScreen({ positionId }: { positionId: number }) {
+  const { t } = useLocale();
+  const query = useLearningData<Position>(Number.isInteger(positionId) && positionId > 0 ? `/business/positions/${positionId}` : null);
+  if (!Number.isInteger(positionId) || positionId < 1) return <StatusPage code='404' />;
+  return <Shell title={query.data?.name ?? t('Должность')} description={t('Регламенты и требования для этой должности')}>
+    <Link to='/company' className={css.backLink}>← {t('Персонал')} / {t('Должности')}</Link>
+    {query.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
+    {!!query.error && <RequestError error={query.error} onRetry={() => void query.reload()} />}
+    {query.data && <PositionDetail key={positionId} position={query.data} onRefresh={query.reload} />}
+  </Shell>;
+}
+
+function PositionDetail({ position, onRefresh }: { position: Position; onRefresh: () => Promise<void> }) {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
   const [offset, setOffset] = useState(0);
   const courses = useLearningData<Page<Course>>(
-    `/business/positions/${position.id}/courses?offset=${offset}&limit=20`,
+    `/business/positions/${position.id}/regulations?offset=${offset}&limit=20`,
   );
   const [newCourse, setNewCourse] = useState(false);
   const [form, setForm] = useState({
-    title: `${t('Обучение')}: ${position.name}`.slice(0, 200),
+    title: '',
     goal: `${t('Подготовить сотрудника к самостоятельному выполнению обязанностей')}: ${position.name}`,
-    lesson_count: 6,
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [assigning, setAssigning] = useState<Course | null>(null);
-  const dialog = useRef<HTMLElement>(null);
-  useDialogFocus(dialog, { busy, onClose });
+  const [renaming, setRenaming] = useState<EditableEntity | null>(null);
+  const [editPosition, setEditPosition] = useState(false);
   async function create(e: FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -785,7 +796,7 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
     setError('');
     try {
       const { data } = await api.post<{ url: string }>(
-        `/business/positions/${position.id}/courses`,
+        `/business/positions/${position.id}/regulations`,
         { ...form, language: locale, expected_position_revision: position.revision },
       );
       navigate(data.url);
@@ -801,7 +812,7 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
     setError('');
     try {
       const { data } = await api.post<{ created: number; already_assigned: number }>(
-        `/business/positions/${position.id}/courses/${assigning.id}/assign`,
+        `/business/positions/${position.id}/regulations/${assigning.id}/assign`,
         { expected_revision: position.revision },
       );
       setMessage(
@@ -815,47 +826,39 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
     }
   }
   return (
-    <div className={css.overlay}>
-      <section
-        ref={dialog}
-        tabIndex={-1}
-        className={css.dialog}
-        role='dialog'
-        aria-modal='true'
-        aria-labelledby='position-detail-title'
-      >
+    <div className={css.positionDetail}>
+      <section aria-label={t('Регламенты должности')}>
         <div className={css.toolbar}>
-          <h2 id='position-detail-title'>{position.name}</h2>
-          <button className={styles.secondary} onClick={onClose}>
-            {t('Закрыть')}
-          </button>
+          <span className={css.counts}>{t('Сотрудники')}: {position.employee_count} · {t('Регламенты')}: {courses.data?.total ?? position.course_count}</span>
+          {!position.is_archived && <button className={styles.secondary} onClick={() => setEditPosition(true)}>{t('Изменить должность')}</button>}
         </div>
         <p>{position.description}</p>
-        <h3>{t('Обязанности')}</h3>
+        <details className={css.jobDescription}><summary>{t('Обязанности и навыки')}</summary><h3>{t('Обязанности')}</h3>
         <p className={css.prose}>{position.responsibilities || '—'}</p>
         <h3>{t('Навыки')}</h3>
-        <p className={css.prose}>{position.competencies || '—'}</p>
+        <p className={css.prose}>{position.competencies || '—'}</p></details>
         <div className={css.toolbar}>
-          <h3>{t('Курсы для должности')}</h3>
+          <h3>{t('Регламенты для должности')}</h3>
           {!position.is_archived && (
             <button className={styles.primary} onClick={() => setNewCourse(!newCourse)}>
-              {t('Создать курс для должности')}
+              {t('Добавить регламент')}
             </button>
           )}
         </div>
         {newCourse && (
           <form className={css.form} onSubmit={create}>
             <label>
-              {t('Название курса')}
+              {t('Название регламента')}
               <input
                 required
                 maxLength={200}
+                placeholder={t('Например, 01. Стандарт сервиса')}
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
               />
             </label>
             <label>
-              {t('Цель обучения')}
+              {t('Что регулирует документ')}
               <textarea
                 required
                 maxLength={2000}
@@ -863,17 +866,7 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
                 onChange={(e) => setForm({ ...form, goal: e.target.value })}
               />
             </label>
-            <label>
-              {t('Количество уроков')}
-              <input
-                type='number'
-                required
-                min={1}
-                max={100}
-                value={form.lesson_count}
-                onChange={(e) => setForm({ ...form, lesson_count: Number(e.target.value) })}
-              />
-            </label>
+
             <p>
               {t(
                 'На следующем шаге добавьте материалы и проверьте план. Обязанности и навыки должности будут учтены при генерации.',
@@ -899,12 +892,12 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
             <h3>{assigning.name}</h3>
             <p>
               {t(
-                'Назначить опубликованный курс всем действующим сотрудникам этой должности? Повторное нажатие не создаст дубликаты. Новых сотрудников можно включить повторным назначением.',
+                'Назначить опубликованный регламент всем действующим сотрудникам этой должности? Уже выданные назначения и результаты сохранятся. Повторное назначение включит новых сотрудников.',
               )}
             </p>
             <div className={css.actions}>
               <button className={styles.primary} disabled={busy} onClick={() => void assign()}>
-                {t('Назначить обучение')}
+                {t('Назначить регламент')}
               </button>
               <button
                 className={styles.secondary}
@@ -917,9 +910,9 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
           </div>
         )}
         {courses.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
-        {!!courses.error && <p role='alert'>{t(errorText(courses.error))}</p>}
+        {!!courses.error && <RequestError error={courses.error} onRetry={() => void courses.reload()} />}
         {!courses.loading && courses.data?.items.length === 0 && (
-          <p>{t('Для этой должности пока нет курсов')}</p>
+          <p>{t('Для этой должности пока нет регламентов')}</p>
         )}
         {courses.data?.items.map((course) => (
           <article className={css.course} key={course.id}>
@@ -934,17 +927,18 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
               </p>
             </div>
             <div className={css.actions}>
+              {!position.is_archived && <button className={styles.secondary} disabled={course.status === 'generating' || busy} onClick={() => setRenaming({ kind: 'course', id: course.id, courseId: course.id, title: course.name, description: course.description, revision: course.content_revision })}>{t('Переименовать')}</button>}
               <Link
                 className={styles.secondary}
                 to={
-                  course.status === 'ready'
-                    ? `/courses/${course.id}/edit`
-                    : `/express?course=${course.id}&step=1`
+                  course.status !== 'generating'
+                    ? `/courses/${course.id}/edit?position=${position.id}`
+                    : `/express?course=${course.id}&step=1&position=${position.id}`
                 }
               >
-                {t('Открыть курс')}
+                {t('Открыть регламент')}
               </Link>
-              <Link className={styles.secondary} to={`/learning-analytics?course_id=${course.id}`}>{t('Результаты обучения')}</Link>
+              <Link className={styles.secondary} to={`/learning-analytics?course_id=${course.id}`}>{t('Результаты сотрудников')}</Link>
               {course.publication_status === 'published' && !position.is_archived && (
                 <button
                   className={styles.primary}
@@ -958,6 +952,8 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
           </article>
         ))}
         <Pager offset={offset} total={courses.data?.total ?? 0} onChange={setOffset} />
+        {renaming && <EntityEditor entity={renaming} onClose={() => setRenaming(null)} onSaved={() => { setRenaming(null); void courses.reload(); }} />}
+        {editPosition && <PositionEditor position={position} onClose={() => setEditPosition(false)} onSaved={async () => { await onRefresh(); setEditPosition(false); }} />}
       </section>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useLocale } from "@/i18n/useLocale";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import MarkdownContent from "@/Components/MarkdownContent";
 import TextEditor, { type TextEditorHandle } from "@/Components/ElementUi/TextEditor/TextEditor";
 import EntityEditor, { type EditableEntity } from "./EntityEditor";
@@ -10,6 +10,7 @@ import DiagramEditor from "@/Components/DiagramEditor";
 import { api, authSessionIsCurrent, captureAuthSession } from "@/shared/api";
 import Menu from "@/Components/Menu/Menu";
 import styles from "./courseEditPage.module.css";
+import { isBusiness } from '@/shared/business';
 import { useAuth } from "@/auth/useAuth";
 import {
   readDraft,
@@ -50,6 +51,7 @@ type Module = {
 };
 type Structure = {
   course_id: number;
+  position_id?: number | null;
   title: string;
   description?: string;
   content_revision: number;
@@ -68,7 +70,11 @@ export default function CourseEditPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const owner = user?.id ?? null;
+  const business = isBusiness(user);
+  const [params] = useSearchParams();
   const [structure, setStructure] = useState<Structure | null>(null);
+  const positionId = structure?.position_id ?? (Number(params.get('position')) || null);
+  const personnelPath = positionId ? `/company/positions/${positionId}` : '/company';
   const courseTitle = structure?.title?.trim() || `${t("Курс")} ${id}`;
   const [modules, setModules] = useState<Module[]>([]);
   const [finalTests, setFinalTests] = useState<ReviewTest[]>([]);
@@ -431,7 +437,7 @@ export default function CourseEditPage() {
     );
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = "course.md";
+    anchor.download = business ? "regulation.md" : "course.md";
     anchor.click();
     URL.revokeObjectURL(url);
   }
@@ -452,7 +458,7 @@ export default function CourseEditPage() {
       <Menu />
       <main className={styles.container}>
         <p className={styles.breadcrumbs}>
-          <Link to="/courses">← {t("Мои курсы")}</Link>
+          <Link to={business ? personnelPath : '/courses'}>← {t(business ? 'Регламенты должности' : 'Мои курсы')}</Link>
         </p>
         <header className={styles.courseHeader}>
           <div className={styles.courseIdentity}>
@@ -475,21 +481,21 @@ export default function CourseEditPage() {
             >
               {t("Настройки курса")}
             </button>
-            <Link className={styles.canvasLink} to={`/courses/${id}/canvas`}>{t("Открыть канву")} ↗</Link>
+            {!business && <Link className={styles.canvasLink} to={`/courses/${id}/canvas`}>{t("Открыть канву")} ↗</Link>}
           </div>}
         </header>
         {structure && <details className={styles.courseMeta}>
-          <summary>{t("Структура, источники и согласование")}</summary>
+          <summary>{t(business ? "Источники и согласование" : "Структура, источники и согласование")}</summary>
           <div className={styles.courseMetaBody}>
           <div className={styles.toolbar}>
-            <button
+            {(!business || !modules.length) && <button
               disabled={busy}
               onClick={() =>
                 setEditing({ kind: "module", courseId: Number(id), title: "" })
               }
             >
               {t("Добавить модуль +")}
-            </button>
+            </button>}
             <button
               disabled={busy}
               onClick={() =>
@@ -690,7 +696,7 @@ export default function CourseEditPage() {
             <h2 className={styles.outlineLabel}>{t("Содержание курса")}</h2>
             {modules.map((m, moduleIndex) => (
               <section key={m.id}>
-                <h2>{m.title}</h2>
+                {!business && <><h2>{m.title}</h2>
                 <details className={styles.moduleManagement}>
                   <summary>{t("Управление модулем")}</summary>
                 <div className={styles.moduleActions}>
@@ -747,7 +753,7 @@ export default function CourseEditPage() {
                     {t("Убрать")}
                   </button>
                 </div>
-                </details>
+                </details></>}
                 {m.lessons.map((l, lessonIndex) => (
                   <div key={l.id} className={styles.lessonRow}>
                     <button
@@ -791,7 +797,7 @@ export default function CourseEditPage() {
                     </button>
                   </div>
                 ))}
-                <button
+                {(!business || !m.lessons.length) && <button
                   disabled={busy}
                   className={styles.addLesson}
                   onClick={() =>
@@ -804,8 +810,8 @@ export default function CourseEditPage() {
                   }
                 >
                   {t("Добавить урок +")}
-                </button>
-                <details>
+                </button>}
+                {(!business || m.tests.length > 0) && <details>
                   <summary>
                     {t("Тесты (")}
                     {m.tests.length})
@@ -867,7 +873,7 @@ export default function CourseEditPage() {
                   >
                     {t("Добавить вопрос")}
                   </button>
-                </details>
+                </details>}
                 <details>
                   <summary>
                     {t("Практика и кейсы (")}
@@ -999,7 +1005,7 @@ export default function CourseEditPage() {
               : t("Опубликовать курс")}
           </button>
           {structure?.status === "published" && (
-            <Link className={styles.primary} to={`/assignments?course=${id}`}>
+            <Link className={styles.primary} to={business ? personnelPath : `/assignments?course=${id}`}>
               {t("Назначить участникам")}
             </Link>
           )}

@@ -1,4 +1,5 @@
 import {isAdminSurface, homePath} from '@/shared/surface';
+import { businessHome } from '@/shared/business';
 import LanguageSwitch from '@/Components/LanguageSwitch';
 import {useLocale} from '@/i18n/useLocale';
 import { FormEvent, useEffect, useRef, useState } from 'react';
@@ -70,7 +71,7 @@ export default function AuthPage() {
             if (!completeAuthentication.current)
                 throw new Error(t("Не удалось завершить вход. Обновите страницу и откройте вход заново."));
             completeAuthentication.current(data,session);
-            navigate(data.assignment_id ? `/learning/${data.assignment_id}` : homePath, { replace: true });
+            navigate(data.assignment_id ? `/learning/${data.assignment_id}` : businessHome(data.user, homePath), { replace: true });
         }).catch(reason => { setError(t("{value0} Повторите вход из корпоративного сервиса или LMS; ваши материалы и ответы сохранены.", { value0: reason instanceof Error ? reason.message : t("Не удалось завершить вход.") })); }).finally(() => setSsoPending(false));
     }, [navigate,t,isLoading]);
     useEffect(() => {
@@ -89,9 +90,9 @@ export default function AuthPage() {
         if (!isLoading && isAuthenticated && !ssoHandled) {
             const next = params.get('next');
             const safe = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') && !next.startsWith('/auth');
-            navigate(safe ? next : homePath, { replace: true });
+            navigate(safe ? next : businessHome(user, homePath), { replace: true });
         }
-    }, [isAuthenticated, isLoading, navigate, params, user?.is_admin, ssoHandled]);
+    }, [isAuthenticated, isLoading, navigate, params, user, ssoHandled]);
     async function submit(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         setError('');
@@ -141,7 +142,7 @@ export default function AuthPage() {
         {ssoPending && <p className={styles.notice} role="status">{t("Проверяем корпоративный вход…")}</p>}
         {!isAdminSurface && !isRegistration && /^\d+$/.test(params.get('provider') || '') && <p><a className={styles.forgot} href={apiUrl(`/auth/oidc/${params.get('provider')}/start`)}>{t("Войти через организацию ↗")}</a></p>}
         {ssoHandled && !ssoPending && isAuthenticated && <p><Link to="/account">{t("Вернуться к своему профилю")}</Link></p>}
-        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={(data,session)=>{auth.completeAuthentication?.(data,session);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:homePath,{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
+        {challenge?<><h3>{t('Подтвердите двухэтапный вход')}</h3><MFAChallengeForm challenge={challenge} onCancel={()=>{setChallenge(null);setError('');setSsoHandled(false);}} onSuccess={(data,session)=>{auth.completeAuthentication?.(data,session);setChallenge(null);if(ssoHandled)navigate(data.assignment_id?`/learning/${data.assignment_id}`:businessHome(data.user,homePath),{replace:true});}}/></>:isRegistration && registrationEnabled === false ? <div className={styles.notice} role="status"><h3>{t("Доступ по приглашению")}</h3><p>{t("Регистрация в этом контуре пока закрыта. Войдите в существующий аккаунт. Для нового аккаунта откройте персональную ссылку приглашения от администратора организации.")}</p><button type="button" className={styles.submit} onClick={switchMode}>{t("Войти в аккаунт")}</button></div> :
             <form className={styles.form} onSubmit={submit}>
           {isRegistration && <div className={styles.nameRow}>
             <label>{t("Имя") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder={t("Иван")}/></label>

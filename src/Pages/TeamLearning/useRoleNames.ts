@@ -5,7 +5,7 @@ import { useLearningData } from "../Learning/useLearningData";
 import { roles, type TeamSettings } from "./types";
 
 const profileRoles: Record<string, Record<string, string>> = {
-  business: { author: "Тренер", member: "Сотрудник" },
+  business: { author: "Наставник", manager: "Руководитель", member: "Сотрудник" },
   education: {
     author: "Преподаватель",
     reviewer: "Методист",
@@ -35,7 +35,7 @@ export function useRoleNames() {
     return (
       labels[`${role}_${locale}`]?.trim() ||
       labels[role]?.trim() ||
-      t(profileRoles[query.data?.profile ?? ""]?.[role] ?? roles[role] ?? role)
+      t(profileRoles[user?.organization_kind === 'business' ? 'business' : query.data?.profile ?? ""]?.[role] ?? roles[role] ?? role)
     );
   };
 }
