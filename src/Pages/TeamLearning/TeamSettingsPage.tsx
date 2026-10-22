@@ -15,6 +15,7 @@ import { dateLabel } from "../Learning/types";
 import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
 import { type Team, type TeamSettings, roles } from "./types";
 import s from "../Learning/learning.module.css";
+import { useManagementConfirmation } from './useManagementConfirmation';
 
 type Permission = { can_manage_team: boolean; can_manage_admins: boolean };
 export default function TeamSettingsPage() {
@@ -500,8 +501,10 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
   );
   const [target, setTarget] = useState(params.get("user") ?? "");
   const action = useTeamAction();
+  const confirmation = useManagementConfirmation();
   return (
     <section className={s.card} style={{ marginTop: 28 }}>
+      {confirmation.dialog}
       <h2>{t("Владение организацией")}</h2>
       <p className={s.muted}>
         {t(
@@ -513,19 +516,17 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
           className={s.inlineForm}
           onSubmit={(e) => {
             e.preventDefault();
-            if (
-              confirm(
-                t(
-                  "Предложить передачу владения выбранному участнику? До его принятия вы остаётесь владельцем.",
-                ),
-              )
-            )
-              void action.run(async () => {
+            confirmation.ask({
+              title: t('Предложить передачу владения'),
+              description: t("Предложить передачу владения выбранному участнику? До его принятия вы остаётесь владельцем."),
+              confirmLabel: t('Предложить передачу'),
+              action: () => action.run(async () => {
                 await api.post("/team/ownership-transfers", {
                   user_id: Number(target),
                 });
                 await transfers.reload();
-              }, t("Предложение создано. Получатель подтвердит его в настройках своего аккаунта."));
+              }, t("Предложение создано. Получатель подтвердит его в настройках своего аккаунта.")),
+            });
           }}
         >
           <label className={s.field}>
@@ -579,15 +580,11 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
               <button
                 className={s.primary}
                 disabled={action.busy}
-                onClick={() => {
-                  if (
-                    confirm(
-                      t(
-                        "Принять права владельца? После этого нужно снова войти в свой аккаунт.",
-                      ),
-                    )
-                  )
-                    void action.run(async () => {
+                onClick={() => confirmation.ask({
+                  title: t('Принять владение'),
+                  description: t("Принять права владельца? После этого нужно снова войти в свой аккаунт."),
+                  confirmLabel: t('Принять владение'),
+                  action: () => action.run(async () => {
                       await api.post(
                         `/team/ownership-transfers/${transfer.id}/accept`,
                       );
@@ -595,8 +592,8 @@ function Ownership({ isOwner }: { isOwner: boolean }) {
                       navigate("/auth?returnTo=%2Fteam-settings", {
                         replace: true,
                       });
-                    });
-                }}
+                    }),
+                })}
               >
                 {t("Принять владение")}
               </button>

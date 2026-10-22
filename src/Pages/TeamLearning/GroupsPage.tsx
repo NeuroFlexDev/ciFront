@@ -24,6 +24,7 @@ import s from "../Learning/learning.module.css";
 import ArchivePanel from './ArchivePanel';
 import { ManagementCapabilityNotice } from './ManagementCapability';
 import { useManagementCapability } from './useManagementCapability';
+import { useManagementConfirmation } from './useManagementConfirmation';
 
 export default function GroupsPage() {
   const roleName = useRoleNames();
@@ -388,8 +389,10 @@ export function GroupForm({
   const [add, setAdd] = useState<number[]>([]);
   const action = useTeamAction();
   const conflict = draft.expected_state !== group.state_token || !draft.expected_state;
+  const confirmation = useManagementConfirmation();
   return (
     <section className={s.card}>
+      {confirmation.dialog}
       <h2>{group.name}</h2>
       {canManage && <ManagementCapabilityNotice capability={capability} />}
       {conflict && <div className={s.conflict}><h3>{t('Сравните сохранённую запись')}</h3>
@@ -458,21 +461,17 @@ export function GroupForm({
               <button
                 className={s.secondary}
                 disabled={action.busy}
-                onClick={() => {
-                  if (
-                    confirm(
-                      t(
-                        "Убрать участника из группы? Его ранее назначенные курсы и результаты сохранятся.",
-                      ),
-                    )
-                  )
-                    void action.run(async () => {
+                onClick={() => confirmation.ask({
+                  title: t('Убрать участника из группы'),
+                  description: t("Убрать участника из группы? Его ранее назначенные курсы и результаты сохранятся."),
+                  confirmLabel: t('Убрать'),
+                  action: () => action.run(async () => {
                       await api.delete(
                         `/team/groups/${group.id}/members/${uid}`,
                       );
                       await reload();
-                    }, t("Участник убран из группы. Результаты сохранены."));
-                }}
+                    }, t("Участник убран из группы. Результаты сохранены.")),
+                })}
               >
                 {t("Убрать")}
               </button>
@@ -546,20 +545,16 @@ export function GroupForm({
           className={s.danger}
           style={{ marginTop: 24 }}
           disabled={!capability.supported || action.busy}
-          onClick={() => {
-            if (
-              confirm(
-                t(
-                  "Архивировать группу? Новые участники перестанут получать групповые назначения. История обучения сохраняется.",
-                ),
-              )
-            )
-              void action.run(async () => {
+          onClick={() => confirmation.ask({
+            title: t('Архивировать группу'),
+            description: t("Архивировать группу? Новые участники перестанут получать групповые назначения. История обучения сохраняется."),
+            confirmLabel: t('Архивировать'),
+            action: () => action.run(async () => {
                 await api.post(`/team/groups/${group.id}/archive`, { expected_state: group.state_token });
                 await reload();
                 onArchive();
-              }, t("Группа архивирована"));
-          }}
+              }, t("Группа архивирована")),
+          })}
         >
           {t("Архивировать группу")}
         </button>
@@ -590,8 +585,10 @@ export function Departments({
   const current = data.find(row => row.id === id);
   const conflict = !!id && (!draft.expected_state || draft.expected_state !== current?.state_token);
   const action = useTeamAction();
+  const confirmation = useManagementConfirmation();
   return (
     <div className={s.grid}>
+      {confirmation.dialog}
       <section className={s.card}>
         <h2>{t("Структура организации")}</h2>
         {canManage && <ManagementCapabilityNotice capability={capability} />}
@@ -624,20 +621,15 @@ export function Departments({
                 <button
                   className={s.danger}
                   disabled={!capability.supported || action.busy}
-                  onClick={() => {
-                    if (
-                      confirm(
-                        t(
-                          "Архивировать «{v0}»? Сначала перенесите участников и дочерние подразделения.",
-                          { v0: d.name },
-                        ),
-                      )
-                    )
-                      void action.run(async () => {
+                  onClick={() => confirmation.ask({
+                    title: t('Архивировать подразделение'),
+                    description: t("Архивировать «{v0}»? Сначала перенесите участников и дочерние подразделения.", { v0: d.name }),
+                    confirmLabel: t('Архивировать'),
+                    action: () => action.run(async () => {
                         await api.post(`/team/departments/${d.id}/archive`, { expected_state: d.state_token });
                         await reload();
-                      });
-                  }}
+                      }),
+                  })}
                 >
                   {t("Архивировать")}
                 </button>
@@ -964,6 +956,7 @@ function Roles({
   const [scope, setScope] = useState("organization");
   const [scopeId, setScopeId] = useState("");
   const action = useTeamAction();
+  const confirmation = useManagementConfirmation();
   const choices =
     scope === "group"
       ? groups.map((g) => ({ id: g.id, title: g.name }))
@@ -980,6 +973,7 @@ function Roles({
           : courses.data?.items.find((v) => v.id === g.scope_id)?.title;
   return (
     <div className={s.stack} style={{ marginTop: 28 }}>
+      {confirmation.dialog}
       <h3>{t("Права доступа")}</h3>
       <p className={s.muted}>
         {t("Основная роль:") + " "}
@@ -1013,19 +1007,15 @@ function Roles({
               action.busy ||
               (g.role === "admin" && !permission.data?.can_manage_admins)
             }
-            onClick={() => {
-              if (
-                confirm(
-                  t(
-                    "Отозвать это назначение роли? Сеансы участника будут завершены.",
-                  ),
-                )
-              )
-                void action.run(async () => {
+            onClick={() => confirmation.ask({
+              title: t('Отозвать назначение роли'),
+              description: t("Отозвать это назначение роли? Сеансы участника будут завершены."),
+              confirmLabel: t('Отозвать'),
+              action: () => action.run(async () => {
                   await api.delete(`/team/members/${member.id}/roles/${g.id}`);
                   await grants.reload();
-                }, t("Роль отозвана"));
-            }}
+                }, t("Роль отозвана")),
+            })}
           >
             {t("Отозвать")}
           </button>
