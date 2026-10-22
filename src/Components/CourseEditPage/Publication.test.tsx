@@ -1,14 +1,17 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import CourseEditPage from "./CourseEditPage";
 import { ApiError } from "@/shared/errors";
 import { readDraft, setDraftOwner } from "@/shared/drafts";
 
-const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn() }));
+const mocks = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn(), put: vi.fn(), generation: 0 }));
 const user = vi.hoisted(() => ({ id: 9519, organization_id: null, organization_role: "owner", is_admin: false }));
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => ({ user }) }));
-vi.mock("@/shared/api", () => ({ api: mocks, captureAuthSession: vi.fn(), assertAuthSession: vi.fn(), apiFetch: vi.fn() }));
+vi.mock("@/shared/api", () => ({ api: mocks,
+  captureAuthSession: () => ({ generation: mocks.generation, storedToken: "test-token" }),
+  authSessionIsCurrent: (session: { generation: number }) => session.generation === mocks.generation,
+  assertAuthSession: vi.fn(), apiFetch: vi.fn() }));
 vi.mock("@/Components/Menu/Menu", () => ({ default: () => null }));
 vi.mock("@/Components/SourceReleasePanel", () => ({ default: () => null }));
 vi.mock("@/Components/MarkdownContent", () => ({ default: ({ children }: { children: string }) => <div>{children}</div> }));
@@ -22,10 +25,14 @@ let transferError: unknown;
 beforeEach(() => {
   vi.resetAllMocks();
   localStorage.clear();
+  mocks.generation++;
   setDraftOwner(++user.id);
   transfers = { items: [], total: 0 };
   transferError = null;
   mocks.get.mockImplementation(async (path: string) => {
+    if (path === "/courses/8/structure") return { data: { course_id: 8, title: "Курс Б", content_revision: 13, status: "draft", modules_timeline: [{ module_id: 80 }] } };
+    if (path === "/modules/80") return { data: { id: 80, title: "Модуль Б", revision: 2, lessons: [{ ...lesson, id: 81, title: "Урок Б", content: "Текст курса Б" }], tests: [], tasks: [] } };
+    if (path === "/team/course-transfers?offset=0&limit=20&course_id=8") return { data: { items: [], total: 0 } };
     if (path === transferPath) {
       if (transferError) throw transferError;
       return { data: transfers };
@@ -42,8 +49,12 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); setDraftOwner(null); localStorage.clear(); });
 
+function BackToCourse() {
+  const navigate = useNavigate();
+  return <button onClick={() => navigate(-1)}>Назад к курсу Б</button>;
+}
 async function page() {
-  render(<MemoryRouter initialEntries={["/courses/7/edit"]}><Routes><Route path="/courses/:id/edit" element={<CourseEditPage />} /></Routes></MemoryRouter>);
+  render(<MemoryRouter initialEntries={["/courses/8/edit", "/courses/7/edit"]} initialIndex={1}><BackToCourse /><Routes><Route path="/courses/:id/edit" element={<CourseEditPage />} /></Routes></MemoryRouter>);
   const text = await screen.findByRole("textbox", { name: "Текст урока (Markdown)" });
   fireEvent.click(screen.getByText("Экспорт опубликованной версии: PDF и ZIP"));
   return text;
@@ -98,4 +109,62 @@ it("does not claim publication or reset export state when the publish request fa
   expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeEnabled();
   expect(screen.queryByText("Курс опубликован")).not.toBeInTheDocument();
   expect(mocks.get.mock.calls.filter(([path]) => path === transferPath)).toHaveLength(1);
+});
+
+function deferred() {
+  let resolve!: (value: { data: unknown }) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<{ data: unknown }>((done, fail) => { resolve = done; reject = fail; });
+  return { promise, resolve, reject };
+}
+
+it.each(["success", "failure"])("ignores a late %s from course A after navigation, including its finally during course B publication", async (outcome) => {
+  const a = deferred(), b = deferred();
+  mocks.post.mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise);
+  await page();
+  fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
+  fireEvent.click(screen.getByRole("button", { name: "Назад к курсу Б" }));
+  await screen.findByRole("heading", { name: "Курс Б" });
+  expect(screen.getByRole("textbox", { name: "Текст урока (Markdown)" })).toHaveValue("Текст курса Б");
+  expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
+  expect(mocks.post.mock.calls.map(([path]) => path)).toEqual(["/courses/7/publish", "/courses/8/publish"]);
+  await act(async () => {
+    if (outcome === "success") a.resolve({ data: { id: 7, publication_status: "published", revision: 9 } });
+    else a.reject(new ApiError("Ошибка публикации курса А", 422));
+  });
+  expect(screen.queryByText("Курс опубликован")).not.toBeInTheDocument();
+  expect(screen.queryByText("Ошибка публикации курса А")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Опубликовано" })).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "Настройки курса" })).toBeDisabled();
+  await act(async () => b.reject(new ApiError("Текущая публикация Б отклонена", 422)));
+  expect(await screen.findByText("Текущая публикация Б отклонена")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "Настройки курса" }));
+  fireEvent.change(screen.getByLabelText("Название"), { target: { value: "Уточнённое название Б" } });
+  mocks.put.mockResolvedValue({ data: {} });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  await waitFor(() => expect(mocks.put).toHaveBeenCalledWith("/courses/8", expect.objectContaining({ expected_revision: 13 })));
+});
+
+it("ignores publication from a previous session and keeps a renewed-session request busy until its own result", async () => {
+  const old = deferred(), renewed = deferred();
+  mocks.post.mockReturnValueOnce(old.promise).mockReturnValueOnce(renewed.promise);
+  await page();
+  fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
+  mocks.generation++;
+  await act(async () => old.resolve({ data: { id: 7, publication_status: "published", revision: 99 } }));
+  expect(screen.queryByText("Курс опубликован")).not.toBeInTheDocument();
+  act(() => window.dispatchEvent(new Event("lernium-session-renewed")));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
+  expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeDisabled();
+  await act(async () => renewed.resolve({ data: { id: 7, publication_status: "published", revision: 10 } }));
+  expect(await screen.findByText("Курс опубликован")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Настройки курса" }));
+  fireEvent.change(screen.getByLabelText("Название"), { target: { value: "Текущий сеанс" } });
+  mocks.put.mockResolvedValue({ data: {} });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));
+  await waitFor(() => expect(mocks.put).toHaveBeenCalledWith("/courses/7", expect.objectContaining({ expected_revision: 10 })));
 });

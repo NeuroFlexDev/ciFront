@@ -8,7 +8,7 @@ import AssessmentEditor, { type AssessmentTarget } from "./AssessmentEditor";
 import ImageLibrary from "@/Components/ElementUi/ImageEditor/ImageLibrary";
 import DiagramEditor from "@/Components/DiagramEditor";
 import { WizardSteps } from "@/Pages/ExpressPage/CourseWizard";
-import { api } from "@/shared/api";
+import { api, authSessionIsCurrent, captureAuthSession } from "@/shared/api";
 import Menu from "@/Components/Menu/Menu";
 import styles from "./courseEditPage.module.css";
 import { useAuth } from "@/auth/useAuth";
@@ -92,6 +92,7 @@ export default function CourseEditPage() {
   const [assessment, setAssessment] = useState<AssessmentTarget | null>(null);
   const [showImages, setShowImages] = useState(false);
   const [showDiagram, setShowDiagram] = useState(false);
+  const pendingPublication = useRef<{ cancelled: boolean } | null>(null);
   const [publicationProblems, setPublicationProblems] = useState<
     { id: string; question: string; message: string }[]
   >([]);
@@ -109,6 +110,17 @@ export default function CourseEditPage() {
           : readDraft<string>(`lesson:${item.id}`, owner)?.value;
       return typeof local === "string" && local !== item.content;
     });
+
+  useEffect(() => {
+    // A new course or a refreshed session owns its own publication state.
+    if (pendingPublication.current) {
+      pendingPublication.current = null;
+      setBusy(false);
+    }
+    return () => {
+      if (pendingPublication.current) pendingPublication.current.cancelled = true;
+    };
+  }, [id, owner, version]);
 
   useEffect(() => {
     let stopped = false;
@@ -253,16 +265,24 @@ export default function CourseEditPage() {
     }
   }
   async function publish() {
+    if (busy || pendingPublication.current) return;
     if (pendingLessons.length) {
       setError(new Error(t("Сначала сохраните все изменённые уроки.")));
       return;
     }
+    const request = { cancelled: false };
+    pendingPublication.current = request;
+    const session = captureAuthSession();
+    const current = () => pendingPublication.current === request && !request.cancelled
+      && latestEditor.current.courseId === id && latestEditor.current.owner === owner
+      && authSessionIsCurrent(session);
     setBusy(true);
     setError(null);
     setNotice("");
     setPublicationProblems([]);
     try {
       const { data } = await api.post<Publication>(`/courses/${id}/publish`);
+      if (!current()) return;
       setNotice(t("Курс опубликован"));
       setStructure((s) => (s ? {
         ...s,
@@ -273,6 +293,7 @@ export default function CourseEditPage() {
       // without reloading the lesson editor or losing text typed during publish.
       setPublicationRefresh((value) => value + 1);
     } catch (e) {
+      if (!current()) return;
       setError(e);
       if (
         e instanceof ApiError &&
@@ -290,7 +311,10 @@ export default function CourseEditPage() {
           setPublicationProblems(detail.assessments);
       }
     } finally {
-      setBusy(false);
+      if (current()) {
+        pendingPublication.current = null;
+        setBusy(false);
+      }
     }
   }
   async function modify(action: () => Promise<unknown>) {
