@@ -17,6 +17,7 @@ export default function AdminMenu() {
         {[
           ['/admin', 'Заказчики и доступ'],
           ['/admin/operations', 'Состояние сервисов'],
+          ['/admin/ai', 'AI-провайдеры'],
           ['/support-access', 'Доступ поддержки'],
         ].map(([path, label]) => (
           <NavLink

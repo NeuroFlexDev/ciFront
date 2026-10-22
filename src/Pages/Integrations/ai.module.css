@@ -1,0 +1,21 @@
+.page {padding-bottom:48px}
+.summary {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:12px 0 28px}
+.summary>div {display:flex;flex-direction:column;gap:12px;background:#171a12;border:1px solid #394326;border-radius:26px;padding:28px}
+.summary strong {font-size:clamp(22px,2.2vw,36px);color:#d0f777;line-height:1.2}
+.summary small {color:#a6af9a}
+.section {margin-top:48px}
+.cards {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px}
+.card {padding:28px;border-radius:26px;background:#141414;border:1px solid #2c2c2c;min-width:0}
+.card header {display:flex;align-items:start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.badge {display:inline-block;font-size:12px;padding:4px 10px;border-radius:12px;background:#342b22;color:#efcb99;white-space:normal}
+.badge[data-good=true] {background:#263519;color:#d0f777}
+.endpoint {font-size:13px;overflow-wrap:anywhere}
+.editor {border-color:#789325;scroll-margin-top:30px}
+.editor fieldset {border:0;padding:0;margin:0;min-width:0}
+.page td {vertical-align:top;overflow-wrap:anywhere;max-width:420px}
+.page th {white-space:normal}
+.page td strong {font-size:14px}
+.page details summary {cursor:pointer;padding:12px 0}
+.page details p {margin-top:14px}
+.page a {color:#d0f777}
+@media(max-width:760px) {.summary {grid-template-columns:1fr}.summary>div {padding:22px}.card {padding:22px}.section {margin-top:32px}}

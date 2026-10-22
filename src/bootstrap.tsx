@@ -1,4 +1,5 @@
 import { businessEnglish } from '@/i18n/business';
+import { aiControlEnglish } from '@/i18n/aiControl';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
@@ -25,6 +26,7 @@ export function renderApplication(application: ReactNode) {
           en: {
             ...globalEnglish,
             ...businessEnglish,
+            ...aiControlEnglish,
             ...integrationsEnglish,
             ...publicationEnglish,
             ...materialsEnglish,

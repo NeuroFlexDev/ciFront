@@ -11,6 +11,7 @@ const Admin = lazy(() => import('./Pages/AdminPage/AdminPage'));
 const Delivery = lazy(() => import('./Pages/AdminPage/DeliveryPage'));
 const Billing = lazy(() => import('./Pages/Billing/BillingPage'));
 const Operations = lazy(() => import('./Pages/Integrations/AdminOperationsPage'));
+const AI = lazy(() => import('./Pages/Integrations/AdminAIPage'));
 const Support = lazy(() => import('./Pages/TeamLearning/SupportAccessPage'));
 const Account = lazy(() => import('./Pages/AccountPage/AccountPage'));
 const Access = lazy(() => import('./Pages/AccessPage/AccessPage'));
@@ -35,6 +36,14 @@ export default function AdminApp() {
         <Routes>
           <Route path='/' element={<Navigate to='/admin' replace />} />
           <Route path='/auth' element={<Auth />} />
+          <Route
+            path='/admin/ai'
+            element={
+              <Operator>
+                <AI />
+              </Operator>
+            }
+          />
           <Route path='/forgot-password' element={<Access />} />
           <Route path='/reset-password' element={<Access reset />} />
           <Route
