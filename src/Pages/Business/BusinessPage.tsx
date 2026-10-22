@@ -2,6 +2,7 @@ import { createContext, useContext, useRef, useState, type FormEvent, type React
 import { useDialogFocus } from '@/hooks/useDialogFocus';
 import { useDurableState } from '@/hooks/useDurableState';
 import DraftNotice from '@/Components/DraftNotice';
+import { useRoleNames } from '../TeamLearning/useRoleNames';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Plus, BriefcaseBusiness, Users, BookOpen, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
@@ -89,6 +90,7 @@ export default function BusinessPage() {
 
 function CompanyWorkspace() {
   const { user } = useAuth();
+  const roleName = useRoleNames();
   const { t, locale } = useLocale();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -246,7 +248,7 @@ function CompanyWorkspace() {
                 onChange={(e) => setInvite({ ...invite, role: e.target.value, position_id: '' })}
               >
                 <option value='member'>{t('Сотрудник')}</option>
-                <option value='manager'>{t('Управляющий компанией')}</option>
+                <option value='manager'>{roleName('manager')}</option>
               </select>
             </label>
           )}
@@ -426,16 +428,7 @@ function CompanyWorkspace() {
                       <small>{person.email}</small>
                     </td>
                     <td>
-                      {t(
-                        (
-                          {
-                            owner: 'Владелец',
-                            admin: 'Администратор',
-                            manager: 'Управляющий компанией',
-                            member: 'Сотрудник',
-                          } as Record<string, string>
-                        )[person.organization_role] ?? person.organization_role,
-                      )}
+                      {roleName(person.organization_role)}
                     </td>
                     <td>
                       {person.organization_role === 'member' && person.is_active ? (
@@ -533,7 +526,7 @@ function CompanyWorkspace() {
                 <span>
                   {item.email}
                   <small>
-                    {t(item.role === 'manager' ? 'Управляющий компанией' : 'Сотрудник')}
+                    {roleName(item.role)}
                   </small>
                 </span>
                 <button

@@ -483,6 +483,7 @@ export default function CourseEditPage() {
               {t("Настройки курса")}
             </button>
             {!business && <Link className={styles.canvasLink} to={`/courses/${id}/canvas`}>{t("Открыть канву")} ↗</Link>}
+            {business && !dirty && !modules.some(m => m.lessons.some(l => l.content.trim())) && <Link className={styles.canvasLink} to={`/express?course=${id}&step=2${positionId ? `&position=${positionId}` : ''}`}>{t('Создать из документов')}</Link>}
           </div>}
         </header>
         {structure && <details className={styles.courseMeta}>
