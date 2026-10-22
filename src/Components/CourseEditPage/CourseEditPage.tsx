@@ -1,4 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
+import { pluralForm } from "@/i18n/plurals";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import MarkdownContent from "@/Components/MarkdownContent";
@@ -58,7 +59,7 @@ type Structure = {
 };
 
 export default function CourseEditPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { id } = useParams();
   const { user } = useAuth();
   const owner = user?.id ?? null;
@@ -541,7 +542,7 @@ export default function CourseEditPage() {
               >
                 <small>
                   {t("Модуль")} {index + 1} · {module.lessons.length}{" "}
-                  {t("уроков")}
+                  {t(pluralForm(locale, module.lessons.length, "урок", "урока", "уроков"))}
                 </small>
                 {module.title}
               </button>
