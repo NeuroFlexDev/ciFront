@@ -20,6 +20,9 @@ export const editorEnglish: Record<string, string> = {
   'Закрыть редактор, сохранив черновик': 'Close editor and keep draft', 'Редактирование': 'Editing',
 };
 export function useEditorCopy() {
-  const { locale } = useLocale();
-  return (key: string) => locale === 'en' ? editorEnglish[key] ?? key : key;
+  const { locale, t } = useLocale();
+  return (key: string) => {
+    const contextual = t(key);
+    return contextual !== key ? contextual : locale === 'en' ? editorEnglish[key] ?? key : key;
+  };
 }
