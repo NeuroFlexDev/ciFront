@@ -1,5 +1,7 @@
 export const businessEnglish: Record<string, string> = {
   'Персонал': 'Personnel',
+  'Текст регламента': 'Regulation text',
+  'Добавьте, например, должности «Администратор» и «Старший администратор». В каждой будет свой список регламентов и сотрудников.': 'For example, add Administrator and Senior Administrator. Each role has its own regulations and employees.',
   'Рабочее пространство руководителя. Управляйте должностями, регламентами и подготовкой сотрудников.': 'Manager workspace. Manage job roles, regulations and employee readiness.',
   'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.': 'Managers create job roles, invite employees and prepare regulations. The company owner manages access for managers.',
   'Сотрудник увидит назначенные регламенты в разделе «Мои регламенты».': 'The employee will see assigned regulations in My regulations.',

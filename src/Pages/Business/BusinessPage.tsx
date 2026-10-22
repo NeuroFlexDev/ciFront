@@ -1,5 +1,7 @@
 import { createContext, useContext, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { useDialogFocus } from '@/hooks/useDialogFocus';
+import { useDurableState } from '@/hooks/useDurableState';
+import DraftNotice from '@/Components/DraftNotice';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Plus, BriefcaseBusiness, Users, BookOpen, ArrowUpRight } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
@@ -779,7 +781,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
     `/business/positions/${position.id}/regulations?offset=${offset}&limit=20`,
   );
   const [newCourse, setNewCourse] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm, clearForm] = useDurableState(`business-regulation:${position.id}`, {
     title: '',
     goal: `${t('Подготовить сотрудника к самостоятельному выполнению обязанностей')}: ${position.name}`,
   });
@@ -799,6 +801,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
         `/business/positions/${position.id}/regulations`,
         { ...form, language: locale, expected_position_revision: position.revision },
       );
+      clearForm(form);
       navigate(data.url);
     } catch (reason) {
       setError(errorText(reason));
@@ -847,6 +850,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
         </div>
         {newCourse && (
           <form className={css.form} onSubmit={create}>
+            <DraftNotice />
             <label>
               {t('Название регламента')}
               <input

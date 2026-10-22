@@ -77,6 +77,7 @@ export default function CourseEditPage() {
   const personnelPath = positionId ? `/company/positions/${positionId}` : '/company';
   const courseTitle = structure?.title?.trim() || `${t("Курс")} ${id}`;
   const [modules, setModules] = useState<Module[]>([]);
+  const singleDocument = business && modules.reduce((count, item) => count + item.lessons.length, 0) === 1;
   const [finalTests, setFinalTests] = useState<ReviewTest[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
@@ -589,8 +590,8 @@ export default function CourseEditPage() {
             {lesson ? (
               <>
                 <header className={styles.lessonHeading}>
-                  <h2>{lesson.title}</h2>
-                <div className={styles.toolbar}>
+                  <h2>{singleDocument ? t('Текст регламента') : lesson.title}</h2>
+                {!singleDocument && <div className={styles.toolbar}>
                   <button
                     disabled={busy}
                     onClick={() =>
@@ -616,7 +617,7 @@ export default function CourseEditPage() {
                   >
                     {t("Убрать урок")}
                   </button>
-                </div>
+                </div>}
                 </header>
                 <TextEditor
                   key={`${id}:${lesson.id}:${owner}`}
@@ -765,9 +766,9 @@ export default function CourseEditPage() {
                       <span className={styles.lessonNumber} aria-hidden="true">
                         {lessonIndex + 1}
                       </span>
-                      <span>{l.title}</span>
+                      <span>{singleDocument ? t('Текст регламента') : l.title}</span>
                     </button>
-                    <button
+                    {!singleDocument && <><button
                       disabled={busy || lessonIndex === 0}
                       aria-label={t("Поднять урок {v0}", { v0: l.title })}
                       onClick={() =>
@@ -794,7 +795,7 @@ export default function CourseEditPage() {
                       }
                     >
                       ↓
-                    </button>
+                    </button></>}
                   </div>
                 ))}
                 {(!business || !m.lessons.length) && <button
