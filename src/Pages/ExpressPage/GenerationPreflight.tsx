@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, BookOpen, Check, FileText, ListChecks, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, Check, FileText, Globe2, ListChecks, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
 import { pluralForm } from "@/i18n/plurals";
 import type { GenerationSettings } from "./CourseWizard";
@@ -7,10 +7,12 @@ import styles from "./wizard.module.css";
 export type Preflight = {
   allowed: boolean; reasons: string[]; source_characters: number; source_bytes: number;
   minimum_calls: number; calls_limit: number; output_token_reservation: number; tokens_limit: number; note: string;
+  web_search?: { enabled: boolean; max_queries: number; reservation_rub: string; reservation_is_provider_bill: false; no_automatic_retry: boolean };
 };
 
-export default function GenerationPreflight({ settings, preflight, sourceCount, busy, onPrepare, onGenerate, onBack }: {
+export default function GenerationPreflight({ settings, preflight, sourceCount, busy, webSearchEnabled = true, onPrepare, onGenerate, onBack }: {
   settings: GenerationSettings; preflight: Preflight | null; sourceCount: number; busy: boolean;
+  webSearchEnabled?: boolean;
   onPrepare: () => void; onGenerate: () => void; onBack: () => void;
 }) {
   const { t, locale } = useLocale();
@@ -35,6 +37,11 @@ export default function GenerationPreflight({ settings, preflight, sourceCount, 
       <div><BookOpen aria-hidden="true" /><dt>{t("Объём курса")}</dt><dd>{settings.lesson_count}<small>{counted(settings.lesson_count, "урок в плане", "урока в плане", "уроков в плане")}</small></dd></div>
       <div><ListChecks aria-hidden="true" /><dt>{t("Проверка знаний")}</dt><dd className={styles.testSummary}>{settings.module_tests_enabled && settings.final_test_enabled ? t("Тесты + итоговый") : settings.module_tests_enabled ? t("После модулей") : settings.final_test_enabled ? t("Итоговый тест") : t("Без тестов")}<small>{t("по вашим настройкам")}</small></dd></div>
     </dl>
+    <div className={styles.webSearchSummary}><Globe2 size={20} aria-hidden="true" /><p>{webSearchEnabled && preflight?.web_search?.enabled === false
+      ? (locale === 'en' ? 'Internet search is currently unavailable. Your uploaded documents remain available.' : 'Поиск в интернете сейчас недоступен. Загруженные документы сохраняются.')
+      : locale === 'en'
+      ? (webSearchEnabled ? 'If your materials leave gaps, we will search the internet and keep source links for review.' : 'Internet search is off. Only your selected documents will be used.')
+      : (webSearchEnabled ? 'Если в материалах есть пробелы, найдём дополнения в интернете и сохраним ссылки для проверки.' : 'Поиск в интернете выключен. Используем только выбранные документы.')}</p></div>
     <div className={styles.preflightNext}>
       <h3>{t("Что произойдёт дальше")}</h3>
       <ol><li><span>1</span><div><strong>{t("Разберём материалы")}</strong><p>{t("Выделим ключевые темы и соберём логичный учебный план.")}</p></div></li>

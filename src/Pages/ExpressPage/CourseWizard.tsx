@@ -1,7 +1,7 @@
 import { useLocale, getLocale } from "@/i18n/useLocale";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { FileUp, LayoutTemplate, Plus, Sparkles } from "lucide-react";
+import { FileUp, Globe2, LayoutTemplate, Plus, Sparkles } from "lucide-react";
 import Menu from "@/Components/Menu/Menu";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -49,6 +49,7 @@ type Draft = {
   document_ids: number[];
   selection_initialized: boolean;
   request_id: string;
+  web_search_enabled?: boolean;
   plan_text?: string;
   edited_source_fields?: Partial<Record<SuggestedField, boolean>>;
   source_fill?: Partial<Record<SuggestedField, string>>;
@@ -110,7 +111,7 @@ export function WizardSteps({
 }
 
 export default function CourseWizard() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   const [params, setParams] = useSearchParams();
   const template = templates.find((item) => item.id === params.get("template"));
@@ -139,6 +140,7 @@ export default function CourseWizard() {
     document_ids: [],
     selection_initialized: false,
     request_id: crypto.randomUUID(),
+    web_search_enabled: true,
   });
   const { settings } = draft;
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -414,7 +416,7 @@ export default function CourseWizard() {
         setDraft((previous) => ({ ...previous, settings: next }));
         const { data } = await api.post<Preflight>(
           `/courses/${id}/generation-preflight`,
-          { settings: next, document_ids: draft.document_ids },
+          { settings: next, document_ids: draft.document_ids, web_search_enabled: draft.web_search_enabled ?? true },
         );
         setPreflight(data);
         go(4);
@@ -443,7 +445,7 @@ export default function CourseWizard() {
       try {
         const { data } = await api.post<{ run_id: number }>(
           `/courses/${courseId}/generation-runs`,
-          { settings, document_ids: draft.document_ids, request_id: draft.request_id },
+          { settings, document_ids: draft.document_ids, request_id: draft.request_id, web_search_enabled: draft.web_search_enabled ?? true },
         );
         setParams({ course: String(courseId), run: String(data.run_id) }, { replace: true });
         setSubmission("idle");
@@ -946,7 +948,7 @@ export default function CourseWizard() {
                       }}
                     />
                   </label>
-                  <label>
+                  <label className={styles.planApproval}>
                     <input
                       type="checkbox"
                       checked={Boolean(settings.approved_plan?.length)}
@@ -1006,6 +1008,22 @@ export default function CourseWizard() {
                     />
                   </label>
                 </div>
+                <section className={styles.webSearchOption}>
+                  <Globe2 size={23} aria-hidden="true" />
+                  <div>
+                    <label className={styles.toggle}>
+                      {locale === 'en' ? 'Supplement from the internet if sources are insufficient' : 'Дополнять из интернета, если материалов недостаточно'}
+                      <input type="checkbox" role="switch" checked={draft.web_search_enabled ?? true} disabled={busy}
+                        onChange={event => {
+                          if (busy) return;
+                          edited.current = true;
+                          setPreflight(null);
+                          setDraft(previous => ({ ...previous, web_search_enabled: event.target.checked, request_id: crypto.randomUUID() }));
+                        }} />
+                    </label>
+                    <p>{locale === 'en' ? 'Search uses short topics, never your full documents. Additional sources keep their links for your review. Search uses part of the generation budget.' : 'Ищем по коротким темам, без отправки документов целиком. Дополнительные источники сохраняются со ссылками для проверки. Поиск расходует часть бюджета генерации.'}</p>
+                  </div>
+                </section>
                 <div className={styles.footer}>
                   <button type="button" onClick={() => go(2)}>
                     {t("← Назад к источникам")}
@@ -1026,7 +1044,7 @@ export default function CourseWizard() {
             </form>
           )}
           {step === 4 && !runId && submission === "idle" && (
-            <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length}
+            <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length} webSearchEnabled={draft.web_search_enabled ?? true}
               busy={busy} onPrepare={() => void prepare()} onGenerate={() => void generate()} onBack={() => go(3)} />
           )}
           {(runId || submission !== "idle") && (

@@ -39,9 +39,26 @@ it('resumes uploaded ready documents and launches the real generation API', asyn
   expect(button).toBeEnabled();
   fireEvent.click(button);
   await waitFor(() => expect(api.post).toHaveBeenCalledWith('/courses/7/generation-runs',
-    {document_ids:[42],settings:{title:settings.title,goal:settings.goal,target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],expected_revision:5},request_id:expect.any(String)}));
+    {document_ids:[42],settings:{title:settings.title,goal:settings.goal,target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],expected_revision:5},request_id:expect.any(String),web_search_enabled:true}));
   expect(api.put).toHaveBeenCalledWith('/courses/7/generation-settings',expect.objectContaining({expected_revision:4}));
   expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toHaveAttribute('href','/courses/7/edit');
+});
+
+it('restores an opted-out internet search and sends the same choice to preflight and launch', async()=>{
+  const settings={title:'Internal onboarding',goal:'Learn our workflow',target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],expected_revision:4};
+  writeDraft('generation:37',{settings,document_ids:[42],selection_initialized:true,request_id:'search-opt-out',web_search_enabled:false});
+  vi.mocked(api.get).mockImplementation(async path=>({data:path.includes('capabilities')?capabilities:path.includes('generation-settings')?{...settings,revision:4}:path.includes('documents')?{items:[{id:42,status:'ready',original_filename:'source.txt'}],total:1}:{run_id:99,course_id:37,status:'completed',progress_percent:100,stages:[]}}));
+  vi.mocked(api.put).mockResolvedValue({data:{...settings,revision:5}});
+  vi.mocked(api.post).mockImplementation(async path=>({data:path.includes('preflight')?preflight:{run_id:99}}));
+  render(<MemoryRouter initialEntries={['/express?course=37']}><ExpressPage/></MemoryRouter>);
+  const toggle=await screen.findByRole('switch',{name:'Дополнять из интернета, если материалов недостаточно'});
+  expect(toggle).not.toBeChecked();
+  const next=screen.getByRole('button',{name:'Сохранить и продолжить →'});
+  await waitFor(()=>expect(next).toBeEnabled());
+  fireEvent.click(next);
+  fireEvent.click(await screen.findByRole('button',{name:'Сгенерировать курс'}));
+  await waitFor(()=>expect(api.post).toHaveBeenCalledWith('/courses/37/generation-runs',expect.objectContaining({web_search_enabled:false})));
+  expect(api.post).toHaveBeenCalledWith('/courses/37/generation-preflight',expect.objectContaining({web_search_enabled:false}));
 });
 
 it('loads server settings even when documents finish first', async()=>{

@@ -16,6 +16,7 @@ import { useCanvasStore } from '@/store/canvasStore';
 import type { CanvasNodeType } from '@/types/canvas';
 import { EXTENDED_NODE_TYPES, NODE_TYPE_DEFINITIONS } from '@/utils/canvasAdapters';
 import styles from '@/Components/canvas/styles.module.css';
+import { canvasViewportInsets } from './viewportInsets';
 
 function InnerCanvasView({ onRevealCanvas }: { onRevealCanvas: () => void }) {
   const { t } = useLocale();
@@ -65,13 +66,28 @@ function InnerCanvasView({ onRevealCanvas }: { onRevealCanvas: () => void }) {
     }
 
     const node = flow.getNode(pendingFocusNodeId);
-    if (node) {
-      const width = node.measured?.width ?? 280;
-      const height = node.measured?.height ?? 180;
-      void flow.setCenter(node.position.x + width / 2, node.position.y + height / 2, {
-        zoom: Math.max(flow.getZoom(), 0.94),
-        duration: motionDuration(220),
-      });
+    const workspace = wrapperRef.current?.closest('main');
+    if (node && workspace) {
+      // React Flow resolves group-relative coordinates; center those real bounds
+      // in the free board area without closing the inspector or changing nodes.
+      const area = canvasViewportInsets(workspace).availableArea;
+      const bounds = flow.getNodesBounds([node.id]);
+      const zoom = Math.max(
+        0.3,
+        Math.min(
+          Math.max(flow.getZoom(), 0.94),
+          area.width / Math.max(1, bounds.width),
+          area.height / Math.max(1, bounds.height),
+        ),
+      );
+      void flow.setViewport(
+        {
+          x: area.x + area.width / 2 - (bounds.x + bounds.width / 2) * zoom,
+          y: area.y + area.height / 2 - (bounds.y + bounds.height / 2) * zoom,
+          zoom,
+        },
+        { duration: motionDuration(220) },
+      );
     }
 
     consumeFocusNode();

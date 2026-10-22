@@ -1,3 +1,5 @@
+import type { WebSearchEvidence } from './WebSearchStatus';
+
 export type GenerationRun = {
   run_id: number;
   course_id: number;
@@ -7,7 +9,8 @@ export type GenerationRun = {
   stages: { code: string; title: string; status: string }[];
   status_error?: { message: string; retryable: boolean } | null;
   status_notice?: string | null;
-  settings_snapshot?: { title?: string; approved_plan?: string[] };
+  settings_snapshot?: { title?: string; approved_plan?: string[]; web_search_enabled?: boolean };
+  web_search?: WebSearchEvidence | null;
   created_at?: string | null;
   queued_at?: string | null;
   started_at?: string | null;

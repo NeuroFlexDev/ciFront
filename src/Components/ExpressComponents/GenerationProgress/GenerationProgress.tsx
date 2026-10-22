@@ -26,6 +26,7 @@ import {
   type GenerationRun,
 } from './types';
 import styles from './styles.module.css';
+import WebSearchStatus from './WebSearchStatus';
 
 const stageDetails: Record<string, { title: string; description: string }> = {
   ingestion: {
@@ -467,6 +468,7 @@ export default function GenerationProgress({
           </div>
         </aside>
       </div>
+      <WebSearchStatus evidence={run?.web_search} />
       <footer className={styles.footer}>
         <div className={styles.actions}>
           {submission === 'uncertain' && (
