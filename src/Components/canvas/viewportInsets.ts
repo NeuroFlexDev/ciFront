@@ -17,6 +17,12 @@ export function canvasViewportInsets(workspace: HTMLElement) {
     else insets.right = Math.max(insets.right, bounds.right - rect.left + 20);
   }
   return {
+    availableArea: {
+      x: insets.left,
+      y: insets.top,
+      width: Math.max(1, bounds.width - insets.left - insets.right),
+      height: Math.max(1, bounds.height - insets.top - insets.bottom),
+    },
     padding: {
       left: `${insets.left}px`,
       right: `${insets.right}px`,

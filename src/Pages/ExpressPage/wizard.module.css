@@ -264,6 +264,8 @@
 .sourceFillNotice > svg { flex: 0 0 auto; color: #caf432; margin-top: 3px; }
 .sourceFillNotice p { margin: 6px 0 0; font-size: 14px; }
 .sourceFillNotice button { margin-top: 12px; }
+.page .planApproval { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.6; }
+.page .planApproval input { flex: 0 0 18px; width: 18px; height: 18px; min-height: 18px; margin: 3px 0 0; padding: 0; accent-color: #caf432; }
 .preflight { padding: clamp(22px, 3.5vw, 44px); border-radius: 32px; background: #141414; }
 .preflightHeader { display: flex; align-items: flex-start; gap: 22px; margin-bottom: 32px; }
 .preflightIcon { display: grid; place-items: center; flex: 0 0 64px; height: 64px; border-radius: 22px; color: #15180c; background: #caf432; }
@@ -391,10 +393,92 @@
   border-radius: 18px;
 }
 .toggle input {
-  width: 42px;
-  height: 24px;
-  accent-color: #caf432;
+  appearance: none;
+  position: relative;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 26px;
+  margin: 0;
+  border: 1px solid #6d6d75;
+  border-radius: 999px;
+  background: #44454c;
   cursor: pointer;
+}
+.toggle input::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ececf0;
+}
+.toggle input:checked {
+  border-color: #caf432;
+  background: #caf432;
+}
+.toggle input:checked::before {
+  transform: translateX(20px);
+  background: #141414;
+}
+.toggle input:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.webSearchOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #303035;
+  border-radius: 24px;
+  background: #141414;
+}
+.webSearchOption > svg {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  padding: 11px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: #caf43212;
+  color: #caf432;
+}
+.webSearchOption > div {
+  flex: 1;
+  min-width: 0;
+}
+.form .webSearchOption .toggle {
+  align-items: flex-start;
+  padding: 0;
+  border-radius: 0;
+  line-height: 1.5;
+}
+.page .webSearchOption p {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 12px 0 0;
+  max-width: 800px;
+}
+.webSearchSummary {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-top: 20px;
+  padding: 18px 22px;
+  border-radius: 20px;
+  background: #0d0e12;
+}
+.webSearchSummary > svg {
+  flex: none;
+  margin-top: 2px;
+  color: #caf432;
+}
+.page .webSearchSummary p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
 }
 .footer {
   display: flex;
@@ -528,6 +612,19 @@
   .page .actions button {
     flex: 1;
   }
+  .webSearchOption {
+    padding: 20px;
+    gap: 12px;
+  }
+  .webSearchOption > svg {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+  .form .webSearchOption .toggle {
+    gap: 12px;
+  }
 }
 
 @media (hover: hover) {
@@ -562,6 +659,10 @@
   border-color: #caf432;
 }
 @media (prefers-reduced-motion: no-preference) {
+  .toggle input,
+  .toggle input::before {
+    transition: background-color 160ms ease, border-color 160ms ease, transform 180ms var(--ui-ease);
+  }
   .content,
   .modes,
   .uploadCard,
@@ -583,5 +684,13 @@
   }
   .uploadCard:before {
     transition: border-color 200ms ease;
+  }
+}
+@media (forced-colors: active) {
+  .toggle input {
+    appearance: auto;
+  }
+  .toggle input::before {
+    display: none;
   }
 }
