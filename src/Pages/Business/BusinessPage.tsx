@@ -212,6 +212,7 @@ function CompanyWorkspace() {
           {message}
         </p>
       )}
+      <Link className={css.backLink} to='/courses'>{t('Все регламенты')} ↗</Link>
       {invitationLink && <CopyLink url={invitationLink} />}
       {confirm && (
         <ConfirmationDialog

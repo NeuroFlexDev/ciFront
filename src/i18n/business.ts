@@ -9,6 +9,7 @@ export const businessEnglish: Record<string, string> = {
   'Например, администратор': 'For example, Administrator',
   'Команда': 'Team',
   'Регламенты': 'Regulations',
+  'Все регламенты': 'All regulations',
   'Мои регламенты': 'My regulations',
   'Регламенты должности': 'Job regulations',
   'Регламенты и требования для этой должности': 'Regulations and requirements for this job role',
