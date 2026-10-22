@@ -756,7 +756,9 @@ export function AIManagement() {
                               : !provider.has_key
                                 ? 'Нужен ключ'
                                 : provider.available
-                                  ? 'В маршрутизации'
+                                  ? assigned
+                                    ? 'В маршрутизации'
+                                    : 'Нет включённых моделей'
                                   : 'Временно исключён',
                           )}
                         </span>
