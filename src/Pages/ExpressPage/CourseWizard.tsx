@@ -43,6 +43,7 @@ type Capabilities = {
   document_formats: string[];
   document_max_bytes: number;
   source_characters_limit: number;
+  web_search_supported?: boolean;
 };
 type Draft = {
   settings: GenerationSettings;
@@ -50,6 +51,7 @@ type Draft = {
   selection_initialized: boolean;
   request_id: string;
   web_search_enabled?: boolean;
+  generation_search_supported?: boolean;
   plan_text?: string;
   edited_source_fields?: Partial<Record<SuggestedField, boolean>>;
   source_fill?: Partial<Record<SuggestedField, string>>;
@@ -416,8 +418,9 @@ export default function CourseWizard() {
         setDraft((previous) => ({ ...previous, settings: next }));
         const { data } = await api.post<Preflight>(
           `/courses/${id}/generation-preflight`,
-          { settings: next, document_ids: draft.document_ids, web_search_enabled: draft.web_search_enabled ?? true },
+          { settings: next, document_ids: draft.document_ids, ...(capabilities?.web_search_supported ? { web_search_enabled: draft.web_search_enabled ?? true } : {}) },
         );
+        setDraft(previous => ({ ...previous, generation_search_supported: Boolean(capabilities?.web_search_supported) }));
         setPreflight(data);
         go(4);
       } catch (reason) {
@@ -445,7 +448,7 @@ export default function CourseWizard() {
       try {
         const { data } = await api.post<{ run_id: number }>(
           `/courses/${courseId}/generation-runs`,
-          { settings, document_ids: draft.document_ids, request_id: draft.request_id, web_search_enabled: draft.web_search_enabled ?? true },
+          { settings, document_ids: draft.document_ids, request_id: draft.request_id, ...(draft.generation_search_supported ? { web_search_enabled: draft.web_search_enabled ?? true } : {}) },
         );
         setParams({ course: String(courseId), run: String(data.run_id) }, { replace: true });
         setSubmission("idle");
@@ -1013,7 +1016,7 @@ export default function CourseWizard() {
                   <div>
                     <label className={styles.toggle}>
                       {locale === 'en' ? 'Supplement from the internet if sources are insufficient' : 'Дополнять из интернета, если материалов недостаточно'}
-                      <input type="checkbox" role="switch" checked={draft.web_search_enabled ?? true} disabled={busy}
+                      <input type="checkbox" role="switch" checked={Boolean(capabilities?.web_search_supported && (draft.web_search_enabled ?? true))} disabled={busy || !capabilities?.web_search_supported}
                         onChange={event => {
                           if (busy) return;
                           edited.current = true;
@@ -1022,6 +1025,7 @@ export default function CourseWizard() {
                         }} />
                     </label>
                     <p>{locale === 'en' ? 'Search uses short topics, never your full documents. Additional sources keep their links for your review. Search uses part of the generation budget.' : 'Ищем по коротким темам, без отправки документов целиком. Дополнительные источники сохраняются со ссылками для проверки. Поиск расходует часть бюджета генерации.'}</p>
+                    {capabilities && !capabilities.web_search_supported && <p role="status">{locale === 'en' ? 'Internet search is temporarily unavailable. You can generate a course from your uploaded documents.' : 'Поиск в интернете временно недоступен. Можно создать курс по загруженным документам.'}</p>}
                   </div>
                 </section>
                 <div className={styles.footer}>
@@ -1030,7 +1034,7 @@ export default function CourseWizard() {
                   </button>
                   <button
                     className={styles.primary}
-                    disabled={busy || !draft.document_ids.length}
+                    disabled={busy || !capabilities || !draft.document_ids.length}
                   >
                     {busy ? t("Проверяем…") : t("Сохранить и продолжить →")}
                   </button>
@@ -1044,8 +1048,8 @@ export default function CourseWizard() {
             </form>
           )}
           {step === 4 && !runId && submission === "idle" && (
-            <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length} webSearchEnabled={draft.web_search_enabled ?? true}
-              busy={busy} onPrepare={() => void prepare()} onGenerate={() => void generate()} onBack={() => go(3)} />
+            <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length} webSearchEnabled={Boolean(capabilities?.web_search_supported && (draft.web_search_enabled ?? true))}
+              busy={busy || !capabilities} onPrepare={() => void prepare()} onGenerate={() => void generate()} onBack={() => go(3)} />
           )}
           {(runId || submission !== "idle") && (
             <GenerationProgress

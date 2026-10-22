@@ -12,7 +12,7 @@ vi.mock('@/Components/Menu/Menu', () => ({default: () => null}));
 vi.mock('@/shared/api', () => ({api:{get:vi.fn(),post:vi.fn(),put:vi.fn()}}));
 beforeEach(()=>{user.id++;setDraftOwner(user.id);});
 afterEach(() => {cleanup(); vi.clearAllMocks();localStorage.clear();setDraftOwner(null);});
-const capabilities={document_formats:['pdf','docx','txt','md'],document_max_bytes:25*1024*1024,source_characters_limit:500000};
+const capabilities={document_formats:['pdf','docx','txt','md'],document_max_bytes:25*1024*1024,source_characters_limit:500000,web_search_supported:true};
 const preflight={allowed:true,reasons:[],source_characters:500,source_bytes:500,minimum_calls:8,calls_limit:250,output_token_reservation:8000,tokens_limit:500000,note:'Budget checked'};
 
 it('resumes uploaded ready documents and launches the real generation API', async () => {
@@ -59,6 +59,26 @@ it('restores an opted-out internet search and sends the same choice to preflight
   fireEvent.click(await screen.findByRole('button',{name:'Сгенерировать курс'}));
   await waitFor(()=>expect(api.post).toHaveBeenCalledWith('/courses/37/generation-runs',expect.objectContaining({web_search_enabled:false})));
   expect(api.post).toHaveBeenCalledWith('/courses/37/generation-preflight',expect.objectContaining({web_search_enabled:false}));
+});
+
+it('generates against a server without search support without sending an unsupported field', async()=>{
+  const settings={title:'Compatible course',goal:'Keep all uploaded sources',target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],revision:4};
+  const legacyCapabilities={document_formats:capabilities.document_formats,document_max_bytes:capabilities.document_max_bytes,source_characters_limit:capabilities.source_characters_limit};
+  vi.mocked(api.get).mockImplementation(async path=>({data:path.includes('capabilities')?legacyCapabilities:path.includes('generation-settings')?settings:path.includes('documents')?{items:[{id:42,status:'ready',original_filename:'source.txt'}],total:1}:{run_id:99,course_id:38,status:'completed',progress_percent:100,stages:[]}}));
+  vi.mocked(api.put).mockResolvedValue({data:{...settings,revision:5}});
+  vi.mocked(api.post).mockImplementation(async(path,payload)=>{
+    expect(payload).not.toHaveProperty('web_search_enabled');
+    return {data:path.includes('preflight')?preflight:{run_id:99}};
+  });
+  render(<MemoryRouter initialEntries={['/express?course=38']}><ExpressPage/></MemoryRouter>);
+  await screen.findByText('Поиск в интернете временно недоступен. Можно создать курс по загруженным документам.');
+  expect(screen.getByRole('switch',{name:'Дополнять из интернета, если материалов недостаточно'})).toBeDisabled();
+  const next=screen.getByRole('button',{name:'Сохранить и продолжить →'});
+  await waitFor(()=>expect(next).toBeEnabled());
+  fireEvent.click(next);
+  fireEvent.click(await screen.findByRole('button',{name:'Сгенерировать курс'}));
+  expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toHaveAttribute('href','/courses/38/edit');
+  expect(api.post).toHaveBeenCalledWith('/courses/38/generation-runs',expect.objectContaining({document_ids:[42],request_id:expect.any(String)}));
 });
 
 it('loads server settings even when documents finish first', async()=>{
