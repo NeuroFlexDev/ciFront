@@ -1044,3 +1044,9 @@
   padding: 0;
   border: 0;
 }
+
+/* Portal forms share the same controls as the workspace. */
+.dialogScope{font-family:'GolosText',sans-serif;line-height:1.6}
+.dialogScope *{box-sizing:border-box}.dialogScope p{font-size:13px;color:#adb3a3;line-height:1.65}.dialogScope h3{font-size:16px;font-weight:600}.dialogScope button:disabled{opacity:.5;cursor:not-allowed}.dialogScope a{color:#caf432}.dialogScope :focus-visible{outline:2px solid #caf432;outline-offset:3px}
+.dialogScope fieldset>section>h2:first-child{display:none}.dialogScope .panel{margin:0;padding:0;background:transparent;border:0}.dialogScope .form{gap:18px}.dialogScope .form label{font-size:13px}.dialogScope .form input:not([type=checkbox]),.dialogScope .form select,.dialogScope .form textarea{min-height:46px;padding:12px 14px;border-radius:12px;font-size:14px}
+.card .row{gap:8px}.card .row>*{flex:1 1 45%;padding:10px 12px;border-radius:14px}.card .row>.primary{flex-basis:100%}.card h2{font-family:'GolosText',sans-serif!important;font-weight:600!important}.card .row>.danger{background:transparent;color:#d7a69a;border-color:#544138}

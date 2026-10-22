@@ -1,7 +1,8 @@
-import { useLocale } from "@/i18n/useLocale";
-import { useState, type PropsWithChildren, type ReactNode } from "react";
-import Menu from "@/Components/Menu/Menu";
-import styles from "./workspace.module.css";
+import { useLocale } from '@/i18n/useLocale';
+import { useState, type PropsWithChildren, type ReactNode } from 'react';
+import Menu from '@/Components/Menu/Menu';
+import styles from './workspace.module.css';
+import { isAdminSurface } from '@/shared/surface';
 export function Shell({
   title,
   description,
@@ -15,7 +16,7 @@ export function Shell({
   return (
     <>
       <Menu />
-      <main className={styles.page}>
+      <main className={`${styles.page} ${isAdminSurface ? styles.adminPage : ''}`}>
         <header className={styles.heading}>
           <div>
             <h1>{title}</h1>
@@ -43,14 +44,14 @@ export function CopyLink({ url, title }: { url: string; title?: string }) {
   const [failed, setFailed] = useState(false);
   return (
     <section className={styles.linkBox}>
-      <h3>{title ?? t("Приглашение готово")}</h3>
+      <h3>{title ?? t('Приглашение готово')}</h3>
       <p>
         {t(
-          "Передайте ссылку нужному человеку лично. После закрытия страницы она не отображается повторно.",
+          'Передайте ссылку нужному человеку лично. После закрытия страницы она не отображается повторно.',
         )}
       </p>
       <label>
-        {t("Ссылка для передачи")}
+        {t('Ссылка для передачи')}
         <input readOnly value={url} onFocus={(e) => e.target.select()} />
       </label>
       <button
@@ -65,9 +66,9 @@ export function CopyLink({ url, title }: { url: string; title?: string }) {
             .catch(() => setFailed(true))
         }
       >
-        {copied ? t("Скопировано") : t("Скопировать ссылку")}
+        {copied ? t('Скопировано') : t('Скопировать ссылку')}
       </button>
-      {failed && <p>{t("Выделите ссылку в поле и скопируйте её вручную.")}</p>}
+      {failed && <p>{t('Выделите ссылку в поле и скопируйте её вручную.')}</p>}
     </section>
   );
 }
