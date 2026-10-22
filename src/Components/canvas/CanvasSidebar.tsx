@@ -297,7 +297,7 @@ export function CanvasSidebar({
           onClick={clearFrameForSelection}
         >
           <Ungroup size={16} />
-          {t("Убрать из frame")}
+          {t("Убрать из группы")}
         </button>
       ) : null}
 

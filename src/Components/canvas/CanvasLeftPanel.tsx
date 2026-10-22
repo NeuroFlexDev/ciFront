@@ -96,7 +96,7 @@ export function CanvasLeftPanel({
           }
         >
           <SquareStack size={16} />
-          {t("Создать frame из выделения")}
+          {t("Создать группу из выделения")}
         </button>
         <div className={styles.leftPanelHint}>
           <PlusSquare size={14} />

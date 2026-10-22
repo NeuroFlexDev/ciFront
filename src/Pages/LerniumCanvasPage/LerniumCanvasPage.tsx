@@ -1,4 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
+import { pluralForm } from "@/i18n/plurals";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -29,7 +30,7 @@ import { useAssistantAvailability } from "@/Pages/AiHelperPage/useAssistantAvail
 import { canvasAiDisabledReasons } from "@/utils/canvasAiAvailability";
 
 function LerniumCanvasPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   const { id } = useParams<{ id: string }>();
   const courseId = id ?? "draft";
@@ -313,11 +314,11 @@ function LerniumCanvasPage() {
             <div className={styles.workspaceStatusItem}>
               <CheckCircle2 size={14} />
               {selectedNodeIds.length}
-              {" " + t("узлов выбрано")}
+              {" " + t(pluralForm(locale, selectedNodeIds.length, "узел выбран", "узла выбрано", "узлов выбрано"))}
             </div>
             <div className={styles.workspaceStatusItem}>
               {selectedEdgeIds.length}
-              {" " + t("связей выбрано")}
+              {" " + t(pluralForm(locale, selectedEdgeIds.length, "связь выбрана", "связи выбрано", "связей выбрано"))}
             </div>
             <button
               type="button"
