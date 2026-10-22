@@ -289,7 +289,14 @@ export default function CourseWizard() {
       document_ids: sourceSelection.split(",").map(Number),
     }).then(({ data }) => {
       if (!active) return;
-      setDraft(previous => applySourceSuggestion(previous, data));
+      setDraft(previous => {
+        const next = applySourceSuggestion(previous, data);
+        if (next.settings.title !== previous.settings.title || next.settings.goal !== previous.settings.goal) {
+          setPreflight(null);
+          return { ...next, request_id: crypto.randomUUID() };
+        }
+        return next;
+      });
       edited.current = true;
       setSuggestionState("ready");
     }).catch(() => { if (active) setSuggestionState("error"); });
