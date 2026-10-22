@@ -225,6 +225,7 @@ it("changes editor controls without changing saved lesson text, test answers or 
       <CourseEditPage />
     </Page>,
   );
+  fireEvent.click(await screen.findByRole("button", {name: "Source"}));
   expect(await screen.findByLabelText("Lesson text (Markdown)")).toHaveValue(
     "Исходный учебный текст",
   );

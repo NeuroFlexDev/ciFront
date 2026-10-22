@@ -7,6 +7,7 @@ import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { apiFetch } from "@/shared/api";
 import { ApiError, errorMessage } from "@/shared/errors";
+import { useReconnect } from "@/hooks/useReconnect";
 import DiagramBlock from "./DiagramBlock";
 import { DIAGRAM_LANGUAGES } from "@/shared/diagrams";
 
@@ -15,6 +16,7 @@ export function ProtectedImage({ src, alt }: { src?: string; alt?: string }) {
   const [blob, setBlob] = useState<string>();
   const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
+  useReconnect(() => { if (error) setVersion(value => value + 1); });
   const protectedPath = src?.match(
     /^(?:\/api)?(\/(?:images\/\d+\/content|support\/grants\/\d+\/images\/\d+\/content))$/,
   )?.[1];
@@ -32,7 +34,9 @@ export function ProtectedImage({ src, alt }: { src?: string; alt?: string }) {
         });
         if (!response.ok)
           throw new ApiError(
-            "Иллюстрация недоступна в вашем сеансе.",
+            response.status === 401 ? "Войдите снова, затем повторите действие."
+              : response.status >= 500 ? "Иллюстрация временно недоступна. Повторите загрузку."
+                : "Иллюстрация недоступна в вашем сеансе.",
             response.status,
             "http",
           );

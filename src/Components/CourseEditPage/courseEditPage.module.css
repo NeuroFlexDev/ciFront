@@ -1,5 +1,5 @@
-.container{max-width:1440px;min-width:0;margin:36px auto 80px;padding:0 28px;color:#f4f4f6;font-family:'GolosText',sans-serif}
-.container h1{margin:28px 0 24px;font:400 clamp(26px,3vw,40px)/1.35 'Days',sans-serif;letter-spacing:-.025em;overflow-wrap:anywhere}
+.container{max-width:1760px;min-width:0;margin:22px auto 64px;padding:0 28px;color:#f4f4f6;font-family:'GolosText',sans-serif}
+.container h1{margin:8px 0 0;font:400 clamp(23px,2.1vw,32px)/1.4 'Days',sans-serif;letter-spacing:-.025em;overflow-wrap:anywhere}
 .container h2{margin:0 0 20px;font:600 24px/1.4 'GolosText',sans-serif;text-align:left;overflow-wrap:anywhere}
 .container h3{margin:28px 0 14px;font:600 20px/1.45 'GolosText',sans-serif}
 .container p{margin:12px 0;color:#b7b7bf;font-size:15px;line-height:1.75}
@@ -16,6 +16,28 @@
 .breadcrumbs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px!important}
 .toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 20px}
 .toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.courseHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:14px 0 20px}
+.courseIdentity{min-width:0;flex:1}
+.courseEyebrow{display:flex;align-items:center;gap:10px;font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#aaa}
+.courseEyebrow>span{color:#caf432}
+.courseActions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex:0 0 auto;max-width:400px;padding-top:8px}
+.container .canvasLink{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:11px 18px;border:1px solid #465128;border-radius:28px;background:#1b2012;color:#d4f785;text-decoration:none;font-size:14px;font-weight:500}
+.container .canvasLink:hover{background:#272e19;border-color:#caf432}
+.courseMeta{padding:0;border-top:1px solid #29292e;border-bottom:1px solid #29292e;margin:12px 0 20px}
+.courseMeta>summary{display:flex;align-items:center;gap:10px;min-height:42px;list-style:none;cursor:pointer;color:#b2b3bb;font-size:13px}
+.courseMeta>summary::before{content:'+';display:grid;place-items:center;width:20px;height:20px;color:#caf432;font-size:19px}
+.courseMeta[open]>summary::before{content:'−'}
+.courseMeta>summary::-webkit-details-marker{display:none}
+.courseMetaBody{padding:10px 0 20px}
+.courseMetaBody>.toolbar{margin-bottom:12px}
+.outlineLabel{margin:0 0 16px!important;color:#aaa!important;font-size:11px!important;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.moduleManagement{margin:0 0 14px!important;padding:0!important;border:0!important}
+.moduleManagement>summary{font-size:12px!important;min-height:32px;display:flex;align-items:center}
+.moduleManagement[open]>.moduleActions{margin:8px 0 10px}
+.lessonHeading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.lessonHeading h2{margin:0;font-size:clamp(23px,2.2vw,32px);line-height:1.35}
+.lessonHeading .toolbar{margin:0;justify-content:flex-end;flex-shrink:0}
+.lessonHeading .toolbar button{min-height:36px;padding:7px 11px;font-size:12px}
 .formatToolbar{gap:6px;padding:12px;border:1px solid #303034;border-radius:18px;background:#101014}
 .formatToolbar button{min-height:40px;padding:8px 13px;border-color:transparent;background:transparent;font-size:13px}
 .formatToolbar button:hover:not(:disabled){border-color:#45454d;background:#26262c}
@@ -23,14 +45,14 @@
 .reviewHistory>summary{cursor:pointer;font-size:14px;color:#d4d4da;line-height:1.6}
 .pending{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:20px 0;padding:16px 20px;border:1px solid #575136;border-radius:18px;background:#242217;color:#eee3b7;font-size:14px;line-height:1.6}
 .pending button{min-height:36px;padding:6px 12px;font-size:13px}
-.moduleMap{display:flex;gap:14px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;margin:28px 0 24px;padding:4px 4px 12px;scrollbar-color:#494951 transparent;scrollbar-width:thin}
-.moduleMap button{flex:0 0 clamp(220px,23vw,300px);min-height:108px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:12px;padding:20px 22px;border:1px solid #303034;border-radius:24px;background:#141414;text-align:left;overflow-wrap:anywhere;scroll-snap-align:start}
+.moduleMap{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x proximity;margin:20px 0;padding:4px 2px 8px;scrollbar-color:#494951 transparent;scrollbar-width:thin}
+.moduleMap button{flex:0 0 clamp(220px,23vw,300px);min-height:80px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;padding:14px 20px;border:1px solid #303034;border-radius:22px;background:#141414;text-align:left;overflow-wrap:anywhere;scroll-snap-align:start}
 .moduleMap small{font-size:12px;color:#b0b0b8;font-weight:400}
 .moduleMap button[aria-current=true]{border-color:#caf432;background:#1a1d12;box-shadow:inset 0 -2px #caf432}
 .moduleMap button[aria-current=true] small{color:#caf432}
 .content{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
-.sidebar,.editorContainer{min-width:0;border:1px solid #2c2c31;border-radius:32px;background:#141414;overflow-wrap:anywhere;animation:panelIn .26s ease-out}
-.sidebar{position:sticky;top:24px;max-height:calc(100dvh - 48px);overflow:auto;padding:24px;scrollbar-color:#494951 transparent;scrollbar-width:thin;scroll-padding-block:20px}
+.sidebar,.editorContainer{min-width:0;overflow-wrap:anywhere;animation:panelIn .26s ease-out}
+.sidebar{position:sticky;top:20px;max-height:calc(100dvh - 40px);overflow:auto;padding:0 2px 12px 8px;scrollbar-color:#494951 transparent;scrollbar-width:thin;scroll-padding-block:20px}
 .sidebar section{padding-bottom:24px;margin-bottom:24px;border-bottom:1px solid #303034}
 .sidebar section:last-of-type{margin-bottom:12px}
 .sidebar h2{font-size:19px;margin:0 0 16px}
@@ -45,19 +67,19 @@
 .moduleActions button{padding:8px 12px;font-size:12px}
 .lessonRow{display:grid;grid-template-columns:minmax(0,1fr) 40px 40px;align-items:center;gap:6px;margin-bottom:10px}
 .lessonRow>button:not(.lesson){padding:8px;min-height:40px;border-radius:50%;font-size:16px}
-.container .lesson{display:flex;align-items:center;gap:10px;width:100%;min-height:58px;padding:10px 12px;border-radius:18px;background:#0c0d12;border-color:#303034;text-align:left;font-size:14px;font-weight:500;white-space:normal}
+.container .lesson{display:flex;align-items:center;gap:12px;width:100%;min-height:72px;padding:14px 18px;border-radius:36px;background:#141414;border-color:transparent;text-align:left;font-size:14px;font-weight:500;white-space:normal}
 .container .lesson[aria-pressed=true]{background:#1a1d12;border-color:#caf432;color:#f4f6eb}
-.lessonNumber{display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#26262b;color:#bdbdc5;font-size:12px}
-.lesson[aria-pressed=true] .lessonNumber{background:#caf432;color:#141414}
+.lessonNumber{display:grid;place-items:center;flex-shrink:0;width:32px;height:32px;border-radius:50%;color:#f4f4f6;font:400 23px/1 'Days',sans-serif}
+.lesson[aria-pressed=true] .lessonNumber{color:#caf432}
 .sidebar .addLesson{width:100%;margin:6px 0 2px;color:#caf432;border-color:#4d5932;background:#202417}
-.editorContainer{padding:32px}
+.editorContainer{padding:0;border:0;background:transparent}
 .editorHeading{padding-bottom:4px}
 .editorHeading h2{font-size:clamp(22px,2.2vw,30px);margin-bottom:18px}
-.editorContainer label{display:grid;gap:12px;margin-bottom:18px;color:#c5c5cc;font-size:13px;line-height:1.5}
-.editorContainer textarea{width:100%;min-height:360px;padding:20px;border:1px solid #414149;border-radius:18px;background:#0c0d12;color:#eeeef3;font:16px/1.8 'GolosText',sans-serif;resize:vertical;caret-color:#caf432;transition:border-color .18s,box-shadow .18s}
-.editorContainer textarea:hover:not(:disabled){border-color:#64646c}
-.editorContainer textarea:focus{border-color:#caf432;box-shadow:0 0 0 3px #caf43212}
-.editorContainer textarea:disabled{opacity:.7;cursor:wait}
+.editorContainer>label{display:grid;gap:12px;margin-bottom:18px;color:#c5c5cc;font-size:13px;line-height:1.5}
+.editorContainer>label>textarea{width:100%;min-height:360px;padding:20px;border:1px solid #414149;border-radius:18px;background:#0c0d12;color:#eeeef3;font:16px/1.8 'GolosText',sans-serif;resize:vertical;caret-color:#caf432;transition:border-color .18s,box-shadow .18s}
+.editorContainer>label>textarea:hover:not(:disabled){border-color:#64646c}
+.editorContainer>label>textarea:focus{border-color:#caf432;box-shadow:0 0 0 3px #caf43212}
+.editorContainer>label>textarea:disabled{opacity:.7;cursor:wait}
 .saveRow{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:4px 0 24px}
 .saveRow p,.actionHint{margin:0!important;font-size:13px!important;color:#a9abb0!important;line-height:1.6!important}
 .preview{padding-top:24px;margin-top:24px;border-top:1px solid #333339;animation:panelIn .22s ease-out;font-size:16px;line-height:1.8}
@@ -94,5 +116,8 @@
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
 @media(max-width:1150px){.content{grid-template-columns:minmax(0,1fr) 310px;gap:18px}.sidebar{padding:20px}.editorContainer{padding:26px}.lessonRow{grid-template-columns:minmax(0,1fr) 36px 36px;gap:4px}.lessonRow>button:not(.lesson){min-height:40px}.container .lesson{font-size:13px;padding:10px}.lessonNumber{width:24px;height:24px}}
 @media(max-width:960px){.content{grid-template-columns:minmax(0,1fr)}.sidebar{position:static;max-height:none}.sidebar section{padding-bottom:22px}.lessonRow{grid-template-columns:minmax(0,1fr) 44px 44px}.container .lesson{font-size:14px}.container{margin-top:26px;padding:0 20px}.editorContainer,.sidebar{border-radius:28px}.buttons{justify-content:flex-start}.publishHint{text-align:left}}
-@media(max-width:600px){.container{padding:0 16px;margin-bottom:44px}.container h1{font-size:26px;margin:24px 0}.editorContainer,.sidebar{padding:20px;border-radius:24px}.editorContainer textarea{padding:16px;min-height:320px}.moduleMap{margin:20px 0}.moduleMap button{flex-basis:220px;min-height:96px;padding:16px 18px}.formatToolbar{padding:8px;gap:4px}.formatToolbar button{padding:8px 10px}.overlay{padding:12px}.dialog{padding:22px;max-height:calc(100dvh - 24px);border-radius:24px}.dialog fieldset,.dialog fieldset>section{padding:14px}.buttons>button,.buttons>a{flex:1 1 210px;text-align:center;justify-content:center}.editorHeading h2{font-size:23px}.preview h1{font-size:26px}}
+@media(max-width:600px){.container{padding:0 16px;margin-bottom:44px}.container h1{font-size:26px;margin:24px 0}.editorContainer,.sidebar{padding:20px;border-radius:24px}.editorContainer>label>textarea{padding:16px;min-height:320px}.moduleMap{margin:20px 0}.moduleMap button{flex-basis:220px;min-height:96px;padding:16px 18px}.formatToolbar{padding:8px;gap:4px}.formatToolbar button{padding:8px 10px}.overlay{padding:12px}.dialog{padding:22px;max-height:calc(100dvh - 24px);border-radius:24px}.dialog fieldset,.dialog fieldset>section{padding:14px}.buttons>button,.buttons>a{flex:1 1 210px;text-align:center;justify-content:center}.editorHeading h2{font-size:23px}.preview h1{font-size:26px}}
 @media(prefers-reduced-motion:reduce){.container *,.container *::before,.container *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.container button:active{transform:none}}
+@media(max-width:1150px){.editorContainer{padding:0}.courseActions{max-width:290px}.lessonHeading{display:block}.lessonHeading .toolbar{justify-content:flex-start;margin-top:10px}.sidebar{padding:0 2px 12px 4px}}
+@media(max-width:960px){.courseHeader{flex-direction:column;gap:12px}.courseActions{max-width:none;justify-content:flex-start;padding:0}.sidebar{padding:20px 0 0;border-top:1px solid #303034}.content{gap:30px}.container h1{font-size:clamp(22px,4vw,28px)}}
+@media(max-width:600px){.editorContainer{padding:0}.courseHeader{margin-top:12px}.courseMeta>summary{font-size:12px;line-height:1.5;padding:8px 0}.courseActions>button,.courseActions>.canvasLink{font-size:12px;min-height:40px;padding:8px 13px}.moduleMap button{min-height:76px}.sidebar{border-radius:0}.container h1{margin:8px 0 0}}

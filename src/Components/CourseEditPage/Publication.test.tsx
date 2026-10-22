@@ -55,6 +55,7 @@ function BackToCourse() {
 }
 async function page() {
   render(<MemoryRouter initialEntries={["/courses/8/edit", "/courses/7/edit"]} initialIndex={1}><BackToCourse /><Routes><Route path="/courses/:id/edit" element={<CourseEditPage />} /></Routes></MemoryRouter>);
+  fireEvent.click(await screen.findByRole("button", { name: "Исходник" }));
   const text = await screen.findByRole("textbox", { name: "Текст урока (Markdown)" });
   fireEvent.click(screen.getByText("Экспорт опубликованной версии: PDF и ZIP"));
   return text;
@@ -88,16 +89,17 @@ it("clears a stale version-list error on successful publication", async () => {
   expect(screen.queryByText("Список версий временно недоступен")).not.toBeInTheDocument();
 });
 
-it("keeps text entered while publication is pending and does not refetch the editor", async () => {
+it("locks content while publication is pending and does not refetch or replace the editor", async () => {
   const text = await page();
   let finish!: (value: { data: unknown }) => void;
   mocks.post.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
   fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
+  expect(text).toBeDisabled();
   fireEvent.change(text, { target: { value: "Текст, введённый во время публикации" } });
   transfers = { items: [published], total: 1 };
   await act(async () => finish({ data: { id: 7, publication_status: "published", revision: 9, published_at: published.published_at } }));
-  expect(text).toHaveValue("Текст, введённый во время публикации");
-  expect(readDraft<string>("lesson:71", user.id)?.value).toBe("Текст, введённый во время публикации");
+  expect(text).toHaveValue(lesson.content);
+  expect(readDraft<string>("lesson:71", user.id)).toBeNull();
   expect(mocks.get.mock.calls.filter(([path]) => path === "/courses/7/structure")).toHaveLength(1);
 });
 
@@ -118,6 +120,53 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
+it.each(["success", "failure"])("ignores a late lesson save %s after navigating to another course, including its finally", async outcome => {
+  const a = deferred(), b = deferred();
+  mocks.put.mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise);
+  const text = await page();
+  fireEvent.change(text, { target: { value: "Черновик А" } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить урок" }));
+  expect(text).toBeDisabled();
+  fireEvent.click(screen.getByRole("button", { name: "Назад к курсу Б" }));
+  await screen.findByRole("heading", { name: "Курс Б" });
+  fireEvent.click(screen.getByRole("button", { name: "Исходник" }));
+  const current = screen.getByRole("textbox", { name: "Текст урока (Markdown)" });
+  fireEvent.change(current, { target: { value: "Черновик Б" } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить урок" }));
+  await act(async () => outcome === "success" ? a.resolve({ data: { ...lesson, revision: 99 } }) : a.reject(new ApiError("Ошибка урока А", 409)));
+  expect(current).toHaveValue("Черновик Б");
+  expect(current).toBeDisabled();
+  expect(screen.queryByText("Ошибка урока А")).not.toBeInTheDocument();
+  expect(readDraft<string>("lesson:81", user.id)?.baseRevision).toBe(3);
+  await act(async () => b.resolve({ data: { ...lesson, id: 81, content: "Черновик Б", revision: 4 } }));
+  expect(current).toBeEnabled();
+  expect(readDraft<string>("lesson:81", user.id)).toBeNull();
+  expect(readDraft<string>("lesson:71", user.id)?.value).toBe("Черновик А");
+  fireEvent.change(current, { target: { value: "Следующая редакция Б" } });
+  mocks.put.mockResolvedValue({ data: { ...lesson, id: 81, revision: 5 } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить урок" }));
+  await waitFor(() => expect(mocks.put).toHaveBeenLastCalledWith("/lessons/81", { content: "Следующая редакция Б", expected_revision: 4 }));
+});
+
+it("does not apply a lesson save from a replaced auth session or clear its recovery copy", async () => {
+  const pending = deferred();
+  mocks.put.mockReturnValue(pending.promise);
+  const text = await page();
+  fireEvent.change(text, { target: { value: "Сохранить после входа" } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить урок" }));
+  mocks.generation++;
+  await act(async () => pending.resolve({ data: { ...lesson, revision: 99 } }));
+  expect(readDraft<string>("lesson:71", user.id)?.value).toBe("Сохранить после входа");
+  act(() => window.dispatchEvent(new Event("lernium-session-renewed")));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Сохранить урок" })).toBeEnabled());
+  const sourceButton = screen.getByRole("button", { name: "Исходник" });
+  fireEvent.click(sourceButton);
+  expect(screen.getByRole("textbox", { name: "Текст урока (Markdown)" })).toHaveValue("Сохранить после входа");
+  mocks.put.mockResolvedValue({ data: { ...lesson, revision: 4 } });
+  fireEvent.click(screen.getByRole("button", { name: "Сохранить урок" }));
+  await waitFor(() => expect(mocks.put).toHaveBeenLastCalledWith("/lessons/71", { content: "Сохранить после входа", expected_revision: 3 }));
+});
+
 it.each(["success", "failure"])("ignores a late %s from course A after navigation, including its finally during course B publication", async (outcome) => {
   const a = deferred(), b = deferred();
   mocks.post.mockReturnValueOnce(a.promise).mockReturnValueOnce(b.promise);
@@ -125,6 +174,7 @@ it.each(["success", "failure"])("ignores a late %s from course A after navigatio
   fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
   fireEvent.click(screen.getByRole("button", { name: "Назад к курсу Б" }));
   await screen.findByRole("heading", { name: "Курс Б" });
+  fireEvent.click(screen.getByRole("button", { name: "Исходник" }));
   expect(screen.getByRole("textbox", { name: "Текст урока (Markdown)" })).toHaveValue("Текст курса Б");
   expect(screen.getByRole("button", { name: "Опубликовать курс" })).toBeEnabled();
   fireEvent.click(screen.getByRole("button", { name: "Опубликовать курс" }));
