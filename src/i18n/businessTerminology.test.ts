@@ -7,6 +7,7 @@ import type { AuthUser } from '@/auth/auth-context';
 it('localizes registered interface messages without modifying customer names or text', () => {
   const ru = (key: string, params?: Record<string, string | number>) => businessTranslation('ru', key, params, (k, p) => translate('ru', k, p));
   expect(ru('Редактор курса')).toBe('Редактор регламента');
+  expect(ru('Текст урока (Markdown)')).toBe('Текст регламента (Markdown)');
   expect(ru('Редактировать модуль {v0}', {v0: 'Курс валют'})).toBe('Редактировать раздел Курс валют');
   expect(ru('Курс валют и уроки сервиса — текст заказчика')).toBe('Курс валют и уроки сервиса — текст заказчика');
   expect(businessTranslation('en', 'Редактор курса', undefined, k => translate('en', k))).toBe('Regulation editor');
