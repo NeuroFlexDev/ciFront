@@ -7,13 +7,17 @@ import { publicationEnglish } from './publication';
 import { materialsEnglish } from './materials';
 import { tenantLifecycleEnglish } from './tenantLifecycle';
 import { adminEditorEnglish } from './adminEditor';
+import { integrationsEnglish } from './integrations';
+import { visualEnglish } from './visual';
+import { canvasEnglish } from './canvas';
 import type { Locale, TranslationParams } from './locale';
 
 // Only registered interface messages are eligible. Names, uploaded text,
 // editor contents and interpolation values retain the customer's wording.
 const interfaceKeys = new Set(Object.keys({ ...learningEnglish, ...globalEnglish,
   ...creatorEnglish, ...generationEnglish, ...businessEnglish, ...publicationEnglish,
-  ...materialsEnglish, ...tenantLifecycleEnglish, ...adminEditorEnglish }));
+  ...materialsEnglish, ...tenantLifecycleEnglish, ...adminEditorEnglish,
+  ...integrationsEnglish, ...visualEnglish, ...canvasEnglish }));
 const words: Record<string, string> = {
   курс: 'регламент', курса: 'регламента', курсу: 'регламенту', курсом: 'регламентом', курсе: 'регламенте',
   курсы: 'регламенты', курсов: 'регламентов', курсам: 'регламентам', курсами: 'регламентами', курсах: 'регламентах',
