@@ -134,7 +134,8 @@ it('locks editable settings while a save is pending so its receipt cannot overwr
 
 it('shows pending acceptance, keeps its durable request ID after a lost response, and never retries the paid launch automatically', async () => {
   const settings={title:'Safety',goal:'Safe operation',target_audience:null,difficulty:'basic',language:'ru',lesson_count:2,module_tests_enabled:true,final_test_enabled:true,approved_plan:[],revision:4};
-  vi.mocked(api.get).mockImplementation(async path => ({data:path.includes('capabilities')?capabilities:path.includes('generation-settings')?settings:path.includes('documents')?{items:[{id:42,status:'ready',original_filename:'source.txt'}],total:1}:{run_id:99,course_id:7,status:'completed',progress_percent:100,stages:[]}}));
+  let searchSupported=true;
+  vi.mocked(api.get).mockImplementation(async path => ({data:path.includes('capabilities')?{...capabilities,web_search_supported:searchSupported}:path.includes('generation-settings')?settings:path.includes('documents')?{items:[{id:42,status:'ready',original_filename:'source.txt'}],total:1}:{run_id:99,course_id:7,status:'completed',progress_percent:100,stages:[]}}));
   vi.mocked(api.put).mockResolvedValue({data:{...settings,revision:5}});
   let rejectLaunch:(reason:unknown)=>void=()=>{};
   let launches=0;
@@ -155,6 +156,8 @@ it('shows pending acceptance, keeps its durable request ID after a lost response
   await act(async()=>rejectLaunch(new ApiError('Response lost',0,'timeout')));
   expect(await screen.findByRole('heading',{name:'Проверим, принят ли запуск'})).toBeInTheDocument();
   expect(screen.getByRole('button',{name:/Настройка курса/})).toBeDisabled();
+  // A rollback between dispatch and receipt lookup cannot change its payload.
+  searchSupported=false;
   await act(async()=>window.dispatchEvent(new Event('online')));
   expect(launches).toBe(1);
   fireEvent.click(screen.getByRole('button',{name:'Проверить запуск'}));
