@@ -9,9 +9,9 @@ import { dateText } from '@/Pages/Workspace/shared';
 import { useResource } from './useResource';
 import { Empty, Field, ResourceState, SecretResult } from './IntegrationComponents';
 import FederationPanel from './FederationPanel';
+import WebhooksPanel from './WebhooksPanel';
 import s from './integrations.module.css';
 const scopes: Record<string, string> = { 'courses:read': 'Просмотр курсов', 'members:read': 'Просмотр сотрудников', 'assignments:read': 'Просмотр назначений', 'assignments:write': 'Назначение и отзыв обучения', 'results:read': 'Просмотр результатов' };
-const events: Record<string, string> = { 'course.published': 'Курс опубликован', 'assignment.created': 'Обучение назначено', 'assignment.revoked': 'Назначение отозвано', 'submission.graded': 'Ответ оценён', 'invoice.paid': 'Счёт оплачен', 'member.revoked': 'Доступ сотрудника отозван' };
 type Key = {
     id: number;
     name: string;
@@ -20,12 +20,6 @@ type Key = {
     expires_at: string;
     revoked_at: string | null;
     last_used_at: string | null;
-};
-type Hook = {
-    id: number;
-    url: string;
-    events: string[];
-    enabled: boolean;
 };
 type Delivery = {
     id: string;
@@ -91,50 +85,6 @@ function KeysPanel() {
  {resource.data && (!resource.data.items.length ? <Empty>{t("Ключей пока нет. Создайте ключ для приложения, которому требуется доступ к данным организации.")}</Empty> : <div className={s.tableWrap}><table className={s.table}><thead><tr><th>{t("Приложение")}</th><th>{t("Права")}</th><th>{t("Срок и состояние")}</th><th>{t("Действия")}</th></tr></thead><tbody>{resource.data.items.map(key => <tr key={key.id}><td>{key.name}<small>{key.prefix}…</small><small>{key.last_used_at ? t("Использован {value0}", { value0: dateText(key.last_used_at) }) : t("Ещё не использован")}</small></td><td>{key.scopes.map(scope => <small key={scope}>{t(scopes[scope] || scope)}</small>)}</td><td>{key.revoked_at ? t("Отозван") : new Date(key.expires_at + 'Z') < new Date() ? t("Истёк") : t("Действует")}<small>{dateText(key.expires_at)}</small></td><td>{!key.revoked_at && <div className={s.row}><button className={s.secondary} disabled={busy || !!secret} onClick={() => setConfirm({ id: key.id, rotate: true })}>{t("Заменить ключ")}</button><button className={s.danger} disabled={busy} onClick={() => setConfirm({ id: key.id, rotate: false })}>{t("Отозвать")}</button></div>}</td></tr>)}</tbody></table></div>)}
  {confirm && <section className={s.notice}><p>{confirm.rotate ? t("Прежний ключ перестанет работать сразу. Сохраните новый и обновите подключённое приложение.") : t("Приложение потеряет доступ по этому ключу. История действий сохранится.")}</p><div className={s.row}><button disabled={busy} onClick={() => void mutate()}>{t("Подтвердить") + " "}{confirm.rotate ? t("замену") : t("отзыв")}</button><button className={s.secondary} disabled={busy} onClick={() => setConfirm(null)}>{t("Отмена")}</button></div></section>}
  <section className={s.panel}><h2>{t("Новый ключ приложения")}</h2><form className={s.form} onSubmit={create}><fieldset className={s.form} disabled={busy}><div className={s.fields}><Field label={t("Название приложения")} value={draft.name} minLength={2} maxLength={160} onChange={name => setDraft({ ...draft, name })}/><Field label={t("Действует до")} type="datetime-local" value={draft.expires} onChange={expires => setDraft({ ...draft, expires })}/></div><p>{t("Срок — до одного года. Выберите только необходимые права.")}</p><div className={s.checks}>{(resource.data?.scopes || Object.keys(scopes)).map(scope => <label className={s.check} key={scope}><input type="checkbox" checked={draft.scopes.includes(scope)} onChange={() => setDraft({ ...draft, scopes: toggle(draft.scopes, scope) })}/>{t(scopes[scope] || scope)}</label>)}</div><div><button disabled={busy || !draft.scopes.length || !!secret}>{busy ? t("Сохраняем…") : t("Создать ключ")}</button></div></fieldset></form></section></>;
-}
-function WebhooksPanel() {
-    const { t } = useLocale();
-    const resource = useResource<{
-        items: Hook[];
-        events: string[];
-    }>('/integrations/webhooks');
-    const [draft, setDraft, clear] = useDurableState('integrations:webhook', { url: '', events: [] as string[] });
-    const [secret, setSecret] = useState('');
-    const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<unknown>(null);
-    const [confirm, setConfirm] = useState<number | null>(null);
-    async function create(event: FormEvent) { event.preventDefault(); setBusy(true); setError(null); try {
-        const { data } = await api.post<{
-            secret: string;
-        }>('/integrations/webhooks', draft);
-        setSecret(data.secret);
-        clear();
-        setDraft({ url: '', events: [] });
-        resource.reload();
-    }
-    catch (e) {
-        setError(e);
-        resource.reload();
-    }
-    finally {
-        setBusy(false);
-    } }
-    async function disable() { setBusy(true); try {
-        await api.delete(`/integrations/webhooks/${confirm}`);
-        setConfirm(null);
-        resource.reload();
-    }
-    catch (e) {
-        setError(e);
-    }
-    finally {
-        setBusy(false);
-    } }
-    return <><ResourceState {...resource}/>{!!error && <ResourceState error={error} loading={false} reload={resource.reload}/>}<p>{t("События доставляются с повторными попытками и подписью. Получатель должен проверять подпись и учитывать повторную доставку по ID события.")}</p>{secret && <SecretResult label={t("Секрет подписи webhook")} value={secret} onClose={() => setSecret('')}/>}
- {resource.data && (!resource.data.items.length ? <Empty>{t("Получатели событий ещё не подключены.")}</Empty> : <div className={s.grid}>{resource.data.items.map(hook => <section className={s.panel} key={hook.id}><h3>{new URL(hook.url).hostname}</h3><p style={{ overflowWrap: 'anywhere' }}>{hook.url}</p><p>{hook.events.map(event => t(events[event] || event)).join(' · ')}</p>{hook.enabled ? <button className={s.danger} disabled={busy} onClick={() => setConfirm(hook.id)}>{t("Отключить доставку")}</button> : <p>{t("Доставка отключена")}</p>}</section>)}</div>)}
- {confirm !== null && <section className={s.notice}><p>{t("Остановить доставку на этот адрес? Новые события перестанут поступать; история останется.")}</p><div className={s.row}><button disabled={busy} onClick={() => void disable()}>{t("Отключить")}</button><button className={s.secondary} onClick={() => setConfirm(null)}>{t("Отмена")}</button></div></section>}
- <section className={s.panel}><h2>{t("Подключить получателя")}</h2><form className={s.form} onSubmit={create}><fieldset className={s.form} disabled={busy}><Field label={t("HTTPS-адрес обработчика")} type="url" value={draft.url} onChange={url => setDraft({ ...draft, url })}/><div className={s.checks}>{(resource.data?.events || Object.keys(events)).map(event => <label className={s.check} key={event}><input type="checkbox" checked={draft.events.includes(event)} onChange={() => setDraft({ ...draft, events: toggle(draft.events, event) })}/>{t(events[event] || event)}</label>)}</div><div><button disabled={busy || !draft.events.length || !!secret}>{t("Подключить webhook")}</button></div></fieldset></form></section>
- <details className={s.details}><summary>{t("Проверка подлинности события")}</summary><p>{t("Заголовок X-Lernium-Signature содержит t=время,v1=подпись. Подпись: HMAC-SHA256 от строки времени, точки и исходного тела запроса. Проверяйте время (например, окно 5 минут), сравнивайте подпись за постоянное время и сохраняйте X-Lernium-Event-ID для защиты от повторов.")}</p></details></>;
 }
 function DeliveriesPanel() {
     const { t } = useLocale();
