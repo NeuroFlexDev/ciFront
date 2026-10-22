@@ -22,6 +22,7 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { PublicationHistory } from "@/Pages/Learning/CourseReviewsPage";
+import CourseTransferPanel from "@/Pages/TeamLearning/CourseTransferPanel";
 import SourceReleasePanel from "@/Components/SourceReleasePanel";
 
 type Lesson = {
@@ -1023,6 +1024,12 @@ export default function CourseEditPage() {
             </p>
           )}
         </div>
+        {user?.organization_role === "owner" && !user.is_admin && (
+          <details>
+            <summary>{t("Экспорт опубликованной версии: PDF и ZIP")}</summary>
+            <CourseTransferPanel key={`${id}:${version}`} courseId={Number(id)} />
+          </details>
+        )}
         {assessment && (
           <AssessmentEditor
             target={assessment}

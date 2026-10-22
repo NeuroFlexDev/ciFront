@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { apiFetch } from "@/shared/api";
-import { ApiError } from "@/shared/errors";
+import { exportCourse, type ExportFormat } from "./courseExport";
+import { assertAuthSession, captureAuthSession } from "@/shared/api";
+import e from "./courseTransfer.module.css";
 import { useLocale } from "@/i18n/useLocale";
 import { LoadingState, RequestError } from "@/Components/RequestState";
 import { useLearningData } from "../Learning/useLearningData";
@@ -17,12 +18,13 @@ type Version = {
   source_count: number;
 };
 
-export default function CourseTransferPanel() {
+export default function CourseTransferPanel({ courseId }: { courseId?: number }) {
   const { t } = useLocale();
   const [offset, setOffset] = useState(0);
   const query = useLearningData<{ items: Version[]; total: number }>(
-    `/team/course-transfers?offset=${offset}&limit=20`,
+    `/team/course-transfers?offset=${offset}&limit=20${courseId ? `&course_id=${courseId}` : ""}`,
   );
+  const [format, setFormat] = useState<ExportFormat>(courseId ? "pdf" : "zip");
   const [selected, setSelected] = useState<Version | null>(null);
   const [sources, setSources] = useState(true),
     [keys, setKeys] = useState(false),
@@ -36,37 +38,26 @@ export default function CourseTransferPanel() {
     setBusy(true);
     setError(null);
     setNotice("");
+    const session = captureAuthSession();
     try {
-      const response = await apiFetch("/team/course-transfers/export", {
-        method: "POST",
-        body: JSON.stringify({
-          course_version_id: selected.course_version_id,
-          snapshot_sha256: selected.snapshot_sha256,
-          include_sources: sources,
-          include_answer_keys: keys,
-          confirm_transfer: confirmed,
-          confirm_private_materials: privateConfirmed,
-        }),
+      const file = await exportCourse(format, {
+        course_version_id: selected.course_version_id,
+        snapshot_sha256: selected.snapshot_sha256,
+        include_sources: sources,
+        include_answer_keys: keys,
+        confirm_transfer: confirmed,
+        confirm_private_materials: privateConfirmed,
       });
-      if (!response.ok) {
-        let message = t("Не удалось подготовить пакет курса.");
-        try {
-          const data = await response.json();
-          if (typeof data.detail === "string") message = data.detail;
-        } catch {
-          /* Keep the actionable generic message. */
-        }
-        throw new ApiError(message, response.status, "http");
-      }
-      const url = URL.createObjectURL(await response.blob());
+      assertAuthSession(session);
+      const url = URL.createObjectURL(file);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `lernium-course-${selected.course_id}-v${selected.revision}.zip`;
+      anchor.download = `lernium-course-${selected.course_id}-v${selected.revision}.${format}`;
       anchor.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
       setNotice(
         t(
-          "Пакет подготовлен, скачивание началось. Проверьте файлы и контрольные суммы перед передачей.",
+          format === "pdf" ? "PDF подготовлен, скачивание началось. Проверьте документ перед передачей." : "Пакет подготовлен, скачивание началось. Проверьте файлы и контрольные суммы перед передачей.",
         ),
       );
       setConfirmed(false);
@@ -79,13 +70,13 @@ export default function CourseTransferPanel() {
   }
   return (
     <section
-      className={s.card}
+      className={`${s.card} ${e.panel}`}
       aria-label={t("Передача опубликованного курса")}
     >
-      <h2>{t("Передача опубликованного курса")}</h2>
+      <div className={e.heading}><span className={e.eyebrow}>LERNIUM · EXPORT</span><h2>{t("Экспорт курса")}</h2></div>
       <p className={s.muted}>
         {t(
-          "Владелец выбирает точную опубликованную версию и состав ZIP. В пакете будут читаемый курс, структурированные данные, манифест и контрольные суммы. Участники, их ответы и результаты сюда не входят.",
+          "Скачайте фирменный PDF для чтения или ZIP для передачи курса и оригиналов. Экспортируется выбранная опубликованная версия. Участники, их ответы и результаты сюда не входят.",
         )}
       </p>
       {query.loading && !query.data && <LoadingState />}
@@ -108,6 +99,19 @@ export default function CourseTransferPanel() {
               style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
               className={s.stack}
             >
+              <label className={s.field}>
+                {t("Формат экспорта")}
+                <select value={format} onChange={(event) => {
+                  setFormat(event.target.value as ExportFormat); setConfirmed(false);
+                  setPrivateConfirmed(false); setError(null); setNotice("");
+                }}>
+                  <option value="pdf">{t("PDF — готовый учебный документ")}</option>
+                  <option value="zip">{t("ZIP — курс, данные и оригиналы")}</option>
+                </select>
+              </label>
+              <p className={e.formatInfo}>{t(format === "pdf"
+                ? "Обложка, содержание, иллюстрации, схемы, формулы и таблицы. Оригиналы приложений доступны в ZIP."
+                : "Читаемый Markdown, структурированные данные, изображения, манифест и SHA-256. Оригиналы — по вашему выбору.")}</p>
               <label className={s.field}>
                 {t("Версия для передачи")}
                 <select
@@ -148,7 +152,7 @@ export default function CourseTransferPanel() {
                       count: selected.source_count,
                     })}
                   </p>
-                  <label className={s.row}>
+                  {format === "zip" && <label className={s.row}>
                     <input
                       type="checkbox"
                       checked={sources}
@@ -158,7 +162,7 @@ export default function CourseTransferPanel() {
                       }}
                     />
                     {t("Включить закреплённые оригиналы материалов")}
-                  </label>
+                  </label>}
                   <label className={s.row}>
                     <input
                       type="checkbox"
@@ -199,14 +203,14 @@ export default function CourseTransferPanel() {
                   </label>
                   <p className={s.caption}>
                     {t(
-                      "Максимум пакета — 512 MiB. Черновики и неразрешённые источники исключены; внешние ссылки автора сохраняются. Действие записывается в журнал.",
+                      format === "pdf" ? "PDF — до 80 MiB и 500 страниц. Если рисунок или схема недоступны, экспорт остановится с объяснением. Черновики не включаются. Действие записывается в журнал." : "Максимум пакета — 512 MiB. Черновики и неразрешённые источники исключены; внешние ссылки автора сохраняются. Действие записывается в журнал.",
                     )}
                   </p>
                   <button
                     className={s.primary}
                     disabled={busy || !confirmed || (keys && !privateConfirmed)}
                   >
-                    {t(busy ? "Готовим пакет…" : "Скачать пакет курса")}
+                    {t(busy ? "Готовим пакет…" : format === "pdf" ? "Скачать PDF курса" : "Скачать пакет курса")}
                   </button>
                 </>
               )}
