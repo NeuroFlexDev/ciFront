@@ -1,4 +1,11 @@
 export const tenantLifecycleEnglish: Record<string, string> = {
+  'Выполняем действие…': 'Working…',
+  'Убрать участника из группы': 'Remove group member',
+  'Архивировать подразделение': 'Archive department',
+  'Отозвать назначение роли': 'Revoke role assignment',
+  'Архивировать программу': 'Archive program',
+  'Выбрать новый цикл': 'Choose a new cycle',
+  'Предложить передачу владения': 'Offer ownership transfer',
   'Проверяем поддержку управления записями…': 'Checking record management support…',
   'Сервер ещё не поддерживает безопасное изменение и восстановление записей. Дождитесь обновления сервера. Ваши черновики сохранены.': 'The server does not support safe record editing and restoration yet. Wait for the server update. Your drafts are preserved.',
   'Проверить поддержку снова': 'Check support again',

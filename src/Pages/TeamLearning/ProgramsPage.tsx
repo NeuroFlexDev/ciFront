@@ -22,6 +22,7 @@ import s from "../Learning/learning.module.css";
 import ArchivePanel from './ArchivePanel';
 import { ManagementCapabilityNotice } from './ManagementCapability';
 import { useManagementCapability } from './useManagementCapability';
+import { useManagementConfirmation } from './useManagementConfirmation';
 
 export default function ProgramsPage() {
   const { t } = useLocale();
@@ -145,6 +146,7 @@ function ProgramForm({
   const [add, setAdd] = useState("");
   const action = useTeamAction();
   const conflict = !!program && draft.expected_revision !== program.revision;
+  const confirmation = useManagementConfirmation();
   const available = catalogue.filter(
     (c) =>
       !draft.steps.some((s) => s.course_version_id === c.course_version_id),
@@ -183,6 +185,7 @@ function ProgramForm({
         void save();
       }}
     >
+      {confirmation.dialog}
       <fieldset disabled={action.busy} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}>
       <h2>{program ? t("Редактирование программы") : t("Новая программа")}</h2>
       {conflict && (
@@ -428,20 +431,16 @@ function ProgramForm({
               type="button"
               className={s.danger}
               disabled={!lifecycleSupported || action.busy}
-              onClick={() => {
-                if (
-                  confirm(
-                    t(
-                      "Архивировать программу? Назначения и результаты останутся доступны, новые циклы создаваться не будут.",
-                    ),
-                  )
-                )
-                  void action.run(async () => {
+              onClick={() => confirmation.ask({
+                title: t('Архивировать программу'),
+                description: t("Архивировать программу? Назначения и результаты останутся доступны, новые циклы создаваться не будут."),
+                confirmLabel: t('Архивировать'),
+                action: () => action.run(async () => {
                     await api.post(`/team/programs/${program.id}/archive`, { expected_revision: program.revision });
                     await reload();
                     select(null);
-                  }, t("Программа архивирована"));
-              }}
+                  }, t("Программа архивирована")),
+              })}
             >
               {t("Архивировать")}
             </button>
@@ -471,8 +470,10 @@ function Enrollments({
     { user_ids: [] as number[], cycle_key: "initial" },
   );
   const action = useTeamAction();
+  const confirmation = useManagementConfirmation();
   return (
     <section className={s.card}>
+      {confirmation.dialog}
       <h2>{t("Участники программы")}</h2>
       <details>
         <summary>{t("Назначить программу")}</summary>
@@ -516,16 +517,12 @@ function Enrollments({
             <button
               className={s.secondary}
               disabled={action.busy}
-              onClick={() => {
-                if (
-                  confirm(
-                    t(
-                      "Начать отдельный цикл для выбранных участников? Предыдущие назначения сохранятся.",
-                    ),
-                  )
-                )
-                  setDraft({ ...draft, cycle_key: crypto.randomUUID() });
-              }}
+              onClick={() => confirmation.ask({
+                title: t('Отдельный новый цикл'),
+                description: t("Начать отдельный цикл для выбранных участников? Предыдущие назначения сохранятся."),
+                confirmLabel: t('Выбрать новый цикл'),
+                action: () => setDraft({ ...draft, cycle_key: crypto.randomUUID() }),
+              })}
             >
               {t("Отдельный новый цикл")}
             </button>
