@@ -14,7 +14,21 @@ export type AIModel = {
   vision: boolean;
   extra_body: Record<string, unknown>;
 };
-export type AICheck = { status: string; checked_at: string; models: string[] };
+export type AICatalogModel = {
+  id: string;
+  context_window: number;
+  max_output_tokens: number;
+  input_usd_per_million: string;
+  output_usd_per_million: string;
+  json_mode: boolean;
+  vision: boolean;
+};
+export type AICheck = {
+  status: string;
+  checked_at: string;
+  models: string[];
+  model_details?: AICatalogModel[];
+};
 export type AIProvider = {
   id: string;
   name: string;

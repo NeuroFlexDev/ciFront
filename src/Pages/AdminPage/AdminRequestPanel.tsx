@@ -1,3 +1,5 @@
+import AdminDialog from '@/Components/Admin/AdminDialog';
+import AdminToast from '@/Components/Admin/AdminToast';
 import { useState } from 'react';
 import { useDurableState } from '@/hooks/useDurableState';
 import { useLocale } from '@/i18n/useLocale';
@@ -80,201 +82,234 @@ export default function AdminRequestPanel({
           {t('Записать обращение')}
         </button>
       </div>
-      {!!error && <RequestError error={error} onRetry={onChanged} />}
-      {message && <p role='status'>{message}</p>}
+      {!!error && !(draft || edit || archive) && <RequestError error={error} onRetry={onChanged} />}
+      <AdminToast message={message} onClose={() => setMessage('')} />
       {draft && (
-        <section className={styles.panel}>
-          <h2>{t('Входящее обращение')}</h2>
-          <p>
-            {t(
-              'Зафиксируйте уже полученное обращение. Эта запись не отправляет письмо и не создаёт согласие от имени клиента.',
-            )}
-          </p>
-          <form
-            className={styles.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(async () => {
-                await api.post('/admin/requests', draft);
-                setDraft(null);
-                setStatus('open');
-                setMessage(t('Обращение записано.'));
-              });
-            }}
-          >
-            <label>
-              {t('Имя')}
-              <input
-                maxLength={160}
-                value={draft.name}
-                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-              />
-            </label>
-            <label>
-              Email
-              <input
-                required
-                type='email'
-                maxLength={255}
-                value={draft.email}
-                onChange={(e) => setDraft({ ...draft, email: e.target.value })}
-              />
-            </label>
-            <label>
-              {t('Тема обращения')}
-              <select
-                value={draft.purpose}
-                onChange={(e) => setDraft({ ...draft, purpose: e.target.value })}
-              >
-                <option value='support'>{t('Поддержка')}</option>
-                <option value='enquiry'>{t('Заявка')}</option>
-                <option value='rights'>{t('Персональные данные')}</option>
-              </select>
-            </label>
-            <label className={styles.span}>
-              {t('Текст обращения')}
-              <textarea
-                required
-                minLength={10}
-                maxLength={5000}
-                value={draft.message}
-                onChange={(e) => setDraft({ ...draft, message: e.target.value })}
-              />
-            </label>
-            <div className={styles.row}>
-              <button className={styles.primary}>{t('Сохранить обращение')}</button>
-              <button type='button' className={styles.secondary} onClick={() => setDraft(null)}>
-                {t('Отмена')}
-              </button>
-            </div>
-          </form>
-        </section>
+        <AdminDialog
+          title={t('Входящее обращение')}
+          onClose={() => setDraft(null)}
+          busy={busy}
+          guard
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel}>
+            <p>
+              {t(
+                'Зафиксируйте уже полученное обращение. Эта запись не отправляет письмо и не создаёт согласие от имени клиента.',
+              )}
+            </p>
+            <form
+              className={styles.form}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(async () => {
+                  await api.post('/admin/requests', draft);
+                  setDraft(null);
+                  setStatus('open');
+                  setMessage(t('Обращение записано.'));
+                });
+              }}
+            >
+              <label>
+                {t('Имя')}
+                <input
+                  maxLength={160}
+                  value={draft.name}
+                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  required
+                  type='email'
+                  maxLength={255}
+                  value={draft.email}
+                  onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                />
+              </label>
+              <label>
+                {t('Тема обращения')}
+                <select
+                  value={draft.purpose}
+                  onChange={(e) => setDraft({ ...draft, purpose: e.target.value })}
+                >
+                  <option value='support'>{t('Поддержка')}</option>
+                  <option value='enquiry'>{t('Заявка')}</option>
+                  <option value='rights'>{t('Персональные данные')}</option>
+                </select>
+              </label>
+              <label className={styles.span}>
+                {t('Текст обращения')}
+                <textarea
+                  required
+                  minLength={10}
+                  maxLength={5000}
+                  value={draft.message}
+                  onChange={(e) => setDraft({ ...draft, message: e.target.value })}
+                />
+              </label>
+              <div className={styles.row}>
+                <button className={styles.primary}>{t('Сохранить обращение')}</button>
+                <button
+                  type='button'
+                  data-dialog-close
+                  className={styles.secondary}
+                  onClick={() => setDraft(null)}
+                >
+                  {t('Отмена')}
+                </button>
+              </div>
+            </form>
+          </section>
+        </AdminDialog>
       )}
       {edit && (
-        <section className={styles.panel}>
-          <h2>
-            {t('Обработка обращения')} · {edit.row.name || edit.row.email}
-          </h2>
-          <p style={{ whiteSpace: 'pre-wrap' }}>{edit.row.message}</p>
-          <p>{t('Исходное сообщение сохраняется. Комментарии добавляются в историю действий.')}</p>
-          {(edit.row.notes ?? []).map((note) => (
-            <blockquote key={note.id}>
-              <p>{note.text}</p>
-              <small>{dateText(note.created_at)}</small>
-            </blockquote>
-          ))}
-          <form
-            className={styles.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(async () => {
-                await api.put(`/admin/requests/${edit.row.reference}`, {
-                  status: edit.status,
-                  note: edit.note,
-                  expected_state: edit.row.state_token,
+        <AdminDialog
+          title={`${t('Обработка обращения')} · ${edit.row.name || edit.row.email}`}
+          onClose={() => setEdit(null)}
+          busy={busy}
+          guard
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel}>
+            <p style={{ whiteSpace: 'pre-wrap' }}>{edit.row.message}</p>
+            <p>
+              {t('Исходное сообщение сохраняется. Комментарии добавляются в историю действий.')}
+            </p>
+            {(edit.row.notes ?? []).map((note) => (
+              <blockquote key={note.id}>
+                <p>{note.text}</p>
+                <small>{dateText(note.created_at)}</small>
+              </blockquote>
+            ))}
+            <form
+              className={styles.form}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(async () => {
+                  await api.put(`/admin/requests/${edit.row.reference}`, {
+                    status: edit.status,
+                    note: edit.note,
+                    expected_state: edit.row.state_token,
+                  });
+                  setEdit(null);
+                  setMessage(t('Обработка обращения сохранена.'));
                 });
-                setEdit(null);
-                setMessage(t('Обработка обращения сохранена.'));
-              });
-            }}
-          >
-            {!!error && (
-              <button
-                type='button'
-                className={styles.secondary}
-                onClick={() =>
-                  void perform(async () => {
-                    const result = await api.get<ManagedRequest>(
-                      `/admin/requests/${edit.row.reference}`,
-                    );
-                    setLatest(result.data);
-                  })
-                }
-              >
-                {t('Сравнить с текущей записью')}
-              </button>
-            )}
-            {latest?.reference === edit.row.reference && (
-              <section className={styles.span}>
-                <h3>{t('Текущая запись на сервере')}</h3>
-                <p>
-                  {t(
-                    latest.status === 'open'
-                      ? 'Открыто'
-                      : latest.status === 'closed'
-                        ? 'Обработано'
-                        : 'В архиве',
-                  )}
-                </p>
-                {(latest.notes ?? []).map((note) => (
-                  <p key={note.id}>{note.text}</p>
-                ))}
+              }}
+            >
+              {!!error && (
                 <button
                   type='button'
                   className={styles.secondary}
-                  onClick={() => {
-                    setEdit({ ...edit, row: latest });
-                    setLatest(null);
-                  }}
+                  onClick={() =>
+                    void perform(async () => {
+                      const result = await api.get<ManagedRequest>(
+                        `/admin/requests/${edit.row.reference}`,
+                      );
+                      setLatest(result.data);
+                    })
+                  }
                 >
-                  {t('Сохранить мои поля поверх этой версии')}
+                  {t('Сравнить с текущей записью')}
                 </button>
-                <p>{t('Затем нажмите сохранение. Ваш введённый текст останется в форме.')}</p>
-              </section>
-            )}
-            <label>
-              {t('Состояние')}
-              <select
-                value={edit.status}
-                onChange={(e) => setEdit({ ...edit, status: e.target.value })}
-              >
-                <option value='open'>{t('Открыто')}</option>
-                <option value='closed'>{t('Обработано')}</option>
-              </select>
-            </label>
-            <label className={styles.span}>
-              {t('Комментарий оператора')}
-              <textarea
-                maxLength={2000}
-                value={edit.note}
-                onChange={(e) => setEdit({ ...edit, note: e.target.value })}
-              />
-            </label>
+              )}
+              {latest?.reference === edit.row.reference && (
+                <section className={styles.span}>
+                  <h3>{t('Текущая запись на сервере')}</h3>
+                  <p>
+                    {t(
+                      latest.status === 'open'
+                        ? 'Открыто'
+                        : latest.status === 'closed'
+                          ? 'Обработано'
+                          : 'В архиве',
+                    )}
+                  </p>
+                  {(latest.notes ?? []).map((note) => (
+                    <p key={note.id}>{note.text}</p>
+                  ))}
+                  <button
+                    type='button'
+                    className={styles.secondary}
+                    onClick={() => {
+                      setEdit({ ...edit, row: latest });
+                      setLatest(null);
+                    }}
+                  >
+                    {t('Сохранить мои поля поверх этой версии')}
+                  </button>
+                  <p>{t('Затем нажмите сохранение. Ваш введённый текст останется в форме.')}</p>
+                </section>
+              )}
+              <label>
+                {t('Состояние')}
+                <select
+                  value={edit.status}
+                  onChange={(e) => setEdit({ ...edit, status: e.target.value })}
+                >
+                  <option value='open'>{t('Открыто')}</option>
+                  <option value='closed'>{t('Обработано')}</option>
+                </select>
+              </label>
+              <label className={styles.span}>
+                {t('Комментарий оператора')}
+                <textarea
+                  maxLength={2000}
+                  value={edit.note}
+                  onChange={(e) => setEdit({ ...edit, note: e.target.value })}
+                />
+              </label>
+              <div className={styles.row}>
+                <button className={styles.primary}>{t('Сохранить обработку')}</button>
+                <button
+                  type='button'
+                  data-dialog-close
+                  className={styles.secondary}
+                  onClick={() => setEdit(null)}
+                >
+                  {t('Отмена')}
+                </button>
+              </div>
+            </form>
+          </section>
+        </AdminDialog>
+      )}
+      {archive && (
+        <AdminDialog
+          title={t('Архивировать обращение?')}
+          onClose={() => setArchive(null)}
+          busy={busy}
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel} aria-label={t('Подтверждение действия')}>
+            <p>
+              {archive.name || archive.email} ·{' '}
+              {t('Исходное сообщение и история сохранятся. Обращение можно будет восстановить.')}
+            </p>
             <div className={styles.row}>
-              <button className={styles.primary}>{t('Сохранить обработку')}</button>
-              <button type='button' className={styles.secondary} onClick={() => setEdit(null)}>
+              <button
+                className={styles.primary}
+                onClick={() =>
+                  void perform(async () => {
+                    await api.post(`/admin/requests/${archive.reference}/archive`, {
+                      expected_state: archive.state_token,
+                    });
+                    setArchive(null);
+                  })
+                }
+              >
+                {t('Подтвердить')}
+              </button>
+              <button className={styles.secondary} onClick={() => setArchive(null)}>
                 {t('Отмена')}
               </button>
             </div>
-          </form>
-        </section>
-      )}
-      {archive && (
-        <section className={styles.panel} aria-label={t('Подтверждение действия')}>
-          <h2>{t('Архивировать обращение?')}</h2>
-          <p>
-            {archive.name || archive.email} ·{' '}
-            {t('Исходное сообщение и история сохранятся. Обращение можно будет восстановить.')}
-          </p>
-          <div className={styles.row}>
-            <button
-              className={styles.primary}
-              onClick={() =>
-                void perform(async () => {
-                  await api.post(`/admin/requests/${archive.reference}/archive`, {
-                    expected_state: archive.state_token,
-                  });
-                  setArchive(null);
-                })
-              }
-            >
-              {t('Подтвердить')}
-            </button>
-            <button className={styles.secondary} onClick={() => setArchive(null)}>
-              {t('Отмена')}
-            </button>
-          </div>
-        </section>
+          </section>
+        </AdminDialog>
       )}
       {requests.map((row) => (
         <section className={styles.panel} key={row.reference}>

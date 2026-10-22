@@ -456,3 +456,7 @@
     transform: translateY(1px);
   }
 }
+
+.adminPage{width:min(calc(100% - 64px),1480px);margin:32px auto 60px}
+.adminPage .heading{margin:0 0 28px;align-items:center}.adminPage .heading h1{font-family:'GolosText',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.04em;line-height:1.3;margin-bottom:8px}.adminPage .heading p{color:#98a28b;font-size:14px;margin:0}
+@media(max-width:700px){.adminPage{width:calc(100% - 32px);margin-top:26px}.adminPage .heading{align-items:flex-start;flex-wrap:wrap;gap:14px}.adminPage .heading h1{font-size:25px}}

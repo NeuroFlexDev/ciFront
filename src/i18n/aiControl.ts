@@ -1,4 +1,5 @@
 export const aiControlEnglish: Record<string, string> = {
+  'Нет включённых моделей': 'No enabled models',
   'AI-провайдеры': 'AI providers',
   'Подключения, модели, расходы и правила выбора для каждого этапа.':
     'Connections, models, costs and routing rules for each stage.',
@@ -138,4 +139,66 @@ export const aiControlEnglish: Record<string, string> = {
   'Российский облачный провайдер для корпоративных проектов':
     'Russian cloud provider for enterprise projects',
   'Модели в собственном контуре и локальный резерв': 'Self-hosted models and local fallback',
+  'Закрыть окно': 'Close dialog',
+  'Закрыть уведомление': 'Dismiss notification',
+  'Закрыть без сохранения? Изменения в этой форме будут потеряны.':
+    'Close without saving? Changes in this form will be lost.',
+  'Продолжить редактирование': 'Keep editing',
+  'Закрыть без сохранения': 'Discard changes',
+  Управление: 'Administration',
+  'Меню аккаунта': 'Account menu',
+  'Доступные подключения': 'Available connections',
+  'Моделей допущено': 'Approved models',
+  'Режим работы': 'Operating mode',
+  'Свой контур': 'Private deployment',
+  'Умный выбор': 'Adaptive routing',
+  'Разделы AI': 'AI sections',
+  Модели: 'Models',
+  Расходы: 'Costs',
+  'Подключите сервис, проверьте API и назначьте модели на этапы.':
+    'Connect a service, check its API and assign models to stages.',
+  'Ключ сохранён': 'Key saved',
+  'моделей в каталоге': 'catalog models',
+  'Проверка подключения ещё не запускалась': 'Connection has not been checked yet',
+  'Проверка API читает каталог без генерации. Баланс и качество ответов проверяются отдельно.':
+    'The API check reads the catalog without generating content. Balance and response quality are checked separately.',
+  'Выберите модель, задайте этапы и разрешите её использование.':
+    'Choose a model, assign stages and approve it for use.',
+  'Поиск модели': 'Search models',
+  'Найти модель…': 'Find a model…',
+  'Фильтр по провайдеру': 'Filter by provider',
+  'Все провайдеры': 'All providers',
+  'Фильтр по этапу': 'Filter by stage',
+  'Все этапы': 'All stages',
+  'Найдено моделей': 'Models found',
+  Контекст: 'Context',
+  'за 1 млн: вход / ответ': 'per 1M: input / output',
+  'Модели не найдены': 'No models found',
+  'Измените фильтры или добавьте модель подключённого провайдера.':
+    'Change the filters or add a model from a connected provider.',
+  'Сбросить фильтры': 'Clear filters',
+  'Стоимость, доступность и качество сравниваются перед каждым запросом.':
+    'Cost, availability and quality are compared before every request.',
+  'Порог качества': 'Quality threshold',
+  'после проверок': 'after checks',
+  'Покрытие этапов': 'Stage coverage',
+  маршрутов: 'routes',
+  'Запуски, начатые за последние 24 часа': 'Runs started in the last 24 hours',
+  'Расчётная стоимость': 'Estimated cost',
+  'После генерации здесь появятся токены, ошибки и расчётные расходы.':
+    'Token usage, errors and estimated costs appear here after generation.',
+  'Выберите сервис. Адрес API заполнится автоматически.':
+    'Choose a service. Its API address is filled in automatically.',
+  'Другой совместимый сервис': 'Other compatible service',
+  'Данные из OpenRouter': 'OpenRouter catalog data',
+  'USD за 1 млн: вход / ответ': 'USD per 1M: input / output',
+  'Ваш курс оплаты, ₽ за $1': 'Your payment exchange rate, RUB per USD',
+  'Заполнить тарифы и лимиты': 'Fill prices and limits',
+  'Учитывайте комиссии в курсе оплаты. Допуск и этапы выбираются отдельно.':
+    'Include payment fees in the exchange rate. Select approval and stages separately.',
+  'Стоимость и возможности': 'Pricing and capabilities',
+  'Выдавайте доступ и следите за принятием приглашений.':
+    'Grant access and track invitation acceptance.',
+  'Пригласить пользователя': 'Invite user',
+  'Ключ проверен': 'Key verified',
 };

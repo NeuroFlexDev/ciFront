@@ -1,3 +1,5 @@
+import AdminDialog from '@/Components/Admin/AdminDialog';
+import AdminToast from '@/Components/Admin/AdminToast';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useDurableState } from '@/hooks/useDurableState';
 import { useLocale } from '@/i18n/useLocale';
@@ -116,15 +118,15 @@ export default function AdminCoursePanel({
     <fieldset disabled={busy || !capable} className={styles.layoutReset}>
       <div className={styles.between}>
         <div className={styles.filterRow}>
-        {filters}
-        <label className={styles.check}>
-          <input
-            type='checkbox'
-            checked={archived}
-            onChange={(e) => setArchived(e.target.checked)}
-          />
-          {t('Архив курсов')}
-        </label>
+          {filters}
+          <label className={styles.check}>
+            <input
+              type='checkbox'
+              checked={archived}
+              onChange={(e) => setArchived(e.target.checked)}
+            />
+            {t('Архив курсов')}
+          </label>
         </div>
         <button
           className={styles.primary}
@@ -139,137 +141,167 @@ export default function AdminCoursePanel({
           'Управляйте названием и доступностью курса. Содержимое уроков открывается только автору или по разрешению заказчика.',
         )}
       </p>
-      {!!error && <RequestError error={error} onRetry={onChanged} />}
-      {message && <p role='status'>{message}</p>}
+      {!!error && !(draft || confirm || assign) && (
+        <RequestError error={error} onRetry={onChanged} />
+      )}
+      <AdminToast message={message} onClose={() => setMessage('')} />
       {draft && (
-        <section className={styles.panel}>
-          <h2>{draft.id ? t('Метаданные курса') : t('Новый курс')}</h2>
-          <form className={styles.form} onSubmit={save}>
-            {!!error && draft.id && (
-              <div className={styles.span}>
+        <AdminDialog
+          title={draft.id ? t('Метаданные курса') : t('Новый курс')}
+          onClose={() => setDraft(null)}
+          busy={busy}
+          guard
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel}>
+            <form className={styles.form} onSubmit={save}>
+              {!!error && draft.id && (
+                <div className={styles.span}>
+                  <button
+                    type='button'
+                    className={styles.secondary}
+                    onClick={() =>
+                      void perform(async () => {
+                        const result = await api.get<ManagedCourse>(`/admin/courses/${draft.id}`);
+                        setLatest(result.data);
+                      })
+                    }
+                  >
+                    {t('Сравнить с текущей записью')}
+                  </button>
+                </div>
+              )}
+              {latest && latest.id === draft.id && (
+                <section className={styles.span}>
+                  <h3>{t('Текущая запись на сервере')}</h3>
+                  <p>{latest.title}</p>
+                  <p>{latest.description}</p>
+                  <button
+                    type='button'
+                    className={styles.secondary}
+                    onClick={() => {
+                      setDraft({ ...draft, expected_state: latest.state_token });
+                      setLatest(null);
+                    }}
+                  >
+                    {t('Сохранить мои поля поверх этой версии')}
+                  </button>
+                  <p>{t('Затем нажмите сохранение. Ваш введённый текст останется в форме.')}</p>
+                </section>
+              )}
+              {!draft.id && ownerInput(draft.owner, (owner) => setDraft({ ...draft, owner }))}
+              <label className={styles.span}>
+                {t('Название курса')}
+                <input
+                  required
+                  maxLength={300}
+                  value={draft.title}
+                  onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                />
+              </label>
+              <label className={styles.span}>
+                {t('Описание курса')}
+                <textarea
+                  maxLength={10000}
+                  value={draft.description}
+                  onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                />
+              </label>
+              <p className={styles.span}>
+                {t(
+                  'Изменение опубликованного курса откроет рабочую редакцию. Назначения и ответы учеников останутся на прежней версии.',
+                )}
+              </p>
+              <div className={styles.row}>
+                <button className={styles.primary}>{t('Сохранить курс')}</button>
                 <button
                   type='button'
+                  data-dialog-close
                   className={styles.secondary}
-                  onClick={() =>
-                    void perform(async () => {
-                      const result = await api.get<ManagedCourse>(`/admin/courses/${draft.id}`);
-                      setLatest(result.data);
-                    })
-                  }
+                  onClick={() => setDraft(null)}
                 >
-                  {t('Сравнить с текущей записью')}
+                  {t('Отмена')}
                 </button>
               </div>
-            )}
-            {latest && latest.id === draft.id && (
-              <section className={styles.span}>
-                <h3>{t('Текущая запись на сервере')}</h3>
-                <p>{latest.title}</p>
-                <p>{latest.description}</p>
-                <button
-                  type='button'
-                  className={styles.secondary}
-                  onClick={() => {
-                    setDraft({ ...draft, expected_state: latest.state_token });
-                    setLatest(null);
-                  }}
-                >
-                  {t('Сохранить мои поля поверх этой версии')}
-                </button>
-                <p>{t('Затем нажмите сохранение. Ваш введённый текст останется в форме.')}</p>
-              </section>
-            )}
-            {!draft.id && ownerInput(draft.owner, (owner) => setDraft({ ...draft, owner }))}
-            <label className={styles.span}>
-              {t('Название курса')}
-              <input
-                required
-                maxLength={300}
-                value={draft.title}
-                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
-              />
-            </label>
-            <label className={styles.span}>
-              {t('Описание курса')}
-              <textarea
-                maxLength={10000}
-                value={draft.description}
-                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-              />
-            </label>
-            <p className={styles.span}>
+            </form>
+          </section>
+        </AdminDialog>
+      )}
+      {confirm && (
+        <AdminDialog
+          title={`${t(confirm.is_deleted ? 'Восстановить курс?' : 'Архивировать курс?')} ${confirm.title}`}
+          onClose={() => setConfirm(null)}
+          busy={busy}
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel} role='region' aria-label={t('Подтверждение действия')}>
+            <p>
               {t(
-                'Изменение опубликованного курса откроет рабочую редакцию. Назначения и ответы учеников останутся на прежней версии.',
+                'Опубликованные версии, выданные назначения и результаты сохранятся. Восстановление проверяет владельца и лимит курсов.',
               )}
             </p>
             <div className={styles.row}>
-              <button className={styles.primary}>{t('Сохранить курс')}</button>
-              <button type='button' className={styles.secondary} onClick={() => setDraft(null)}>
+              <button
+                className={styles.primary}
+                onClick={() =>
+                  void perform(async () => {
+                    await api.post(
+                      `/admin/courses/${confirm.id}/${confirm.is_deleted ? 'restore' : 'archive'}`,
+                      { expected_state: confirm.state_token },
+                    );
+                    setConfirm(null);
+                    setMessage(t('Состояние курса изменено. История сохранена.'));
+                  })
+                }
+              >
+                {t('Подтвердить')}
+              </button>
+              <button className={styles.secondary} onClick={() => setConfirm(null)}>
                 {t('Отмена')}
               </button>
             </div>
-          </form>
-        </section>
-      )}
-      {confirm && (
-        <section className={styles.panel} role='region' aria-label={t('Подтверждение действия')}>
-          <h2>
-            {confirm.is_deleted ? t('Восстановить курс?') : t('Архивировать курс?')} {confirm.title}
-          </h2>
-          <p>
-            {t(
-              'Опубликованные версии, выданные назначения и результаты сохранятся. Восстановление проверяет владельца и лимит курсов.',
-            )}
-          </p>
-          <div className={styles.row}>
-            <button
-              className={styles.primary}
-              onClick={() =>
-                void perform(async () => {
-                  await api.post(
-                    `/admin/courses/${confirm.id}/${confirm.is_deleted ? 'restore' : 'archive'}`,
-                    { expected_state: confirm.state_token },
-                  );
-                  setConfirm(null);
-                  setMessage(t('Состояние курса изменено. История сохранена.'));
-                })
-              }
-            >
-              {t('Подтвердить')}
-            </button>
-            <button className={styles.secondary} onClick={() => setConfirm(null)}>
-              {t('Отмена')}
-            </button>
-          </div>
-        </section>
+          </section>
+        </AdminDialog>
       )}
       {assign && (
-        <section className={styles.panel}>
-          <h2>
-            {t('Назначить владельца курса №')}
-            {assign.course}
-          </h2>
-          <p>{t('Перенос доступен только для курса без владельца и связанных материалов.')}</p>
-          <form
-            className={styles.form}
-            onSubmit={(event) => {
-              event.preventDefault();
-              void perform(async () => {
-                await api.post(`/admin/courses/${assign.course}/assign-owner`, {
-                  user_id: Number(assign.owner),
+        <AdminDialog
+          title={`${t('Назначить владельца курса №')} ${assign.course}`}
+          onClose={() => setAssign(null)}
+          busy={busy}
+          guard
+          className={styles.dialogScope}
+        >
+          {!!error && <RequestError error={error} />}
+          <section className={styles.panel}>
+            <p>{t('Перенос доступен только для курса без владельца и связанных материалов.')}</p>
+            <form
+              className={styles.form}
+              onSubmit={(event) => {
+                event.preventDefault();
+                void perform(async () => {
+                  await api.post(`/admin/courses/${assign.course}/assign-owner`, {
+                    user_id: Number(assign.owner),
+                  });
+                  setAssign(null);
+                  setMessage(t('Владелец курса назначен.'));
                 });
-                setAssign(null);
-                setMessage(t('Владелец курса назначен.'));
-              });
-            }}
-          >
-            {ownerInput(assign.owner, (owner) => setAssign({ ...assign, owner }))}
-            <button className={styles.primary}>{t('Назначить владельца')}</button>
-            <button type='button' className={styles.secondary} onClick={() => setAssign(null)}>
-              {t('Отмена')}
-            </button>
-          </form>
-        </section>
+              }}
+            >
+              {ownerInput(assign.owner, (owner) => setAssign({ ...assign, owner }))}
+              <button className={styles.primary}>{t('Назначить владельца')}</button>
+              <button
+                type='button'
+                data-dialog-close
+                className={styles.secondary}
+                onClick={() => setAssign(null)}
+              >
+                {t('Отмена')}
+              </button>
+            </form>
+          </section>
+        </AdminDialog>
       )}
       <div className={styles.tableWrap}>
         <table className={styles.table}>
