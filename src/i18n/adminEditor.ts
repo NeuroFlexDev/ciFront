@@ -1,5 +1,8 @@
 /** Administrative and editor controls; customer names and saved content are not translated. */
 export const adminEditorEnglish: Record<string, string> = {
+  'Генерация курсов': 'Course generation',
+  'Активность запусков': 'Run activity',
+  'Последние дни с данными': 'Latest days with data',
   "Условия заказчика сохранены.": "Customer settings saved.",
   "Заказчик создан. Теперь можно пригласить его администратора.":
     "Customer created. You can now invite their administrator.",

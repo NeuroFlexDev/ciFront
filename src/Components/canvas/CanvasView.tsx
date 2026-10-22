@@ -4,18 +4,21 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
-} from '@xyflow/react';
-import { useLocale } from '@/i18n/useLocale';
-import '@xyflow/react/dist/style.css';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+} from "@xyflow/react";
+import { useLocale } from "@/i18n/useLocale";
+import "@xyflow/react/dist/style.css";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { CanvasMinimap } from '@/Components/canvas/CanvasMinimap';
-import { LerniumCanvasEdge } from '@/Components/canvas/edge-renderers/LerniumCanvasEdge';
-import { LerniumCanvasNode } from '@/Components/canvas/node-renderers/LerniumCanvasNode';
-import { useCanvasStore } from '@/store/canvasStore';
-import type { CanvasNodeType } from '@/types/canvas';
-import { EXTENDED_NODE_TYPES, NODE_TYPE_DEFINITIONS } from '@/utils/canvasAdapters';
-import styles from '@/Components/canvas/styles.module.css';
+import { CanvasMinimap } from "@/Components/canvas/CanvasMinimap";
+import { LerniumCanvasEdge } from "@/Components/canvas/edge-renderers/LerniumCanvasEdge";
+import { LerniumCanvasNode } from "@/Components/canvas/node-renderers/LerniumCanvasNode";
+import { useCanvasStore } from "@/store/canvasStore";
+import type { CanvasNodeType } from "@/types/canvas";
+import {
+  EXTENDED_NODE_TYPES,
+  NODE_TYPE_DEFINITIONS,
+} from "@/utils/canvasAdapters";
+import styles from "@/Components/canvas/styles.module.css";
 
 export type CanvasViewApi = {
   zoomIn: () => void;
@@ -36,7 +39,9 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
   const edges = useCanvasStore((state) => state.edges);
   const viewport = useCanvasStore((state) => state.viewport);
   const interactionMode = useCanvasStore((state) => state.interactionMode);
-  const pendingFocusNodeId = useCanvasStore((state) => state.pendingFocusNodeId);
+  const pendingFocusNodeId = useCanvasStore(
+    (state) => state.pendingFocusNodeId,
+  );
   const consumeFocusNode = useCanvasStore((state) => state.consumeFocusNode);
   const setSelection = useCanvasStore((state) => state.setSelection);
   const onNodesChange = useCanvasStore((state) => state.onNodesChange);
@@ -45,21 +50,28 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
   const createNode = useCanvasStore((state) => state.createNode);
   const setViewport = useCanvasStore((state) => state.setViewport);
 
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const nodeTypes = useMemo(() => ({ canvasNode: LerniumCanvasNode }), []);
   const edgeTypes = useMemo(() => ({ lerniumEdge: LerniumCanvasEdge }), []);
+  const motionDuration = (duration: number) =>
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : duration;
 
   useEffect(() => {
     onReady({
       zoomIn: () => {
-        void flow.zoomIn({ duration: 180 });
+        void flow.zoomIn({ duration: motionDuration(180) });
       },
       zoomOut: () => {
-        void flow.zoomOut({ duration: 180 });
+        void flow.zoomOut({ duration: motionDuration(180) });
       },
       fitView: () => {
-        void flow.fitView({ duration: 180, padding: 0.16 });
+        void flow.fitView({ duration: motionDuration(180), padding: 0.16, maxZoom: 1 });
       },
     });
   }, [flow, onReady]);
@@ -87,10 +99,14 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
     if (node) {
       const width = node.measured?.width ?? 280;
       const height = node.measured?.height ?? 180;
-      void flow.setCenter(node.position.x + width / 2, node.position.y + height / 2, {
-        zoom: Math.max(flow.getZoom(), 0.94),
-        duration: 220,
-      });
+      void flow.setCenter(
+        node.position.x + width / 2,
+        node.position.y + height / 2,
+        {
+          zoom: Math.max(flow.getZoom(), 0.94),
+          duration: motionDuration(220),
+        },
+      );
     }
 
     consumeFocusNode();
@@ -149,13 +165,13 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
             event: MouseEvent | React.MouseEvent<Element, MouseEvent>,
           ) => void
         }
-        fitView
+        defaultViewport={viewport}
         minZoom={0.3}
         maxZoom={1.8}
-        panOnDrag={interactionMode === 'hand'}
-        selectionOnDrag={interactionMode === 'select'}
-        nodesDraggable={interactionMode !== 'hand'}
-        nodesConnectable={interactionMode !== 'hand'}
+        panOnDrag={interactionMode === "hand"}
+        selectionOnDrag={interactionMode === "select"}
+        nodesDraggable={interactionMode !== "hand"}
+        nodesConnectable={interactionMode !== "hand"}
         elementsSelectable
         deleteKeyCode={null}
         proOptions={{ hideAttribution: true }}
@@ -163,15 +179,29 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
         <Background
           gap={24}
           size={1.1}
-          color='rgba(128, 149, 173, 0.12)'
-          variant={BackgroundVariant.Lines}
+          color="rgba(202, 244, 50, 0.15)"
+          variant={BackgroundVariant.Dots}
         />
       </ReactFlow>
 
       <CanvasMinimap />
 
       {contextMenu ? (
-        <div className={styles.contextMenu} style={{ left: contextMenu.x, top: contextMenu.y }}>
+        <div
+          className={styles.contextMenu}
+          role="group"
+          aria-label={t("Добавить узел")}
+          style={{
+            left: Math.min(
+              contextMenu.x,
+              Math.max(0, (wrapperRef.current?.clientWidth ?? 260) - 248),
+            ),
+            top: Math.min(
+              contextMenu.y,
+              Math.max(0, (wrapperRef.current?.clientHeight ?? 450) - 420),
+            ),
+          }}
+        >
           {EXTENDED_NODE_TYPES.map((nodeType) => {
             const definition = NODE_TYPE_DEFINITIONS[nodeType];
             const Icon = definition.icon;
@@ -179,7 +209,7 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
             return (
               <button
                 key={nodeType}
-                type='button'
+                type="button"
                 className={styles.contextMenuButton}
                 onClick={() => handleCreateFromMenu(nodeType)}
               >

@@ -5,6 +5,7 @@ import MarkdownContent from "@/Components/MarkdownContent";
 import EntityEditor, { type EditableEntity } from "./EntityEditor";
 import AssessmentEditor, { type AssessmentTarget } from "./AssessmentEditor";
 import ImageLibrary from "@/Components/ElementUi/ImageEditor/ImageLibrary";
+import DiagramEditor from "@/Components/DiagramEditor";
 import { WizardSteps } from "@/Pages/ExpressPage/CourseWizard";
 import { api } from "@/shared/api";
 import Menu from "@/Components/Menu/Menu";
@@ -21,6 +22,7 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { useReconnect } from "@/hooks/useReconnect";
 import { PublicationHistory } from "@/Pages/Learning/CourseReviewsPage";
+import CourseTransferPanel from "@/Pages/TeamLearning/CourseTransferPanel";
 import SourceReleasePanel from "@/Components/SourceReleasePanel";
 
 type Lesson = {
@@ -71,6 +73,8 @@ export default function CourseEditPage() {
   const [restored, setRestored] = useState(false);
   const [serverLesson, setServerLesson] = useState<Lesson | null>(null);
   const selectedRef = useRef<number | null>(null);
+  const latestEditor = useRef({ courseId: id, owner, selected, draft, baseRevision });
+  latestEditor.current = { courseId: id, owner, selected, draft, baseRevision };
   useReconnect(() => setVersion((v) => v + 1));
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -78,6 +82,7 @@ export default function CourseEditPage() {
   const [editing, setEditing] = useState<EditableEntity | null>(null);
   const [assessment, setAssessment] = useState<AssessmentTarget | null>(null);
   const [showImages, setShowImages] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
   const [publicationProblems, setPublicationProblems] = useState<
     { id: string; question: string; message: string }[]
   >([]);
@@ -196,6 +201,7 @@ export default function CourseEditPage() {
   function edit(value: string) {
     if (!lesson) return;
     writeDraft(`lesson:${lesson.id}`, value, baseRevision, owner);
+    latestEditor.current = { ...latestEditor.current, draft: value };
     setDraft(value);
   }
   async function save(expected = baseRevision) {
@@ -307,14 +313,23 @@ export default function CourseEditPage() {
   }
   function insertMarkdown(value: string) {
     const input = textInput.current;
-    if (!input) return;
+    const current = latestEditor.current;
+    // A delayed renderer must never write a previous lesson's text into the
+    // current editor. Within the same lesson, keep typing made while it ran.
+    if (!input || current.courseId !== id || current.owner !== owner ||
+        current.selected !== lesson?.id || selectedRef.current !== lesson?.id) return false;
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    edit(draft.slice(0, start) + value + draft.slice(end));
+    const next = current.draft.slice(0, start) + value + current.draft.slice(end);
+    writeDraft(`lesson:${current.selected}`, next, current.baseRevision, current.owner);
+    latestEditor.current = { ...current, draft: next };
+    setDraft(next);
     requestAnimationFrame(() => {
+      if (!input.isConnected || textInput.current !== input || selectedRef.current !== current.selected) return;
       input.focus();
       input.setSelectionRange(start + value.length, start + value.length);
     });
+    return true;
   }
   function editTest(test: ReviewTest, parentId?: number) {
     setEditing({
@@ -672,13 +687,16 @@ export default function CourseEditPage() {
                       ? t("Закрыть иллюстрации")
                       : t("Добавить иллюстрацию")}
                   </button>
+                  <button disabled={busy} onClick={() => setShowDiagram(value => !value)} aria-expanded={showDiagram}>
+                    {showDiagram ? t("Закрыть редактор схемы") : t("Добавить схему")}
+                  </button>
                 </div>
+                {showDiagram && <DiagramEditor key={`diagram:${lesson.id}`} draftKey={`${id}:${lesson.id}`} onInsert={markdown => { if (insertMarkdown(markdown)) setShowDiagram(false); }}/>}
                 {showImages && (
                   <ImageLibrary
                     courseId={id!}
                     onInsert={(markdown) => {
-                      insertMarkdown("\n" + markdown + "\n");
-                      setShowImages(false);
+                      if (insertMarkdown("\n" + markdown + "\n")) setShowImages(false);
                     }}
                   />
                 )}
@@ -1017,6 +1035,12 @@ export default function CourseEditPage() {
             </p>
           )}
         </div>
+        {user?.organization_role === "owner" && !user.is_admin && (
+          <details>
+            <summary>{t("Экспорт опубликованной версии: PDF и ZIP")}</summary>
+            <CourseTransferPanel key={`${id}:${version}`} courseId={Number(id)} />
+          </details>
+        )}
         {assessment && (
           <AssessmentEditor
             target={assessment}

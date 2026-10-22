@@ -1,7 +1,7 @@
 import { useLocale, getLocale } from "@/i18n/useLocale";
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { FileUp, LayoutTemplate, Plus } from "lucide-react";
+import { FileUp, LayoutTemplate, Plus, Sparkles } from "lucide-react";
 import Menu from "@/Components/Menu/Menu";
 import { api } from "@/shared/api";
 import { ApiError } from "@/shared/errors";
@@ -12,6 +12,8 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
 import { templates } from "@/Pages/Workspace/template-data";
 import styles from "./wizard.module.css";
+import GenerationPreflight, { type Preflight } from "./GenerationPreflight";
+import { applySourceSuggestion, type SourceSuggestion, type SuggestedField } from "./sourceSuggestion";
 
 export type GenerationSettings = {
   title: string;
@@ -45,17 +47,6 @@ type Run = {
   status_error?: { message: string; retryable: boolean } | null;
   status_notice?: string | null;
 };
-type Preflight = {
-  allowed: boolean;
-  reasons: string[];
-  source_characters: number;
-  source_bytes: number;
-  minimum_calls: number;
-  calls_limit: number;
-  output_token_reservation: number;
-  tokens_limit: number;
-  note: string;
-};
 type Capabilities = {
   document_formats: string[];
   document_max_bytes: number;
@@ -67,6 +58,8 @@ type Draft = {
   selection_initialized: boolean;
   request_id: string;
   plan_text?: string;
+  edited_source_fields?: Partial<Record<SuggestedField, boolean>>;
+  source_fill?: Partial<Record<SuggestedField, string>>;
 };
 function settingsFromServer(data: SavedSettings): GenerationSettings {
   return {
@@ -167,6 +160,8 @@ export default function CourseWizard() {
   const [run, setRun] = useState<Run | null>(null);
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [notice, setNotice] = useState("");
+  const [suggestionState, setSuggestionState] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const sourceSelection = draft.document_ids.slice().sort((a, b) => a - b).join(",");
   const [dragging, setDragging] = useState(false);
   const [uploadFailures, setUploadFailures] = useState<
     { file: File; message: string }[]
@@ -187,6 +182,7 @@ export default function CourseWizard() {
   const [serverSettings, setServerSettings] = useState<SavedSettings | null>(
     null,
   );
+  const [settingsLoadedFor, setSettingsLoadedFor] = useState<number | null>(null);
   const creating = useRef<Promise<number> | null>(null);
   useReconnect(() => setVersion((value) => value + 1));
   const go = (next: number) => {
@@ -201,6 +197,7 @@ export default function CourseWizard() {
     setDraft((previous) => ({
       ...previous,
       settings: { ...previous.settings, ...patch },
+      edited_source_fields: { ...previous.edited_source_fields, ...(patch.title !== undefined ? { title: true } : {}), ...(patch.goal !== undefined ? { goal: true } : {}) },
       request_id: crypto.randomUUID(),
     }));
   };
@@ -227,6 +224,7 @@ export default function CourseWizard() {
       .then(({ data }) => {
         if (!active) return;
         setServerSettings(data);
+        setSettingsLoadedFor(courseId);
         if (!edited.current && !initialDraft.current.hadLocal) {
           setDraft((previous) => ({
             ...previous,
@@ -237,6 +235,7 @@ export default function CourseWizard() {
         }
       })
       .catch((e) => {
+        if (active && e instanceof ApiError && e.status === 404) setSettingsLoadedFor(courseId);
         if (active && !(e instanceof ApiError && e.status === 404)) setError(e);
       });
     return () => {
@@ -280,6 +279,31 @@ export default function CourseWizard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, offset, version]);
+  useEffect(() => {
+    if (!courseId || !sourceSelection || runId) { setSuggestionState("idle"); return; }
+    if (busy || step > 3) return;
+    if (settingsLoadedFor !== courseId) { setSuggestionState("loading"); return; }
+    let active = true;
+    setSuggestionState("loading");
+    api.post<SourceSuggestion>(`/courses/${courseId}/source-suggestion`, {
+      document_ids: sourceSelection.split(",").map(Number),
+    }).then(({ data }) => {
+      if (!active) return;
+      setDraft(previous => {
+        const next = applySourceSuggestion(previous, data);
+        if (next.settings.title !== previous.settings.title || next.settings.goal !== previous.settings.goal) {
+          setPreflight(null);
+          return { ...next, request_id: crypto.randomUUID() };
+        }
+        return next;
+      });
+      edited.current = true;
+      setSuggestionState("ready");
+    }).catch(() => { if (active) setSuggestionState("error"); });
+    return () => { active = false; };
+    // The durable setter reads the latest form. Late source responses never overwrite manual edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId, sourceSelection, runId, version, settingsLoadedFor, busy, step]);
   useEffect(() => {
     if (!runId) return;
     let active = true;
@@ -753,7 +777,7 @@ export default function CourseWizard() {
             >
               <fieldset
                 disabled={busy}
-                style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+                className={styles.formFields}
               >
                 <legend className={styles.srOnly}>
                   {t("Настройки курса")}
@@ -823,6 +847,13 @@ export default function CourseWizard() {
                       </button>
                     </section>
                   )}
+                {draft.document_ids.length > 0 && <aside className={styles.sourceFillNotice} aria-live="polite">
+                  <Sparkles size={20} aria-hidden="true" />
+                  <div><strong>{t("Поможем заполнить по документам")}</strong>
+                    <p>{suggestionState === "loading" ? t("Подбираем тему и описание из выбранных источников…") : suggestionState === "error" ? t("Не удалось прочитать подсказки. Заполните поля сами или повторите попытку — ваши правки сохранятся.") : t("Тема и описание взяты из текста документов. Проверьте и отредактируйте их под свою задачу. Ручные правки не заменяются.")}</p>
+                    {suggestionState === "error" && <button type="button" onClick={() => setVersion(value => value + 1)}>{t("Повторить автозаполнение")}</button>}
+                  </div>
+                </aside>}
                 <label>
                   {t("Название курса")}
                   <input
@@ -833,7 +864,7 @@ export default function CourseWizard() {
                   />
                 </label>
                 <label>
-                  {t("Цель курса")}
+                  {t("Описание и цель курса")}
                   <textarea
                     required
                     maxLength={2000}
@@ -1023,74 +1054,8 @@ export default function CourseWizard() {
             </form>
           )}
           {step === 4 && !runId && (
-            <section className={styles.panel}>
-              <h2>{t("Проверка перед генерацией")}</h2>
-              {preflight ? (
-                <>
-                  <p>
-                    {t("Источники:") + " "}
-                    {bytes(preflight.source_bytes)} ·{" "}
-                    {preflight.source_characters.toLocaleString(
-                      getLocale() === "en" ? "en-GB" : "ru-RU",
-                    )}
-                    {" " + t("символов")}
-                  </p>
-                  <p>
-                    {t("Минимум вызовов ИИ:") + " "}
-                    {preflight.minimum_calls}
-                    {" " + t("из лимита") + " "}
-                    {preflight.calls_limit}
-                    {t(". Резерв выходных токенов:") + " "}
-                    {preflight.output_token_reservation.toLocaleString(
-                      getLocale() === "en" ? "en-GB" : "ru-RU",
-                    )}
-                    {" " + t("из") + " "}
-                    {preflight.tokens_limit.toLocaleString(
-                      getLocale() === "en" ? "en-GB" : "ru-RU",
-                    )}
-                    .
-                  </p>
-                  <p>{t(preflight.note)}</p>
-                  {!preflight.allowed && (
-                    <div role="alert">
-                      <h3>{t("Скорректируйте параметры")}</h3>
-                      <ul>
-                        {preflight.reasons.map((reason) => (
-                          <li key={reason}>{t(reason)}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  <button
-                    className={styles.primary}
-                    disabled={busy || !preflight.allowed}
-                    onClick={() => void generate()}
-                  >
-                    {busy ? t("Запускаем…") : t("Сгенерировать курс")}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p>
-                    {t(
-                      "Перед запуском проверим источники, количество уроков и доступный бюджет.",
-                    )}
-                  </p>
-                  <button
-                    className={styles.primary}
-                    disabled={busy}
-                    onClick={() => void prepare()}
-                  >
-                    {t("Проверить параметры")}
-                  </button>
-                </>
-              )}
-              <div className={styles.footer}>
-                <button disabled={busy} onClick={() => go(3)}>
-                  {t("← Изменить настройки")}
-                </button>
-              </div>
-            </section>
+            <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length}
+              busy={busy} onPrepare={() => void prepare()} onGenerate={() => void generate()} onBack={() => go(3)} />
           )}
           {runId && (
             <section className={styles.panel} aria-live="polite">

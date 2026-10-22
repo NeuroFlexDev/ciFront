@@ -1,0 +1,100 @@
+.diagram {
+  margin: 20px 0;
+  border: 1px solid #3b3d43;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #141519;
+  color: #eee;
+  min-width: 0;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #36383f;
+  font-weight: 600;
+}
+.header span:last-child {
+  display: flex;
+  gap: 8px;
+}
+.diagram button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #282a2e;
+  color: #e6e8e3;
+  border: 1px solid #46494e;
+  border-radius: 99px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.diagram button:hover {
+  border-color: #b2ee63;
+  color: #b2ee63;
+}
+.diagram button:focus-visible,
+.viewport:focus-visible,
+.source summary:focus-visible {
+  outline: 2px solid #b2ee63;
+  outline-offset: -3px;
+}
+.viewport {
+  overflow: auto;
+  padding: 20px;
+  max-height: 75vh;
+  overscroll-behavior: contain;
+}
+.viewport svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: auto;
+}
+.viewport[data-zoom="true"] svg {
+  max-width: none;
+}
+.source {
+  padding: 12px 16px;
+  border-top: 1px solid #36383f;
+  font-size: 13px;
+}
+.source summary {
+  cursor: pointer;
+  color: #bdc1bd;
+}
+.source pre {
+  white-space: pre;
+  overflow: auto;
+  max-height: 360px;
+  padding: 12px;
+  background: #0d0e11;
+  border-radius: 8px;
+}
+.error,
+.diagram > p {
+  padding: 12px 16px;
+}
+.error {
+  color: #ffb4ae;
+}
+@media print {
+  .diagram {
+    background: white;
+    color: black;
+    break-inside: avoid;
+  }
+  .header button,
+  .source {
+    display: none;
+  }
+  .viewport {
+    max-height: none;
+    overflow: visible;
+  }
+}

@@ -1,5 +1,7 @@
 /** Interface copy only; course content, messages and filenames remain untouched. */
+import { visualEnglish } from "./visual";
 export const materialsEnglish: Record<string, string> = {
+  ...visualEnglish,
   "Проверяем доступность помощника…": "Checking assistant availability…",
   "Помощник отключён в настройках вашей организации. Обратитесь к администратору.":
     "The assistant is disabled for your organization. Contact your administrator.",
