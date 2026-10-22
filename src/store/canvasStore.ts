@@ -85,8 +85,23 @@ const DEFAULT_VIEWPORT: Viewport = { x: 0, y: 0, zoom: 1 };
 let hydratedOwner:number|null=null;
 let hydrating=false;
 let loadSequence=0;
+function persistentNode(node:LerniumNode):LerniumNode{
+  const copy={...node};
+  delete copy.selected;
+  delete copy.measured;
+  delete copy.dragging;
+  delete copy.resizing;
+  return copy;
+}
+function persistentEdge(edge:LerniumEdge):LerniumEdge{
+  const copy={...edge};delete copy.selected;return copy;
+}
+// Selection, DOM measurements and navigation are view state, not course edits.
+function contentFingerprint(snapshot:Pick<CanvasSnapshot,'nodes'|'edges'>){
+  return JSON.stringify({nodes:snapshot.nodes.map(persistentNode),edges:snapshot.edges.map(persistentEdge)});
+}
 function recoverySnapshot(state:Pick<CanvasStoreState,'courseId'|'courseTitle'|'nodes'|'edges'|'viewport'>):CanvasSnapshot{
-  return {courseId:state.courseId!,courseTitle:state.courseTitle,nodes:state.nodes,edges:state.edges,viewport:state.viewport,updatedAt:0};
+  return {courseId:state.courseId!,courseTitle:state.courseTitle,nodes:state.nodes.map(persistentNode),edges:state.edges.map(persistentEdge),viewport:state.viewport,updatedAt:0};
 }
 
 function isSameIds(left: string[], right: string[]) {
@@ -150,13 +165,16 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
     const saved = await loadCanvasSnapshot(courseId);
     if(sequence!==loadSequence||owner!==getDraftOwner())return;
     const draft=readDraft<CanvasSnapshot>(`canvas:${courseId}`,owner);
-    const snapshot = draft?.value ?? saved ?? createInitialCanvas(courseId, courseTitle);
-    if(draft?.baseRevision!==undefined)adoptCanvasRevision(courseId,draft.baseRevision);
+    const server = saved ?? createInitialCanvas(courseId, courseTitle);
+    const recovered = Boolean(draft && contentFingerprint(draft.value)!==contentFingerprint(server));
+    const snapshot = recovered ? draft!.value : server;
+    if(draft&&!recovered)clearDraft(`canvas:${courseId}`,draft.value,owner);
+    if(recovered&&draft?.baseRevision!==undefined)adoptCanvasRevision(courseId,draft.baseRevision);
     hydratedOwner=owner;
 
     set({
       courseId,
-      courseTitle: snapshot.courseTitle,
+      courseTitle: saved?.courseTitle ?? snapshot.courseTitle,
       nodes: snapshot.nodes,
       edges: snapshot.edges,
       viewport: snapshot.viewport ?? DEFAULT_VIEWPORT,
@@ -167,8 +185,8 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
       isAiRunning:false,
       lastError: null,
       lastErrorStatus: null,
-      recoveredDraft: Boolean(draft),
-      hasUnsavedChanges: Boolean(draft),
+      recoveredDraft: recovered,
+      hasUnsavedChanges: recovered,
       aiNotice: null,
       aiProposal: readDraft<PendingAiProposal>(`canvas-ai:${courseId}`,owner)?.value ?? null,
       lastSavedAt: snapshot.updatedAt ?? null,
@@ -187,20 +205,18 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
 
     try {
       const snapshot = {
-        courseId: state.courseId,
-        courseTitle: state.courseTitle,
-        nodes: state.nodes,
-        edges: state.edges,
-        viewport: state.viewport,
+        ...recoverySnapshot(state),
         updatedAt: Date.now(),
       };
 
       await saveCanvasSnapshot(snapshot);
       if(owner!==getDraftOwner())return;
-      clearDraft(`canvas:${snapshot.courseId}`,{...snapshot,updatedAt:0},owner);
+      const local=readDraft<CanvasSnapshot>(`canvas:${snapshot.courseId}`,owner);
+      if(local&&contentFingerprint(local.value)===contentFingerprint(snapshot))
+        clearDraft(`canvas:${snapshot.courseId}`,local.value,owner);
       const current=get();
       if(current.courseId!==snapshot.courseId)return;
-      const unchanged=JSON.stringify(recoverySnapshot(current))===JSON.stringify({...snapshot,updatedAt:0});
+      const unchanged=contentFingerprint(current)===contentFingerprint(snapshot);
       if(!unchanged)writeDraft(`canvas:${snapshot.courseId}`,recoverySnapshot(current),getCanvasRevision(snapshot.courseId));
       set({ isSaving: false, lastSavedAt: snapshot.updatedAt, hasUnsavedChanges:!unchanged,recoveredDraft:false });
     } catch (error) {
@@ -508,7 +524,8 @@ export const useCanvasStore = create<CanvasStoreState>((set, get) => ({
 
 useCanvasStore.subscribe((state,previous)=>{
   if(hydrating||!state.courseId||state.courseId!==previous.courseId||hydratedOwner!==getDraftOwner())return;
-  if(state.nodes===previous.nodes&&state.edges===previous.edges&&state.viewport===previous.viewport&&state.courseTitle===previous.courseTitle)return;
+  if(state.nodes===previous.nodes&&state.edges===previous.edges)return;
+  if(contentFingerprint(state)===contentFingerprint(previous))return;
   writeDraft(`canvas:${state.courseId}`,recoverySnapshot(state),getCanvasRevision(state.courseId));
   if(!state.hasUnsavedChanges)useCanvasStore.setState({hasUnsavedChanges:true});
 });

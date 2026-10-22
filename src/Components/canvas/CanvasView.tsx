@@ -71,7 +71,7 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
         void flow.zoomOut({ duration: motionDuration(180) });
       },
       fitView: () => {
-        void flow.fitView({ duration: motionDuration(180), padding: 0.16 });
+        void flow.fitView({ duration: motionDuration(180), padding: 0.16, maxZoom: 1 });
       },
     });
   }, [flow, onReady]);
@@ -165,7 +165,7 @@ function InnerCanvasView({ onReady }: InnerCanvasViewProps) {
             event: MouseEvent | React.MouseEvent<Element, MouseEvent>,
           ) => void
         }
-        fitView
+        defaultViewport={viewport}
         minZoom={0.3}
         maxZoom={1.8}
         panOnDrag={interactionMode === "hand"}
