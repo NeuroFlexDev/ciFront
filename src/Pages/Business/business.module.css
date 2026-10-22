@@ -10,6 +10,23 @@
   margin-bottom: 32px;
   color: #caf432;
 }
+.dashboard { display: grid; gap: 28px; }
+.overviewHeading { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.overviewHeading h2 { margin: 8px 0; font-size: clamp(22px, 2vw, 30px); }
+.overviewHeading p { max-width: 680px; color: #b9b9b9; line-height: 1.6; }
+.overviewHeading > a { display: inline-flex; gap: 10px; align-items: center; color: #caf432; }
+.eyebrow { color: #caf432; font-size: 14px; }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.metric { display: flex; flex-direction: column; gap: 12px; padding: 26px; border: 1px solid #343434; border-radius: 26px; background: #151515; color: #eee; text-decoration: none; transition: border-color .18s, transform .18s; }
+.metric:hover { border-color: #caf432; transform: translateY(-2px); }
+.metric > svg { color: #caf432; }
+.metric strong { font-size: 42px; line-height: 1.15; }
+.metric em { font-size: 22px; font-style: normal; color: #aaa; }
+.metric small { color: #aaa; line-height: 1.6; }
+.teamNotice { border-left: 3px solid #caf432; padding: 14px 18px; background: #20251a; border-radius: 0 12px 12px 0; }
+@media (max-width: 1100px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .metrics { grid-template-columns: 1fr; } .metric { padding: 22px; } }
+@media (prefers-reduced-motion: reduce) { .metric { transition: none; } .metric:hover { transform: none; } }
 .journey span {
   display: flex;
   align-items: center;

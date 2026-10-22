@@ -16,6 +16,7 @@ import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
 import { type Team, type TeamSettings, roles } from "./types";
 import s from "../Learning/learning.module.css";
 import { useManagementConfirmation } from './useManagementConfirmation';
+import { businessRoles, isBusiness } from '@/shared/business';
 
 type Permission = { can_manage_team: boolean; can_manage_admins: boolean };
 export default function TeamSettingsPage() {
@@ -119,6 +120,8 @@ function SettingsForm({
   reload: () => Promise<void>;
 }) {
   const { t } = useLocale();
+  const { user } = useAuth();
+  const visibleRoles = isBusiness(user) ? businessRoles : roles;
 
   const initial = {
     expected_revision: settings.revision,
@@ -249,7 +252,7 @@ function SettingsForm({
           </div>
           <h3>{t("Названия ролей в вашей организации")}</h3>
           <div className={s.formGrid}>
-            {Object.entries(roles).map(([key, title]) => (
+            {Object.entries(visibleRoles).map(([key, title]) => (
               <label key={key} className={s.field}>
                 {t(String(title))} · RU
                 <input
@@ -273,7 +276,7 @@ function SettingsForm({
                 />
               </label>
             ))}
-            {Object.entries(roles).map(([key, title]) => (
+            {Object.entries(visibleRoles).map(([key, title]) => (
               <label key={`${key}_en`} className={s.field}>
                 {t(String(title))} · EN
                 <input

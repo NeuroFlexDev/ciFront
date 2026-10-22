@@ -16,6 +16,7 @@ import EntityEditor, { type EditableEntity } from '@/Components/CourseEditPage/E
 import { RequestError } from '@/Components/RequestState';
 import ConfirmationDialog from '../TeamLearning/ManagementConfirmation';
 import css from './business.module.css';
+import BusinessDashboard, { type BusinessOverview } from './BusinessDashboard';
 
 type Page<T> = { items: T[]; total: number };
 type Position = {
@@ -27,6 +28,7 @@ type Position = {
   revision: number;
   is_archived: boolean;
   employee_count: number;
+  candidate_count?: number;
   course_count: number;
 };
 type Employee = {
@@ -38,6 +40,7 @@ type Employee = {
   auth_version: number;
   position_id: number | null;
   position_name?: string;
+  manager_id: number | null;
 };
 type Invitation = { id: number; email: string; role: string; position_id: number | null };
 type Course = { id: number; name: string; description?: string; content_revision: number; status: string; publication_status: string };
@@ -94,15 +97,19 @@ function CompanyWorkspace() {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
-  const tab = params.get('tab') === 'employees' ? 'employees' : 'positions';
-  const setTab = (value: string) => setParams(value === 'employees' ? { tab: value } : {});
+  const owner = user?.organization_role === 'owner';
+  const requestedTab = params.get('tab') ?? 'overview';
+  const tab = ['positions', 'employees', 'candidates', ...(owner ? ['managers'] : [])].includes(requestedTab) ? requestedTab : 'overview';
+  const setTab = (value: string) => { setEmployeeOffset(0); setSearch(''); setParams(value === 'overview' ? {} : { tab: value }); };
+  const memberRole = tab === 'candidates' ? 'candidate' : tab === 'managers' ? 'manager' : 'member';
+  const managerFilter = owner ? params.get('manager_id') ?? '' : '';
   const [archived, setArchived] = useState(false);
   const [positionOffset, setPositionOffset] = useState(0);
   const [employeeOffset, setEmployeeOffset] = useState(0);
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Position | 'new' | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [invite, setInvite] = useState({ email: '', role: 'member', position_id: '' });
+  const [invite, setInvite, clearInvite] = useDurableState('business-invitation', { email: '', role: 'member', position_id: '', manager_id: '' });
   const [invitationLink, setInvitationLink] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -114,10 +121,10 @@ function CompanyWorkspace() {
     `/business/positions?archived=${archived}&offset=${positionOffset}&limit=20`,
   );
   const employees = useLearningData<Page<Employee>>(
-    `/business/employees?offset=${employeeOffset}&limit=20&q=${encodeURIComponent(search)}`,
+    `/business/employees?offset=${employeeOffset}&limit=20&q=${encodeURIComponent(search)}&role=${memberRole}${managerFilter ? `&manager_id=${encodeURIComponent(managerFilter)}` : ''}`,
   );
   const invitations = useLearningData<{ items: Invitation[] }>('/business/invitations');
-  const owner = user?.organization_role === 'owner';
+  const overview = useLearningData<BusinessOverview>('/business/dashboard');
   const options = useContext(PositionOptionsContext)!;
   const refresh = async () => {
     await Promise.all([
@@ -125,6 +132,7 @@ function CompanyWorkspace() {
       employees.reload(),
       invitations.reload(),
       options.query.reload(),
+      overview.reload(),
     ]);
   };
   async function mutate(action: () => Promise<void>) {
@@ -151,13 +159,15 @@ function CompanyWorkspace() {
           email: invite.email,
           role: invite.role,
           position_id:
-            invite.role === 'member' && invite.position_id ? Number(invite.position_id) : null,
+            invite.role !== 'manager' && invite.position_id ? Number(invite.position_id) : null,
+          manager_id: owner && invite.role !== 'manager' && invite.manager_id ? Number(invite.manager_id) : null,
           locale,
         },
       );
       setInvitationLink(data.url);
       setInviteOpen(false);
-      setInvite({ email: '', role: 'member', position_id: '' });
+      setInvite({ email: '', role: 'member', position_id: '', manager_id: '' });
+      clearInvite({ email: '', role: 'member', position_id: '', manager_id: '' });
       setMessage(
         t(
           data.mail_status === 'queued'
@@ -169,20 +179,21 @@ function CompanyWorkspace() {
   }
   return (
     <Shell
-      title={t('Персонал')}
+      title={t(tab === 'overview' ? owner ? 'Дашборд компании' : 'Дашборд моей команды' : 'Персонал')}
       description={t(
-        'Рабочее пространство руководителя. Управляйте должностями, регламентами и подготовкой сотрудников.',
+        owner ? 'Вся компания: руководители, команды и результаты подготовки.' : 'Ваши сотрудники и кандидаты: должности, регламенты, тесты и результаты.',
       )}
       action={
         <button
           className={styles.primary}
           onClick={() => {
             setInviteOpen(true);
+            setInvite({ ...invite, role: memberRole });
             setInvitationLink('');
           }}
         >
           <Plus size={18} />
-          {t(owner ? 'Пригласить в компанию' : 'Пригласить сотрудника')}
+          {t(owner ? 'Пригласить в компанию' : tab === 'candidates' ? 'Добавить кандидата' : 'Добавить сотрудника')}
         </button>
       }
     >
@@ -227,6 +238,7 @@ function CompanyWorkspace() {
       )}
       {inviteOpen && (
         <form className={`${styles.panel} ${css.form}`} onSubmit={sendInvite}>
+          <DraftNotice />
           <h2>{t('Приглашение в компанию')}</h2>
           <p>
             {t('Человек получит личную ссылку и сам задаст пароль. Передавать пароли не нужно.')}
@@ -241,7 +253,7 @@ function CompanyWorkspace() {
               onChange={(e) => setInvite({ ...invite, email: e.target.value })}
             />
           </label>
-          {owner && (
+          {(
             <label>
               {t('Роль')}
               <select
@@ -249,11 +261,12 @@ function CompanyWorkspace() {
                 onChange={(e) => setInvite({ ...invite, role: e.target.value, position_id: '' })}
               >
                 <option value='member'>{t('Сотрудник')}</option>
-                <option value='manager'>{roleName('manager')}</option>
+                <option value='candidate'>{t('Кандидат')}</option>
+                {owner && <option value='manager'>{roleName('manager')}</option>}
               </select>
             </label>
           )}
-          {invite.role === 'member' && (
+          {invite.role !== 'manager' && (
             <label>
               {t('Должность')}
               <PositionPicker
@@ -262,11 +275,17 @@ function CompanyWorkspace() {
               />
             </label>
           )}
+          {owner && invite.role !== 'manager' && <label>{t('Руководитель')}
+            <select value={invite.manager_id} onChange={(e) => setInvite({ ...invite, manager_id: e.target.value })}>
+              <option value=''>{t('Без руководителя — назначить позже')}</option>
+              {overview.data?.managers.filter(m => m.is_active).map(m => <option key={m.id} value={m.id}>{m.full_name || m.email}</option>)}
+            </select>
+          </label>}
           <p>
             {t(
               invite.role === 'manager'
                 ? 'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.'
-                : 'Сотрудник увидит назначенные регламенты в разделе «Мои регламенты».',
+                : 'Участник сможет читать назначенные регламенты и проходить тесты. Другие команды ему недоступны.',
             )}
           </p>
           <div className={css.actions}>
@@ -285,14 +304,21 @@ function CompanyWorkspace() {
         </form>
       )}
       <div className={css.tabs} role='tablist' aria-label={t('Управление компанией')}>
+        <button role='tab' aria-selected={tab === 'overview'} onClick={() => setTab('overview')}>{t('Дашборд')}</button>
+        {owner && <button role='tab' aria-selected={tab === 'managers'} onClick={() => setTab('managers')}>{t('Руководители')}</button>}
         <button role='tab' aria-selected={tab === 'positions'} onClick={() => setTab('positions')}>
           {t('Должности')}
         </button>
         <button role='tab' aria-selected={tab === 'employees'} onClick={() => setTab('employees')}>
           {t('Сотрудники')}
         </button>
+        <button role='tab' aria-selected={tab === 'candidates'} onClick={() => setTab('candidates')}>{t('Кандидаты')}</button>
       </div>
-      {tab === 'positions' ? (
+      {tab === 'overview' ? <>
+        {overview.loading && !overview.data && <LoadingState>{t('Собираем результаты…')}</LoadingState>}
+        {!!overview.error && <RequestError error={overview.error} onRetry={() => void overview.reload()} />}
+        {overview.data && <BusinessDashboard data={overview.data} />}
+      </> : tab === 'positions' ? (
         <section>
           <div className={css.toolbar}>
             <label className={css.check}>
@@ -343,6 +369,7 @@ function CompanyWorkspace() {
                   <span>
                     {t('Регламенты')}: {position.course_count}
                   </span>
+                  <span>{t('Кандидаты')}: {position.candidate_count ?? 0}</span>
                 </div>
                 <div className={css.actions}>
                   <button className={styles.primary} onClick={() => navigate(`/company/positions/${position.id}`)}>
@@ -389,7 +416,7 @@ function CompanyWorkspace() {
         <section>
           <div className={css.toolbar}>
             <label className={css.search}>
-              {t('Поиск сотрудника')}
+              {t('Поиск участника')}
               <input
                 type='search'
                 value={search}
@@ -404,6 +431,12 @@ function CompanyWorkspace() {
               {t('Всего')}: {employees.data?.total ?? 0}
             </span>
           </div>
+          {owner && tab !== 'managers' && <label className={css.picker}>{t('Руководитель')}
+            <select value={managerFilter} onChange={(e) => { setEmployeeOffset(0); setParams({ tab, ...(e.target.value ? { manager_id: e.target.value } : {}) }); }}>
+              <option value=''>{t('Все руководители')}</option>
+              {overview.data?.managers.map(m => <option key={m.id} value={m.id}>{m.full_name || m.email}</option>)}
+            </select>
+          </label>}
           {employees.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
           {!!employees.error && (
             <p role='alert'>
@@ -415,9 +448,10 @@ function CompanyWorkspace() {
             <table className={css.table}>
               <thead>
                 <tr>
-                  <th>{t('Сотрудник')}</th>
+                  <th>{t('Участник')}</th>
                   <th>{t('Роль')}</th>
                   <th>{t('Должность')}</th>
+                  {owner && tab !== 'managers' && <th>{t('Руководитель')}</th>}
                   <th>{t('Доступ')}</th>
                 </tr>
               </thead>
@@ -432,7 +466,7 @@ function CompanyWorkspace() {
                       {roleName(person.organization_role)}
                     </td>
                     <td>
-                      {person.organization_role === 'member' && person.is_active ? (
+                      {['member', 'candidate'].includes(person.organization_role) && person.is_active ? (
                         <PositionPicker
                           currentName={person.position_name}
                           label={`${t('Должность')}: ${person.email}`}
@@ -452,20 +486,32 @@ function CompanyWorkspace() {
                         '—'
                       )}
                     </td>
+                    {owner && tab !== 'managers' && <td><div className={css.picker}>
+                      <select aria-label={`${t('Руководитель')}: ${person.email}`} disabled={busy}
+                        value={person.manager_id ?? ''} onChange={(e) => {
+                          const manager_id = e.target.value ? Number(e.target.value) : null;
+                          setConfirm({ label: t('Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.'), action: async () => {
+                            await api.put(`/business/employees/${person.id}/reporting-line`, { manager_id, expected_manager_id: person.manager_id, expected_auth_version: person.auth_version });
+                          }});
+                        }}>
+                        <option value=''>{t('Без руководителя')}</option>
+                        {overview.data?.managers.map(m => <option key={m.id} value={m.id} disabled={!m.is_active}>{m.full_name || m.email}{!m.is_active ? ` (${t('Приостановлен')})` : ''}</option>)}
+                      </select>
+                    </div></td>}
                     <td>
                       {!person.is_active ? (
                         t('Приостановлен')
-                      ) : owner && ['member', 'manager'].includes(person.organization_role) ? (
+                      ) : owner && ['member', 'candidate', 'manager', 'admin'].includes(person.organization_role) ? (
                         <button
                           className={styles.secondary}
                           disabled={busy}
                           onClick={() =>
                             setConfirm({
-                              label: `${person.full_name || person.email}: ${t(person.organization_role === 'member' ? 'назначить управляющим компанией?' : 'снять полномочия управляющего?')} ${t('Пользователю потребуется войти заново.')}`,
+                              label: `${person.full_name || person.email}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
                               action: async () => {
                                 await api.put(`/business/employees/${person.id}/manager`, {
                                   role:
-                                    person.organization_role === 'member' ? 'manager' : 'member',
+                                    ['member', 'candidate'].includes(person.organization_role) ? 'manager' : 'member',
                                   expected_auth_version: person.auth_version,
                                 });
                               },
@@ -473,7 +519,7 @@ function CompanyWorkspace() {
                           }
                         >
                           {t(
-                            person.organization_role === 'member'
+                            ['member', 'candidate'].includes(person.organization_role)
                               ? 'Назначить управляющим'
                               : 'Снять полномочия',
                           )}
@@ -482,8 +528,8 @@ function CompanyWorkspace() {
                         t('Активен')
                       )}
                       {person.id !== user?.id &&
-                        (person.organization_role === 'member' ||
-                          (owner && person.organization_role === 'manager')) && (
+                        (['member', 'candidate'].includes(person.organization_role) ||
+                          (owner && ['manager', 'admin'].includes(person.organization_role))) && (
                           <div className={css.actions}>
                             <button
                               className={styles.secondary}
@@ -504,13 +550,20 @@ function CompanyWorkspace() {
                             </button>
                           </div>
                         )}
+                      {['member', 'candidate'].includes(person.organization_role) && <div className={css.actions}>
+                        <Link className={css.backLink} to={`/learning-analytics?user_id=${person.id}`}>{t('Результаты')} ↗</Link>
+                        <button className={styles.secondary} disabled={busy} onClick={() => setConfirm({
+                          label: t(person.organization_role === 'candidate' ? 'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.' : 'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.'),
+                          action: async () => { await api.put(`/business/employees/${person.id}/role`, { role: person.organization_role === 'candidate' ? 'member' : 'candidate', expected_auth_version: person.auth_version }); },
+                        })}>{t(person.organization_role === 'candidate' ? 'Принять в сотрудники' : 'Перевести в кандидаты')}</button>
+                      </div>}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {!employees.loading && employees.data?.total === 0 && <p>{t('Сотрудники не найдены')}</p>}
+          {!employees.loading && employees.data?.total === 0 && <p>{t('Участники не найдены. Добавьте человека через приглашение или измените поиск.')}</p>}
           <Pager
             offset={employeeOffset}
             total={employees.data?.total ?? 0}
@@ -760,7 +813,7 @@ function PositionScreen({ positionId }: { positionId: number }) {
   const query = useLearningData<Position>(Number.isInteger(positionId) && positionId > 0 ? `/business/positions/${positionId}` : null);
   if (!Number.isInteger(positionId) || positionId < 1) return <StatusPage code='404' />;
   return <Shell title={query.data?.name ?? t('Должность')} description={t('Регламенты и требования для этой должности')}>
-    <Link to='/company' className={css.backLink}>← {t('Персонал')} / {t('Должности')}</Link>
+    <Link to='/company?tab=positions' className={css.backLink}>← {t('Персонал')} / {t('Должности')}</Link>
     {query.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
     {!!query.error && <RequestError error={query.error} onRetry={() => void query.reload()} />}
     {query.data && <PositionDetail key={positionId} position={query.data} onRefresh={query.reload} />}
@@ -826,7 +879,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
     <div className={css.positionDetail}>
       <section aria-label={t('Регламенты должности')}>
         <div className={css.toolbar}>
-          <span className={css.counts}>{t('Сотрудники')}: {position.employee_count} · {t('Регламенты')}: {courses.data?.total ?? position.course_count}</span>
+          <span className={css.counts}>{t('Сотрудники')}: {position.employee_count} · {t('Кандидаты')}: {position.candidate_count ?? 0} · {t('Регламенты')}: {courses.data?.total ?? position.course_count}</span>
           {!position.is_archived && <button className={styles.secondary} onClick={() => setEditPosition(true)}>{t('Изменить должность')}</button>}
         </div>
         <p>{position.description}</p>
@@ -890,7 +943,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
             <h3>{assigning.name}</h3>
             <p>
               {t(
-                'Назначить опубликованный регламент всем действующим сотрудникам этой должности? Уже выданные назначения и результаты сохранятся. Повторное назначение включит новых сотрудников.',
+                'Назначить регламент сотрудникам и кандидатам этой должности в вашей команде? Уже выданные назначения и результаты сохранятся. Владелец назначает по всей компании.',
               )}
             </p>
             <div className={css.actions}>
@@ -943,7 +996,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
                   disabled={busy}
                   onClick={() => setAssigning(course)}
                 >
-                  {t('Назначить сотрудникам')}
+                  {t('Назначить команде')}
                 </button>
               )}
             </div>

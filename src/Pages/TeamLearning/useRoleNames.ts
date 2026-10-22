@@ -5,7 +5,7 @@ import { useLearningData } from "../Learning/useLearningData";
 import { roles, type TeamSettings } from "./types";
 
 const profileRoles: Record<string, Record<string, string>> = {
-  business: { author: "Наставник", manager: "Руководитель", member: "Сотрудник" },
+  business: { author: "Наставник", manager: "Руководитель", admin: "Руководитель", member: "Сотрудник", candidate: "Кандидат" },
   education: {
     author: "Преподаватель",
     reviewer: "Методист",
