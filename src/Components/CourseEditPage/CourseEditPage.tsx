@@ -73,6 +73,8 @@ export default function CourseEditPage() {
   const [restored, setRestored] = useState(false);
   const [serverLesson, setServerLesson] = useState<Lesson | null>(null);
   const selectedRef = useRef<number | null>(null);
+  const latestEditor = useRef({ courseId: id, owner, selected, draft, baseRevision });
+  latestEditor.current = { courseId: id, owner, selected, draft, baseRevision };
   useReconnect(() => setVersion((v) => v + 1));
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -199,6 +201,7 @@ export default function CourseEditPage() {
   function edit(value: string) {
     if (!lesson) return;
     writeDraft(`lesson:${lesson.id}`, value, baseRevision, owner);
+    latestEditor.current = { ...latestEditor.current, draft: value };
     setDraft(value);
   }
   async function save(expected = baseRevision) {
@@ -310,14 +313,23 @@ export default function CourseEditPage() {
   }
   function insertMarkdown(value: string) {
     const input = textInput.current;
-    if (!input) return;
+    const current = latestEditor.current;
+    // A delayed renderer must never write a previous lesson's text into the
+    // current editor. Within the same lesson, keep typing made while it ran.
+    if (!input || current.courseId !== id || current.owner !== owner ||
+        current.selected !== lesson?.id || selectedRef.current !== lesson?.id) return false;
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    edit(draft.slice(0, start) + value + draft.slice(end));
+    const next = current.draft.slice(0, start) + value + current.draft.slice(end);
+    writeDraft(`lesson:${current.selected}`, next, current.baseRevision, current.owner);
+    latestEditor.current = { ...current, draft: next };
+    setDraft(next);
     requestAnimationFrame(() => {
+      if (!input.isConnected || textInput.current !== input || selectedRef.current !== current.selected) return;
       input.focus();
       input.setSelectionRange(start + value.length, start + value.length);
     });
+    return true;
   }
   function editTest(test: ReviewTest, parentId?: number) {
     setEditing({
@@ -679,13 +691,12 @@ export default function CourseEditPage() {
                     {showDiagram ? t("Закрыть редактор схемы") : t("Добавить схему")}
                   </button>
                 </div>
-                {showDiagram && <DiagramEditor key={lesson.id} draftKey={`${id}:${lesson.id}`} onInsert={markdown => { insertMarkdown(markdown); setShowDiagram(false); }}/>}
+                {showDiagram && <DiagramEditor key={`diagram:${lesson.id}`} draftKey={`${id}:${lesson.id}`} onInsert={markdown => { if (insertMarkdown(markdown)) setShowDiagram(false); }}/>}
                 {showImages && (
                   <ImageLibrary
                     courseId={id!}
                     onInsert={(markdown) => {
-                      insertMarkdown("\n" + markdown + "\n");
-                      setShowImages(false);
+                      if (insertMarkdown("\n" + markdown + "\n")) setShowImages(false);
                     }}
                   />
                 )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GitBranch, Plus } from "lucide-react";
 import DiagramBlock from "./DiagramBlock";
 import { useDurableState } from "@/hooks/useDurableState";
@@ -38,20 +38,46 @@ export default function DiagramEditor({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const operation = useRef(0);
+  const pending = useRef(false);
+  const destination = useRef({ draftKey, onInsert });
+  destination.current = { draftKey, onInsert };
+  useEffect(() => {
+    pending.current = false;
+    setBusy(false);
+    return () => {
+      operation.current += 1;
+    };
+  }, [draftKey]);
   const insert = async () => {
+    if (pending.current) return;
+    pending.current = true;
+    const request = ++operation.current;
+    const sourceKey = draftKey;
     setBusy(true);
     setError("");
     try {
       await renderDiagram(draft.source, draft.kind);
-      onInsert(`\n\n\`\`\`${draft.kind}\n${draft.source.trim()}\n\`\`\`\n\n`);
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Не удалось построить схему.",
+      if (
+        request !== operation.current ||
+        destination.current.draftKey !== sourceKey
+      )
+        return;
+      destination.current.onInsert(
+        `\n\n\`\`\`${draft.kind}\n${draft.source.trim()}\n\`\`\`\n\n`,
       );
+    } catch (reason) {
+      if (request === operation.current)
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : "Не удалось построить схему.",
+        );
     } finally {
-      setBusy(false);
+      if (request === operation.current) {
+        pending.current = false;
+        setBusy(false);
+      }
     }
   };
   return (
