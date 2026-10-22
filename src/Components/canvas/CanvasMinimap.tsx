@@ -1,11 +1,12 @@
 import { useLocale } from "@/i18n/useLocale";
+import { pluralForm } from "@/i18n/plurals";
 import { MiniMap } from "@xyflow/react";
 
 import { useCanvasStore } from "@/store/canvasStore";
 import styles from "@/Components/canvas/styles.module.css";
 
 export function CanvasMinimap() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   const nodes = useCanvasStore((state) => state.nodes);
   const edges = useCanvasStore((state) => state.edges);
@@ -25,11 +26,11 @@ export function CanvasMinimap() {
       <div className={styles.minimapStats}>
         <span>
           {nodes.length}
-          {" " + t("узлов")}
+          {" " + t(pluralForm(locale, nodes.length, "узел", "узла", "узлов"))}
         </span>
         <span>
           {edges.length}
-          {" " + t("связей")}
+          {" " + t(pluralForm(locale, edges.length, "связь", "связи", "связей"))}
         </span>
         <span>{Math.round(viewport.zoom * 100)}%</span>
       </div>

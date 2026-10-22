@@ -227,7 +227,7 @@ it("preserves node edits and durable draft while switching mobile panels and sav
     { timeout: 10000 },
   );
   expect(
-    screen.getByRole("button", { name: "Создать frame из выделения" }),
+    screen.getByRole("button", { name: "Создать группу из выделения" }),
   ).toBeDisabled();
   act(() =>
     useCanvasStore.getState().setSelection({ nodeIds: [node.id], edgeIds: [] }),
@@ -240,7 +240,7 @@ it("preserves node edits and durable draft while switching mobile panels and sav
   expect(title).toHaveValue("Несохранённое название");
   expect(readDraft("canvas:23", 17)).not.toBeNull();
   expect(
-    screen.getByRole("button", { name: "Создать frame из выделения" }),
+    screen.getByRole("button", { name: "Создать группу из выделения" }),
   ).toBeEnabled();
   fireEvent.click(screen.getByRole("button", { name: "Схема" }));
   fireEvent.click(screen.getByRole("button", { name: "Сохранить" }));

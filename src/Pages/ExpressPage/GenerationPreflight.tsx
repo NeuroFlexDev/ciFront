@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowRight, BookOpen, Check, FileText, ListChecks, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { useLocale } from "@/i18n/useLocale";
+import { pluralForm } from "@/i18n/plurals";
 import type { GenerationSettings } from "./CourseWizard";
 import styles from "./wizard.module.css";
 
@@ -14,6 +15,8 @@ export default function GenerationPreflight({ settings, preflight, sourceCount, 
 }) {
   const { t, locale } = useLocale();
   const number = (value: number) => value.toLocaleString(locale === "en" ? "en-GB" : "ru-RU");
+  const counted = (value: number, one: string, few: string, many: string) =>
+    t(pluralForm(locale, value, one, few, many));
   const ready = preflight?.allowed;
   return <section className={styles.preflight} aria-labelledby="preflight-title">
     <header className={styles.preflightHeader}>
@@ -28,8 +31,8 @@ export default function GenerationPreflight({ settings, preflight, sourceCount, 
       {settings.target_audience && <p><strong>{t("Для кого:")} </strong>{settings.target_audience}</p>}
     </div>
     <dl className={styles.preflightFacts}>
-      <div><FileText aria-hidden="true" /><dt>{t("Документы")}</dt><dd>{sourceCount}<small>{t("источников выбрано")}</small></dd></div>
-      <div><BookOpen aria-hidden="true" /><dt>{t("Объём курса")}</dt><dd>{settings.lesson_count}<small>{t("уроков в плане")}</small></dd></div>
+      <div><FileText aria-hidden="true" /><dt>{t("Документы")}</dt><dd>{sourceCount}<small>{counted(sourceCount, "источник выбран", "источника выбрано", "источников выбрано")}</small></dd></div>
+      <div><BookOpen aria-hidden="true" /><dt>{t("Объём курса")}</dt><dd>{settings.lesson_count}<small>{counted(settings.lesson_count, "урок в плане", "урока в плане", "уроков в плане")}</small></dd></div>
       <div><ListChecks aria-hidden="true" /><dt>{t("Проверка знаний")}</dt><dd className={styles.testSummary}>{settings.module_tests_enabled && settings.final_test_enabled ? t("Тесты + итоговый") : settings.module_tests_enabled ? t("После модулей") : settings.final_test_enabled ? t("Итоговый тест") : t("Без тестов")}<small>{t("по вашим настройкам")}</small></dd></div>
     </dl>
     <div className={styles.preflightNext}>
