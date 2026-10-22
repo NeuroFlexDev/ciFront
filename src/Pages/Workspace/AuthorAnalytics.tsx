@@ -166,7 +166,7 @@ export default function AuthorAnalytics({
                         {t(statuses[c.status] ?? String(c.status)) || c.status}
                       </span>
                       <h3 style={{ marginTop: 18 }}>
-                        {c.title || t("Черновик №{v0}", { v0: c.id })}
+                        {c.title?.trim() || t("Черновик №{v0}", { v0: c.id })}
                       </h3>
                       <p>
                         {t(

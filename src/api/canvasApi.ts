@@ -15,7 +15,8 @@ type Graph = {nodes: {id: string; type: string; label?: string; title?: string; 
 export async function loadCanvasSnapshot(courseId: string): Promise<CanvasSnapshot | null> {
   const data = await fetchCanvasWorkspace(courseId);
   versions.set(key(courseId),data.version);
-  if (data.snapshot) return {...data.snapshot,courseTitle:data.course_title ?? data.snapshot.courseTitle};
+  const courseTitle = (data.course_title ?? data.snapshot?.courseTitle)?.trim() || `Курс ${courseId}`;
+  if (data.snapshot) return {...data.snapshot,courseTitle};
   const graph = (await api.get<Graph>(`/courses/${courseId}/canvas`)).data;
   const nodes = graph.nodes.map((n,i) => {
     const type = (n.type === 'task' ? 'practice' : n.type) as CanvasNodeType;
@@ -23,7 +24,7 @@ export async function loadCanvasSnapshot(courseId: string): Promise<CanvasSnapsh
       {title:n.label ?? n.title ?? n.id,description:n.description ?? '',status:'ready'});
     return {...node,id:n.id,data:{...node.data,id:n.id}};
   });
-  return {courseId,courseTitle:data.course_title ?? `Курс ${courseId}`,nodes,
+  return {courseId,courseTitle,nodes,
     edges:graph.edges.map(e => createCanvasEdge(e.source,e.target,e.relation === 'contains' ? 'contains' : e.relation === 'requires' ? 'prerequisite' : 'next')),
     viewport:{x:100,y:100,zoom:0.8},updatedAt:graph.updated_at ? Date.parse(graph.updated_at) : 0};
 }

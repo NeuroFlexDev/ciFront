@@ -38,6 +38,10 @@ export default function DiagramEditor({
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  function updateDraft(next: typeof draft) {
+    if (next.source !== draft.source || next.kind !== draft.kind) setError("");
+    setDraft(next);
+  }
   const operation = useRef(0);
   const pending = useRef(false);
   const destination = useRef({ draftKey, onInsert });
@@ -97,7 +101,7 @@ export default function DiagramEditor({
             key={key}
             type="button"
             disabled={!!draft.source.trim()}
-            onClick={() => setDraft({ kind: "mermaid", source: value })}
+            onClick={() => updateDraft({ kind: "mermaid", source: value })}
           >
             {t(labels[key as keyof typeof labels])}
           </button>
@@ -115,7 +119,7 @@ export default function DiagramEditor({
         <select
           value={draft.kind}
           disabled={busy}
-          onChange={(event) => setDraft({ ...draft, kind: event.target.value })}
+          onChange={(event) => updateDraft({ ...draft, kind: event.target.value })}
         >
           <option value="mermaid">Mermaid</option>
           <option value="plantuml">PlantUML (class / sequence)</option>
@@ -130,7 +134,7 @@ export default function DiagramEditor({
           spellCheck={false}
           disabled={busy}
           onChange={(event) =>
-            setDraft({ ...draft, source: event.target.value })
+            updateDraft({ ...draft, source: event.target.value })
           }
           placeholder={"flowchart LR\n  A --> B"}
         />

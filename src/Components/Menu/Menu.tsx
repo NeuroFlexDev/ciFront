@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { api, getAuthToken } from '@/shared/api';
+import { useReconnect } from '@/hooks/useReconnect';
 import logo from '@/assets/icons/logo.svg';
 import styles from './styles.module.css';
 type Permissions = {
@@ -54,6 +55,7 @@ export default function Menu() {
   );
   const [failed, setFailed] = useState(false);
   const [version, setVersion] = useState(0);
+  useReconnect(() => setVersion((value) => value + 1));
   useEffect(() => {
     let active = true;
     const token = getAuthToken();

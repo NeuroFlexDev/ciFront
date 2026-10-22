@@ -63,6 +63,7 @@ export default function CourseEditPage() {
   const { user } = useAuth();
   const owner = user?.id ?? null;
   const [structure, setStructure] = useState<Structure | null>(null);
+  const courseTitle = structure?.title?.trim() || `${t("Курс")} ${id}`;
   const [modules, setModules] = useState<Module[]>([]);
   const [finalTests, setFinalTests] = useState<ReviewTest[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
@@ -363,7 +364,7 @@ export default function CourseEditPage() {
   }
   function download() {
     const text =
-      `# ${structure?.title ?? t("Курс")}\n\n` +
+      `# ${courseTitle}\n\n` +
       modules
         .map(
           (m) =>
@@ -415,7 +416,7 @@ export default function CourseEditPage() {
             </>
           )}
         </p>
-        <h1>{structure?.title ?? t("Проверка курса")}</h1>
+        <h1>{courseTitle}</h1>
         {structure && (
           <div className={styles.toolbar}>
             <button
