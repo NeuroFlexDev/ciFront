@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 }));
 const user = vi.hoisted(() => ({ id: 9510, organization_id: null }));
 vi.mock("@/auth/useAuth", () => ({ useAuth: () => ({ user }) }));
-vi.mock("@/shared/api", () => ({ api: mocks }));
+vi.mock("@/shared/api", () => ({ api: mocks, captureAuthSession: () => ({}), authSessionIsCurrent: () => true }));
 vi.mock("@/Components/Menu/Menu", () => ({ default: () => null }));
 vi.mock("@/Components/SourceReleasePanel", () => ({ default: () => null }));
 vi.mock("@/Components/DiagramBlock", () => ({ default: () => null }));
@@ -97,6 +97,7 @@ async function page() {
       </Routes>
     </MemoryRouter>,
   );
+  fireEvent.click(await screen.findByRole("button", { name: "Исходник" }));
   return screen.findByRole("textbox", { name: "Текст урока (Markdown)" });
 }
 function pendingDiagram() {
@@ -145,6 +146,7 @@ it("cancels the pending insertion when switching lessons and keeps the source dr
   await page();
   const finish = pendingDiagram();
   fireEvent.click(screen.getByRole("button", { name: "Урок Б" }));
+  fireEvent.click(screen.getByRole("button", { name: "Исходник" }));
   const text = screen.getByRole("textbox", { name: "Текст урока (Markdown)" });
   fireEvent.change(text, { target: { value: "Новая редакция Б" } });
   await act(async () => finish());
@@ -153,6 +155,7 @@ it("cancels the pending insertion when switching lessons and keeps the source dr
   expect(readDraft<string>("lesson:71")).toBeNull();
   expect(mocks.put).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Урок А" }));
+  fireEvent.click(screen.getByRole("button", { name: "Исходник" }));
   expect(
     screen.getByRole("textbox", { name: "Текст урока (Markdown)" }),
   ).toHaveValue(lessons[0].content);

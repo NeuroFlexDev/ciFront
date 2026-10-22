@@ -1,4 +1,9 @@
 export const creatorEnglish: Record<string, string> = {
+  "Редактор курса": "Course editor",
+  "Открыть канву": "Open canvas",
+  "Структура, источники и согласование": "Structure, sources and review",
+  "Содержание курса": "Course outline",
+  "Управление модулем": "Manage module",
   "Всё о будущем курсе": "Your course at a glance",
   "Проверьте детали — дальше Лерниум подготовит структуру, уроки и задания. Вы сможете отредактировать результат перед публикацией.": "Review the details. Lernium will prepare the structure, lessons and exercises. You can edit everything before publishing.",
   "Ваш курс": "Your course",

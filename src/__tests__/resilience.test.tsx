@@ -65,18 +65,22 @@ describe('R02 recovery',()=>{
 
   it('restores a failed lesson write after a full editor remount',async()=>{
     vi.stubGlobal('fetch',vi.fn(courseFetch));const first=render(editor());
+    fireEvent.click(await screen.findByRole('button',{name:'Исходник'}));
     fireEvent.change(await screen.findByLabelText('Текст урока (Markdown)'),{target:{value:'Important unsaved answer'}});
     fireEvent.click(screen.getByRole('button',{name:'Сохранить урок'}));
     await waitFor(()=>expect(screen.getByRole('button',{name:'Сохранить урок'})).toBeEnabled());
     first.unmount();render(editor());
+    fireEvent.click(await screen.findByRole('button',{name:'Исходник'}));
     await waitFor(()=>expect(screen.getByLabelText('Текст урока (Markdown)')).toHaveValue('Important unsaved answer'));
     expect(screen.getByRole('button',{name:'Опубликовать курс'})).toBeDisabled();
   });
 
   it('does not allow publishing while a different lesson has an unsaved draft',async()=>{
     vi.stubGlobal('fetch',vi.fn(courseFetch));render(editor());
+    fireEvent.click(await screen.findByRole('button',{name:'Исходник'}));
     fireEvent.change(await screen.findByLabelText('Текст урока (Markdown)'),{target:{value:'Pending first lesson'}});
     fireEvent.click(screen.getByRole('button',{name:'Second lesson'}));
+    fireEvent.click(screen.getByRole('button',{name:'Исходник'}));
     expect(screen.getByLabelText('Текст урока (Markdown)')).toHaveValue('Second original');
     expect(screen.getByRole('button',{name:'Опубликовать курс'})).toBeDisabled();
   });

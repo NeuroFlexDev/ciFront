@@ -1,11 +1,14 @@
 import { useLocale } from "@/i18n/useLocale";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { X, FileText } from "lucide-react";
 import {useDialogFocus} from '@/hooks/useDialogFocus';
-import { api } from "@/shared/api";
+import { api, authSessionIsCurrent, captureAuthSession } from "@/shared/api";
 import { useDurableState } from "@/hooks/useDurableState";
 import { RequestError } from "@/Components/RequestState";
 import DraftNotice from "@/Components/DraftNotice";
-import styles from "./courseEditPage.module.css";
+import TextEditor from "@/Components/ElementUi/TextEditor/TextEditor";
+import { useEditorCopy } from "@/Components/ElementUi/TextEditor/editorCopy";
+import styles from "./entityEditor.module.css";
 
 export type EditableEntity = {
   kind: "course" | "module" | "lesson" | "test" | "task";
@@ -36,6 +39,7 @@ export default function EntityEditor({
   onSaved: () => void;
 }) {
   const { t } = useLocale();
+  const copy = useEditorCopy();
 
   const resource = `editor:${entity.kind}:${entity.id ?? `new:${entity.courseId}:${entity.parentId ?? "final"}`}`;
   const [form, setForm, clearForm] = useDurableState(resource, {
@@ -49,9 +53,19 @@ export default function EntityEditor({
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDivElement>(null);
+  const pending = useRef<{ cancelled: boolean } | null>(null);
+  useEffect(() => {
+    pending.current = null;
+    setBusy(false);
+    return () => { if (pending.current) pending.current.cancelled = true; };
+  }, [resource]);
   useDialogFocus(dialog,{busy,onClose});
   async function save() {
     if (busy) return;
+    const request = { cancelled: false };
+    pending.current = request;
+    const session = captureAuthSession();
+    const current = () => pending.current === request && !request.cancelled && authSessionIsCurrent(session);
     setBusy(true);
     setError(null);
     try {
@@ -114,12 +128,13 @@ export default function EntityEditor({
                   : `/courses/${entity.courseId}/tests/`;
         await api.post(path, body);
       }
+      if (!current()) return;
       clearForm(form);
       onSaved();
     } catch (reason) {
-      setError(reason);
+      if (current()) setError(reason);
     } finally {
-      setBusy(false);
+      if (current()) { pending.current = null; setBusy(false); }
     }
   }
   return (
@@ -132,10 +147,15 @@ export default function EntityEditor({
         aria-modal="true"
         aria-labelledby="entity-title"
       >
+        <header className={styles.header}>
+          <div><span className={styles.eyebrow}><FileText size={15}/>{copy("Редактирование")}</span>
         <h2 id="entity-title">
           {entity.id ? t("Редактировать") : t("Добавить")}{" "}
           {t(labels[entity.kind] ?? String(entity.kind))}
         </h2>
+          </div>
+          <button type="button" className={styles.close} disabled={busy} onClick={onClose} aria-label={copy("Закрыть редактор, сохранив черновик")}><X size={22}/></button>
+        </header>
         <DraftNotice />
         {!!error && <RequestError error={error} />}
         <form
@@ -173,17 +193,20 @@ export default function EntityEditor({
             </label>
           )}
           {entity.kind === "lesson" && (
-            <label>
-              {t("Содержание (Markdown)")}
-              <textarea
-                rows={10}
+            <section className={styles.contentSection}>
+              <h3>{copy("Содержание урока")}</h3>
+              <TextEditor
+                key={resource}
+                documentKey={resource}
+                format="markdown"
+                ariaLabel={copy("Содержание урока")}
                 value={form.content}
                 disabled={busy}
-                onChange={(event) =>
-                  setForm({ ...form, content: event.target.value })
+                onChange={(content) =>
+                  setForm(previous => ({ ...previous, content }))
                 }
               />
-            </label>
+            </section>
           )}
           {entity.kind === "test" && (
             <>

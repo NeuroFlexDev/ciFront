@@ -1,13 +1,12 @@
 import { useLocale } from "@/i18n/useLocale";
-import { pluralForm } from "@/i18n/plurals";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import MarkdownContent from "@/Components/MarkdownContent";
+import TextEditor, { type TextEditorHandle } from "@/Components/ElementUi/TextEditor/TextEditor";
 import EntityEditor, { type EditableEntity } from "./EntityEditor";
 import AssessmentEditor, { type AssessmentTarget } from "./AssessmentEditor";
 import ImageLibrary from "@/Components/ElementUi/ImageEditor/ImageLibrary";
 import DiagramEditor from "@/Components/DiagramEditor";
-import { WizardSteps } from "@/Pages/ExpressPage/CourseWizard";
 import { api, authSessionIsCurrent, captureAuthSession } from "@/shared/api";
 import Menu from "@/Components/Menu/Menu";
 import styles from "./courseEditPage.module.css";
@@ -65,7 +64,7 @@ type Publication = {
 };
 
 export default function CourseEditPage() {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const { id } = useParams();
   const { user } = useAuth();
   const owner = user?.id ?? null;
@@ -93,10 +92,11 @@ export default function CourseEditPage() {
   const [showImages, setShowImages] = useState(false);
   const [showDiagram, setShowDiagram] = useState(false);
   const pendingPublication = useRef<{ cancelled: boolean } | null>(null);
+  const pendingSave = useRef<{ cancelled: boolean } | null>(null);
   const [publicationProblems, setPublicationProblems] = useState<
     { id: string; question: string; message: string }[]
   >([]);
-  const textInput = useRef<HTMLTextAreaElement>(null);
+  const textInput = useRef<TextEditorHandle>(null);
   const lesson = modules
     .flatMap((m) => m.lessons)
     .find((l) => l.id === selected);
@@ -112,6 +112,10 @@ export default function CourseEditPage() {
     });
 
   useEffect(() => {
+    if (pendingSave.current) {
+      pendingSave.current = null;
+      setBusy(false);
+    }
     // A new course or a refreshed session owns its own publication state.
     if (pendingPublication.current) {
       pendingPublication.current = null;
@@ -119,6 +123,7 @@ export default function CourseEditPage() {
     }
     return () => {
       if (pendingPublication.current) pendingPublication.current.cancelled = true;
+      if (pendingSave.current) pendingSave.current.cancelled = true;
     };
   }, [id, owner, version]);
 
@@ -226,42 +231,56 @@ export default function CourseEditPage() {
     setDraft(value);
   }
   async function save(expected = baseRevision) {
-    if (!lesson) return;
+    if (!lesson || busy || pendingSave.current) return;
+    const request = { cancelled: false };
+    pendingSave.current = request;
+    const session = captureAuthSession();
+    const saved = { courseId: id, owner, lessonId: lesson.id, content: latestEditor.current.draft };
+    const current = () => pendingSave.current === request && !request.cancelled
+      && latestEditor.current.courseId === saved.courseId && latestEditor.current.owner === saved.owner
+      && latestEditor.current.selected === saved.lessonId && authSessionIsCurrent(session);
     setBusy(true);
     setError(null);
     setNotice("");
     try {
       const { data } = await api.put<Lesson>(`/lessons/${lesson.id}`, {
-        content: draft,
+        content: saved.content,
         expected_revision: expected ?? lesson.revision,
       });
+      if (!current()) return;
       setModules((prev) =>
         prev.map((m) => ({
           ...m,
           lessons: m.lessons.map((l) =>
-            l.id === lesson.id ? { ...l, ...data, content: draft } : l,
+            l.id === saved.lessonId ? { ...l, ...data, content: saved.content } : l,
           ),
         })),
       );
       setStructure((s) => (s ? { ...s, status: "draft" } : s));
-      setNotice(t("Урок сохранён"));
-      clearDraft(`lesson:${lesson.id}`, draft, owner);
+      const unchanged = latestEditor.current.draft === saved.content;
+      setNotice(unchanged ? t("Урок сохранён") : "");
+      if (unchanged) clearDraft(`lesson:${saved.lessonId}`, saved.content, saved.owner);
+      else writeDraft(`lesson:${saved.lessonId}`, latestEditor.current.draft, data.revision, saved.owner);
+      latestEditor.current = { ...latestEditor.current, baseRevision: data.revision };
       setBaseRevision(data.revision);
       setRestored(false);
       setServerLesson(null);
     } catch (e) {
+      if (!current()) return;
       setError(e);
       if (e instanceof ApiError && e.status === 409) {
         try {
-          setServerLesson(
-            (await api.get<Lesson>(`/lessons/${lesson.id}`)).data,
-          );
+          const { data } = await api.get<Lesson>(`/lessons/${saved.lessonId}`);
+          if (current()) setServerLesson(data);
         } catch {
           /* Original draft and conflict remain visible. */
         }
       }
     } finally {
-      setBusy(false);
+      if (current()) {
+        pendingSave.current = null;
+        setBusy(false);
+      }
     }
   }
   async function publish() {
@@ -359,19 +378,9 @@ export default function CourseEditPage() {
     // current editor. Within the same lesson, keep typing made while it ran.
     if (!input || current.courseId !== id || current.owner !== owner ||
         current.selected !== lesson?.id || selectedRef.current !== lesson?.id) return false;
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const next = current.draft.slice(0, start) + value + current.draft.slice(end);
-    writeDraft(`lesson:${current.selected}`, next, current.baseRevision, current.owner);
-    latestEditor.current = { ...current, draft: next };
-    setDraft(next);
-    requestAnimationFrame(() => {
-      if (!input.isConnected || textInput.current !== input || selectedRef.current !== current.selected) return;
-      input.focus();
-      input.setSelectionRange(start + value.length, start + value.length);
-    });
-    return true;
+    return input.insertMarkdown(value);
   }
+
   function editTest(test: ReviewTest, parentId?: number) {
     setEditing({
       kind: "test",
@@ -442,23 +451,15 @@ export default function CourseEditPage() {
     <>
       <Menu />
       <main className={styles.container}>
-        <WizardSteps step={5} />
         <p className={styles.breadcrumbs}>
-          <Link to="/courses">{t("Мои курсы")}</Link> ·{" "}
-          <Link to={`/courses/${id}/canvas`}>{t("Канва")}</Link>
-          {user?.organization_id && (
-            <>
-              {" "}
-              ·{" "}
-              <Link to={`/course-reviews?course=${id}`}>
-                {t("Ссылка для назначенного проверяющего")}
-              </Link>
-            </>
-          )}
+          <Link to="/courses">← {t("Мои курсы")}</Link>
         </p>
-        <h1>{courseTitle}</h1>
-        {structure && (
-          <div className={styles.toolbar}>
+        <header className={styles.courseHeader}>
+          <div className={styles.courseIdentity}>
+            <div className={styles.courseEyebrow}><span>LERNIUM</span> / {t("Редактор курса")}</div>
+            <h1>{courseTitle}</h1>
+          </div>
+          {structure && <div className={styles.courseActions}>
             <button
               disabled={busy}
               onClick={() =>
@@ -474,6 +475,13 @@ export default function CourseEditPage() {
             >
               {t("Настройки курса")}
             </button>
+            <Link className={styles.canvasLink} to={`/courses/${id}/canvas`}>{t("Открыть канву")} ↗</Link>
+          </div>}
+        </header>
+        {structure && <details className={styles.courseMeta}>
+          <summary>{t("Структура, источники и согласование")}</summary>
+          <div className={styles.courseMetaBody}>
+          <div className={styles.toolbar}>
             <button
               disabled={busy}
               onClick={() =>
@@ -491,7 +499,16 @@ export default function CourseEditPage() {
               {t("Добавить итоговый вопрос")}
             </button>
           </div>
-        )}
+          {user?.organization_id && <>
+            <p><Link to={`/course-reviews?course=${id}`}>{t("Ссылка для назначенного проверяющего")}</Link></p>
+            <details className={styles.reviewHistory}>
+              <summary>{t("История согласования курса")}</summary>
+              <PublicationHistory key={version} courseId={Number(id)} />
+            </details>
+          </>}
+          <SourceReleasePanel courseId={Number(id)} onChanged={() => setVersion(v => v + 1)} />
+          </div>
+        </details>}
         {loading && (
           <LoadingState>{t("Загружаем содержание курса…")}</LoadingState>
         )}
@@ -503,13 +520,6 @@ export default function CourseEditPage() {
           />
         )}
         {notice && <p role="status">{notice}</p>}
-        {user?.organization_id && structure && (
-          <details className={styles.reviewHistory}>
-            <summary>{t("История согласования курса")}</summary>
-            <PublicationHistory key={version} courseId={Number(id)} />
-          </details>
-        )}
-        {structure && <SourceReleasePanel courseId={Number(id)} onChanged={() => setVersion(v => v + 1)} />}
         {publicationProblems.length > 0 && (
           <section className="request-state">
             <h2>{t("Задания, требующие настройки")}</h2>
@@ -568,33 +578,12 @@ export default function CourseEditPage() {
             </Link>
           </section>
         )}
-        {modules.length > 0 && (
-          <nav className={styles.moduleMap} aria-label={t("Структура курса")}>
-            {modules.map((module, index) => (
-              <button
-                key={module.id}
-                disabled={busy || !module.lessons.length}
-                aria-current={
-                  module.lessons.some((item) => item.id === selected) || undefined
-                }
-                onClick={() => select(module.lessons[0])}
-              >
-                <small>
-                  {t("Модуль")} {index + 1} · {module.lessons.length}{" "}
-                  {t(pluralForm(locale, module.lessons.length, "урок", "урока", "уроков"))}
-                </small>
-                {module.title}
-              </button>
-            ))}
-          </nav>
-        )}
         <div className={styles.content}>
           <section className={styles.editorContainer}>
             {lesson ? (
               <>
-                <header className={styles.editorHeading}>
+                <header className={styles.lessonHeading}>
                   <h2>{lesson.title}</h2>
-                </header>
                 <div className={styles.toolbar}>
                   <button
                     disabled={busy}
@@ -622,64 +611,16 @@ export default function CourseEditPage() {
                     {t("Убрать урок")}
                   </button>
                 </div>
-                <div
-                  className={`${styles.toolbar} ${styles.formatToolbar}`}
-                  role="toolbar"
-                  aria-label={t("Добавить блок содержания")}
-                >
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("\n## Заголовок раздела\n\n"))
-                    }
-                  >
-                    {t("Заголовок")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(
-                        t(
-                          "\n| Столбец 1 | Столбец 2 |\n| --- | --- |\n| Значение | Значение |\n",
-                        ),
-                      )
-                    }
-                  >
-                    {t("Таблица")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => insertMarkdown("\n$$\nE = mc^2\n$$\n")}
-                  >
-                    {t("Формула")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("[Текст ссылки](https://)"))
-                    }
-                  >
-                    {t("Ссылка")}
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      insertMarkdown(t("\n- Первый пункт\n- Второй пункт\n"))
-                    }
-                  >
-                    {t("Список")}
-                  </button>
-                </div>
-                <label>
-                  {t("Текст урока (Markdown)")}
-                  <textarea
-                    ref={textInput}
-                    value={draft}
-                    onChange={(e) => edit(e.target.value)}
-                    disabled={busy}
-                    rows={18}
-                  />
-                </label>
+                </header>
+                <TextEditor
+                  key={`${id}:${lesson.id}:${owner}`}
+                  ref={textInput}
+                  documentKey={`${id}:${lesson.id}:${owner}`}
+                  format="markdown"
+                  value={draft}
+                  onChange={edit}
+                  disabled={busy}
+                />
                 <div className={styles.saveRow}>
                   <button
                     className={styles.primary}
@@ -741,21 +682,17 @@ export default function CourseEditPage() {
                     }}
                   />
                 )}
-                <section
-                  className={styles.preview}
-                  aria-label={t("Предпросмотр")}
-                  key={lesson.id}
-                >
-                  <h3>{t("Предпросмотр")}</h3>
-                  <MarkdownContent>{draft}</MarkdownContent>
-                </section>
+
               </>
             ) : null}
           </section>
           <aside className={styles.sidebar}>
+            <h2 className={styles.outlineLabel}>{t("Содержание курса")}</h2>
             {modules.map((m, moduleIndex) => (
               <section key={m.id}>
                 <h2>{m.title}</h2>
+                <details className={styles.moduleManagement}>
+                  <summary>{t("Управление модулем")}</summary>
                 <div className={styles.moduleActions}>
                   <button
                     disabled={busy}
@@ -810,6 +747,7 @@ export default function CourseEditPage() {
                     {t("Убрать")}
                   </button>
                 </div>
+                </details>
                 {m.lessons.map((l, lessonIndex) => (
                   <div key={l.id} className={styles.lessonRow}>
                     <button

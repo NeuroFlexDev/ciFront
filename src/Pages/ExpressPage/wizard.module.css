@@ -80,6 +80,10 @@
   max-width: 1080px;
   margin: auto;
 }
+@media (max-height: 850px) {
+  .page.generationPage { margin-top: 24px; }
+  .generationPage .steps { margin-bottom: 28px; }
+}
 .page button,
 .page a.primary,
 .page label.primary {

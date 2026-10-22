@@ -13,6 +13,8 @@ import DraftNotice from "@/Components/DraftNotice";
 import { templates } from "@/Pages/Workspace/template-data";
 import styles from "./wizard.module.css";
 import GenerationPreflight, { type Preflight } from "./GenerationPreflight";
+import GenerationProgress from "@/Components/ExpressComponents/GenerationProgress/GenerationProgress";
+import { useGenerationProgress } from "./useGenerationProgress";
 import { applySourceSuggestion, type SourceSuggestion, type SuggestedField } from "./sourceSuggestion";
 
 export type GenerationSettings = {
@@ -36,16 +38,6 @@ type DocumentItem = {
   extracted_characters: number;
   chunk_count: number;
   error_message?: string | null;
-};
-type Run = {
-  run_id: number;
-  course_id: number;
-  status: string;
-  progress_percent: number;
-  current_stage: string;
-  stages: { code: string; title: string; status: string }[];
-  status_error?: { message: string; retryable: boolean } | null;
-  status_notice?: string | null;
 };
 type Capabilities = {
   document_formats: string[];
@@ -157,7 +149,9 @@ export default function CourseWizard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
-  const [run, setRun] = useState<Run | null>(null);
+  const { run, error: progressError, connection, receivedAt } = useGenerationProgress(runId, version);
+  const [submission, setSubmission] = useState<"idle" | "submitting" | "uncertain">("idle");
+  const [stoppingRun, setStoppingRun] = useState<number | null>(null);
   const [preflight, setPreflight] = useState<Preflight | null>(null);
   const [notice, setNotice] = useState("");
   const [suggestionState, setSuggestionState] = useState<"idle" | "loading" | "ready" | "error">("idle");
@@ -304,28 +298,6 @@ export default function CourseWizard() {
     // The durable setter reads the latest form. Late source responses never overwrite manual edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId, sourceSelection, runId, version, settingsLoadedFor, busy, step]);
-  useEffect(() => {
-    if (!runId) return;
-    let active = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const poll = async () => {
-      try {
-        const { data } = await api.get<Run>(`/generation-runs/${runId}`);
-        if (!active) return;
-        setRun(data);
-        setError(null);
-        if (["queued", "running"].includes(data.status))
-          timer = setTimeout(poll, 2500);
-      } catch (e) {
-        if (active) setError(e);
-      }
-    };
-    void poll();
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [runId, version]);
   async function ensureCourse() {
     if (courseId) return courseId;
     if (creating.current) return creating.current;
@@ -467,19 +439,19 @@ export default function CourseWizard() {
   async function generate() {
     if (!courseId || !preflight?.allowed) return;
     await action(async () => {
-      const { data } = await api.post<{ run_id: number }>(
-        `/courses/${courseId}/generation-runs`,
-        {
-          settings,
-          document_ids: draft.document_ids,
-          request_id: draft.request_id,
-        },
-      );
-      setRun(null);
-      setParams(
-        { course: String(courseId), run: String(data.run_id) },
-        { replace: true },
-      );
+      setSubmission("submitting");
+      try {
+        const { data } = await api.post<{ run_id: number }>(
+          `/courses/${courseId}/generation-runs`,
+          { settings, document_ids: draft.document_ids, request_id: draft.request_id },
+        );
+        setParams({ course: String(courseId), run: String(data.run_id) }, { replace: true });
+        setSubmission("idle");
+      } catch (reason) {
+        // A lost acceptance response is retried only explicitly, with the same durable request ID.
+        setSubmission(!(reason instanceof ApiError) || !reason.status || reason.status >= 500 ? "uncertain" : "idle");
+        throw reason;
+      }
     });
   }
   async function resume() {
@@ -488,7 +460,7 @@ export default function CourseWizard() {
       const { data } = await api.post<{ run_id: number }>(
         `/generation-runs/${runId}/retry`,
       );
-      setRun(null);
+      setStoppingRun(null);
       setParams(
         { course: String(courseId), run: String(data.run_id) },
         { replace: true },
@@ -511,11 +483,11 @@ export default function CourseWizard() {
   return (
     <>
       <Menu />
-      <main className={styles.page}>
+      <main className={`${styles.page} ${runId || submission !== "idle" ? styles.generationPage : ""}`}>
         <h1 className={styles.srOnly}>{t("Создать курс по документам")}</h1>
-        <WizardSteps step={step} onStep={runId || busy ? undefined : go} />
+        <WizardSteps step={submission !== "idle" ? 4 : step} onStep={runId || busy || submission !== "idle" ? undefined : go} />
         <div className={styles.content}>
-          {!!error && (
+          {!!error && !runId && submission === "idle" && (
             <RequestError
               error={error}
               onRetry={() => {
@@ -525,7 +497,7 @@ export default function CourseWizard() {
             />
           )}
           {notice && <p role="status">{notice}</p>}
-          {step === 1 && !runId && (
+          {step === 1 && !runId && submission === "idle" && (
             <section>
               <h2>{t("Как вы хотите создать курс?")}</h2>
               <div className={styles.modes}>
@@ -571,7 +543,7 @@ export default function CourseWizard() {
               </div>
             </section>
           )}
-          {step === 2 && !runId && (
+          {step === 2 && !runId && submission === "idle" && (
             <section>
               <div
                 className={`${styles.uploadCard} ${dragging ? styles.dragging : ""}`}
@@ -767,7 +739,7 @@ export default function CourseWizard() {
               </div>
             </section>
           )}
-          {step === 3 && !runId && (
+          {step === 3 && !runId && submission === "idle" && (
             <form
               className={styles.form}
               onSubmit={(event) => {
@@ -1053,116 +1025,30 @@ export default function CourseWizard() {
               </fieldset>
             </form>
           )}
-          {step === 4 && !runId && (
+          {step === 4 && !runId && submission === "idle" && (
             <GenerationPreflight settings={settings} preflight={preflight} sourceCount={draft.document_ids.length}
               busy={busy} onPrepare={() => void prepare()} onGenerate={() => void generate()} onBack={() => go(3)} />
           )}
-          {runId && (
-            <section className={styles.panel} aria-live="polite">
-              <h2>
-                {["completed", "succeeded"].includes(run?.status ?? "")
-                  ? t("Курс готов к проверке")
-                  : run?.status === "paused"
-                    ? t("Прогресс сохранён")
-                    : run?.status === "failed"
-                      ? t("Генерация остановлена")
-                      : t("Генерация курса")}
-              </h2>
-              {!run && !error ? (
-                <LoadingState>{t("Получаем состояние запуска…")}</LoadingState>
-              ) : (
-                run && (
-                  <>
-                    <progress value={run.progress_percent} max={100} />
-                    <strong className={styles.percent}>
-                      {run.progress_percent}%
-                    </strong>
-                    <ol className={styles.stages}>
-                      {run.stages.map((stage) => (
-                        <li key={stage.code}>
-                          <span>
-                            {stage.status === "completed"
-                              ? "✓"
-                              : stage.status === "running"
-                                ? "◌"
-                                : "○"}
-                          </span>
-                          {t(stage.title)}
-                          <small>
-                            {stage.status === "completed"
-                              ? t("Готово")
-                              : stage.status === "running"
-                                ? t("В работе")
-                                : stage.status === "failed"
-                                  ? t("Ошибка")
-                                  : t("Ожидание")}
-                          </small>
-                        </li>
-                      ))}
-                    </ol>
-                    {run.status_error && (
-                      <p role="alert">{run.status_error.message}</p>
-                    )}
-                    {run.status_notice && (
-                      <p role="status">{t(run.status_notice)}</p>
-                    )}
-                    {run.status === "paused" && (
-                      <button
-                        className={styles.primary}
-                        disabled={busy}
-                        onClick={() => void resume()}
-                      >
-                        {t("Продолжить генерацию")}
-                      </button>
-                    )}
-                    {run.status === "failed" && run.status_error?.retryable && (
-                      <button disabled={busy} onClick={() => void resume()}>
-                        {t("Повторить генерацию")}
-                      </button>
-                    )}
-                    {["queued", "running"].includes(run.status) && (
-                      <button
-                        disabled={busy}
-                        onClick={() =>
-                          void action(async () => {
-                            await api.post(`/generation-runs/${runId}/cancel`);
-                            setVersion((value) => value + 1);
-                          })
-                        }
-                      >
-                        {t("Остановить после текущего этапа")}
-                      </button>
-                    )}
-                    {["completed", "succeeded"].includes(run.status) && (
-                      <Link
-                        className={styles.primary}
-                        to={`/courses/${courseId}/edit`}
-                      >
-                        {t("Проверить и опубликовать курс")}
-                      </Link>
-                    )}
-                    {run.status === "failed" && (
-                      <button
-                        onClick={() => {
-                          setRun(null);
-                          setParams(
-                            { course: String(courseId), step: "3" },
-                            { replace: true },
-                          );
-                        }}
-                      >
-                        {t("Изменить параметры курса")}
-                      </button>
-                    )}
-                    <p>
-                      {t(
-                        "Материалы и завершённые этапы сохраняются на сервере. К запуску можно вернуться по этому адресу или из дашборда.",
-                      )}
-                    </p>
-                  </>
-                )
-              )}
-            </section>
+          {(runId || submission !== "idle") && (
+            <GenerationProgress
+              run={run} courseId={courseId} title={settings.title}
+              connection={connection} receivedAt={receivedAt} submission={submission}
+              busy={busy} stopping={stoppingRun === runId && runId !== null}
+              error={error || progressError}
+              onRefresh={() => { setError(null); setVersion(value => value + 1); }}
+              onResume={() => void resume()}
+              onCancel={() => void action(async () => {
+                await api.post(`/generation-runs/${runId}/cancel`);
+                setStoppingRun(runId);
+                setVersion(value => value + 1);
+              })}
+              onRetrySubmission={() => void generate()}
+              onEditSettings={() => {
+                setError(null);
+                setSubmission("idle");
+                setParams({ course: String(courseId), step: submission === "uncertain" ? "4" : "3" }, { replace: true });
+              }}
+            />
           )}
         </div>
       </main>

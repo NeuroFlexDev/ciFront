@@ -8,14 +8,21 @@
   --canvas-muted: #afb2a9;
   --canvas-accent: #caf432;
   --canvas-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
-  min-height: 100vh;
-  max-width: 2040px;
-  margin: auto;
-  padding: 24px clamp(16px, 2vw, 36px) 40px;
+  --canvas-edge: 16px;
+  --canvas-controls-top: 104px;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  isolation: isolate;
   color: var(--canvas-text);
   background: var(--canvas-bg);
   font:
-    14px/1.5 "GolosText",
+    14px/1.5 'GolosText',
     sans-serif;
   color-scheme: dark;
 }
@@ -56,27 +63,31 @@
   flex-shrink: 0;
 }
 .workspaceLoading {
-  min-height: 70vh;
   display: grid;
   place-items: center;
+  padding: 24px;
   color: var(--canvas-muted);
 }
 .toolbar {
+  position: absolute;
+  z-index: 30;
+  inset: var(--canvas-edge) var(--canvas-edge) auto;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto auto;
-  grid-template-areas: "identity ai status" "search controls controls";
+  grid-template-columns: 44px minmax(140px, 1fr) minmax(170px, 280px) auto auto auto;
+  grid-template-areas: 'back identity search ai status controls';
   align-items: center;
-  gap: 20px 24px;
-  padding: 24px;
+  gap: 14px;
+  padding: 12px;
   background: var(--canvas-surface);
-  border: 1px solid #272925;
+  border: 1px solid #30322b;
   border-radius: 28px;
+  box-shadow: 0 10px 36px #0005;
 }
 .toolbarIdentity {
   grid-area: identity;
   min-width: 0;
   display: grid;
-  gap: 8px;
+  gap: 3px;
 }
 .toolbarEyebrow,
 .sectionCaption,
@@ -90,13 +101,16 @@
 .toolbarTitle,
 .sidebarTitle {
   margin: 0;
-  font-family: "Days", "GolosText", sans-serif;
+  font-family: 'Days', 'GolosText', sans-serif;
   font-weight: 400;
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 .toolbarTitle {
-  font-size: clamp(19px, 1.6vw, 28px);
+  font-size: clamp(14px, 1.2vw, 19px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .toolbarSearch {
   grid-area: search;
@@ -151,7 +165,6 @@
 .toolbarControls {
   grid-area: controls;
   justify-content: flex-end;
-  flex-wrap: wrap;
 }
 .toolbarButton,
 .toolbarButtonWide,
@@ -224,52 +237,50 @@
 }
 .toolbarAiPanel {
   position: absolute;
-  z-index: 25;
-  top: calc(100% + 12px);
+  z-index: 35;
+  top: calc(100% + 20px);
   right: 0;
-  width: min(520px, calc(100vw - 48px));
-  max-height: 65vh;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100dvh - 200px);
   overflow: auto;
   padding: 16px;
-  background: #1b1c19;
+  background: var(--canvas-surface);
   border: 1px solid #414836;
-  border-radius: 24px;
+  border-radius: 28px;
   box-shadow: 0 20px 60px #0008;
   animation: panel-enter 180ms var(--canvas-ease);
 }
 .toolbarStatus {
   grid-area: status;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+  max-width: 165px;
   color: var(--canvas-muted);
-  font-size: 12px;
+  font-size: 10px;
+  text-align: right;
 }
 .toolbarStatus [data-unsaved] {
   color: var(--canvas-accent);
 }
-.workspaceShell {
-  display: grid;
-  grid-template-columns: 206px minmax(0, 1fr) 320px;
-  align-items: start;
-  gap: 18px;
-  margin-top: 20px;
+.toolbarStatus :global(.language-picker) {
+  margin: 0;
+  font-size: 11px;
+  gap: 6px;
 }
-.leftPanelSlot,
-.sidebarSlot {
-  min-width: 0;
+.toolbarStatus :global(.language-picker) > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
-.leftPanel,
-.sidebar,
-.workspaceMain {
-  background: var(--canvas-surface);
-  border: 1px solid #282b24;
-  border-radius: 26px;
-  min-width: 0;
+.toolbarStatus :global(.language-picker) select {
+  padding: 4px 8px;
 }
 .leftPanel,
 .sidebar {
+  min-width: 0;
   padding: 20px;
   display: grid;
   align-content: start;
@@ -330,7 +341,8 @@
   flex-shrink: 0;
 }
 .boardFrame {
-  position: relative;
+  position: absolute;
+  inset: 0;
 }
 .emptyBoard {
   position: absolute;
@@ -352,7 +364,7 @@
 }
 .emptyBoard h2 {
   margin: 0;
-  font-family: "Days", "GolosText", sans-serif;
+  font-family: 'Days', 'GolosText', sans-serif;
   font-weight: 400;
   font-size: 20px;
   line-height: 1.4;
@@ -408,35 +420,26 @@
   color: var(--canvas-text);
 }
 .workspaceMain {
-  display: flex;
-  flex-direction: column;
+  position: absolute;
+  inset: 0;
+  min-width: 0;
   overflow: hidden;
 }
-.workspaceBreadcrumbs,
 .workspaceStatusBar {
+  position: absolute;
+  z-index: 14;
+  bottom: var(--canvas-edge);
+  left: var(--canvas-edge);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  padding: 16px;
-}
-.workspaceBreadcrumbs {
-  border-bottom: 1px solid #2c2f27;
-}
-.backLink {
-  min-height: 38px;
-  font-size: 12px;
+  max-width: calc(100% - 310px);
   padding: 8px 12px;
-  background: transparent;
-}
-.workspaceHint {
-  flex-basis: 100%;
-  color: var(--canvas-muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-.workspaceStatusBar {
-  border-top: 1px solid #2c2f27;
+  background: var(--canvas-surface);
+  border: 1px solid var(--canvas-line);
+  border-radius: 24px;
+  box-shadow: 0 8px 24px #0004;
 }
 .workspaceStatusItem {
   display: flex;
@@ -452,36 +455,45 @@
   margin-left: auto;
 }
 .canvasStage {
-  position: relative;
-  height: clamp(520px, calc(100dvh - 290px), 960px);
-  min-height: 520px;
-  background: #0c0e0b;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #0c0d12;
 }
 .canvasStage :global(.react-flow__selection) {
   background: #caf43212;
   border-color: #caf432;
+}
+.canvasStage :global(.react-flow__attribution) {
+  bottom: 0;
+  left: var(--canvas-edge);
+  margin: 0;
+  padding: 0 4px;
+  font-size: 9px;
+  line-height: 14px;
+  background: #141414;
+  color: #afb2a9;
+}
+.canvasStage :global(.react-flow__attribution a) {
+  color: inherit;
 }
 .canvasStage :global(.react-flow__node:focus-visible) {
   outline: 2px solid #caf432;
   outline-offset: 7px;
   border-radius: 26px;
 }
-.proposalReview:empty {
-  display: none;
-}
-.proposalReview {
-  max-height: 45vh;
-  overflow: auto;
-}
-.workspaceMain > :global(.draft-notice),
+.feedbackDock :global(.draft-notice),
 .searchNotice,
 .aiNotice,
 .errorBanner {
-  margin: 12px 16px;
+  margin: 0;
   padding: 12px 14px;
-  border-radius: 16px;
-  font-size: 13px;
+  border-radius: 20px;
+  font-size: 12px;
   line-height: 1.6;
+  box-shadow: 0 8px 24px #0004;
 }
 .searchNotice,
 .aiNotice {
@@ -524,12 +536,11 @@
 }
 .minimapShell {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
-  z-index: 4;
-  width: 184px;
-  border-radius: 20px;
-  background: #141810ed;
+  right: 0;
+  bottom: calc(100% + 12px);
+  width: 224px;
+  border-radius: 24px;
+  background: var(--canvas-surface);
   border: 1px solid #414b31;
   overflow: hidden;
   box-shadow: 0 10px 30px #0005;
@@ -757,8 +768,8 @@
 .nodeTitle {
   margin-top: 16px;
   font:
-    15px/1.45 "Days",
-    "GolosText",
+    15px/1.45 'Days',
+    'GolosText',
     sans-serif;
   overflow-wrap: anywhere;
 }
@@ -811,9 +822,6 @@
   font-size: 10px;
   white-space: nowrap;
 }
-.mobilePanels {
-  display: none;
-}
 @keyframes panel-enter {
   from {
     opacity: 0;
@@ -849,221 +857,347 @@
     transform: translateY(-2px);
   }
 }
-@media (min-width: 1550px) {
-  .workspaceShell {
-    grid-template-columns: 226px minmax(0, 1fr) 352px;
-    gap: 22px;
-  }
-  .sidebar,
-  .leftPanel {
-    padding: 24px;
-  }
+
+.toolbarBack {
+  grid-area: back;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--canvas-accent);
+  border: 1px solid var(--canvas-line);
+  background: #20231c;
 }
-@media (max-width: 1250px) {
-  .workspaceShell {
-    grid-template-columns: minmax(0, 1fr) 300px;
-  }
-  .leftPanelSlot {
-    grid-column: 1/-1;
-  }
-  .leftPanel {
-    grid-template-columns: 170px 1fr 200px;
-    gap: 20px;
-    padding: 16px;
-    align-items: start;
-  }
-  .paletteGrid {
-    grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
-  }
-  .paletteButton {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    min-height: 44px;
-  }
-  .leftPanelHint {
-    font-size: 11px;
-  }
-  .toolbar {
-    gap: 16px;
-    padding: 20px;
-  }
-  .toolbarControls {
-    gap: 6px;
-  }
-  .toolbarButtonWide {
-    font-size: 12px !important;
-    padding: 10px 13px;
-  }
+.panelToggles {
+  position: absolute;
+  z-index: 24;
+  inset: var(--canvas-controls-top) var(--canvas-edge) auto;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
 }
-@media (max-width: 900px) {
+.panelToggles button {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 24px;
+  color: var(--canvas-text);
+  background: var(--canvas-surface);
+  border: 1px solid var(--canvas-line);
+  box-shadow: 0 6px 20px #0004;
+  cursor: pointer;
+}
+.panelToggles button[aria-expanded='true'] {
+  color: #141414;
+  background: var(--canvas-accent);
+  border-color: var(--canvas-accent);
+}
+.selectionCount {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 50%;
+  background: #41472d;
+  color: #efffd0;
+  font-size: 11px;
+}
+.floatingPanel {
+  position: absolute;
+  z-index: 25;
+  top: calc(var(--canvas-controls-top) + 56px);
+  width: 288px;
+  max-height: calc(100% - var(--canvas-controls-top) - 144px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #34382e;
+  border-radius: 32px;
+  background: var(--canvas-surface);
+  box-shadow: 0 16px 48px #0006;
+  animation: panel-enter 180ms var(--canvas-ease);
+}
+.floatingPanel[hidden] {
+  display: none;
+}
+.floatingPanel[data-side='left'] {
+  left: var(--canvas-edge);
+}
+.floatingPanel[data-side='right'] {
+  right: var(--canvas-edge);
+  width: 344px;
+}
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 12px 16px 12px 20px;
+  border-bottom: 1px solid #30332b;
+}
+.panelHeader h2 {
+  margin: 0;
+  font:
+    400 15px/1.4 'Days',
+    'GolosText',
+    sans-serif;
+}
+.panelHeader .iconButton {
+  width: 36px;
+  height: 36px;
+}
+.panelBody {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #4d5835 transparent;
+}
+.panelBody > .utilityButton {
+  margin: 0 20px 20px;
+}
+.feedbackDock {
+  position: absolute;
+  z-index: 12;
+  bottom: 88px;
+  left: var(--canvas-edge);
+  width: min(410px, calc(100% - 32px));
+  max-height: 27dvh;
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+.feedbackDock:empty {
+  display: none;
+}
+.feedbackDock :global(.draft-notice) {
+  background: #1d2415;
+}
+.reviewOverlay {
+  position: absolute;
+  z-index: 28;
+  top: calc(var(--canvas-controls-top) + 56px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, calc(100% - 32px));
+  max-height: calc(100% - var(--canvas-controls-top) - 144px);
+  overflow: auto;
+  border-radius: 28px;
+  background: var(--canvas-surface);
+  border: 1px solid #606e39;
+  box-shadow: 0 20px 60px #0009;
+  overscroll-behavior: contain;
+}
+.reviewOverlay :global(.request-state) {
+  margin: 0;
+  min-height: 0;
+  padding: 24px;
+}
+.navigationDock {
+  position: absolute;
+  z-index: 20;
+  bottom: var(--canvas-edge);
+  right: var(--canvas-edge);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  background: var(--canvas-surface);
+  border: 1px solid #3e4533;
+  border-radius: 28px;
+  box-shadow: 0 10px 30px #0005;
+}
+.navigationDock button,
+.minimapDisclosure summary {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--canvas-text);
+  cursor: pointer;
+  list-style: none;
+}
+.minimapDisclosure summary::-webkit-details-marker {
+  display: none;
+}
+.minimapDisclosure[open] summary {
+  color: #141414;
+  background: var(--canvas-accent);
+}
+.navigationDock button:hover:not(:disabled) {
+  background: #2b3022;
+}
+.zoomValue {
+  min-width: 48px;
+  text-align: center;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1150px) {
   .workspacePage {
-    padding: 16px 16px 30px;
+    --canvas-controls-top: 150px;
   }
   .toolbar {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "identity identity" "search search" "controls controls" "ai status";
+    grid-template-columns: 44px minmax(0, 1fr) auto auto;
+    grid-template-areas: 'back identity ai controls' 'search search status status';
+    gap: 8px 12px;
   }
-  .toolbarControls {
-    justify-content: flex-start;
+  .toolbarSearch {
+    min-height: 40px;
+  }
+  .toolbarSearch input {
+    min-height: 38px;
   }
   .toolbarStatus {
+    max-width: none;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    gap: 12px;
+  }
+  .toolbarAiPanel {
+    right: -110px;
+  }
+}
+@media (max-width: 760px) {
+  .workspacePage {
+    --canvas-edge: 10px;
+    --canvas-controls-top: 146px;
+  }
+  .toolbar {
+    grid-template-columns: 36px minmax(0, 1fr) auto auto;
+    grid-template-areas: 'back identity identity controls' 'search search ai status';
+    padding: 10px;
+    gap: 10px 6px;
+    border-radius: 24px;
+  }
+  .toolbarBack {
+    width: 36px;
+    height: 40px;
+  }
+  .toolbarTitle {
+    font-size: 14px;
+  }
+  .toolbarEyebrow {
+    font-size: 9px;
+  }
+  .toolbarButtonWide {
+    padding: 10px 12px;
+    min-height: 40px;
+    font-size: 12px !important;
+  }
+  .toolbarSearch {
+    gap: 5px;
+    padding-left: 10px;
+  }
+  .toolbarSearch > svg {
+    display: none;
+  }
+  .toolbarSearch input {
+    font-size: 12px;
+  }
+  .toolbarAiHeader {
     font-size: 11px;
+    padding: 8px;
+    min-height: 40px;
+    gap: 5px;
+  }
+  .toolbarAiHeader > svg:last-child {
+    display: none;
+  }
+  .toolbarAi {
+    position: static;
   }
   .toolbarAiPanel {
     left: 0;
-    right: auto;
+    right: 0;
+    top: calc(100% + 12px);
+    width: 100%;
   }
-  .mobilePanels {
-    display: flex;
-    gap: 5px;
-    background: #141414;
-    border: 1px solid #2f3427;
-    border-radius: 26px;
-    padding: 5px;
-    margin-top: 16px;
+  .toolbarStatus {
+    justify-content: end;
   }
-  .mobilePanels button {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 44px;
-    padding: 10px 12px;
-    color: #d6dacd;
-    border: 0;
-    border-radius: 22px;
-    background: transparent;
-    cursor: pointer;
+  .toolbarStatus > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
-  .mobilePanels button[aria-pressed="true"] {
-    background: #caf432;
-    color: #141414;
+  .toolbarStatus select {
+    padding: 6px;
+    font-size: 12px;
   }
-  .workspaceShell {
-    display: block;
-    margin-top: 12px;
+  .panelToggles button {
+    font-size: 12px;
+    padding: 10px 14px;
   }
-  .workspaceShell[data-panel="board"] > .leftPanelSlot,
-  .workspaceShell[data-panel="board"] > .sidebarSlot,
-  .workspaceShell[data-panel="tools"] > .workspaceMain,
-  .workspaceShell[data-panel="tools"] > .sidebarSlot,
-  .workspaceShell[data-panel="properties"] > .workspaceMain,
-  .workspaceShell[data-panel="properties"] > .leftPanelSlot {
-    display: none;
+  .floatingPanel,
+  .floatingPanel[data-side='right'] {
+    width: min(344px, calc(100% - 20px));
   }
-  .leftPanel {
-    display: grid;
-    grid-template-columns: 1fr;
+  .floatingPanel {
+    max-height: calc(100% - var(--canvas-controls-top) - 136px);
+    border-radius: 28px;
   }
-  .modeRail {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .modeRail > * {
-    flex: 1;
-  }
-  .paletteGrid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  }
-  .paletteButton {
-    display: grid;
+  .leftPanel,
+  .sidebar {
     padding: 18px;
   }
-  .sidebar {
-    max-width: none;
-    grid-template-columns: 1fr;
-  }
-  .canvasStage {
-    height: 62dvh;
-    min-height: 430px;
-  }
-  .sidebarGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .sidebarAiBlock .aiActions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .minimapShell {
-    width: 140px;
-    right: 10px;
-    bottom: 10px;
-  }
-  .minimap {
-    height: 85px;
+  .feedbackDock {
+    bottom: 132px;
+    max-height: 20dvh;
+    width: min(360px, calc(100% - 20px));
   }
   .workspaceStatusBar {
-    gap: 8px;
+    bottom: 72px;
+    max-width: calc(100% - 20px);
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .workspaceStatusItem {
+    font-size: 10px;
   }
   .statusAction {
-    margin-left: 0;
+    font-size: 10px !important;
+    padding: 6px 8px;
+    min-height: 30px;
   }
-  .toolbarTitle {
-    font-size: 22px;
-  }
-}
-@media (max-width: 480px) {
   .emptyBoard {
-    padding: 24px 20px;
-    gap: 14px;
+    top: 55%;
+    width: calc(100% - 28px);
+    max-width: 410px;
+    padding: 22px;
+    gap: 12px;
   }
   .emptyBoard h2 {
     font-size: 17px;
   }
-  .toolbar {
-    padding: 18px 16px;
-    border-radius: 24px;
-  }
-  .toolbarControls {
-    display: grid;
-    grid-template-columns: 44px 44px 1fr;
-    align-items: stretch;
-  }
-  .saveButton {
-    grid-column: 1/-1;
-  }
-  .toolbarButtonWide {
-    font-size: 12px !important;
-  }
-  .toolbarTitle {
-    font-size: 20px;
-  }
-  .toolbarAiHeader {
-    font-size: 12px;
-    padding: 12px;
-  }
-  .mobilePanels button {
-    padding: 10px 6px;
+  .emptyBoard p {
     font-size: 12px;
   }
-  .mobilePanels svg {
-    width: 14px;
+}
+@media (max-height: 600px) and (min-width: 761px) {
+  .floatingPanel,
+  .reviewOverlay {
+    top: var(--canvas-controls-top);
+    max-height: calc(100% - var(--canvas-controls-top) - 74px);
   }
-  .paletteGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .panelToggles {
+    inset: auto auto var(--canvas-edge) var(--canvas-edge);
+    gap: 8px;
   }
-  .paletteButton {
-    display: flex;
-    padding: 14px 10px;
-  }
-  .aiActionsCompact,
-  .sidebarAiBlock .aiActions {
-    grid-template-columns: 1fr;
-  }
-  .toolbarStatus {
-    max-width: 145px;
-    text-align: right;
-  }
-  .sidebar,
-  .leftPanel {
-    padding: 18px;
-  }
-  .workspaceBreadcrumbs {
-    padding: 12px;
-  }
-  .workspaceHint {
-    font-size: 11px;
+  .workspaceStatusBar {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

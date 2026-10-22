@@ -224,6 +224,8 @@ export const adminEditorEnglish: Record<string, string> = {
   Иллюстрация: "Illustration",
   "Иллюстрация недоступна в вашем сеансе.":
     "This image is unavailable in your session.",
+  "Иллюстрация временно недоступна. Повторите загрузку.":
+    "The image is temporarily unavailable. Please reload it.",
   "Загрузить изображение снова": "Reload image",
   "Загружаем иллюстрацию…": "Loading image…",
   "Государственный заказчик": "Government customer",
