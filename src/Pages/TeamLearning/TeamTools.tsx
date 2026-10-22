@@ -3,21 +3,28 @@ import { useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { RequestError } from "@/Components/RequestState";
 import s from "../Learning/learning.module.css";
+import { useAuth } from '@/auth/useAuth';
+import { isBusiness } from '@/shared/business';
 export function TeamTabs() {
   const { t } = useLocale();
+  const { user } = useAuth();
 
   return (
     <nav
       className={`${s.tablist} ${s.teamNavigation}`}
       aria-label={t("Управление обучением")}
     >
-      {[
+      {(isBusiness(user) ? [
+        ['/company', t('Дашборд')], ['/company?tab=employees', t('Персонал')],
+        ['/learning-analytics', t('Результаты')],
+        ...(user?.organization_role === 'owner' ? [['/team-settings', t('Настройки')]] : []),
+      ] : [
         ["/groups", t("Команда и группы")],
         ["/assignments", t("Назначения")],
         ["/programs", t("Программы")],
         ["/learning-analytics", t("Результаты")],
         ["/team-settings", t("Настройки")],
-      ].map(([to, label]) => (
+      ]).map(([to, label]) => (
         <NavLink key={to} to={to}>
           {t(String(label))}
         </NavLink>

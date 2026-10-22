@@ -122,7 +122,10 @@ const roleLabels: Record<string, string> = {
   reviewer: 'Проверяющий',
   manager: 'Руководитель',
   member: 'Участник',
+  candidate: 'Кандидат',
 };
+const companyRoles = { owner: 'Владелец', manager: 'Руководитель', member: 'Сотрудник', candidate: 'Кандидат' };
+const rolesForKind = (kind?: string) => Object.entries(kind === 'business' ? companyRoles : roleLabels).filter(([key]) => kind === 'business' || key !== 'candidate');
 const kinds: Record<string, string> = {
   business: 'Компания',
   education: 'Образовательная организация',
@@ -944,20 +947,7 @@ export default function AdminPage() {
                         })
                       }
                     >
-                      <option value='member'>{t('Участник')}</option>
-                      <option value='admin'>{t('Администратор')}</option>
-                      <option value='author'>{t('Автор')}</option>
-                      <option value='reviewer'>{t('Проверяющий')}</option>
-                      <option value='manager'>{t('Руководитель')}</option>
-                      <option
-                        value='owner'
-                        disabled={
-                          users.find((item) => item.id === userForm.id)?.organization_role !==
-                          'owner'
-                        }
-                      >
-                        {t('Владелец организации')}
-                      </option>
+                      {rolesForKind(orgOptions.find(o => o.id === userForm.organization_id)?.kind).map(([key, label]) => <option key={key} value={key} disabled={key === 'owner' && users.find(item => item.id === userForm.id)?.organization_role !== 'owner'}>{t(label)}</option>)}
                     </select>
                   </label>
                   <label className={styles.check}>
@@ -1116,7 +1106,7 @@ export default function AdminPage() {
                         <select
                           required
                           value={inviteOrg}
-                          onChange={(e) => setInviteOrg(e.target.value)}
+                          onChange={(e) => { setInviteOrg(e.target.value); setInviteRole('member'); }}
                         >
                           <option value=''>{t('Выберите заказчика')}</option>
                           {orgOptions
@@ -1141,12 +1131,7 @@ export default function AdminPage() {
                       <label>
                         {t('Роль')}
                         <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                          <option value='member'>{t('Участник')}</option>
-                          <option value='admin'>{t('Администратор')}</option>
-                          <option value='author'>{t('Автор')}</option>
-                          <option value='reviewer'>{t('Проверяющий')}</option>
-                          <option value='manager'>{t('Руководитель')}</option>
-                          <option value='owner'>{t('Владелец организации')}</option>
+                          {rolesForKind(orgOptions.find(o => o.id === Number(inviteOrg))?.kind).map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}
                         </select>
                       </label>
                       <button className={styles.primary} disabled={busy}>
@@ -1215,7 +1200,7 @@ export default function AdminPage() {
                                     })
                                   }
                                 >
-                                  {Object.entries(roleLabels).map(([key, value]) => (
+                                  {rolesForKind(orgOptions.find(o => o.id === i.organization_id)?.kind).map(([key, value]) => (
                                     <option key={key} value={key}>
                                       {t(value)}
                                     </option>

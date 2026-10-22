@@ -90,9 +90,13 @@ function PlatformMenu() {
   const business = isBusiness(user);
   const manager = isBusinessManager(user);
   const links = manager ? [
-    ['/company', t('Персонал')],
+    ['/company', t('Дашборд')],
+    ['/company?tab=employees', t('Персонал')],
     ...(permissions?.can_report ? [['/learning-analytics', t('Результаты сотрудников')]] : []),
     ['/learning', t('Мои регламенты')],
+  ] : business ? [
+    ['/learning', t('Мои регламенты')],
+    ['/dashboard', t('Мои результаты')],
   ] : [
     ['/dashboard', t('Дашборд')],
     ['/learning', t(business ? 'Мои регламенты' : 'Моё обучение')],
@@ -149,7 +153,7 @@ function PlatformMenu() {
           <NavLink
             key={path}
             to={path}
-            className={({ isActive }) => `${styles.navText} ${isActive ? styles.active : ''}`}
+            className={({ isActive }) => `${styles.navText} ${(path.startsWith('/company') ? path.includes('?') ? location.pathname.startsWith('/company') && !!location.search : location.pathname === '/company' && !location.search : isActive) ? styles.active : ''}`}
           >
             {title}
           </NavLink>

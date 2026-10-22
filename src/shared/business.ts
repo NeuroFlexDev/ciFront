@@ -1,5 +1,7 @@
 import type { AuthUser } from '@/auth/auth-context';
 
+export const businessRoles: Record<string, string> = { owner: 'Владелец', manager: 'Руководитель', member: 'Сотрудник', candidate: 'Кандидат' };
+
 export const isBusiness = (user: AuthUser | null | undefined) =>
   user?.organization_kind === 'business' && !user.is_admin;
 export const isBusinessManager = (user: AuthUser | null | undefined) =>
