@@ -944,6 +944,7 @@ function PositionDetail({ position, onClose }: { position: Position; onClose: ()
               >
                 {t('Открыть курс')}
               </Link>
+              <Link className={styles.secondary} to={`/learning-analytics?course_id=${course.id}`}>{t('Результаты обучения')}</Link>
               {course.publication_status === 'published' && !position.is_archived && (
                 <button
                   className={styles.primary}
