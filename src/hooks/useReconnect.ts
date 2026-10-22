@@ -1,9 +1,11 @@
-import {useEffect,useRef} from 'react';
+import {useEffect,useLayoutEffect,useRef} from 'react';
 
 /** Only idempotent reads subscribe here; a failed write always needs an explicit retry. */
 export function useReconnect(retry:()=>void) {
   const ref=useRef(retry);
-  useEffect(()=>{ref.current=retry;},[retry]);
+  // Session renewal can arrive after a commit but before passive effects run.
+  // Publish the callback for the committed UI before processing that event.
+  useLayoutEffect(()=>{ref.current=retry;},[retry]);
   useEffect(()=>{
     const listener=()=>ref.current();
     window.addEventListener('online',listener);

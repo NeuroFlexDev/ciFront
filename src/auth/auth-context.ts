@@ -8,6 +8,7 @@ export type AuthUser = {
   is_admin?: boolean;
   organization_id?: number | null;
   organization_role?: string;
+  organization_kind?: string | null;
 };
 
 export type AuthPayload = {

@@ -25,7 +25,7 @@ it('does not authenticate a password-only MFA response and preserves a rejected 
    if(path.endsWith('/auth/mfa/verify'))return ++attempts===1?response({detail:'Код неверен, уже использован или истёк. Введите новый код либо код восстановления.'},400):response(verified);
    return response({registration_enabled:true});
  }));
- render(<MemoryRouter initialEntries={['/auth']}><AuthProvider><Routes><Route path="/auth" element={<AuthPage/>}/><Route path="/admin" element={<h1>Operator</h1>}/></Routes></AuthProvider></MemoryRouter>);
+ render(<MemoryRouter initialEntries={['/auth']}><AuthProvider><Routes><Route path="/auth" element={<AuthPage/>}/><Route path="/dashboard" element={<h1>Platform session</h1>}/></Routes></AuthProvider></MemoryRouter>);
  fireEvent.change(screen.getByLabelText('Ваша почта'),{target:{value:user.email}});
  fireEvent.change(screen.getByLabelText('Пароль'),{target:{value:'private-password'}});
  fireEvent.click(screen.getByRole('button',{name:'Войти'}));
@@ -38,7 +38,7 @@ it('does not authenticate a password-only MFA response and preserves a rejected 
  expect(JSON.stringify(localStorage)).not.toMatch(/private-password|challenge-not-a-jwt|123456/);
  fireEvent.change(field,{target:{value:'654321'}});
  fireEvent.click(screen.getByRole('button',{name:'Подтвердить вход'}));
- expect(await screen.findByText('Operator')).toBeInTheDocument();
+ expect(await screen.findByText('Platform session')).toBeInTheDocument();
  expect(getAuthToken()).toBe('mfa-verified');
 });
 

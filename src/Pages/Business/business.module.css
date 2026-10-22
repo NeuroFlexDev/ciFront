@@ -1,0 +1,236 @@
+.journey {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 24px 28px;
+  background: #191e12;
+  border: 1px solid #37421e;
+  border-radius: 24px;
+  margin-bottom: 32px;
+  color: #caf432;
+}
+.journey span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 32px 0 24px;
+  border-bottom: 1px solid #303030;
+  padding-bottom: 16px;
+}
+.tabs button {
+  background: none;
+  color: #aaa;
+  border: 1px solid #3c3c3c;
+  border-radius: 24px;
+  padding: 12px 22px;
+  font: inherit;
+  cursor: pointer;
+}
+.tabs button[aria-selected='true'] {
+  color: #12160b;
+  background: #caf432;
+  border-color: #caf432;
+}
+.toolbar,
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.toolbar {
+  justify-content: space-between;
+  margin: 20px 0;
+}
+.actions {
+  margin-top: 12px;
+}
+.position {
+  gap: 14px;
+}
+.position > svg {
+  color: #caf432;
+}
+.position h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.position .actions {
+  margin-top: auto;
+}
+.counts {
+  display: flex;
+  gap: 20px;
+  color: #bbb;
+  font-size: 14px;
+}
+.form {
+  display: grid;
+  gap: 18px;
+  margin: 20px 0;
+}
+.form label,
+.search {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.form input,
+.form textarea,
+.form select,
+.search input,
+.picker select {
+  font: inherit;
+  background: #1b1b1b;
+  color: #fff;
+  border: 1px solid #484848;
+  border-radius: 12px;
+  padding: 12px 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.form input:focus,
+.form textarea:focus,
+.picker select:focus,
+.search input:focus {
+  outline: 2px solid #caf432;
+  outline-offset: 2px;
+}
+.toolbar .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.check input {
+  accent-color: #caf432;
+}
+.error {
+  color: #ffb5a2 !important;
+  background: #341b16;
+  border-radius: 12px;
+  padding: 16px;
+}
+.success {
+  color: #d9eeaa !important;
+  background: #232c15;
+  border-radius: 12px;
+  padding: 16px;
+}
+.tableWrap {
+  overflow: auto;
+  border: 1px solid #303030;
+  border-radius: 22px;
+  margin-bottom: 24px;
+}
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  text-align: left;
+  font-size: 14px;
+}
+.table th {
+  color: #aaa;
+  font-weight: 400;
+  background: #171717;
+}
+.table td,
+.table th {
+  padding: 18px 20px;
+  border-bottom: 1px solid #2a2a2a;
+}
+.table small,
+.invitation small {
+  display: block;
+  color: #aaa;
+  margin-top: 6px;
+}
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 180px;
+}
+.picker select {
+  min-width: 150px;
+  max-width: 320px;
+}
+.picker button {
+  background: #292929;
+  border: 1px solid #555;
+  border-radius: 8px;
+  color: #fff;
+  padding: 6px;
+  cursor: pointer;
+}
+.invitation,
+.course {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #333;
+  padding: 18px 0;
+  flex-wrap: wrap;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #000b;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.dialog {
+  background: #151515;
+  border: 1px solid #414141;
+  border-radius: 28px;
+  padding: 32px;
+  width: min(850px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  box-shadow: 0 24px 120px #0009;
+}
+.dialog h2 {
+  margin-bottom: 0;
+}
+.prose {
+  white-space: pre-wrap;
+}
+@media (max-width: 700px) {
+  .journey {
+    gap: 12px;
+    padding: 18px;
+  }
+  .dialog {
+    padding: 20px;
+    border-radius: 18px;
+  }
+  .overlay {
+    padding: 10px;
+  }
+  .table td,
+  .table th {
+    padding: 12px;
+  }
+  .tabs {
+    flex-wrap: wrap;
+  }
+  .toolbar {
+    align-items: stretch;
+  }
+  .course {
+    align-items: flex-start;
+  }
+}
