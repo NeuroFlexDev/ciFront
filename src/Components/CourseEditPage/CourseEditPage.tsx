@@ -498,14 +498,6 @@ export default function CourseEditPage() {
             >
               {t("Добавить модуль +")}
             </button>}
-            <button
-              disabled={busy}
-              onClick={() =>
-                setEditing({ kind: "test", courseId: Number(id), title: "" })
-              }
-            >
-              {t("Добавить итоговый вопрос")}
-            </button>
           </div>
           {user?.organization_id && <>
             <p><Link to={`/course-reviews?course=${id}`}>{t("Ссылка для назначенного проверяющего")}</Link></p>
@@ -980,6 +972,14 @@ export default function CourseEditPage() {
                   </button>
                 </article>
               ))}
+              <button
+                disabled={busy}
+                onClick={() =>
+                  setEditing({ kind: "test", courseId: Number(id), title: "" })
+                }
+              >
+                {t("Добавить итоговый вопрос")}
+              </button>
             </details>
           </aside>
         </div>
