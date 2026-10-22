@@ -1,4 +1,5 @@
 import { useLocale } from "@/i18n/useLocale";
+import { pluralForm } from "@/i18n/plurals";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, BookOpen } from "lucide-react";
@@ -14,7 +15,7 @@ import {
 import s from "./learning.module.css";
 
 export default function LearningHome() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   const [history, setHistory] = useState(false);
   const [page, setPage] = useState(0);
@@ -158,7 +159,7 @@ export default function LearningHome() {
                 <BookOpen size={17} strokeWidth={1.5} aria-hidden="true" />
                 {t("Версия") + " "}
                 {a.revision} · {a.lesson_count}
-                {" " + t("уроков")}
+                {" " + t(pluralForm(locale, a.lesson_count, "урок", "урока", "уроков"))}
               </p>
               <div className={s.courseProgress}>
                 <progress
