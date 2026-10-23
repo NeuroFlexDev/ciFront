@@ -62,7 +62,8 @@ export type Organization = {
 };
 export type Member = {
   id: number;
-  email: string;
+  email: string | null;
+  username?: string | null;
   full_name: string;
   is_admin: boolean;
   is_active: boolean;
@@ -1058,7 +1059,7 @@ export default function AdminPage() {
                                   setLink(r.data.url);
                                   setLinkTitle(
                                     t('Восстановление для {v0} · 30 минут', {
-                                      v0: u.email,
+                                      v0: u.email || u.username || u.full_name,
                                     }),
                                   );
                                 })

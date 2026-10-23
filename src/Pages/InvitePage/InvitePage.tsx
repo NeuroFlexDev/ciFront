@@ -136,7 +136,7 @@ export default function InvitePage() {
                     'У вас уже есть аккаунт. Присоединение сохранит ваш пароль и существующие материалы.',
                   )}
                 </p>
-                {auth.user?.email.toLowerCase() === preview.email.toLowerCase() ? (
+                {auth.user?.email?.toLowerCase() === preview.email.toLowerCase() ? (
                   <form onSubmit={submit}>
                     <p>{t('Вы вошли под адресом приглашения.')}</p>
                     <button className={styles.primary} disabled={busy}>

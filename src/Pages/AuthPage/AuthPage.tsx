@@ -20,6 +20,7 @@ export default function AuthPage() {
     const { user, isAuthenticated, isLoading, login, register } = auth;
     const ssoFragment = useRef(new URLSearchParams(window.location.hash.slice(1)));
     const ssoStarted = useRef(false);
+    const emailToken = useRef(new URLSearchParams(window.location.hash.slice(1)).get('email_token'));
     const [ssoHandled, setSsoHandled] = useState(() => ['sso_code', 'lti_code', 'sso_error'].some(key => ssoFragment.current.has(key)));
     const [ssoPending, setSsoPending] = useState(() => ['sso_code', 'lti_code'].some(key => ssoFragment.current.has(key)));
     const completeAuthentication = useRef(auth.completeAuthentication);
@@ -88,7 +89,7 @@ export default function AuthPage() {
     }, []);
     useEffect(() => {
         if (!isLoading && isAuthenticated && !ssoHandled) {
-            const next = params.get('next');
+            const next = emailToken.current ? '/account#email_token=' + encodeURIComponent(emailToken.current) : params.get('next');
             const safe = next && next.startsWith('/') && !next.startsWith('//') && !next.includes('\\') && !next.startsWith('/auth');
             navigate(safe ? next : businessHome(user, homePath), { replace: true });
         }
@@ -148,7 +149,7 @@ export default function AuthPage() {
             <label>{t("Имя") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="given-name" maxLength={80} value={name} onChange={e => setName(e.target.value)} placeholder={t("Иван")}/></label>
             <label>{t("Фамилия") + " "}<span className={styles.optional}>{t("(необязательно)")}</span><input autoComplete="family-name" maxLength={79} value={surname} onChange={e => setSurname(e.target.value)} placeholder={t("Иванов")}/></label>
           </div>}
-          <label>{t("Ваша почта")}<input type="email" autoComplete="email" required maxLength={255} value={email} onChange={e => setEmail(e.target.value)} placeholder="example@company.ru"/></label>
+          <label>{t(isRegistration ? "Ваша почта" : "Почта или логин")}<input type={isRegistration ? "email" : "text"} autoComplete={isRegistration ? "email" : "username"} autoCapitalize="none" spellCheck={false} required maxLength={255} value={email} onChange={e => setEmail(e.target.value)} placeholder={isRegistration ? "example@company.ru" : t("Почта или логин")}/></label>
           <label>{isRegistration ? t("Придумайте пароль") : t("Пароль")}<span className={styles.passwordField}><input type={visible ? 'text' : 'password'} autoComplete={isRegistration ? 'new-password' : 'current-password'} required minLength={isRegistration ? 8 : undefined} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} placeholder={isRegistration ? t("Минимум 8 символов") : t("Введите пароль")}/><button type="button" onClick={() => setVisible(!visible)} aria-label={visible ? t("Скрыть пароль") : t("Показать пароль")}>{visible ? <EyeOff size={20}/> : <Eye size={20}/>}</button></span></label>
           {isRegistration ? <p className={styles.hint}>{t("Используйте длинный пароль, который не повторяется на других сайтах.")}</p> : <Link className={styles.forgot} to="/forgot-password">{t("Не помню пароль")}</Link>}
           {error && <p className={styles.error} role="alert">{error}</p>}

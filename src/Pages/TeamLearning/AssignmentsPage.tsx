@@ -80,7 +80,7 @@ export default function AssignmentsPage() {
     team.data?.members.filter(
       (m) =>
         m.is_active &&
-        `${m.full_name} ${m.email} ${people.data?.items.find((p) => p.user_id === m.id)?.position ?? ""}`
+        `${m.full_name} ${m.email || m.username} ${people.data?.items.find((p) => p.user_id === m.id)?.position ?? ""}`
           .toLowerCase()
           .includes(search.toLowerCase()),
     ) ?? [];
@@ -306,15 +306,15 @@ export default function AssignmentsPage() {
                             onChange={() => toggle("users", m.id)}
                           />
                           <span className={s.avatar}>
-                            {initials(m.full_name || m.email)}
+                            {initials(m.full_name || m.username || m.email || t('Участник'))}
                           </span>
-                          <h3>{m.full_name || m.email}</h3>
+                          <h3>{m.full_name || m.username || m.email || t('Участник')}</h3>
                           <p className={s.accent}>
                             {person?.position ||
                               roleName(m.organization_role) ||
                               t("Участник")}
                           </p>
-                          <span className={s.muted}>{m.email}</span>
+                          <span className={s.muted}>{m.email || m.username}</span>
                         </label>
                       );
                     })}

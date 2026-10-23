@@ -230,7 +230,7 @@ export default function GroupsPage() {
                         >
                           <button
                             className={s.cornerAction}
-                            aria-label={`${t("Карточка и права")} · ${m.full_name || m.email}`}
+                            aria-label={`${t("Карточка и права")} · ${m.full_name || m.username || m.email || t('Участник')}`}
                             aria-expanded={selected === m.id}
                             aria-controls="team-person-details"
                             onClick={() => selectPerson(m.id)}
@@ -242,10 +242,10 @@ export default function GroupsPage() {
                             />
                           </button>
                           <div className={s.avatar}>
-                            {initials(m.full_name || m.email)}
+                            {initials(m.full_name || m.username || m.email || t('Участник'))}
                           </div>
-                          <h3>{m.full_name || m.email}</h3>
-                          <p className={s.muted}>{m.email}</p>
+                          <h3>{m.full_name || m.username || m.email || t('Участник')}</h3>
+                          <p className={s.muted}>{m.email || m.username}</p>
                           <p className={s.accent}>
                             {people.data?.items.find((p) => p.user_id === m.id)
                               ?.position || roleName(m.organization_role)}
@@ -503,7 +503,7 @@ export function GroupForm({
                       )
                     }
                   />
-                  <span>{m.full_name || m.email}</span>
+                  <span>{m.full_name || m.username || m.email || t('Участник')}</span>
                 </label>
               ))}
             <button

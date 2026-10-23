@@ -2,7 +2,8 @@ import { createContext, useContext } from 'react';
 
 export interface AuthUser {
   id: number;
-  email: string;
+  email: string | null;
+  username?: string | null;
   full_name?: string | null;
 }
 

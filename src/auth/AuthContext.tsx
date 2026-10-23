@@ -172,13 +172,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       {renewChallenge?<div className={mfaStyles.dialog}><h2 id="renew-title">{t('Подтвердите двухэтапный вход')}</h2><MFAChallengeForm challenge={renewChallenge} onSuccess={completeAuthentication} onCancel={()=>setRenewChallenge(null)}/></div>:<form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,width:'min(460px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
         onSubmit={async event => {
           event.preventDefault(); if(renewing)return; setRenewing(true); setRenewError('');
-          try { await authenticate('/auth/login', {email:user.email,password}); }
+          try { await authenticate('/auth/login', {email:user.email || user.username || '',password}); }
           catch (error) { if(error instanceof MFAChallengeError){setRenewChallenge(error.challenge);setPassword('');}else setRenewError(errorMessage(error)); }
           finally { setRenewing(false); }
         }}>
         <h2 id="renew-title">{t(sessionChanged?'Сеанс изменился в другой вкладке':'Сессия истекла')}</h2>
         {sessionChanged&&<p>{t('Запросы этой страницы приостановлены, чтобы изменения не попали в другой аккаунт. Черновик остаётся у исходного владельца.')}</p>}
-        <p>{t('Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.',{email:user.email})}</p>
+        <p>{t('Войдите снова как {email}. Ваши изменения остаются на странице. После входа повторите сохранение.',{email:user.email || user.username || ''})}</p>
         <label>{t('Пароль')}<input required disabled={renewing} type="password" autoComplete="current-password" value={password}
           onChange={event => setPassword(event.target.value)} /></label>
         {renewError && <p role="alert">{t(renewError)}</p>}

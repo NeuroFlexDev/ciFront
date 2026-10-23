@@ -26,7 +26,7 @@ it('does not authenticate a password-only MFA response and preserves a rejected 
    return response({registration_enabled:true});
  }));
  render(<MemoryRouter initialEntries={['/auth']}><AuthProvider><Routes><Route path="/auth" element={<AuthPage/>}/><Route path="/dashboard" element={<h1>Platform session</h1>}/></Routes></AuthProvider></MemoryRouter>);
- fireEvent.change(screen.getByLabelText('Ваша почта'),{target:{value:user.email}});
+ fireEvent.change(screen.getByLabelText('Почта или логин'),{target:{value:user.email}});
  fireEvent.change(screen.getByLabelText('Пароль'),{target:{value:'private-password'}});
  fireEvent.click(screen.getByRole('button',{name:'Войти'}));
  const field=await screen.findByLabelText('Код подтверждения');
