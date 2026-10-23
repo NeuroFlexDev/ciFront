@@ -1,3 +1,6 @@
+import { useAuth } from '@/auth/useAuth';
+import { isBusiness } from '@/shared/business';
+import businessCss from '../Business/business.module.css';
 import { ArrowUpRight, Network } from 'lucide-react';
 import cs from './myCourses.module.css';
 import { useLocale } from '@/i18n/useLocale';
@@ -17,6 +20,8 @@ type Course = {
 };
 export default function MyCoursesPage() {
   const { t } = useLocale();
+  const { user } = useAuth();
+  const business = isBusiness(user);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [offset, setOffset] = useState(0);
@@ -73,11 +78,12 @@ export default function MyCoursesPage() {
   }
   return (
     <Shell
-      title={t('Мои курсы')}
-      description={t('Ваши материалы, черновики и опубликованные курсы.')}
+      className={business ? businessCss.workspace : ''}
+      title={t(business ? 'Регламенты' : 'Мои курсы')}
+      description={business ? undefined : t('Ваши материалы, черновики и опубликованные курсы.')}
       action={
-        <Link className={styles.primary} to='/express'>
-          {t('Создать курс +')}
+        <Link className={styles.primary} to={business ? '/company?tab=positions' : '/express'}>
+          {t(business ? 'Добавить регламент' : 'Создать курс +')}
         </Link>
       }
     >
@@ -105,9 +111,15 @@ export default function MyCoursesPage() {
       {!loading && !courses.length && !error && (
         <section className={styles.empty}>
           <h2>{filter ? t('В этом разделе пока пусто') : t('Создайте первый курс')}</h2>
-          <p>{t('Начните со своих документов или выберите готовый сценарий настройки.')}</p>
-          <Link className={styles.primary} to='/templates'>
-            {t('Выбрать сценарий')}
+          <p>
+            {t(
+              business
+                ? 'Создайте должность, чтобы собрать для неё регламенты и добавить сотрудников.'
+                : 'Начните со своих документов или выберите готовый сценарий настройки.',
+            )}
+          </p>
+          <Link className={styles.primary} to={business ? '/company?tab=positions' : '/templates'}>
+            {t(business ? 'Открыть должности' : 'Выбрать сценарий')}
           </Link>
         </section>
       )}
@@ -126,14 +138,16 @@ export default function MyCoursesPage() {
                     </span>
                   </div>
                   <div className={cs.quickActions}>
-                    <Link
-                      className={cs.circle}
-                      to={`/courses/${c.id}/canvas`}
-                      aria-label={`${t('Канва')}: ${title}`}
-                      title={t('Канва')}
-                    >
-                      <Network size={23} strokeWidth={1.5} />
-                    </Link>
+                    {!business && (
+                      <Link
+                        className={cs.circle}
+                        to={`/courses/${c.id}/canvas`}
+                        aria-label={`${t('Канва')}: ${title}`}
+                        title={t('Канва')}
+                      >
+                        <Network size={23} strokeWidth={1.5} />
+                      </Link>
+                    )}
                     <Link
                       className={cs.circle}
                       to={href}
@@ -148,16 +162,18 @@ export default function MyCoursesPage() {
                   <h2>
                     <Link to={href}>{title}</Link>
                   </h2>
-                  <dl className={cs.metrics}>
-                    <div>
-                      <dt>{t('Уроки')}</dt>
-                      <dd>{c.lesson_count}</dd>
-                    </div>
-                    <div>
-                      <dt>{t('Модули')}</dt>
-                      <dd>{c.module_count}</dd>
-                    </div>
-                  </dl>
+                  {!business && (
+                    <dl className={cs.metrics}>
+                      <div>
+                        <dt>{t('Уроки')}</dt>
+                        <dd>{c.lesson_count}</dd>
+                      </div>
+                      <div>
+                        <dt>{t('Модули')}</dt>
+                        <dd>{c.module_count}</dd>
+                      </div>
+                    </dl>
+                  )}
                   {c.description && <p className={cs.description}>{c.description}</p>}
                   <div className={cs.actions}>
                     <Link className={cs.open} to={href}>
@@ -178,22 +194,24 @@ export default function MyCoursesPage() {
           })}
         </div>
       )}
-      <div className={styles.row} style={{ marginTop: 28 }}>
-        <button
-          className={styles.secondary}
-          disabled={offset === 0 || loading}
-          onClick={() => setOffset((n) => Math.max(0, n - 20))}
-        >
-          {t('Назад')}
-        </button>
-        <button
-          className={styles.secondary}
-          disabled={courses.length < 20 || loading}
-          onClick={() => setOffset((n) => n + 20)}
-        >
-          {t('Далее')}
-        </button>
-      </div>
+      {(offset > 0 || courses.length >= 20) && (
+        <div className={styles.row} style={{ marginTop: 28 }}>
+          <button
+            className={styles.secondary}
+            disabled={offset === 0 || loading}
+            onClick={() => setOffset((n) => Math.max(0, n - 20))}
+          >
+            {t('Назад')}
+          </button>
+          <button
+            className={styles.secondary}
+            disabled={courses.length < 20 || loading}
+            onClick={() => setOffset((n) => n + 20)}
+          >
+            {t('Далее')}
+          </button>
+        </div>
+      )}
     </Shell>
   );
 }

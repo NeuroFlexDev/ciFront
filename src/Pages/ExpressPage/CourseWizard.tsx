@@ -771,7 +771,7 @@ export default function CourseWizard() {
                 <legend className={styles.srOnly}>
                   {t("Настройки курса")}
                 </legend>
-                <DraftNotice />
+                {!business && <DraftNotice />}
                 {serverSettings &&
                   settings.expected_revision !== serverSettings.revision && (
                     <section className="request-state">

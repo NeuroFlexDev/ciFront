@@ -1,4 +1,4 @@
-import {isAdminSurface, adminAppUrl} from '@/shared/surface';
+import { isAdminSurface, adminAppUrl } from '@/shared/surface';
 import AdminMenu from './AdminMenu';
 import { isBusiness, isBusinessManager, businessHome } from '@/shared/business';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
@@ -89,33 +89,42 @@ function PlatformMenu() {
   const author = permissions?.can_author ?? !user?.organization_id;
   const business = isBusiness(user);
   const manager = isBusinessManager(user);
-  const links = manager ? [
-    ['/company', t('Дашборд')],
-    ['/company?tab=employees', t('Персонал')],
-    ...(permissions?.can_report ? [['/learning-analytics', t('Результаты сотрудников')]] : []),
-    ['/learning', t('Мои регламенты')],
-  ] : business ? [
-    ['/learning', t('Мои регламенты')],
-    ['/dashboard', t('Мои результаты')],
-  ] : [
-    ['/dashboard', t('Дашборд')],
-    ['/learning', t(business ? 'Мои регламенты' : 'Моё обучение')],
-    ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
-    ...(author
+  const companyOverview =
+    location.pathname === '/company' &&
+    (new URLSearchParams(location.search).get('tab') === 'overview' ||
+      (!location.search && user?.organization_role === 'owner'));
+  const companyPersonnel = location.pathname.startsWith('/company') && !companyOverview;
+  const links = manager
+    ? [
+        ['/company?tab=overview', t('Обзор')],
+        ['/company?tab=positions', t('Персонал')],
+        ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
+        ['/courses', t('Регламенты')],
+      ]
+    : business
       ? [
-          ['/courses', t('Курсы')],
-          ['/express', t('Создать курс')],
+          ['/learning', t('Мои регламенты')],
+          ['/dashboard', t('Мои результаты')],
         ]
-      : []),
-    ...(user?.organization_id ? [['/employees', t('Сотрудники')]] : []),
-    ...(permissions?.can_report
-      ? [['/learning-analytics', t('Аналитика')]]
-      : author
-        ? [['/analytics', t('Аналитика')]]
-        : []),
-  ];
+      : [
+          ['/dashboard', t('Дашборд')],
+          ['/learning', t(business ? 'Мои регламенты' : 'Моё обучение')],
+          ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
+          ...(author
+            ? [
+                ['/courses', t('Курсы')],
+                ['/express', t('Создать курс')],
+              ]
+            : []),
+          ...(user?.organization_id ? [['/employees', t('Сотрудники')]] : []),
+          ...(permissions?.can_report
+            ? [['/learning-analytics', t('Аналитика')]]
+            : author
+              ? [['/analytics', t('Аналитика')]]
+              : []),
+        ];
   const extra = [
-    ...(manager ? [['/courses', t('Все регламенты')]] : []),
+    ...(manager ? [['/learning', t('Мои регламенты')]] : []),
     ...(author
       ? [
           ['/templates', t('Сценарии')],
@@ -139,12 +148,10 @@ function PlatformMenu() {
     ...(permissions?.can_manage_team ? [['/integrations', t('Интеграции')]] : []),
     ...(user?.organization_role === 'owner' ? [['/billing', t('Договор и оплата')]] : []),
 
-    ...(user?.organization_role === 'owner'
-      ? [['/support-access', t('Доступ поддержки')]]
-      : []),
+    ...(user?.organization_role === 'owner' ? [['/support-access', t('Доступ поддержки')]] : []),
   ];
   return (
-    <header className={styles.menuContainer}>
+    <header className={`${styles.menuContainer} ${business ? styles.businessMenu : ''}`}>
       <Link className={styles.brand} to={businessHome(user, '/dashboard')}>
         <img src={logo} alt={t('Лерниум')} />
       </Link>
@@ -153,7 +160,16 @@ function PlatformMenu() {
           <NavLink
             key={path}
             to={path}
-            className={({ isActive }) => `${styles.navText} ${(path.startsWith('/company') ? path.includes('?') ? location.pathname.startsWith('/company') && !!location.search : location.pathname === '/company' && !location.search : isActive) ? styles.active : ''}`}
+            aria-current={
+              path.startsWith('/company')
+                ? (path.includes('overview') ? companyOverview : companyPersonnel)
+                  ? 'page'
+                  : false
+                : undefined
+            }
+            className={({ isActive }) =>
+              `${styles.navText} ${(path.startsWith('/company') ? (path.includes('overview') ? companyOverview : companyPersonnel) : isActive) ? styles.active : ''}`
+            }
           >
             {title}
           </NavLink>

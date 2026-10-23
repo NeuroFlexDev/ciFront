@@ -1,10 +1,18 @@
-import { createContext, useContext, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { useDialogFocus } from '@/hooks/useDialogFocus';
+import { createContext, useContext, useState, type FormEvent, type ReactNode } from 'react';
 import { useDurableState } from '@/hooks/useDurableState';
-import DraftNotice from '@/Components/DraftNotice';
+import BusinessDialog from '@/Components/Admin/AdminDialog';
+import Toast from '@/Components/Admin/AdminToast';
 import { useRoleNames } from '../TeamLearning/useRoleNames';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Plus, BriefcaseBusiness, Users, BookOpen, ArrowUpRight } from 'lucide-react';
+import {
+  Plus,
+  BriefcaseBusiness,
+  ArrowUpRight,
+  ArrowLeft,
+  MoreHorizontal,
+  FileText,
+  Search,
+} from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { useLocale } from '@/i18n/useLocale';
 import { api } from '@/shared/api';
@@ -14,7 +22,6 @@ import { LoadingState } from '@/Components/RequestState';
 import StatusPage from '../AccessPage/StatusPage';
 import EntityEditor, { type EditableEntity } from '@/Components/CourseEditPage/EntityEditor';
 import { RequestError } from '@/Components/RequestState';
-import ConfirmationDialog from '../TeamLearning/ManagementConfirmation';
 import css from './business.module.css';
 import BusinessDashboard, { type BusinessOverview } from './BusinessDashboard';
 
@@ -43,7 +50,14 @@ type Employee = {
   manager_id: number | null;
 };
 type Invitation = { id: number; email: string; role: string; position_id: number | null };
-type Course = { id: number; name: string; description?: string; content_revision: number; status: string; publication_status: string };
+type Course = {
+  id: number;
+  name: string;
+  description?: string;
+  content_revision: number;
+  status: string;
+  publication_status: string;
+};
 const blankPosition = { name: '', description: '', responsibilities: '', competencies: '' };
 
 function Pager({
@@ -98,18 +112,32 @@ function CompanyWorkspace() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const owner = user?.organization_role === 'owner';
-  const requestedTab = params.get('tab') ?? 'overview';
-  const tab = ['positions', 'employees', 'candidates', ...(owner ? ['managers'] : [])].includes(requestedTab) ? requestedTab : 'overview';
-  const setTab = (value: string) => { setEmployeeOffset(0); setSearch(''); setParams(value === 'overview' ? {} : { tab: value }); };
+  const requestedTab = params.get('tab') ?? (owner ? 'overview' : 'positions');
+  const tab = ['positions', 'employees', 'candidates', ...(owner ? ['managers'] : [])].includes(
+    requestedTab,
+  )
+    ? requestedTab
+    : 'overview';
+  const setTab = (value: string) => {
+    setEmployeeOffset(0);
+    setSearch('');
+    setParams(value === 'overview' ? {} : { tab: value });
+  };
   const memberRole = tab === 'candidates' ? 'candidate' : tab === 'managers' ? 'manager' : 'member';
-  const managerFilter = owner ? params.get('manager_id') ?? '' : '';
+  const managerFilter = owner ? (params.get('manager_id') ?? '') : '';
   const [archived, setArchived] = useState(false);
   const [positionOffset, setPositionOffset] = useState(0);
   const [employeeOffset, setEmployeeOffset] = useState(0);
   const [search, setSearch] = useState('');
+  const [managing, setManaging] = useState<number | null>(null);
   const [editing, setEditing] = useState<Position | 'new' | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [invite, setInvite, clearInvite] = useDurableState('business-invitation', { email: '', role: 'member', position_id: '', manager_id: '' });
+  const [invite, setInvite, clearInvite] = useDurableState('business-invitation', {
+    email: '',
+    role: 'member',
+    position_id: '',
+    manager_id: '',
+  });
   const [invitationLink, setInvitationLink] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -125,6 +153,7 @@ function CompanyWorkspace() {
   );
   const invitations = useLearningData<{ items: Invitation[] }>('/business/invitations');
   const overview = useLearningData<BusinessOverview>('/business/dashboard');
+  const person = employees.data?.items.find((item) => item.id === managing);
   const options = useContext(PositionOptionsContext)!;
   const refresh = async () => {
     await Promise.all([
@@ -150,6 +179,11 @@ function CompanyWorkspace() {
       setBusy(false);
     }
   }
+  function confirmPerson(value: { label: string; action: () => Promise<void> }) {
+    setManaging(null);
+    setError('');
+    setConfirm(value);
+  }
   async function sendInvite(event: FormEvent) {
     event.preventDefault();
     await mutate(async () => {
@@ -160,7 +194,10 @@ function CompanyWorkspace() {
           role: invite.role,
           position_id:
             invite.role !== 'manager' && invite.position_id ? Number(invite.position_id) : null,
-          manager_id: owner && invite.role !== 'manager' && invite.manager_id ? Number(invite.manager_id) : null,
+          manager_id:
+            owner && invite.role !== 'manager' && invite.manager_id
+              ? Number(invite.manager_id)
+              : null,
           locale,
         },
       );
@@ -171,156 +208,235 @@ function CompanyWorkspace() {
       setMessage(
         t(
           data.mail_status === 'queued'
-            ? 'Приглашение отправлено на почту'
-            : 'Передайте приглашение по ссылке',
+            ? 'Приглашение создано. Письмо готовится к отправке.'
+            : 'Приглашение готово — скопируйте ссылку.',
         ),
       );
     });
   }
   return (
     <Shell
-      title={t(tab === 'overview' ? owner ? 'Дашборд компании' : 'Дашборд моей команды' : 'Персонал')}
-      description={t(
-        owner ? 'Вся компания: руководители, команды и результаты подготовки.' : 'Ваши сотрудники и кандидаты: должности, регламенты, тесты и результаты.',
-      )}
+      className={css.workspace}
+      title={t(tab === 'overview' ? (owner ? 'Моя компания' : 'Моя команда') : 'Персонал')}
       action={
         <button
           className={styles.primary}
           onClick={() => {
+            if (tab === 'positions') {
+              setEditing('new');
+              return;
+            }
             setInviteOpen(true);
             setInvite({ ...invite, role: memberRole });
             setInvitationLink('');
           }}
         >
           <Plus size={18} />
-          {t(owner ? 'Пригласить в компанию' : tab === 'candidates' ? 'Добавить кандидата' : 'Добавить сотрудника')}
+          {t(
+            tab === 'positions'
+              ? 'Добавить должность'
+              : tab === 'managers'
+                ? 'Пригласить руководителя'
+                : tab === 'candidates'
+                  ? 'Добавить кандидата'
+                  : 'Добавить сотрудника',
+          )}
         </button>
       }
     >
-      <div className={css.journey}>
-        <span>
-          <Users size={20} />
-          {t('Команда')}
-        </span>
-        <span>→</span>
-        <span>
-          <BriefcaseBusiness size={20} />
-          {t('Должности')}
-        </span>
-        <span>→</span>
-        <span>
-          <BookOpen size={20} />
-          {t('Регламенты')}
-        </span>
-      </div>
       {error && (
         <p className={css.error} role='alert'>
           {t(error)}
         </p>
       )}
-      {message && (
-        <p className={css.success} role='status'>
-          {message}
-        </p>
+      <Toast message={message} onClose={() => setMessage('')} />
+      {invitationLink && (
+        <BusinessDialog
+          title={t('Приглашение готово')}
+          onClose={() => setInvitationLink('')}
+          className={css.modal}
+        >
+          <CopyLink url={invitationLink} />
+        </BusinessDialog>
       )}
-      <Link className={css.backLink} to='/courses'>{t('Все регламенты')} ↗</Link>
-      {invitationLink && <CopyLink url={invitationLink} />}
       {confirm && (
-        <ConfirmationDialog
-          confirmation={{
-            title: t('Подтверждение действия'),
-            description: confirm.label,
-            confirmLabel: t('Подтвердить'),
-            action: () => mutate(confirm.action),
-          }}
+        <BusinessDialog
+          title={t('Подтверждение действия')}
+          busy={busy}
           onClose={() => setConfirm(null)}
-        />
-      )}
-      {inviteOpen && (
-        <form className={`${styles.panel} ${css.form}`} onSubmit={sendInvite}>
-          <DraftNotice />
-          <h2>{t('Приглашение в компанию')}</h2>
-          <p>
-            {t('Человек получит личную ссылку и сам задаст пароль. Передавать пароли не нужно.')}
-          </p>
-          <label>
-            {t('Электронная почта')}
-            <input
-              type='email'
-              required
-              maxLength={255}
-              value={invite.email}
-              onChange={(e) => setInvite({ ...invite, email: e.target.value })}
-            />
-          </label>
-          {(
-            <label>
-              {t('Роль')}
-              <select
-                value={invite.role}
-                onChange={(e) => setInvite({ ...invite, role: e.target.value, position_id: '' })}
-              >
-                <option value='member'>{t('Сотрудник')}</option>
-                <option value='candidate'>{t('Кандидат')}</option>
-                {owner && <option value='manager'>{roleName('manager')}</option>}
-              </select>
-            </label>
+          className={css.modal}
+        >
+          <p>{confirm.label}</p>
+          {error && (
+            <p className={css.error} role='alert'>
+              {t(error)}
+            </p>
           )}
-          {invite.role !== 'manager' && (
-            <label>
-              {t('Должность')}
-              <PositionPicker
-                value={invite.position_id}
-                onChange={(position_id) => setInvite({ ...invite, position_id })}
-              />
-            </label>
-          )}
-          {owner && invite.role !== 'manager' && <label>{t('Руководитель')}
-            <select value={invite.manager_id} onChange={(e) => setInvite({ ...invite, manager_id: e.target.value })}>
-              <option value=''>{t('Без руководителя — назначить позже')}</option>
-              {overview.data?.managers.filter(m => m.is_active).map(m => <option key={m.id} value={m.id}>{m.full_name || m.email}</option>)}
-            </select>
-          </label>}
-          <p>
-            {t(
-              invite.role === 'manager'
-                ? 'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.'
-                : 'Участник сможет читать назначенные регламенты и проходить тесты. Другие команды ему недоступны.',
-            )}
-          </p>
           <div className={css.actions}>
-            <button className={styles.primary} disabled={busy}>
-              {t('Создать приглашение')}
-            </button>
-            <button
-              type='button'
-              className={styles.secondary}
-              disabled={busy}
-              onClick={() => setInviteOpen(false)}
-            >
+            <button className={styles.secondary} disabled={busy} onClick={() => setConfirm(null)}>
               {t('Отмена')}
             </button>
+            <button
+              className={styles.primary}
+              disabled={busy}
+              onClick={() => void mutate(confirm.action)}
+            >
+              {t('Подтвердить')}
+            </button>
           </div>
-        </form>
+        </BusinessDialog>
       )}
-      <div className={css.tabs} role='tablist' aria-label={t('Управление компанией')}>
-        <button role='tab' aria-selected={tab === 'overview'} onClick={() => setTab('overview')}>{t('Дашборд')}</button>
-        {owner && <button role='tab' aria-selected={tab === 'managers'} onClick={() => setTab('managers')}>{t('Руководители')}</button>}
-        <button role='tab' aria-selected={tab === 'positions'} onClick={() => setTab('positions')}>
-          {t('Должности')}
-        </button>
-        <button role='tab' aria-selected={tab === 'employees'} onClick={() => setTab('employees')}>
-          {t('Сотрудники')}
-        </button>
-        <button role='tab' aria-selected={tab === 'candidates'} onClick={() => setTab('candidates')}>{t('Кандидаты')}</button>
-      </div>
-      {tab === 'overview' ? <>
-        {overview.loading && !overview.data && <LoadingState>{t('Собираем результаты…')}</LoadingState>}
-        {!!overview.error && <RequestError error={overview.error} onRetry={() => void overview.reload()} />}
-        {overview.data && <BusinessDashboard data={overview.data} />}
-      </> : tab === 'positions' ? (
+      {inviteOpen && (
+        <BusinessDialog
+          title={t('Приглашение в компанию')}
+          description={t('Укажите почту и должность. Сотрудник получит личное приглашение.')}
+          onClose={() => setInviteOpen(false)}
+          busy={busy}
+          className={css.modal}
+        >
+          <form className={css.form} onSubmit={sendInvite}>
+            <label>
+              {t('Электронная почта')}
+              <input
+                type='email'
+                required
+                maxLength={255}
+                value={invite.email}
+                onChange={(e) => setInvite({ ...invite, email: e.target.value })}
+              />
+            </label>
+            {
+              <label>
+                {t('Роль')}
+                <select
+                  value={invite.role}
+                  onChange={(e) => setInvite({ ...invite, role: e.target.value, position_id: '' })}
+                >
+                  <option value='member'>{t('Сотрудник')}</option>
+                  <option value='candidate'>{t('Кандидат')}</option>
+                  {owner && <option value='manager'>{roleName('manager')}</option>}
+                </select>
+              </label>
+            }
+            {invite.role !== 'manager' && (
+              <label>
+                {t('Должность')}
+                <PositionPicker
+                  value={invite.position_id}
+                  onChange={(position_id) => setInvite({ ...invite, position_id })}
+                />
+              </label>
+            )}
+            {owner && invite.role !== 'manager' && (
+              <label>
+                {t('Руководитель')}
+                <select
+                  value={invite.manager_id}
+                  onChange={(e) => setInvite({ ...invite, manager_id: e.target.value })}
+                >
+                  <option value=''>{t('Без руководителя — назначить позже')}</option>
+                  {overview.data?.managers
+                    .filter((m) => m.is_active)
+                    .map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.full_name || m.email}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            )}
+            {error && (
+              <p className={css.error} role='alert'>
+                {t(error)}
+              </p>
+            )}
+            <div className={css.actions}>
+              <button className={styles.primary} disabled={busy}>
+                {t('Создать приглашение')}
+              </button>
+              <button
+                type='button'
+                className={styles.secondary}
+                disabled={busy}
+                onClick={() => setInviteOpen(false)}
+              >
+                {t('Отмена')}
+              </button>
+            </div>
+          </form>
+        </BusinessDialog>
+      )}
+      {tab !== 'overview' && (
+        <div
+          className={css.tabs}
+          role='tablist'
+          aria-label={t('Управление компанией')}
+          onKeyDown={(event) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+            const tabs = Array.from(
+              event.currentTarget.querySelectorAll<HTMLButtonElement>('[role=tab]'),
+            );
+            const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
+            if (index < 0) return;
+            event.preventDefault();
+            const next =
+              event.key === 'Home'
+                ? 0
+                : event.key === 'End'
+                  ? tabs.length - 1
+                  : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+            tabs[next].focus();
+            tabs[next].click();
+          }}
+        >
+          {owner && (
+            <button
+              role='tab'
+              aria-selected={tab === 'managers'}
+              onClick={() => setTab('managers')}
+            >
+              {t('Руководители')}
+            </button>
+          )}
+          <button
+            role='tab'
+            aria-selected={tab === 'positions'}
+            onClick={() => setTab('positions')}
+          >
+            {t('Должности')}
+          </button>
+          <button
+            role='tab'
+            aria-selected={tab === 'employees'}
+            onClick={() => setTab('employees')}
+          >
+            {t('Сотрудники')}
+          </button>
+          <button
+            role='tab'
+            aria-selected={tab === 'candidates'}
+            onClick={() => setTab('candidates')}
+          >
+            {t('Кандидаты')}
+          </button>
+        </div>
+      )}
+      {tab === 'overview' ? (
+        <>
+          {overview.loading && !overview.data && (
+            <LoadingState>{t('Собираем результаты…')}</LoadingState>
+          )}
+          {!!overview.error && (
+            <RequestError error={overview.error} onRetry={() => void overview.reload()} />
+          )}
+          {overview.data && <BusinessDashboard data={overview.data} />}
+        </>
+      ) : tab === 'positions' ? (
         <section>
           <div className={css.toolbar}>
+            <span className={css.muted}>
+              {t('Должности')}: {positions.data?.total ?? 0}
+            </span>
             <label className={css.check}>
               <input
                 type='checkbox'
@@ -332,10 +448,6 @@ function CompanyWorkspace() {
               />
               {t('Показать архив')}
             </label>
-            <button className={styles.primary} onClick={() => setEditing('new')}>
-              <Plus size={18} />
-              {t('Добавить должность')}
-            </button>
           </div>
           {positions.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
           {!!positions.error && (
@@ -345,63 +457,81 @@ function CompanyWorkspace() {
             </p>
           )}
           {!positions.loading && !positions.error && positions.data?.items.length === 0 && (
-            <div className={styles.panel}>
+            <div className={css.empty}>
               <h2>{t(archived ? 'В архиве пока нет должностей' : 'Начните с первой должности')}</h2>
               <p>
-                {t(
-                  'Добавьте, например, должности «Администратор» и «Старший администратор». В каждой будет свой список регламентов и сотрудников.',
-                )}
+                {t('Создайте должность, чтобы собрать для неё регламенты и добавить сотрудников.')}
               </p>
             </div>
           )}
-          <div className={styles.grid}>
+          <div className={css.positionGrid}>
             {positions.data?.items.map((position) => (
-              <article key={position.id} className={`${styles.card} ${css.position}`}>
-                <BriefcaseBusiness size={26} />
+              <article key={position.id} className={css.position}>
+                <div className={css.cardTop}>
+                  <span className={css.positionIcon}>
+                    <BriefcaseBusiness size={22} />
+                  </span>
+                  <span className={css.muted}>
+                    {t(position.is_archived ? 'Архив' : 'Должность')}
+                  </span>
+                </div>
                 <h2>{position.name}</h2>
-                <p>
-                  {position.description || t('Добавьте описание работы и требования к сотруднику')}
-                </p>
+                <p>{position.description}</p>
                 <div className={css.counts}>
                   <span>
-                    {t('Сотрудники')}: {position.employee_count}
+                    <strong>{position.employee_count}</strong>
+                    {t('Сотрудники')}
                   </span>
                   <span>
-                    {t('Регламенты')}: {position.course_count}
+                    <strong>{position.course_count}</strong>
+                    {t('Регламенты')}
                   </span>
-                  <span>{t('Кандидаты')}: {position.candidate_count ?? 0}</span>
+                  <span>
+                    <strong>{position.candidate_count ?? 0}</strong>
+                    {t('Кандидаты')}
+                  </span>
                 </div>
                 <div className={css.actions}>
-                  <button className={styles.primary} onClick={() => navigate(`/company/positions/${position.id}`)}>
+                  <button
+                    className={css.cardLink}
+                    onClick={() => navigate(`/company/positions/${position.id}`)}
+                  >
                     {t('Открыть должность')}
                     <ArrowUpRight size={16} />
                   </button>
-                  {!position.is_archived && (
-                    <button className={styles.secondary} onClick={() => setEditing(position)}>
-                      {t('Изменить')}
-                    </button>
-                  )}
-                  <button
-                    className={styles.secondary}
-                    disabled={busy}
-                    onClick={() =>
-                      setConfirm({
-                        label: t(
-                          position.is_archived
-                            ? 'Восстановить должность?'
-                            : 'Архивировать должность? Регламенты и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.',
-                        ),
-                        action: async () => {
-                          await api.put(`/business/positions/${position.id}/state`, {
-                            expected_revision: position.revision,
-                            is_archived: !position.is_archived,
-                          });
-                        },
-                      })
-                    }
-                  >
-                    {t(position.is_archived ? 'Восстановить' : 'В архив')}
-                  </button>
+                  <details className={css.more}>
+                    <summary aria-label={`${t('Действия')}: ${position.name}`}>
+                      <MoreHorizontal size={20} />
+                    </summary>
+                    <div>
+                      {!position.is_archived && (
+                        <button className={styles.secondary} onClick={() => setEditing(position)}>
+                          {t('Изменить')}
+                        </button>
+                      )}
+                      <button
+                        className={styles.secondary}
+                        disabled={busy}
+                        onClick={() =>
+                          setConfirm({
+                            label: t(
+                              position.is_archived
+                                ? 'Восстановить должность?'
+                                : 'Архивировать должность? Регламенты и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.',
+                            ),
+                            action: async () => {
+                              await api.put(`/business/positions/${position.id}/state`, {
+                                expected_revision: position.revision,
+                                is_archived: !position.is_archived,
+                              });
+                            },
+                          })
+                        }
+                      >
+                        {t(position.is_archived ? 'Восстановить' : 'В архив')}
+                      </button>
+                    </div>
+                  </details>
                 </div>
               </article>
             ))}
@@ -416,7 +546,8 @@ function CompanyWorkspace() {
         <section>
           <div className={css.toolbar}>
             <label className={css.search}>
-              {t('Поиск участника')}
+              <span className={css.srOnly}>{t('Поиск участника')}</span>
+              <Search size={18} aria-hidden='true' />
               <input
                 type='search'
                 value={search}
@@ -431,12 +562,25 @@ function CompanyWorkspace() {
               {t('Всего')}: {employees.data?.total ?? 0}
             </span>
           </div>
-          {owner && tab !== 'managers' && <label className={css.picker}>{t('Руководитель')}
-            <select value={managerFilter} onChange={(e) => { setEmployeeOffset(0); setParams({ tab, ...(e.target.value ? { manager_id: e.target.value } : {}) }); }}>
-              <option value=''>{t('Все руководители')}</option>
-              {overview.data?.managers.map(m => <option key={m.id} value={m.id}>{m.full_name || m.email}</option>)}
-            </select>
-          </label>}
+          {owner && tab !== 'managers' && (
+            <label className={css.picker}>
+              {t('Руководитель')}
+              <select
+                value={managerFilter}
+                onChange={(e) => {
+                  setEmployeeOffset(0);
+                  setParams({ tab, ...(e.target.value ? { manager_id: e.target.value } : {}) });
+                }}
+              >
+                <option value=''>{t('Все руководители')}</option>
+                {overview.data?.managers.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.full_name || m.email}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {employees.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
           {!!employees.error && (
             <p role='alert'>
@@ -449,157 +593,266 @@ function CompanyWorkspace() {
               <thead>
                 <tr>
                   <th>{t('Участник')}</th>
-                  <th>{t('Роль')}</th>
                   <th>{t('Должность')}</th>
-                  {owner && tab !== 'managers' && <th>{t('Руководитель')}</th>}
                   <th>{t('Доступ')}</th>
+                  <th>
+                    <span className={css.srOnly}>{t('Действия')}</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {employees.data?.items.map((person) => (
                   <tr key={person.id}>
                     <td>
-                      <strong>{person.full_name || person.email}</strong>
-                      <small>{person.email}</small>
+                      <div className={css.personCell}>
+                        <span className={css.avatar} aria-hidden='true'>
+                          {(person.full_name || person.email).slice(0, 1).toUpperCase()}
+                        </span>
+                        <div>
+                          <strong>{person.full_name || person.email}</strong>
+                          <small>{person.email}</small>
+                        </div>
+                      </div>
                     </td>
                     <td>
-                      {roleName(person.organization_role)}
+                      {person.position_name ||
+                        (['manager', 'admin'].includes(person.organization_role)
+                          ? roleName(person.organization_role)
+                          : t('Без должности'))}
                     </td>
                     <td>
-                      {['member', 'candidate'].includes(person.organization_role) && person.is_active ? (
-                        <PositionPicker
-                          currentName={person.position_name}
-                          label={`${t('Должность')}: ${person.email}`}
-                          value={person.position_id ? String(person.position_id) : ''}
-                          disabled={busy}
-                          onChange={(value) =>
-                            void mutate(async () => {
-                              await api.put(`/business/employees/${person.id}/position`, {
-                                position_id: value ? Number(value) : null,
-                                expected_position_id: person.position_id,
-                              });
-                              setMessage(t('Должность сотрудника обновлена'));
-                            })
-                          }
-                        />
-                      ) : (
-                        '—'
-                      )}
+                      <span className={`${css.badge} ${person.is_active ? css.activeBadge : ''}`}>
+                        {t(person.is_active ? 'Активен' : 'Приостановлен')}
+                      </span>
                     </td>
-                    {owner && tab !== 'managers' && <td><div className={css.picker}>
-                      <select aria-label={`${t('Руководитель')}: ${person.email}`} disabled={busy}
-                        value={person.manager_id ?? ''} onChange={(e) => {
-                          const manager_id = e.target.value ? Number(e.target.value) : null;
-                          setConfirm({ label: t('Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.'), action: async () => {
-                            await api.put(`/business/employees/${person.id}/reporting-line`, { manager_id, expected_manager_id: person.manager_id, expected_auth_version: person.auth_version });
-                          }});
-                        }}>
-                        <option value=''>{t('Без руководителя')}</option>
-                        {overview.data?.managers.map(m => <option key={m.id} value={m.id} disabled={!m.is_active}>{m.full_name || m.email}{!m.is_active ? ` (${t('Приостановлен')})` : ''}</option>)}
-                      </select>
-                    </div></td>}
                     <td>
-                      {!person.is_active ? (
-                        t('Приостановлен')
-                      ) : owner && ['member', 'candidate', 'manager', 'admin'].includes(person.organization_role) ? (
-                        <button
-                          className={styles.secondary}
-                          disabled={busy}
-                          onClick={() =>
-                            setConfirm({
-                              label: `${person.full_name || person.email}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
-                              action: async () => {
-                                await api.put(`/business/employees/${person.id}/manager`, {
-                                  role:
-                                    ['member', 'candidate'].includes(person.organization_role) ? 'manager' : 'member',
-                                  expected_auth_version: person.auth_version,
-                                });
-                              },
-                            })
-                          }
-                        >
-                          {t(
-                            ['member', 'candidate'].includes(person.organization_role)
-                              ? 'Назначить управляющим'
-                              : 'Снять полномочия',
-                          )}
-                        </button>
-                      ) : (
-                        t('Активен')
-                      )}
-                      {person.id !== user?.id &&
-                        (['member', 'candidate'].includes(person.organization_role) ||
-                          (owner && ['manager', 'admin'].includes(person.organization_role))) && (
-                          <div className={css.actions}>
-                            <button
-                              className={styles.secondary}
-                              disabled={busy}
-                              onClick={() =>
-                                setConfirm({
-                                  label: `${person.full_name || person.email}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
-                                  action: async () => {
-                                    await api.put(`/business/employees/${person.id}/access`, {
-                                      is_active: !person.is_active,
-                                      expected_auth_version: person.auth_version,
-                                    });
-                                  },
-                                })
-                              }
-                            >
-                              {t(person.is_active ? 'Приостановить доступ' : 'Восстановить доступ')}
-                            </button>
-                          </div>
-                        )}
-                      {['member', 'candidate'].includes(person.organization_role) && <div className={css.actions}>
-                        <Link className={css.backLink} to={`/learning-analytics?user_id=${person.id}`}>{t('Результаты')} ↗</Link>
-                        <button className={styles.secondary} disabled={busy} onClick={() => setConfirm({
-                          label: t(person.organization_role === 'candidate' ? 'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.' : 'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.'),
-                          action: async () => { await api.put(`/business/employees/${person.id}/role`, { role: person.organization_role === 'candidate' ? 'member' : 'candidate', expected_auth_version: person.auth_version }); },
-                        })}>{t(person.organization_role === 'candidate' ? 'Принять в сотрудники' : 'Перевести в кандидаты')}</button>
-                      </div>}
+                      <button
+                        className={css.iconButton}
+                        aria-label={`${t('Настроить доступ')}: ${person.full_name || person.email}`}
+                        onClick={() => {
+                          setError('');
+                          setManaging(person.id);
+                        }}
+                      >
+                        <MoreHorizontal size={20} />
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {!employees.loading && employees.data?.total === 0 && <p>{t('Участники не найдены. Добавьте человека через приглашение или измените поиск.')}</p>}
+          {person && (
+            <BusinessDialog
+              title={person.full_name || person.email}
+              description={person.email}
+              busy={busy}
+              onClose={() => setManaging(null)}
+              className={css.modal}
+            >
+              <div className={css.form}>
+                {error && (
+                  <p role='alert' className={css.error}>
+                    {t(error)}
+                  </p>
+                )}
+                <label>
+                  {t('Должность')}
+                  {['member', 'candidate'].includes(person.organization_role) &&
+                  person.is_active ? (
+                    <PositionPicker
+                      currentName={person.position_name}
+                      label={`${t('Должность')}: ${person.email}`}
+                      value={person.position_id ? String(person.position_id) : ''}
+                      disabled={busy}
+                      onChange={(value) =>
+                        void mutate(async () => {
+                          await api.put(`/business/employees/${person.id}/position`, {
+                            position_id: value ? Number(value) : null,
+                            expected_position_id: person.position_id,
+                          });
+                          setMessage(t('Должность сотрудника обновлена'));
+                        })
+                      }
+                    />
+                  ) : (
+                    '—'
+                  )}
+                </label>
+                {owner && tab !== 'managers' && (
+                  <label className={css.formLabel}>
+                    {t('Руководитель')}
+                    <div className={css.picker}>
+                      <select
+                        aria-label={`${t('Руководитель')}: ${person.email}`}
+                        disabled={busy}
+                        value={person.manager_id ?? ''}
+                        onChange={(e) => {
+                          const manager_id = e.target.value ? Number(e.target.value) : null;
+                          confirmPerson({
+                            label: t(
+                              'Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.',
+                            ),
+                            action: async () => {
+                              await api.put(`/business/employees/${person.id}/reporting-line`, {
+                                manager_id,
+                                expected_manager_id: person.manager_id,
+                                expected_auth_version: person.auth_version,
+                              });
+                            },
+                          });
+                        }}
+                      >
+                        <option value=''>{t('Без руководителя')}</option>
+                        {overview.data?.managers.map((m) => (
+                          <option key={m.id} value={m.id} disabled={!m.is_active}>
+                            {m.full_name || m.email}
+                            {!m.is_active ? ` (${t('Приостановлен')})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </label>
+                )}
+                <div className={css.personActions}>
+                  {!person.is_active ? (
+                    t('Приостановлен')
+                  ) : owner &&
+                    ['member', 'candidate', 'manager', 'admin'].includes(
+                      person.organization_role,
+                    ) ? (
+                    <button
+                      className={styles.secondary}
+                      disabled={busy}
+                      onClick={() =>
+                        confirmPerson({
+                          label: `${person.full_name || person.email}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
+                          action: async () => {
+                            await api.put(`/business/employees/${person.id}/manager`, {
+                              role: ['member', 'candidate'].includes(person.organization_role)
+                                ? 'manager'
+                                : 'member',
+                              expected_auth_version: person.auth_version,
+                            });
+                          },
+                        })
+                      }
+                    >
+                      {t(
+                        ['member', 'candidate'].includes(person.organization_role)
+                          ? 'Назначить управляющим'
+                          : 'Снять полномочия',
+                      )}
+                    </button>
+                  ) : (
+                    t('Активен')
+                  )}
+                  {person.id !== user?.id &&
+                    (['member', 'candidate'].includes(person.organization_role) ||
+                      (owner && ['manager', 'admin'].includes(person.organization_role))) && (
+                      <div className={css.actions}>
+                        <button
+                          className={styles.secondary}
+                          disabled={busy}
+                          onClick={() =>
+                            confirmPerson({
+                              label: `${person.full_name || person.email}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
+                              action: async () => {
+                                await api.put(`/business/employees/${person.id}/access`, {
+                                  is_active: !person.is_active,
+                                  expected_auth_version: person.auth_version,
+                                });
+                              },
+                            })
+                          }
+                        >
+                          {t(person.is_active ? 'Приостановить доступ' : 'Восстановить доступ')}
+                        </button>
+                      </div>
+                    )}
+                  {['member', 'candidate'].includes(person.organization_role) && (
+                    <div className={css.actions}>
+                      <Link
+                        className={css.backLink}
+                        to={`/learning-analytics?user_id=${person.id}`}
+                      >
+                        {t('Результаты')} ↗
+                      </Link>
+                      <button
+                        className={styles.secondary}
+                        disabled={busy}
+                        onClick={() =>
+                          confirmPerson({
+                            label: t(
+                              person.organization_role === 'candidate'
+                                ? 'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.'
+                                : 'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.',
+                            ),
+                            action: async () => {
+                              await api.put(`/business/employees/${person.id}/role`, {
+                                role:
+                                  person.organization_role === 'candidate' ? 'member' : 'candidate',
+                                expected_auth_version: person.auth_version,
+                              });
+                            },
+                          })
+                        }
+                      >
+                        {t(
+                          person.organization_role === 'candidate'
+                            ? 'Принять в сотрудники'
+                            : 'Перевести в кандидаты',
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </BusinessDialog>
+          )}
+          {!employees.loading && employees.data?.total === 0 && (
+            <p>
+              {t('Участники не найдены. Добавьте человека через приглашение или измените поиск.')}
+            </p>
+          )}
           <Pager
             offset={employeeOffset}
             total={employees.data?.total ?? 0}
             onChange={setEmployeeOffset}
           />
-          <section className={styles.panel}>
-            <h2>{t('Ожидают приглашения')}</h2>
-            {!!invitations.error && <p role='alert'>{t(errorText(invitations.error))}</p>}
-            {invitations.data?.items.length === 0 && (
-              <p>{t('Все приглашения приняты или закрыты')}</p>
-            )}
-            {invitations.data?.items.map((item) => (
-              <div className={css.invitation} key={item.id}>
-                <span>
-                  {item.email}
-                  <small>
-                    {roleName(item.role)}
-                  </small>
-                </span>
-                <button
-                  className={styles.secondary}
-                  disabled={busy}
-                  onClick={() =>
-                    setConfirm({
-                      label: `${t('Отозвать приглашение')}: ${item.email}?`,
-                      action: async () => {
-                        await api.delete(`/business/invitations/${item.id}`);
-                      },
-                    })
-                  }
-                >
-                  {t('Отозвать приглашение')}
-                </button>
-              </div>
-            ))}
-          </section>
+          {((invitations.data?.items.length ?? 0) > 0 || !!invitations.error) && (
+            <details className={css.pending}>
+              <summary>
+                {t('Ожидают приглашения')} <span>{invitations.data?.items.length ?? 0}</span>
+              </summary>
+              {!!invitations.error && <p role='alert'>{t(errorText(invitations.error))}</p>}
+              {invitations.data?.items.length === 0 && (
+                <p>{t('Все приглашения приняты или закрыты')}</p>
+              )}
+              {invitations.data?.items.map((item) => (
+                <div className={css.invitation} key={item.id}>
+                  <span>
+                    {item.email}
+                    <small>{roleName(item.role)}</small>
+                  </span>
+                  <button
+                    className={styles.secondary}
+                    disabled={busy}
+                    onClick={() =>
+                      setConfirm({
+                        label: `${t('Отозвать приглашение')}: ${item.email}?`,
+                        action: async () => {
+                          await api.delete(`/business/invitations/${item.id}`);
+                        },
+                      })
+                    }
+                  >
+                    {t('Отозвать приглашение')}
+                  </button>
+                </div>
+              ))}
+            </details>
+          )}
         </section>
       )}
       {editing && (
@@ -716,8 +969,6 @@ function PositionEditor({
   );
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const dialog = useRef<HTMLElement>(null);
-  useDialogFocus(dialog, { busy, onClose });
   async function save(e: FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -738,37 +989,36 @@ function PositionEditor({
     }
   }
   return (
-    <div className={css.overlay}>
-      <section
-        ref={dialog}
-        tabIndex={-1}
-        className={css.dialog}
-        role='dialog'
-        aria-modal='true'
-        aria-labelledby='position-title'
-      >
-        <form className={css.form} onSubmit={save}>
-          <h2 id='position-title'>{t(position ? 'Изменить должность' : 'Новая должность')}</h2>
-          <label>
-            {t('Название должности')}
-            <input
-              autoFocus
-              required
-              maxLength={200}
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder={t('Например, администратор')}
-            />
-          </label>
-          <label>
-            {t('Описание работы')}
-            <textarea
-              maxLength={3000}
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder={t('Чем занимается сотрудник и для кого работает')}
-            />
-          </label>
+    <BusinessDialog
+      title={t(position ? 'Изменить должность' : 'Новая должность')}
+      onClose={onClose}
+      busy={busy}
+      guard
+      className={css.modal}
+    >
+      <form className={css.form} onSubmit={save}>
+        <label>
+          {t('Название должности')}
+          <input
+            autoFocus
+            required
+            maxLength={200}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={t('Например, администратор')}
+          />
+        </label>
+        <label>
+          {t('Описание работы')}
+          <textarea
+            maxLength={3000}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder={t('Чем занимается сотрудник и для кого работает')}
+          />
+        </label>
+        <details className={css.jobDescription}>
+          <summary>{t('Обязанности и навыки')}</summary>
           <label>
             {t('Основные обязанности')}
             <textarea
@@ -789,38 +1039,52 @@ function PositionEditor({
               placeholder={t('Что сотрудник должен знать и уметь после обучения')}
             />
           </label>
-          {error && (
-            <p className={css.error} role='alert'>
-              {t(error)}
-            </p>
-          )}
-          <div className={css.actions}>
-            <button className={styles.primary} disabled={busy}>
-              {t('Сохранить должность')}
-            </button>
-            <button type='button' className={styles.secondary} disabled={busy} onClick={onClose}>
-              {t('Отмена')}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+        </details>
+        {error && (
+          <p className={css.error} role='alert'>
+            {t(error)}
+          </p>
+        )}
+        <div className={css.actions}>
+          <button className={styles.primary} disabled={busy}>
+            {t('Сохранить должность')}
+          </button>
+          <button type='button' className={styles.secondary} disabled={busy} data-dialog-close>
+            {t('Отмена')}
+          </button>
+        </div>
+      </form>
+    </BusinessDialog>
   );
 }
 
 function PositionScreen({ positionId }: { positionId: number }) {
   const { t } = useLocale();
-  const query = useLearningData<Position>(Number.isInteger(positionId) && positionId > 0 ? `/business/positions/${positionId}` : null);
+  const query = useLearningData<Position>(
+    Number.isInteger(positionId) && positionId > 0 ? `/business/positions/${positionId}` : null,
+  );
   if (!Number.isInteger(positionId) || positionId < 1) return <StatusPage code='404' />;
-  return <Shell title={query.data?.name ?? t('Должность')} description={t('Регламенты и требования для этой должности')}>
-    <Link to='/company?tab=positions' className={css.backLink}>← {t('Персонал')} / {t('Должности')}</Link>
-    {query.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
-    {!!query.error && <RequestError error={query.error} onRetry={() => void query.reload()} />}
-    {query.data && <PositionDetail key={positionId} position={query.data} onRefresh={query.reload} />}
-  </Shell>;
+  return (
+    <Shell className={css.workspace} title={query.data?.name ?? t('Должность')}>
+      <Link to='/company?tab=positions' className={css.backLink}>
+        <ArrowLeft size={16} /> {t('Должности')}
+      </Link>
+      {query.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
+      {!!query.error && <RequestError error={query.error} onRetry={() => void query.reload()} />}
+      {query.data && (
+        <PositionDetail key={positionId} position={query.data} onRefresh={query.reload} />
+      )}
+    </Shell>
+  );
 }
 
-function PositionDetail({ position, onRefresh }: { position: Position; onRefresh: () => Promise<void> }) {
+function PositionDetail({
+  position,
+  onRefresh,
+}: {
+  position: Position;
+  onRefresh: () => Promise<void>;
+}) {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
   const [offset, setOffset] = useState(0);
@@ -830,7 +1094,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
   const [newCourse, setNewCourse] = useState(false);
   const [form, setForm, clearForm] = useDurableState(`business-regulation:${position.id}`, {
     title: '',
-    goal: `${t('Подготовить сотрудника к самостоятельному выполнению обязанностей')}: ${position.name}`,
+    goal: '',
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -879,16 +1143,29 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
     <div className={css.positionDetail}>
       <section aria-label={t('Регламенты должности')}>
         <div className={css.toolbar}>
-          <span className={css.counts}>{t('Сотрудники')}: {position.employee_count} · {t('Кандидаты')}: {position.candidate_count ?? 0} · {t('Регламенты')}: {courses.data?.total ?? position.course_count}</span>
-          {!position.is_archived && <button className={styles.secondary} onClick={() => setEditPosition(true)}>{t('Изменить должность')}</button>}
+          <span className={css.counts}>
+            {t('Сотрудники')}: {position.employee_count} · {t('Кандидаты')}:{' '}
+            {position.candidate_count ?? 0} · {t('Регламенты')}:{' '}
+            {courses.data?.total ?? position.course_count}
+          </span>
+          {!position.is_archived && (
+            <button className={styles.secondary} onClick={() => setEditPosition(true)}>
+              {t('Изменить должность')}
+            </button>
+          )}
         </div>
-        <p>{position.description}</p>
-        <details className={css.jobDescription}><summary>{t('Обязанности и навыки')}</summary><h3>{t('Обязанности')}</h3>
-        <p className={css.prose}>{position.responsibilities || '—'}</p>
-        <h3>{t('Навыки')}</h3>
-        <p className={css.prose}>{position.competencies || '—'}</p></details>
+        {position.description && <p>{position.description}</p>}
+        {(position.responsibilities || position.competencies) && (
+          <details className={css.jobDescription}>
+            <summary>{t('Обязанности и навыки')}</summary>
+            <h3>{t('Обязанности')}</h3>
+            <p className={css.prose}>{position.responsibilities || '—'}</p>
+            <h3>{t('Навыки')}</h3>
+            <p className={css.prose}>{position.competencies || '—'}</p>
+          </details>
+        )}
         <div className={css.toolbar}>
-          <h3>{t('Регламенты для должности')}</h3>
+          <h2>{t('Регламенты')}</h2>
           {!position.is_archived && (
             <button className={styles.primary} onClick={() => setNewCourse(!newCourse)}>
               {t('Добавить регламент')}
@@ -896,60 +1173,71 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
           )}
         </div>
         {newCourse && (
-          <form className={css.form} onSubmit={create}>
-            <DraftNotice />
-            <label>
-              {t('Название регламента')}
-              <input
-                required
-                maxLength={200}
-                placeholder={t('Например, 01. Стандарт сервиса')}
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-              />
-            </label>
-            <label>
-              {t('Что регулирует документ')}
-              <textarea
-                required
-                maxLength={2000}
-                value={form.goal}
-                onChange={(e) => setForm({ ...form, goal: e.target.value })}
-              />
-            </label>
+          <BusinessDialog
+            title={t('Новый регламент')}
+            onClose={() => setNewCourse(false)}
+            busy={busy}
+            className={css.modal}
+          >
+            <form className={css.form} onSubmit={create}>
+              <label>
+                {t('Название регламента')}
+                <input
+                  required
+                  maxLength={200}
+                  placeholder={t('Например, 01. Стандарт сервиса')}
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+              </label>
+              <label>
+                {t('Что регулирует документ')}
+                <textarea
+                  required
+                  maxLength={2000}
+                  placeholder={t('Например, как встречать гостей и оформлять запись')}
+                  value={form.goal}
+                  onChange={(e) => setForm({ ...form, goal: e.target.value })}
+                />
+              </label>
 
-            <p>
-              {t(
-                'На следующем шаге добавьте материалы и проверьте план. Обязанности и навыки должности будут учтены при генерации.',
+              <p>{t('Затем добавьте документы, из которых нужно подготовить регламент.')}</p>
+              <button className={styles.primary} disabled={busy}>
+                {t('Добавить материалы')}
+              </button>
+              {error && (
+                <p role='alert' className={css.error}>
+                  {t(error)}
+                </p>
               )}
-            </p>
-            <button className={styles.primary} disabled={busy}>
-              {t('Перейти к материалам и настройкам')}
-            </button>
-          </form>
+            </form>
+          </BusinessDialog>
         )}
         {error && (
           <p className={css.error} role='alert'>
             {t(error)}
           </p>
         )}
-        {message && (
-          <p className={css.success} role='status'>
-            {message}
-          </p>
-        )}
+        <Toast message={message} onClose={() => setMessage('')} />
         {assigning && (
-          <div className={styles.panel}>
-            <h3>{assigning.name}</h3>
+          <BusinessDialog
+            title={t('Назначить регламент')}
+            description={assigning.name}
+            onClose={() => setAssigning(null)}
+            busy={busy}
+            className={css.modal}
+          >
             <p>
               {t(
-                'Назначить регламент сотрудникам и кандидатам этой должности в вашей команде? Уже выданные назначения и результаты сохранятся. Владелец назначает по всей компании.',
+                'Сотрудники и кандидаты этой должности получат доступ к регламенту. Результаты тех, кто уже прошёл его, сохранятся.',
               )}
             </p>
+            {error && (
+              <p role='alert' className={css.error}>
+                {t(error)}
+              </p>
+            )}
             <div className={css.actions}>
-              <button className={styles.primary} disabled={busy} onClick={() => void assign()}>
-                {t('Назначить регламент')}
-              </button>
               <button
                 className={styles.secondary}
                 disabled={busy}
@@ -957,28 +1245,35 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
               >
                 {t('Отмена')}
               </button>
+              <button className={styles.primary} disabled={busy} onClick={() => void assign()}>
+                {t('Назначить регламент')}
+              </button>
             </div>
-          </div>
+          </BusinessDialog>
         )}
         {courses.loading && <LoadingState>{t('Загрузка…')}</LoadingState>}
-        {!!courses.error && <RequestError error={courses.error} onRetry={() => void courses.reload()} />}
+        {!!courses.error && (
+          <RequestError error={courses.error} onRetry={() => void courses.reload()} />
+        )}
         {!courses.loading && courses.data?.items.length === 0 && (
           <p>{t('Для этой должности пока нет регламентов')}</p>
         )}
         {courses.data?.items.map((course) => (
           <article className={css.course} key={course.id}>
-            <div>
+            <span className={css.documentIcon}>
+              <FileText size={22} />
+            </span>
+            <div className={css.courseTitle}>
               <h3>{course.name}</h3>
               <p>
                 {t(
                   statuses[
                     course.publication_status === 'published' ? 'published' : course.status
-                  ] ?? course.status,
+                  ] ?? 'Черновик',
                 )}
               </p>
             </div>
             <div className={css.actions}>
-              {!position.is_archived && <button className={styles.secondary} disabled={course.status === 'generating' || busy} onClick={() => setRenaming({ kind: 'course', id: course.id, courseId: course.id, title: course.name, description: course.description, revision: course.content_revision })}>{t('Переименовать')}</button>}
               <Link
                 className={styles.secondary}
                 to={
@@ -989,7 +1284,7 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
               >
                 {t('Открыть регламент')}
               </Link>
-              <Link className={styles.secondary} to={`/learning-analytics?course_id=${course.id}`}>{t('Результаты сотрудников')}</Link>
+
               {course.publication_status === 'published' && !position.is_archived && (
                 <button
                   className={styles.primary}
@@ -999,12 +1294,62 @@ function PositionDetail({ position, onRefresh }: { position: Position; onRefresh
                   {t('Назначить команде')}
                 </button>
               )}
+              <details className={css.more}>
+                <summary aria-label={`${t('Действия')}: ${course.name}`}>
+                  <MoreHorizontal size={20} />
+                </summary>
+                <div>
+                  {' '}
+                  {!position.is_archived && (
+                    <button
+                      className={styles.secondary}
+                      disabled={course.status === 'generating' || busy}
+                      onClick={() =>
+                        setRenaming({
+                          kind: 'course',
+                          id: course.id,
+                          courseId: course.id,
+                          title: course.name,
+                          description: course.description,
+                          revision: course.content_revision,
+                        })
+                      }
+                    >
+                      {t('Переименовать')}
+                    </button>
+                  )}
+                  <Link
+                    className={styles.secondary}
+                    to={`/learning-analytics?course_id=${course.id}`}
+                  >
+                    {t('Результаты сотрудников')}
+                  </Link>
+                </div>
+              </details>
             </div>
           </article>
         ))}
         <Pager offset={offset} total={courses.data?.total ?? 0} onChange={setOffset} />
-        {renaming && <EntityEditor entity={renaming} onClose={() => setRenaming(null)} onSaved={() => { setRenaming(null); void courses.reload(); }} />}
-        {editPosition && <PositionEditor position={position} onClose={() => setEditPosition(false)} onSaved={async () => { await onRefresh(); setEditPosition(false); }} />}
+        {renaming && (
+          <EntityEditor
+            entity={renaming}
+            onClose={() => setRenaming(null)}
+            onSaved={() => {
+              setRenaming(null);
+              void courses.reload();
+            }}
+          />
+        )}
+        {editPosition && (
+          <PositionEditor
+            position={position}
+            onClose={() => setEditPosition(false)}
+            onSaved={async () => {
+              await onRefresh();
+              setEditPosition(false);
+            }}
+          />
+        )}
       </section>
     </div>
   );
