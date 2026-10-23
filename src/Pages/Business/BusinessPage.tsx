@@ -121,7 +121,7 @@ function CompanyWorkspace() {
   const setTab = (value: string) => {
     setEmployeeOffset(0);
     setSearch('');
-    setParams(value === 'overview' ? {} : { tab: value });
+    setParams({ tab: value });
   };
   const memberRole = tab === 'candidates' ? 'candidate' : tab === 'managers' ? 'manager' : 'member';
   const managerFilter = owner ? (params.get('manager_id') ?? '') : '';
@@ -216,32 +216,34 @@ function CompanyWorkspace() {
   }
   return (
     <Shell
-      className={css.workspace}
-      title={t(tab === 'overview' ? (owner ? 'Моя компания' : 'Моя команда') : 'Персонал')}
+      className={`${css.workspace} ${tab === 'overview' ? css.overviewWorkspace : ''}`}
+      title={t(tab === 'overview' ? 'Обзор' : 'Персонал')}
       action={
-        <button
-          className={styles.primary}
-          onClick={() => {
-            if (tab === 'positions') {
-              setEditing('new');
-              return;
-            }
-            setInviteOpen(true);
-            setInvite({ ...invite, role: memberRole });
-            setInvitationLink('');
-          }}
-        >
-          <Plus size={18} />
-          {t(
-            tab === 'positions'
-              ? 'Добавить должность'
-              : tab === 'managers'
-                ? 'Пригласить руководителя'
-                : tab === 'candidates'
-                  ? 'Добавить кандидата'
-                  : 'Добавить сотрудника',
-          )}
-        </button>
+        tab !== 'overview' && (
+          <button
+            className={styles.primary}
+            onClick={() => {
+              if (tab === 'positions') {
+                setEditing('new');
+                return;
+              }
+              setInviteOpen(true);
+              setInvite({ ...invite, role: memberRole });
+              setInvitationLink('');
+            }}
+          >
+            <Plus size={18} />
+            {t(
+              tab === 'positions'
+                ? 'Добавить должность'
+                : tab === 'managers'
+                  ? 'Пригласить руководителя'
+                  : tab === 'candidates'
+                    ? 'Добавить кандидата'
+                    : 'Добавить сотрудника',
+            )}
+          </button>
+        )
       }
     >
       {error && (
