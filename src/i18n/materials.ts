@@ -2,6 +2,11 @@
 import { visualEnglish } from "./visual";
 export const materialsEnglish: Record<string, string> = {
   ...visualEnglish,
+  "Помощник учитывает текст материала, его источники и историю диалога.": "The assistant uses the material, its sources and conversation history.",
+  "Помощник учитывает доступные вам материалы и историю диалога.": "The assistant uses materials you can access and your conversation history.",
+  "Без лимита": "Unlimited",
+  "Без квот на генерации и ИИ": "Unlimited generation and AI",
+  "Курсы, источники, генерации и запросы к ИИ без продуктовых квот. Расход учитывается. Одновременная нагрузка и размер файлов ограничены возможностями сервера.": "No product quotas for courses, sources, generation or AI requests. Usage is recorded. Concurrency and file sizes remain bounded by server capacity.",
   "Проверяем доступность помощника…": "Checking assistant availability…",
   "Помощник отключён в настройках вашей организации. Обратитесь к администратору.":
     "The assistant is disabled for your organization. Contact your administrator.",

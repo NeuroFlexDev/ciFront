@@ -6,7 +6,7 @@ import styles from "./wizard.module.css";
 
 export type Preflight = {
   allowed: boolean; reasons: string[]; source_characters: number; source_bytes: number;
-  minimum_calls: number; calls_limit: number; output_token_reservation: number; tokens_limit: number; note: string;
+  ai_unlimited?: boolean; minimum_calls: number; calls_limit: number; output_token_reservation: number; tokens_limit: number; note: string;
   web_search?: { enabled: boolean; max_queries: number; reservation_rub: string; reservation_is_provider_bill: false; no_automatic_retry: boolean };
 };
 
@@ -59,8 +59,8 @@ export default function GenerationPreflight({ settings, preflight, sourceCount, 
       <details className={styles.resourceDetails}>
         <summary>{t("Ресурсы и ограничения генерации")}</summary>
         <dl><div><dt>{t("Обработанные источники")}</dt><dd>{number(preflight.source_characters)} {t("символов")} · {number(Math.round(preflight.source_bytes / 1024))} {t("КБ")}</dd></div>
-          <div><dt>{t("Минимум обращений к ИИ")}</dt><dd>{number(preflight.minimum_calls)} / {number(preflight.calls_limit)}</dd></div>
-          <div><dt>{t("Резерв для текста ответа")}</dt><dd>{number(preflight.output_token_reservation)} / {number(preflight.tokens_limit)} {t("токенов")}</dd></div></dl>
+          <div><dt>{t("Минимум обращений к ИИ")}</dt><dd>{number(preflight.minimum_calls)} / {preflight.ai_unlimited ? t("Без лимита") : number(preflight.calls_limit)}</dd></div>
+          <div><dt>{t("Резерв для текста ответа")}</dt><dd>{number(preflight.output_token_reservation)} / {preflight.ai_unlimited ? t("Без лимита") : number(preflight.tokens_limit)} {t("токенов")}</dd></div></dl>
         <p>{t(preflight.note)}</p><p>{t("Это предварительный расчёт, а не окончательная стоимость. Сервер учитывает фактические обращения, чтение источников и исправления.")}</p>
       </details>
     </> : <div className={styles.preflightStatus}><Check aria-hidden="true" /><p>{t("Перед запуском проверим источники, количество уроков и доступный бюджет.")}</p></div>}

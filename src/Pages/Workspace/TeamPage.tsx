@@ -129,7 +129,7 @@ function OrganizationTeamPage() {
             {t(". Курсов организации:") + " "}
             {team.organization.courses}
             {" " + t("из") + " "}
-            {team.organization.course_limit}.
+            {team.organization.ai_unlimited ? t("Без лимита") : team.organization.course_limit}.
           </p>
           {url && (
             <>
