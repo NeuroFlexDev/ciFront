@@ -233,7 +233,7 @@ it('opens a position directly after reload and preserves material names', async 
 it('owner starts with company dashboard and every manager team', async () => {
   open('/company');
   expect(
-    await screen.findByRole('heading', { name: 'Подготовка всей компании' }),
+    await screen.findByRole('heading', { name: 'Руководители и их команды' }),
   ).toBeInTheDocument();
   expect(await screen.findByText('Анна')).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Кандидаты ↗' })).toHaveAttribute(
