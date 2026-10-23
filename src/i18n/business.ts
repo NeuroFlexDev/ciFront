@@ -259,4 +259,5 @@ export const businessEnglish: Record<string, string> = {
   'Обновите страницу и войдите снова.': 'Refresh the page and sign in again.',
   Аккаунт: 'Account',
   'Войти в другой аккаунт': 'Sign in to another account',
+  'Входите по логину и ещё не подключили почту? Попросите руководителя задать новый пароль в карточке сотрудника.': 'Signing in with a login and no email yet? Ask your manager to set a new password in your employee profile.',
 };
