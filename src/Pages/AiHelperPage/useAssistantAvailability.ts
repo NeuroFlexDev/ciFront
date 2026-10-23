@@ -4,6 +4,7 @@ import { useReconnect } from "@/hooks/useReconnect";
 import { api } from "@/shared/api";
 
 type Usage = {
+  ai_unlimited?: boolean;
   chat_monthly_limit: number;
   interactive_requests_this_month: number;
   interactive_requests_admission_total?: number;
@@ -57,9 +58,9 @@ export function useAssistantAvailability() {
       }
       const reason = settings?.data.features.assistant === false
         ? "Помощник отключён в настройках вашей организации. Обратитесь к администратору."
-        : data.chat_monthly_limit === 0
+        : !data.ai_unlimited && data.chat_monthly_limit === 0
           ? "Установлен нулевой лимит запросов к помощнику. Обратитесь к администратору."
-          : used >= data.chat_monthly_limit
+          : !data.ai_unlimited && used >= data.chat_monthly_limit
             ? "Месячный лимит запросов к помощнику исчерпан. Обратитесь к администратору или дождитесь нового расчётного месяца."
             : null;
       if (request === sequence.current) {

@@ -54,6 +54,7 @@ export type Organization = {
   course_limit: number;
   source_limit: number;
   generation_limit: number;
+  ai_unlimited?: boolean;
   active_users: number;
   reserved_seats: number;
   courses: number;
@@ -98,6 +99,7 @@ type OrgForm = {
   course_limit: number;
   source_limit: number;
   generation_limit: number;
+  ai_unlimited?: boolean;
   state_token?: string;
 };
 type AdminOverview = Overview & {
@@ -114,6 +116,7 @@ const freshOrg = (): OrgForm => ({
   course_limit: 50,
   source_limit: 20,
   generation_limit: 100,
+  ai_unlimited: false,
 });
 const roleLabels: Record<string, string> = {
   owner: 'Владелец организации',
@@ -689,6 +692,7 @@ export default function AdminPage() {
                         required
                         min={key === 'generation_limit' ? 0 : 1}
                         max={key === 'source_limit' ? 1000 : 100000}
+                        disabled={Boolean(orgForm.ai_unlimited) && key !== 'seat_limit'}
                         value={orgForm[key]}
                         onChange={(e) =>
                           setOrgForm({
@@ -699,6 +703,12 @@ export default function AdminPage() {
                       />
                     </label>
                   ))}
+                  <label className={styles.check}>
+                    <input type='checkbox' checked={Boolean(orgForm.ai_unlimited)}
+                      onChange={(e) => setOrgForm({ ...orgForm, ai_unlimited: e.target.checked })} />
+                    {t('Без квот на генерации и ИИ')}
+                  </label>
+                  {orgForm.ai_unlimited && <p>{t('Курсы, источники, генерации и запросы к ИИ без продуктовых квот. Расход учитывается. Одновременная нагрузка и размер файлов ограничены возможностями сервера.')}</p>}
                   <label className={styles.check}>
                     <input
                       type='checkbox'
@@ -767,21 +777,21 @@ export default function AdminPage() {
                     <div>
                       <dt>{t('Курсы:')}</dt>
                       <dd>
-                        {o.courses} <span>/ {o.course_limit}</span>
+                        {o.courses} <span>/ {o.ai_unlimited ? t('Без лимита') : o.course_limit}</span>
                       </dd>
-                      <progress
+                      {!o.ai_unlimited && <progress
                         value={Math.min(o.courses, o.course_limit)}
                         max={o.course_limit}
                         aria-label={t('Курсы:')}
-                      />
+                      />}
                     </div>
                     <div>
                       <dt>{t('Источников на курс:')}</dt>
-                      <dd>{o.source_limit}</dd>
+                      <dd>{o.ai_unlimited ? t('Без лимита') : o.source_limit}</dd>
                     </div>
                     <div>
                       <dt>{t('Генераций в месяц:')}</dt>
-                      <dd>{o.generation_limit}</dd>
+                      <dd>{o.ai_unlimited ? t('Без лимита') : o.generation_limit}</dd>
                     </div>
                   </dl>
                   <div className={styles.row}>
@@ -797,6 +807,7 @@ export default function AdminPage() {
                           course_limit: o.course_limit,
                           source_limit: o.source_limit,
                           generation_limit: o.generation_limit,
+                          ai_unlimited: Boolean(o.ai_unlimited),
                           state_token: o.state_token,
                         })
                       }

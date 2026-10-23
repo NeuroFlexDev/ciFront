@@ -14,7 +14,7 @@ vi.mock("@/Components/MarkdownContent", () => ({ default: ({ children }: { child
 vi.mock("@/Components/ElementUi/ImageEditor/ImageLibrary", () => ({ default: () => null }));
 
 let enabled: boolean;
-let usage: { chat_monthly_limit: number; interactive_requests_this_month: number; interactive_requests_admission_total?: number; interactive_requests_own_legacy_unattributed?: number };
+let usage: { ai_unlimited?: boolean; chat_monthly_limit: number; interactive_requests_this_month: number; interactive_requests_admission_total?: number; interactive_requests_own_legacy_unattributed?: number };
 let failUsage: boolean;
 beforeEach(() => {
   Object.values(mocked).forEach((method) => method.mockReset());
@@ -128,4 +128,15 @@ it("still permits reading an existing receipt while new AI requests are disabled
   await waitFor(() => expect(mocked.get.mock.calls.filter(([path]) => String(path).startsWith("/chat/requests/")).length).toBeGreaterThan(calls));
   expect(mocked.post).not.toHaveBeenCalled();
   expect(screen.getByLabelText("Сообщение помощнику")).toHaveValue("Вопрос уже отправлен");
+});
+
+
+it("allows an exempt organization to send despite exhausted product quotas", async () => {
+  writeDraft("chat:5:input", { text: "" }, undefined, 42);
+  usage = { ai_unlimited: true, chat_monthly_limit: 0, interactive_requests_this_month: 10000 };
+  page();
+  const input = await screen.findByLabelText("Сообщение помощнику");
+  fireEvent.change(input, { target: { value: "Помоги разобраться в регламенте" } });
+  await waitFor(() => expect(screen.getByRole("button", { name: "Отправить сообщение" })).toBeEnabled());
+  expect(screen.queryByText(/нулевой лимит запросов/)).not.toBeInTheDocument();
 });
