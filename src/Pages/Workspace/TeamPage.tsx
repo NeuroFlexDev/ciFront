@@ -248,7 +248,7 @@ function OrganizationTeamPage() {
                           ? "/account"
                           : `/team-settings?user=${m.id}`
                       }
-                      aria-label={`${m.full_name || m.email} · ${m.id === user?.id ? t("Личный профиль") : t("Роли и области доступа")}`}
+                      aria-label={`${m.full_name || m.username || m.email || t('Участник')} · ${m.id === user?.id ? t("Личный профиль") : t("Роли и области доступа")}`}
                     >
                       <ArrowUpRight
                         size={26}
@@ -258,13 +258,13 @@ function OrganizationTeamPage() {
                     </Link>
                   )}
                   <div className={teamStyles.avatar} aria-hidden="true">
-                    {initials(m.full_name || m.email)}
+                    {initials(m.full_name || m.username || m.email || t('Участник'))}
                   </div>
                   <h2>{m.full_name || t("Без имени")}</h2>
                   <p className={teamStyles.role}>
                     {roleName(m.organization_role)}
                   </p>
-                  <p className={teamStyles.email}>{m.email}</p>
+                  <p className={teamStyles.email}>{m.email || m.username}</p>
                   <p className={teamStyles.access} data-active={m.is_active}>
                     <span aria-hidden="true" />
                     {m.is_active

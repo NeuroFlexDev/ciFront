@@ -139,6 +139,7 @@ it('owner invites a manager with no employee position or password', async () => 
   });
   open('/company?tab=employees');
   fireEvent.click(await screen.findByRole('button', { name: 'Добавить сотрудника' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Пригласить по почте' }));
   fireEvent.change(screen.getByLabelText('Электронная почта'), {
     target: { value: 'manager@example.test' },
   });
@@ -253,6 +254,7 @@ it('manager invites a candidate into their own team without manager controls', a
   expect(screen.getByLabelText('Роль')).toHaveValue('candidate');
   expect(screen.queryByRole('option', { name: 'Руководитель' })).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Руководитель')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Пригласить по почте' }));
   fireEvent.change(screen.getByLabelText('Электронная почта'), {
     target: { value: 'candidate@example.test' },
   });
@@ -302,7 +304,7 @@ it('manager lands on job roles and opens invitations only from personnel actions
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('tab', { name: 'Сотрудники' }));
   fireEvent.click(screen.getByRole('button', { name: 'Добавить сотрудника' }));
-  expect(screen.getByRole('dialog', { name: 'Приглашение в компанию' })).toBeInTheDocument();
+  expect(screen.getByRole('dialog', { name: 'Добавить участника' })).toBeInTheDocument();
 });
 
 it('queued mail is not presented as delivered and the invitation remains available to copy', async () => {
@@ -312,6 +314,7 @@ it('queued mail is not presented as delivered and the invitation remains availab
   });
   open('/company?tab=employees');
   fireEvent.click(await screen.findByRole('button', { name: 'Добавить сотрудника' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Пригласить по почте' }));
   fireEvent.change(screen.getByLabelText('Электронная почта'), {
     target: { value: 'new@example.test' },
   });
@@ -322,4 +325,31 @@ it('queued mail is not presented as delivered and the invitation remains availab
   );
   expect(screen.getByText('Приглашение создано. Письмо готовится к отправке.')).toBeInTheDocument();
   expect(screen.queryByText('Приглашение отправлено на почту')).not.toBeInTheDocument();
+});
+
+it('creates an employee with login and password without requiring email or persisting the password', async () => {
+  vi.mocked(api.post).mockResolvedValue({ data: { id: 90, username: 'beslim.ivan', email: null } });
+  open('/company?tab=employees');
+  fireEvent.click(await screen.findByRole('button', { name: 'Добавить сотрудника' }));
+  expect(screen.queryByLabelText('Электронная почта')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Имя и фамилия'), { target: { value: 'Иван Петров' } });
+  fireEvent.change(screen.getByLabelText('Логин'), { target: { value: 'beslim.ivan' } });
+  fireEvent.change(screen.getByLabelText('Пароль сотрудника'), {
+    target: { value: 'employee-password-2026' },
+  });
+  expect(JSON.stringify(localStorage)).not.toContain('employee-password-2026');
+  fireEvent.click(screen.getByRole('button', { name: 'Создать аккаунт' }));
+  await waitFor(() =>
+    expect(api.post).toHaveBeenCalledWith('/business/employees', {
+      full_name: 'Иван Петров',
+      username: 'beslim.ivan',
+      password: 'employee-password-2026',
+      role: 'member',
+      position_id: null,
+      manager_id: null,
+    }),
+  );
+  await waitFor(() => expect(screen.queryByLabelText('Пароль сотрудника')).not.toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'Добавить сотрудника' }));
+  expect(screen.getByLabelText('Пароль сотрудника')).toHaveValue('');
 });

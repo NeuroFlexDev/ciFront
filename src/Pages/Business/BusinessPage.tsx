@@ -41,7 +41,8 @@ type Position = {
 type Employee = {
   id: number;
   full_name: string;
-  email: string;
+  email: string | null;
+  username?: string | null;
   organization_role: string;
   is_active: boolean;
   auth_version: number;
@@ -132,6 +133,15 @@ function CompanyWorkspace() {
   const [managing, setManaging] = useState<number | null>(null);
   const [editing, setEditing] = useState<Position | 'new' | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [accountMode, setAccountMode] = useState<'login' | 'email'>('login');
+  const [loginName, setLoginName] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
+  const [initialPassword, setInitialPassword] = useState('');
+  const [resetPassword, setResetPassword] = useState('');
+  function closeInvitation() {
+    setInviteOpen(false);
+    setInitialPassword('');
+  }
   const [invite, setInvite, clearInvite] = useDurableState('business-invitation', {
     email: '',
     role: 'member',
@@ -187,6 +197,30 @@ function CompanyWorkspace() {
   async function sendInvite(event: FormEvent) {
     event.preventDefault();
     await mutate(async () => {
+      if (accountMode === 'login') {
+        const { data } = await api.post<Employee>('/business/employees', {
+          full_name: employeeName,
+          username: loginName,
+          password: initialPassword,
+          role: invite.role,
+          position_id:
+            invite.role !== 'manager' && invite.position_id ? Number(invite.position_id) : null,
+          manager_id:
+            owner && invite.role !== 'manager' && invite.manager_id
+              ? Number(invite.manager_id)
+              : null,
+        });
+        closeInvitation();
+        setLoginName('');
+        setEmployeeName('');
+        clearInvite({ email: '', role: 'member', position_id: '', manager_id: '' });
+        setMessage(
+          t('Аккаунт создан. Передайте сотруднику логин {login} и заданный пароль.', {
+            login: data.username ?? loginName,
+          }),
+        );
+        return;
+      }
       const { data } = await api.post<{ url: string; mail_status: string }>(
         '/business/invitations',
         {
@@ -290,23 +324,87 @@ function CompanyWorkspace() {
       )}
       {inviteOpen && (
         <BusinessDialog
-          title={t('Приглашение в компанию')}
-          description={t('Укажите почту и должность. Сотрудник получит личное приглашение.')}
-          onClose={() => setInviteOpen(false)}
+          title={t('Добавить участника')}
+          description={t('Создайте доступ по логину или отправьте приглашение на почту.')}
+          onClose={closeInvitation}
           busy={busy}
           className={css.modal}
         >
+          <div className={css.actions} style={{ marginBottom: 20 }}>
+            {(['login', 'email'] as const).map((mode) => (
+              <button
+                key={mode}
+                type='button'
+                aria-pressed={accountMode === mode}
+                className={accountMode === mode ? styles.primary : styles.secondary}
+                onClick={() => {
+                  setAccountMode(mode);
+                  setInitialPassword('');
+                  setError('');
+                }}
+              >
+                {t(mode === 'login' ? 'По логину и паролю' : 'Пригласить по почте')}
+              </button>
+            ))}
+          </div>
           <form className={css.form} onSubmit={sendInvite}>
-            <label>
-              {t('Электронная почта')}
-              <input
-                type='email'
-                required
-                maxLength={255}
-                value={invite.email}
-                onChange={(e) => setInvite({ ...invite, email: e.target.value })}
-              />
-            </label>
+            {accountMode === 'login' ? (
+              <>
+                <label>
+                  {t('Имя и фамилия')}
+                  <input
+                    required
+                    maxLength={160}
+                    autoComplete='off'
+                    value={employeeName}
+                    onChange={(e) => setEmployeeName(e.target.value)}
+                  />
+                </label>
+                <label>
+                  {t('Логин')}
+                  <input
+                    required
+                    minLength={3}
+                    maxLength={64}
+                    pattern='[A-Za-z0-9][A-Za-z0-9._\-]{2,63}'
+                    autoComplete='off'
+                    autoCapitalize='none'
+                    spellCheck={false}
+                    value={loginName}
+                    onChange={(e) => setLoginName(e.target.value)}
+                  />
+                </label>
+                <p>{t('От 3 до 64 латинских букв, цифр, точек, дефисов или подчёркиваний.')}</p>
+                <label>
+                  {t('Пароль сотрудника')}
+                  <input
+                    required
+                    type='password'
+                    minLength={12}
+                    maxLength={128}
+                    autoComplete='new-password'
+                    value={initialPassword}
+                    onChange={(e) => setInitialPassword(e.target.value)}
+                  />
+                </label>
+                <p>
+                  {t(
+                    'Минимум 12 символов. Сотрудник сможет изменить пароль и подключить почту в профиле.',
+                  )}
+                </p>
+              </>
+            ) : (
+              <label>
+                {t('Электронная почта')}
+                <input
+                  type='email'
+                  required
+                  maxLength={255}
+                  value={invite.email}
+                  onChange={(e) => setInvite({ ...invite, email: e.target.value })}
+                />
+              </label>
+            )}
             {
               <label>
                 {t('Роль')}
@@ -354,13 +452,13 @@ function CompanyWorkspace() {
             )}
             <div className={css.actions}>
               <button className={styles.primary} disabled={busy}>
-                {t('Создать приглашение')}
+                {t(accountMode === 'login' ? 'Создать аккаунт' : 'Создать приглашение')}
               </button>
               <button
                 type='button'
                 className={styles.secondary}
                 disabled={busy}
-                onClick={() => setInviteOpen(false)}
+                onClick={closeInvitation}
               >
                 {t('Отмена')}
               </button>
@@ -557,7 +655,7 @@ function CompanyWorkspace() {
                   setSearch(e.target.value);
                   setEmployeeOffset(0);
                 }}
-                placeholder={t('Имя или почта')}
+                placeholder={t('Имя, логин или почта')}
               />
             </label>
             <span>
@@ -608,11 +706,15 @@ function CompanyWorkspace() {
                     <td>
                       <div className={css.personCell}>
                         <span className={css.avatar} aria-hidden='true'>
-                          {(person.full_name || person.email).slice(0, 1).toUpperCase()}
+                          {(person.full_name || person.username || person.email || t('Сотрудник'))
+                            .slice(0, 1)
+                            .toUpperCase()}
                         </span>
                         <div>
-                          <strong>{person.full_name || person.email}</strong>
-                          <small>{person.email}</small>
+                          <strong>
+                            {person.full_name || person.username || person.email || t('Сотрудник')}
+                          </strong>
+                          <small>{person.email || person.username}</small>
                         </div>
                       </div>
                     </td>
@@ -630,9 +732,10 @@ function CompanyWorkspace() {
                     <td>
                       <button
                         className={css.iconButton}
-                        aria-label={`${t('Настроить доступ')}: ${person.full_name || person.email}`}
+                        aria-label={`${t('Настроить доступ')}: ${person.full_name || person.username || person.email || t('Сотрудник')}`}
                         onClick={() => {
                           setError('');
+                          setResetPassword('');
                           setManaging(person.id);
                         }}
                       >
@@ -646,13 +749,50 @@ function CompanyWorkspace() {
           </div>
           {person && (
             <BusinessDialog
-              title={person.full_name || person.email}
-              description={person.email}
+              title={person.full_name || person.username || person.email || t('Сотрудник')}
+              description={person.email || person.username || ''}
               busy={busy}
-              onClose={() => setManaging(null)}
+              onClose={() => {
+                setResetPassword('');
+                setManaging(null);
+              }}
               className={css.modal}
             >
               <div className={css.form}>
+                {person.username && person.is_active && (
+                  <form
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void mutate(async () => {
+                        await api.post(`/business/employees/${person.id}/password`, {
+                          new_password: resetPassword,
+                          expected_auth_version: person.auth_version,
+                        });
+                        setResetPassword('');
+                        setMessage(t('Пароль обновлён. Передайте новый пароль сотруднику.'));
+                      });
+                    }}
+                  >
+                    <p>
+                      {t('Логин')}: <strong>{person.username}</strong>
+                    </p>
+                    <label>
+                      {t('Новый пароль сотрудника')}
+                      <input
+                        type='password'
+                        autoComplete='new-password'
+                        required
+                        minLength={12}
+                        maxLength={128}
+                        value={resetPassword}
+                        onChange={(e) => setResetPassword(e.target.value)}
+                      />
+                    </label>
+                    <button className={styles.secondary} disabled={busy}>
+                      {t('Задать новый пароль')}
+                    </button>
+                  </form>
+                )}
                 {error && (
                   <p role='alert' className={css.error}>
                     {t(error)}
@@ -728,7 +868,7 @@ function CompanyWorkspace() {
                       disabled={busy}
                       onClick={() =>
                         confirmPerson({
-                          label: `${person.full_name || person.email}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
+                          label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
                           action: async () => {
                             await api.put(`/business/employees/${person.id}/manager`, {
                               role: ['member', 'candidate'].includes(person.organization_role)
@@ -758,7 +898,7 @@ function CompanyWorkspace() {
                           disabled={busy}
                           onClick={() =>
                             confirmPerson({
-                              label: `${person.full_name || person.email}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
+                              label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
                               action: async () => {
                                 await api.put(`/business/employees/${person.id}/access`, {
                                   is_active: !person.is_active,
@@ -813,9 +953,7 @@ function CompanyWorkspace() {
             </BusinessDialog>
           )}
           {!employees.loading && employees.data?.total === 0 && (
-            <p>
-              {t('Участники не найдены. Добавьте человека через приглашение или измените поиск.')}
-            </p>
+            <p>{t('Участники не найдены. Добавьте сотрудника или измените поиск.')}</p>
           )}
           <Pager
             offset={employeeOffset}

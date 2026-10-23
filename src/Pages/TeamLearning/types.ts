@@ -1,7 +1,8 @@
 import type { Rules } from "../Learning/types";
 export type TeamMember = {
   id: number;
-  email: string;
+  email: string | null;
+  username?: string | null;
   full_name: string;
   organization_role: string;
   is_active: boolean;

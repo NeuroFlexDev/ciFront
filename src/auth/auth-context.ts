@@ -3,7 +3,8 @@ import type {AuthSessionStamp} from '@/shared/api';
 
 export type AuthUser = {
   id: number;
-  email: string;
+  email: string | null;
+  username?: string | null;
   full_name?: string;
   is_admin?: boolean;
   organization_id?: number | null;

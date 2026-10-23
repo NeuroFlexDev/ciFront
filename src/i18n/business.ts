@@ -223,4 +223,41 @@ export const businessEnglish: Record<string, string> = {
   'Пропущен срок': 'Past due',
   'Соберите рабочие инструкции и пригласите сотрудников. Результаты появятся здесь.':
     'Collect your work procedures and invite employees. Their progress will appear here.',
+  'Добавить участника': 'Add a person',
+  'Создайте доступ по логину или отправьте приглашение на почту.':
+    'Create a login or send an email invitation.',
+  'По логину и паролю': 'With login and password',
+  'Пригласить по почте': 'Invite by email',
+  Логин: 'Login',
+  'Почта или логин': 'Email or login',
+  'Пароль сотрудника': 'Employee password',
+  'Новый пароль сотрудника': 'New employee password',
+  'Задать новый пароль': 'Set a new password',
+  'Создать аккаунт': 'Create account',
+  'Имя, логин или почта': 'Name, login or email',
+  'От 3 до 64 латинских букв, цифр, точек, дефисов или подчёркиваний.':
+    '3–64 Latin letters, numbers, dots, hyphens or underscores.',
+  'Минимум 12 символов. Сотрудник сможет изменить пароль и подключить почту в профиле.':
+    'At least 12 characters. The employee can change the password and add an email in their profile.',
+  'Аккаунт создан. Передайте сотруднику логин {login} и заданный пароль.':
+    'Account created. Give the employee their login {login} and the password you chose.',
+  'Пароль обновлён. Передайте новый пароль сотруднику.':
+    'Password updated. Give the new password to the employee.',
+  'Участники не найдены. Добавьте сотрудника или измените поиск.':
+    'No people found. Add an employee or change your search.',
+  Почта: 'Email',
+  'Подключите почту для восстановления доступа. Ваш логин сохранится.':
+    'Add an email to recover access. You can keep using your login.',
+  'Подключить почту': 'Add email',
+  'Подтвердить почту': 'Confirm email',
+  'Запросить новое письмо': 'Request a new email',
+  'Подтвердите подключение почты к этому аккаунту.': 'Confirm adding the email to this account.',
+  'Почта подключена. Вход по логину продолжает работать.':
+    'Email added. You can still sign in with your login.',
+  'Проверьте почту и откройте ссылку подтверждения. Она действует 30 минут.':
+    'Check your email and open the confirmation link. It is valid for 30 minutes.',
+  'Обновите страницу и войдите снова.': 'Refresh the page and sign in again.',
+  Аккаунт: 'Account',
+  'Войти в другой аккаунт': 'Sign in to another account',
+  'Входите по логину и ещё не подключили почту? Попросите руководителя задать новый пароль в карточке сотрудника.': 'Signing in with a login and no email yet? Ask your manager to set a new password in your employee profile.',
 };
