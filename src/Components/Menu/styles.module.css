@@ -270,3 +270,26 @@
     max-width: 120px;
   }
 }
+
+.businessMenu {
+  width: min(calc(100% - 96px), 1320px);
+}
+.businessMenu .navText {
+  padding: 18px 22px;
+  font-size: 15px;
+}
+.businessMenu .brand img {
+  width: clamp(160px, 16vw, 230px);
+}
+.businessMenu .userInfo {
+  font-size: 14px;
+}
+@media (max-width: 640px) {
+  .businessMenu {
+    width: calc(100% - 32px);
+  }
+  .businessMenu .navText {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+}

@@ -1,58 +1,78 @@
 export const businessEnglish: Record<string, string> = {
-  'Кандидат': 'Candidate',
-  'Кандидаты': 'Candidates',
-  'Руководители': 'Managers',
+  'Например, как встречать гостей и оформлять запись':
+    'For example, how to greet guests and schedule appointments',
+  Кандидат: 'Candidate',
+  Кандидаты: 'Candidates',
+  Руководители: 'Managers',
   'Дашборд компании': 'Company dashboard',
   'Дашборд моей команды': 'My team dashboard',
-  'Вся компания: руководители, команды и результаты подготовки.': 'Your company: managers, teams and readiness results.',
-  'Ваши сотрудники и кандидаты: должности, регламенты, тесты и результаты.': 'Your employees and candidates: job roles, regulations, tests and results.',
+  'Вся компания: руководители, команды и результаты подготовки.':
+    'Your company: managers, teams and readiness results.',
+  'Ваши сотрудники и кандидаты: должности, регламенты, тесты и результаты.':
+    'Your employees and candidates: job roles, regulations, tests and results.',
   'Добавить кандидата': 'Add candidate',
   'Добавить сотрудника': 'Add employee',
   'Без руководителя — назначить позже': 'No manager — assign later',
   'Без руководителя': 'No manager',
   'Все руководители': 'All managers',
-  'Участник сможет читать назначенные регламенты и проходить тесты. Другие команды ему недоступны.': 'The participant can read assigned regulations and take tests. Other teams are not accessible.',
+  'Участник сможет читать назначенные регламенты и проходить тесты. Другие команды ему недоступны.':
+    'The participant can read assigned regulations and take tests. Other teams are not accessible.',
   'Поиск участника': 'Find a participant',
-  'Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.': 'Change the manager? All assignments, answers and results will be preserved.',
-  'снять полномочия управляющего? Его команда перейдёт в список без руководителя.': 'remove manager permissions? Their team will be listed without a manager.',
-  'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.': 'Convert this candidate to an employee? Assignments and results will be preserved.',
-  'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.': 'Convert this employee to a candidate? Assignments and results will be preserved.',
+  'Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.':
+    'Change the manager? All assignments, answers and results will be preserved.',
+  'снять полномочия управляющего? Его команда перейдёт в список без руководителя.':
+    'remove manager permissions? Their team will be listed without a manager.',
+  'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.':
+    'Convert this candidate to an employee? Assignments and results will be preserved.',
+  'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.':
+    'Convert this employee to a candidate? Assignments and results will be preserved.',
   'Принять в сотрудники': 'Convert to employee',
   'Перевести в кандидаты': 'Convert to candidate',
-  'Участники не найдены. Добавьте человека через приглашение или измените поиск.': 'No participants found. Add someone through an invitation or adjust your search.',
-  'Назначить регламент сотрудникам и кандидатам этой должности в вашей команде? Уже выданные назначения и результаты сохранятся. Владелец назначает по всей компании.': 'Assign this regulation to employees and candidates with this job role in your team? Existing assignments and results are preserved. Owners assign across the company.',
+  'Участники не найдены. Добавьте человека через приглашение или измените поиск.':
+    'No participants found. Add someone through an invitation or adjust your search.',
+  'Назначить регламент сотрудникам и кандидатам этой должности в вашей команде? Уже выданные назначения и результаты сохранятся. Владелец назначает по всей компании.':
+    'Assign this regulation to employees and candidates with this job role in your team? Existing assignments and results are preserved. Owners assign across the company.',
   'Назначить команде': 'Assign to team',
   'Подготовка всей компании': 'Company readiness',
   'Подготовка моей команды': 'My team readiness',
-  'Показатели рассчитаны по действующим участникам и назначениям. История доступна в результатах.': 'Metrics cover active participants and assignments. History is available in results.',
+  'Показатели рассчитаны по действующим участникам и назначениям. История доступна в результатах.':
+    'Metrics cover active participants and assignments. History is available in results.',
   'Открыть результаты': 'View results',
   'Показатели команды': 'Team metrics',
   'Действующие аккаунты': 'Active accounts',
   'Подготовка перед выходом на работу': 'Preparation before starting work',
   'Завершено назначений': 'Completed assignments',
-  'завершено': 'completed',
+  завершено: 'completed',
   'Пока нет назначений': 'No assignments yet',
   'Требуют внимания': 'Need attention',
   'Просроченные назначения': 'Overdue assignments',
   'Руководители и их команды': 'Managers and their teams',
   'Управлять руководителями': 'Manage managers',
-  'Назначьте ответственного во вкладке сотрудников или кандидатов.': 'Assign a manager in the Employees or Candidates tab.',
+  'Назначьте ответственного во вкладке сотрудников или кандидатов.':
+    'Assign a manager in the Employees or Candidates tab.',
   'Завершено / назначено': 'Completed / assigned',
-  'Добавьте первого руководителя и назначьте ему сотрудников или кандидатов.': 'Add your first manager and assign employees or candidates to their team.',
+  'Добавьте первого руководителя и назначьте ему сотрудников или кандидатов.':
+    'Add your first manager and assign employees or candidates to their team.',
   'Начните с должности': 'Start with a job role',
-  'Добавьте регламент и тест, опубликуйте материал и назначьте его своей команде. Здесь появятся реальные результаты прохождения.': 'Add a regulation and test, publish the material and assign it to your team. Actual completion results will appear here.',
+  'Добавьте регламент и тест, опубликуйте материал и назначьте его своей команде. Здесь появятся реальные результаты прохождения.':
+    'Add a regulation and test, publish the material and assign it to your team. Actual completion results will appear here.',
   'Открыть должности': 'View job roles',
   'Мои результаты': 'My results',
-  'Персонал': 'Personnel',
+  Персонал: 'Personnel',
   'Текст регламента': 'Regulation text',
-  'Добавьте, например, должности «Администратор» и «Старший администратор». В каждой будет свой список регламентов и сотрудников.': 'For example, add Administrator and Senior Administrator. Each role has its own regulations and employees.',
-  'Рабочее пространство руководителя. Управляйте должностями, регламентами и подготовкой сотрудников.': 'Manager workspace. Manage job roles, regulations and employee readiness.',
-  'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.': 'Managers create job roles, invite employees and prepare regulations. The company owner manages access for managers.',
-  'Сотрудник увидит назначенные регламенты в разделе «Мои регламенты».': 'The employee will see assigned regulations in My regulations.',
-  'Архивировать должность? Регламенты и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.': 'Archive this job role? Regulations and results will be preserved. Unused invitations for this role will be revoked.',
+  'Добавьте, например, должности «Администратор» и «Старший администратор». В каждой будет свой список регламентов и сотрудников.':
+    'For example, add Administrator and Senior Administrator. Each role has its own regulations and employees.',
+  'Рабочее пространство руководителя. Управляйте должностями, регламентами и подготовкой сотрудников.':
+    'Manager workspace. Manage job roles, regulations and employee readiness.',
+  'Руководитель создаёт должности, приглашает сотрудников и готовит регламенты. Доступами руководителей управляет владелец компании.':
+    'Managers create job roles, invite employees and prepare regulations. The company owner manages access for managers.',
+  'Сотрудник увидит назначенные регламенты в разделе «Мои регламенты».':
+    'The employee will see assigned regulations in My regulations.',
+  'Архивировать должность? Регламенты и результаты обучения сохранятся. Неиспользованные приглашения на эту должность будут отозваны.':
+    'Archive this job role? Regulations and results will be preserved. Unused invitations for this role will be revoked.',
   'Например, администратор': 'For example, Administrator',
-  'Команда': 'Team',
-  'Регламенты': 'Regulations',
+  Команда: 'Team',
+  Регламенты: 'Regulations',
   'Все регламенты': 'All regulations',
   'Мои регламенты': 'My regulations',
   'Регламенты должности': 'Job regulations',
@@ -65,7 +85,7 @@ export const businessEnglish: Record<string, string> = {
   'Для этой должности пока нет регламентов': 'There are no regulations for this job role yet',
   'Открыть регламент': 'Open regulation',
   'Назначить регламент': 'Assign regulation',
-  'Переименовать': 'Rename',
+  Переименовать: 'Rename',
   'Обязанности и навыки': 'Responsibilities and skills',
   'Источники и согласование': 'Sources and approval',
   'Назначить опубликованный регламент всем действующим сотрудникам этой должности? Уже выданные назначения и результаты сохранятся. Повторное назначение включит новых сотрудников.':
@@ -160,4 +180,26 @@ export const businessEnglish: Record<string, string> = {
   'Управление Лерниумом': 'Lernium administration',
   'Заказчики и доступ': 'Customers and access',
   'Состояние сервисов': 'Service health',
+
+  'Моя команда': 'My team',
+  Обзор: 'Overview',
+  'Пригласить руководителя': 'Invite manager',
+  'Новый регламент': 'New procedure',
+  'Добавить материалы': 'Add materials',
+  'Настроить доступ': 'Manage access',
+  'Приглашение создано. Письмо готовится к отправке.':
+    'Invitation created. Email delivery is pending.',
+  'Приглашение готово — скопируйте ссылку.': 'Invitation ready \u2014 copy the link.',
+  'Укажите почту и должность. Сотрудник получит личное приглашение.':
+    'Enter an email and a job role to create a personal invitation.',
+  'Создайте должность, чтобы собрать для неё регламенты и добавить сотрудников.':
+    'Create a job role to organize procedures and invite employees.',
+  'Затем добавьте документы, из которых нужно подготовить регламент.':
+    'Next, add the documents to use for this procedure.',
+  'Сотрудники и кандидаты этой должности получат доступ к регламенту. Результаты тех, кто уже прошёл его, сохранятся.':
+    'Employees and candidates in this job role will get access. Existing results will be preserved.',
+  'Регламенты изучены': 'Procedures completed',
+  'Пропущен срок': 'Past due',
+  'Соберите рабочие инструкции и пригласите сотрудников. Результаты появятся здесь.':
+    'Collect your work procedures and invite employees. Their progress will appear here.',
 };

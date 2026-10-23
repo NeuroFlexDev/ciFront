@@ -7,8 +7,10 @@ export function Shell({
   title,
   description,
   action,
+  className = '',
   children,
 }: PropsWithChildren<{
+  className?: string;
   title: string;
   description?: string;
   action?: ReactNode;
@@ -16,7 +18,7 @@ export function Shell({
   return (
     <>
       <Menu />
-      <main className={`${styles.page} ${isAdminSurface ? styles.adminPage : ''}`}>
+      <main className={`${styles.page} ${isAdminSurface ? styles.adminPage : ''} ${className}`}>
         <header className={styles.heading}>
           <div>
             <h1>{title}</h1>
