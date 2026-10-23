@@ -4,6 +4,7 @@ import { RequestError, LoadingState } from "@/Components/RequestState";
 import { styles } from "@/Pages/Workspace/shared";
 
 type Usage = {
+  ai_unlimited?: boolean;
   month: string;
   tokens_reserved_or_used: number;
   tokens_limit: number;
@@ -102,7 +103,7 @@ export default function ResourceUsagePanel() {
                   <tr key={label}>
                     <th scope="row">{t(label)}</th>
                     <td>{number(used)}</td>
-                    <td>{number(limit)}</td>
+                    <td>{data.ai_unlimited && ["Токены AI", "Страницы OCR", "Верхняя оценка расходов, ₽", "Изображения за месяц", "Учтённые запросы к помощнику"].includes(label) ? t("Без лимита") : number(limit)}</td>
                   </tr>
                 ))}
               </tbody>

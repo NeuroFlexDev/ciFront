@@ -13,6 +13,7 @@ export type Team = {
     kind: string;
     seat_limit: number;
     course_limit: number;
+    ai_unlimited?: boolean;
     generation_limit: number;
     reserved_seats: number;
     courses: number;
