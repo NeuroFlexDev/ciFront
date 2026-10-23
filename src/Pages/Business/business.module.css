@@ -1,4 +1,4 @@
-.workspace {
+.workspace.workspace {
   --business-accent: #c6f135;
   width: min(calc(100% - 96px), 1320px);
   margin: 48px auto 80px;
@@ -646,7 +646,7 @@
   }
 }
 @media (max-width: 640px) {
-  .workspace {
+  .workspace.workspace {
     width: calc(100% - 32px);
     margin: 28px auto 48px;
   }
