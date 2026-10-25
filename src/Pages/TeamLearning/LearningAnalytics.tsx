@@ -1,15 +1,16 @@
-import { useLocale } from "@/i18n/useLocale";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { apiFetch } from "@/shared/api";
-import { ApiError } from "@/shared/errors";
-import { Shell } from "@/Pages/Workspace/shared";
-import { LoadingState, RequestError } from "@/Components/RequestState";
-import { useLearningData } from "../Learning/useLearningData";
-import { type Assignment, dateLabel, stateLabel } from "../Learning/types";
-import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
-import { type Group, type Team } from "./types";
-import s from "../Learning/learning.module.css";
+import AnalyticsSummary from './AnalyticsSummary';
+import { useLocale } from '@/i18n/useLocale';
+import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { apiFetch } from '@/shared/api';
+import { ApiError } from '@/shared/errors';
+import { Shell } from '@/Pages/Workspace/shared';
+import { LoadingState, RequestError } from '@/Components/RequestState';
+import { useLearningData } from '../Learning/useLearningData';
+import { type Assignment, dateLabel, stateLabel } from '../Learning/types';
+import { ActionStatus, useTeamAction } from './TeamTools';
+import { type Group, type Team } from './types';
+import s from '../Learning/learning.module.css';
 
 type Report = {
   items: Assignment[];
@@ -26,21 +27,19 @@ export default function LearningAnalytics() {
   const { t } = useLocale();
 
   const [params, setParams] = useSearchParams();
-  const [query, setQuery] = useState("");
-  const course = params.get("course_id") ?? "";
-  const group = params.get("group_id") ?? "";
-  const user = params.get("user_id") ?? "";
+  const [query, setQuery] = useState('');
+  const course = params.get('course_id') ?? '';
+  const group = params.get('group_id') ?? '';
+  const user = params.get('user_id') ?? '';
   const filters = new URLSearchParams();
-  if (course) filters.set("course_id", course);
-  if (group) filters.set("group_id", group);
-  if (user) filters.set("user_id", user);
-  const report = useLearningData<Report>("/team/results?" + filters);
-  const all = useLearningData<Report>("/team/results");
-  const team = useLearningData<Team>("/team");
-  const groups = useLearningData<{ items: Group[] }>("/team/groups");
-  const reminders = useLearningData<{ items: Assignment[] }>(
-    "/team/learning-reminders",
-  );
+  if (course) filters.set('course_id', course);
+  if (group) filters.set('group_id', group);
+  if (user) filters.set('user_id', user);
+  const report = useLearningData<Report>('/team/results?' + filters);
+  const all = useLearningData<Report>('/team/results');
+  const team = useLearningData<Team>('/team');
+  const groups = useLearningData<{ items: Group[] }>('/team/groups');
+  const reminders = useLearningData<{ items: Assignment[] }>('/team/learning-reminders');
   const action = useTeamAction();
   const choose = (key: string, value: string) =>
     setParams((previous) => {
@@ -51,147 +50,116 @@ export default function LearningAnalytics() {
     });
   const courses = Array.from(
     new Map(
-      (all.data?.items ?? []).map((a) => [
-        a.course_id,
-        { id: a.course_id, title: a.title },
-      ]),
+      (all.data?.items ?? []).map((a) => [a.course_id, { id: a.course_id, title: a.title }]),
     ).values(),
   );
   const visible = (report.data?.items ?? []).filter((a) =>
-    (a.full_name + " " + a.email + " " + a.title)
-      .toLowerCase()
-      .includes(query.toLowerCase()),
+    (a.full_name + ' ' + a.email + ' ' + a.title).toLowerCase().includes(query.toLowerCase()),
   );
   const exportResults = () =>
     void action.run(async () => {
-      const response = await apiFetch("/team/results/export?" + filters);
+      const response = await apiFetch('/team/results/export?' + filters);
       if (!response.ok)
         throw new ApiError(
-          t("Не удалось подготовить выгрузку. Повторите запрос."),
+          t('Не удалось подготовить выгрузку. Повторите запрос.'),
           response.status,
-          "http",
+          'http',
         );
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
-      link.download = "learning-results.csv";
+      link.download = 'learning-results.csv';
       link.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, t("Выгрузка подготовлена с выбранными фильтрами"));
+    }, t('Выгрузка подготовлена с выбранными фильтрами'));
   return (
     <Shell
-      title={t("Результаты обучения")}
-      description={t(
-        "Подтверждённые назначения и оценки в вашей области ответственности.",
-      )}
+      title={t('Аналитика обучения')}
+      description={t('Подтверждённые назначения и оценки в вашей области ответственности.')}
     >
       <div className={s.page}>
-        <TeamTabs />
         {[report, all, team, groups, reminders].map((r, i) =>
-          r.error ? (
-            <RequestError
-              key={i}
-              error={r.error}
-              onRetry={() => void r.reload()}
-            />
-          ) : null,
+          r.error ? <RequestError key={i} error={r.error} onRetry={() => void r.reload()} /> : null,
         )}
-        {report.loading && !report.data && (
-          <LoadingState>{t("Собираем результаты…")}</LoadingState>
-        )}
+        {report.loading && !report.data && <LoadingState>{t('Собираем результаты…')}</LoadingState>}
         {report.data && (
           <>
-            <section className={s.stats}>
-              <div className={s.stat}>
-                <span>{t("Назначено / завершено")}</span>
-                <strong>
-                  {report.data.metrics.assigned} /{" "}
-                  {report.data.metrics.completed}
-                </strong>
-              </div>
-              <div className={s.stat}>
-                <span>{t("Ожидают проверки")}</span>
-                <strong>{report.data.metrics.pending_reviews}</strong>
-              </div>
-              <div className={s.stat}>
-                <span>{t("Средний результат")}</span>
-                <strong>
-                  {report.data.metrics.average_score_percent !== null
-                    ? report.data.metrics.average_score_percent + "%"
-                    : "—"}
-                </strong>
-              </div>
+            <div className={`${s.formGrid} ${s.analyticsFilters}`}>
+              <label className={s.field}>
+                {t('Курс')}
+                <select value={course} onChange={(e) => choose('course_id', e.target.value)}>
+                  <option value=''>{t('Все доступные курсы')}</option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={s.field}>
+                {t('Группа')}
+                <select value={group} onChange={(e) => choose('group_id', e.target.value)}>
+                  <option value=''>{t('Все группы')}</option>
+                  {groups.data?.items.map((g) => (
+                    <option key={g.id} value={g.id}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={s.field}>
+                {t('Участник')}
+                <select value={user} onChange={(e) => choose('user_id', e.target.value)}>
+                  <option value=''>{t('Все участники')}</option>
+                  {team.data?.members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.full_name || m.email}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className={s.field}>
+                {t('Поиск')}
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('Имя, почта или курс')}
+                />
+              </label>
+            </div>
+            <section className={s.analyticsStats} aria-label={t('Сводка обучения')}>
+              {[
+                ['Назначено', report.data.metrics.assigned],
+                ['В процессе', report.data.metrics.in_progress],
+                ['Завершили', report.data.metrics.completed],
+                ['Просрочили', report.data.metrics.overdue],
+                ['На проверке', report.data.metrics.pending_reviews],
+              ].map(([label, value]) => (
+                <div className={s.stat} key={label}>
+                  <span>{t(String(label))}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
             </section>
+            <AnalyticsSummary items={report.data.items} groups={groups.data?.items ?? []} />
             <div className={s.card}>
               <div className={s.spread}>
-                <h2>{t("Назначения и результаты")}</h2>
+                <h2>{t('Назначения и результаты')}</h2>
                 <button
                   className={s.primary}
                   disabled={action.busy || !report.data.items.length}
                   onClick={exportResults}
                 >
-                  {t("Скачать CSV ↓")}
+                  {t('Скачать CSV ↓')}
                 </button>
               </div>
-              <div className={s.formGrid}>
-                <label className={s.field}>
-                  {t("Курс")}
-                  <select
-                    value={course}
-                    onChange={(e) => choose("course_id", e.target.value)}
-                  >
-                    <option value="">{t("Все доступные курсы")}</option>
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className={s.field}>
-                  {t("Группа")}
-                  <select
-                    value={group}
-                    onChange={(e) => choose("group_id", e.target.value)}
-                  >
-                    <option value="">{t("Все группы")}</option>
-                    {groups.data?.items.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className={s.field}>
-                  {t("Участник")}
-                  <select
-                    value={user}
-                    onChange={(e) => choose("user_id", e.target.value)}
-                  >
-                    <option value="">{t("Все участники")}</option>
-                    {team.data?.members.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.full_name || m.email}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className={s.field}>
-                  {t("Поиск")}
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={t("Имя, почта или курс")}
-                  />
-                </label>
-              </div>
               <p className={s.caption}>
-                {t("В процессе:") + " "}
+                {t('В процессе:') + ' '}
                 {report.data.metrics.in_progress}
-                {t(". Просрочено:")} {report.data.metrics.overdue}
+                {t('. Просрочено:')} {report.data.metrics.overdue}
                 {t(
-                  ". Отозванные назначения остаются в истории и не учитываются в активной сводке.",
+                  '. Отозванные назначения остаются в истории и не учитываются в активной сводке.',
                 )}
               </p>
               <ActionStatus action={action} />
@@ -199,11 +167,11 @@ export default function LearningAnalytics() {
                 <table className={s.table}>
                   <thead>
                     <tr>
-                      <th>{t("Участник")}</th>
-                      <th>{t("Курс / версия")}</th>
-                      <th>{t("Прогресс")}</th>
-                      <th>{t("Результат")}</th>
-                      <th>{t("Статус и срок")}</th>
+                      <th>{t('Участник')}</th>
+                      <th>{t('Курс / версия')}</th>
+                      <th>{t('Прогресс')}</th>
+                      <th>{t('Результат')}</th>
+                      <th>{t('Статус и срок')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -216,9 +184,9 @@ export default function LearningAnalytics() {
                         <td>
                           {a.title}
                           <p className={s.caption}>
-                            {t("Версия") + " "}
+                            {t('Версия') + ' '}
                             {a.revision}
-                            {" " + t("· назначение") + " "}
+                            {' ' + t('· назначение') + ' '}
                             {a.id}
                           </p>
                         </td>
@@ -228,7 +196,7 @@ export default function LearningAnalytics() {
                             className={s.progress}
                             max={100}
                             value={a.progress_percent}
-                            aria-label={t("Прогресс {v0}", {
+                            aria-label={t('Прогресс {v0}', {
                               v0: a.full_name ?? a.email ?? String(a.user_id),
                             })}
                           />
@@ -236,27 +204,24 @@ export default function LearningAnalytics() {
                         <td>
                           {a.max_points
                             ? `${a.points} / ${a.max_points}`
-                            : t("Без балльной оценки")}
+                            : t('Без балльной оценки')}
                           <p className={s.caption}>
-                            {a.score_percent !== null
-                              ? `${a.score_percent}%`
-                              : ""}
+                            {a.score_percent !== null ? `${a.score_percent}%` : ''}
                             {a.pending_reviews
-                              ? t(" · На проверке: {v0}", {
+                              ? t(' · На проверке: {v0}', {
                                   v0: a.pending_reviews,
                                 })
-                              : ""}
+                              : ''}
                           </p>
                         </td>
                         <td>
                           <span className={s.badge}>
-                            {t(stateLabel[a.status] ?? String(a.status)) ??
-                              a.status}
+                            {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
                           </span>
                           <p className={s.caption}>
                             {a.completed_at
-                              ? t("Завершено: ") + dateLabel(a.completed_at)
-                              : t("Срок: ") + dateLabel(a.due_at)}
+                              ? t('Завершено: ') + dateLabel(a.completed_at)
+                              : t('Срок: ') + dateLabel(a.due_at)}
                           </p>
                         </td>
                       </tr>
@@ -268,25 +233,21 @@ export default function LearningAnalytics() {
                 <div className={s.empty}>
                   <h3>
                     {report.data.items.length
-                      ? t("По вашему поиску ничего не найдено")
-                      : t("Назначений с такими условиями нет")}
+                      ? t('По вашему поиску ничего не найдено')
+                      : t('Назначений с такими условиями нет')}
                   </h3>
-                  <p>
-                    {t(
-                      "Измените фильтры или назначьте участникам опубликованный курс.",
-                    )}
-                  </p>
-                  <Link className={s.secondary} to="/assignments">
-                    {t("К назначениям")}
+                  <p>{t('Измените фильтры или назначьте участникам опубликованный курс.')}</p>
+                  <Link className={s.secondary} to='/assignments'>
+                    {t('К назначениям')}
                   </Link>
                 </div>
               )}
             </div>
             <section className={s.card} style={{ marginTop: 28 }}>
-              <h2>{t("Ближайшие сроки и просроченные назначения")}</h2>
+              <h2>{t('Ближайшие сроки и просроченные назначения')}</h2>
               <p className={s.muted}>
                 {t(
-                  "Для программ учитывается интервал предупреждения из назначенной редакции; для отдельных курсов — три дня.",
+                  'Для программ учитывается интервал предупреждения из назначенной редакции; для отдельных курсов — три дня.',
                 )}
               </p>
               {reminders.data?.items.length ? (
@@ -294,19 +255,18 @@ export default function LearningAnalytics() {
                   <table className={s.table}>
                     <thead>
                       <tr>
-                        <th>{t("Участник")}</th>
-                        <th>{t("Курс")}</th>
-                        <th>{t("Срок")}</th>
-                        <th>{t("Прогресс")}</th>
+                        <th>{t('Участник')}</th>
+                        <th>{t('Курс')}</th>
+                        <th>{t('Срок')}</th>
+                        <th>{t('Прогресс')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {reminders.data.items.map((a) => (
                         <tr key={a.id}>
                           <td>
-                            {team.data?.members.find((m) => m.id === a.user_id)
-                              ?.full_name ||
-                              t("Участник {v0}", { v0: a.user_id })}
+                            {team.data?.members.find((m) => m.id === a.user_id)?.full_name ||
+                              t('Участник {v0}', { v0: a.user_id })}
                           </td>
                           <td>{a.title}</td>
                           <td>{dateLabel(a.due_at)}</td>
@@ -317,9 +277,7 @@ export default function LearningAnalytics() {
                   </table>
                 </div>
               ) : (
-                <p className={s.muted}>
-                  {t("Назначений с приближающимся сроком нет.")}
-                </p>
+                <p className={s.muted}>{t('Назначений с приближающимся сроком нет.')}</p>
               )}
             </section>
           </>

@@ -1,7 +1,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
+  gap: 24px;
 }
 .card {
   min-width: 0;
@@ -12,14 +12,14 @@
 .cardTop {
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
 }
 .status {
   flex: 1;
   min-width: 0;
-  border-radius: 32px 32px 0 0;
+  border-radius: 24px 24px 0 0;
   background: #141414;
-  padding: 26px 30px 20px;
+  padding: 30px 30px 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -28,15 +28,15 @@
 .status:after {
   content: '';
   position: absolute;
-  width: 32px;
-  height: 32px;
-  right: -32px;
+  width: 24px;
+  height: 24px;
+  right: -24px;
   bottom: 0;
-  background: radial-gradient(circle at top right, transparent 32px, #141414 32.5px);
+  background: radial-gradient(circle at top right, transparent 24px, #141414 24.5px);
   z-index: -1;
 }
 .eyebrow {
-  color: #caf432;
+  color: #c6f135;
   font-size: 14px;
 }
 .status > span:last-child {
@@ -46,33 +46,33 @@
 }
 .quickActions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   padding-bottom: 12px;
   align-self: flex-start;
 }
 .card .circle {
-  width: 54px;
-  height: 54px;
+  width: 50px;
+  height: 50px;
   display: grid;
   place-items: center;
-  background: #caf432;
+  background: #c6f135;
   color: #111;
   border-radius: 50%;
   text-decoration: none;
 }
 .cardBody {
   background: #141414;
-  border-radius: 0 32px 32px 32px;
-  padding: 36px 30px 28px;
+  border-radius: 0 24px 24px 24px;
+  padding: 24px 30px 30px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 .card h2 {
   font:
-    400 clamp(19px, 1.6vw, 28px)/1.35 Days,
+    400 20px/1.35 Days,
     sans-serif;
-  margin: 0 0 30px;
+  margin: 0 0 24px;
   overflow-wrap: anywhere;
 }
 .card h2 a {
@@ -81,21 +81,21 @@
 }
 .metrics {
   display: flex;
-  gap: 36px;
+  gap: 32px;
   margin: 0 0 26px;
 }
 .metrics div {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 .metrics dt {
-  color: #caf432;
+  color: #c6f135;
   font-size: 14px;
 }
 .metrics dd {
   margin: 0;
   font:
-    400 clamp(38px, 3.7vw, 62px)/1 Days,
+    400 48px/1 Days,
     sans-serif;
   font-variant-numeric: tabular-nums;
 }
@@ -122,7 +122,7 @@
   justify-content: center;
   gap: 14px;
   border-radius: 30px;
-  background: #caf432;
+  background: #c6f135;
   color: #111;
   padding: 10px 16px;
   text-decoration: none;
@@ -152,7 +152,7 @@
     box-shadow: 0 8px 25px #caf43215;
   }
   .card h2 a:hover {
-    color: #caf432;
+    color: #c6f135;
   }
   .remove:hover {
     background: #382220;

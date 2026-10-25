@@ -23,7 +23,7 @@
 }
 
 .modeCard.selected {
-  border-color: #C6F135;
+  border-color: #c6f135;
 }
 
 .cardHeader {
@@ -57,9 +57,9 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-  font-family: 'Ubuntu';
+  font-family: 'GolosText';
   font-size: 14px;
-  color: #6D6D6D;
+  color: #6d6d6d;
 }
 
 .featureItem:last-child {
@@ -70,7 +70,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #C6F135;
+  color: #c6f135;
   flex-shrink: 0;
 }
 
@@ -97,6 +97,6 @@
 }
 
 .checkbox.checked {
-  border-color: #C6F135;
+  border-color: #c6f135;
   background: rgba(198, 241, 53, 0.1);
 }

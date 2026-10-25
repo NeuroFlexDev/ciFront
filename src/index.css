@@ -59,17 +59,28 @@ p {
   font-family: 'GolosText', sans-serif;
 }
 
+/* Figma: DS / Colors 1788:6365, Typography 1792:10803, Spacing 1805:10782. */
 :root {
+  --ui-page-width: min(calc(100% - 120px), 1320px);
+  --ui-radius-card: 24px;
+  --ui-radius-input: 16px;
+  --ui-radius-pill: 9999px;
+  --ui-space-section: 40px;
+  --ui-orange: #ff5733;
+  --ui-text-secondary: #6d6d6d;
+  --ui-text-muted: #888;
+  --ui-font-heading: 'Days', sans-serif;
+  --ui-font-body: 'GolosText', sans-serif;
   --ui-bg: #0c0d12;
   --ui-bg-secondary: #141414;
   --ui-surface: #141414;
   --ui-surface-strong: #191919;
-  --ui-surface-soft: #222;
+  --ui-surface-soft: #313131;
   --ui-line: #303030;
   --ui-line-strong: #484848;
-  --ui-text: #fff;
+  --ui-text: #f0f0ec;
   --ui-muted: #aaa;
-  --ui-accent: #caf432;
+  --ui-accent: #c6f135;
   --ui-danger: #f0897d;
   --ui-success: #83c7a3;
   --ui-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
@@ -138,9 +149,9 @@ select {
 }
 .session-recovery button[type='submit'],
 .session-recovery button:not([type]) {
-  background: #caf432;
+  background: #c6f135;
   color: #141414;
-  border-color: #caf432;
+  border-color: #c6f135;
 }
 .session-recovery button:disabled {
   opacity: 0.5;
@@ -225,6 +236,30 @@ select {
   font: inherit;
 }
 .language-picker select:focus-visible {
-  outline: 2px solid #caf432;
+  outline: 2px solid #c6f135;
   outline-offset: 3px;
+}
+
+@media (max-width: 1199px) {
+  :root {
+    --ui-page-width: calc(100% - 64px);
+  }
+}
+@media (max-width: 700px) {
+  :root {
+    --ui-page-width: calc(100% - 32px);
+    --ui-space-section: 28px;
+  }
+}
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+textarea,
+select {
+  accent-color: var(--ui-accent);
 }

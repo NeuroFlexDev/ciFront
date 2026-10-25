@@ -1,5 +1,6 @@
 import { isAdminSurface, adminAppUrl } from '@/shared/surface';
 import AdminMenu from './AdminMenu';
+import NotificationMenu from './NotificationMenu';
 import { isBusiness, isBusinessManager, businessHome } from '@/shared/business';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
 import { useLocale } from '@/i18n/useLocale';
@@ -8,7 +9,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/useAuth';
 import { api, getAuthToken } from '@/shared/api';
 import { useReconnect } from '@/hooks/useReconnect';
-import logo from '@/assets/icons/logo.svg';
+import logo from '@/assets/figma/brand.svg';
 import styles from './styles.module.css';
 type Permissions = {
   can_manage_team: boolean;
@@ -94,6 +95,7 @@ function PlatformMenu() {
     (new URLSearchParams(location.search).get('tab') === 'overview' ||
       (!location.search && user?.organization_role === 'owner'));
   const companyPersonnel = location.pathname.startsWith('/company') && !companyOverview;
+  const learner = !author && user?.organization_role === 'member';
   const links = manager
     ? [
         ['/company?tab=overview', t('Обзор')],
@@ -106,24 +108,29 @@ function PlatformMenu() {
           ['/learning', t('Мои регламенты')],
           ['/dashboard', t('Мои результаты')],
         ]
-      : [
-          ['/dashboard', t('Дашборд')],
-          ['/learning', t(business ? 'Мои регламенты' : 'Моё обучение')],
-          ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
-          ...(author
-            ? [
-                ['/courses', t('Курсы')],
-                ['/express', t('Создать курс')],
-              ]
-            : []),
-          ...(user?.organization_id ? [['/employees', t('Сотрудники')]] : []),
-          ...(permissions?.can_report
-            ? [['/learning-analytics', t('Аналитика')]]
-            : author
-              ? [['/analytics', t('Аналитика')]]
+      : learner
+        ? [
+            ['/learning', t('Моё обучение')],
+            ['/dashboard', t('Прогресс')],
+          ]
+        : [
+            ['/dashboard', t('Дашборд')],
+            ...(permissions?.can_manage_business ? [['/company', t('Моя компания')]] : []),
+            ...(author
+              ? [
+                  ['/courses', t('Курсы')],
+                  ['/express', t('Создать курс')],
+                ]
               : []),
-        ];
+            ...(user?.organization_id ? [['/employees', t('Сотрудники')]] : []),
+            ...(permissions?.can_report
+              ? [['/learning-analytics', t('Аналитика')]]
+              : author
+                ? [['/analytics', t('Аналитика')]]
+                : []),
+          ];
   const extra = [
+    ...(!business && !learner ? [['/learning', t('Моё обучение')]] : []),
     ...(manager ? [['/learning', t('Мои регламенты')]] : []),
     ...(author
       ? [
@@ -175,6 +182,7 @@ function PlatformMenu() {
           </NavLink>
         ))}
       </nav>
+      <NotificationMenu author={author} />
       <details ref={accountRef} className={styles.accountBlock}>
         <summary>
           <span className={styles.userInfo}>

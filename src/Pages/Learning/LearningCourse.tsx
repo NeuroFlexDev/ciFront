@@ -167,6 +167,39 @@ export default function LearningCourse() {
   };
   return (
     <Shell
+      className={s.readerPage}
+      readerHeader={
+        <header className={s.readerTop}>
+          <Link className={s.secondary} to='/learning'>
+            {t('← Моё обучение')}
+          </Link>
+          <div className={s.readerTitle}>
+            <h1>{data?.title ?? t('Обучение')}</h1>
+            <span>
+              {lesson?.title ?? (assessment ? t('Проверка знаний') : t('Материалы курса'))}
+            </span>
+          </div>
+          {data && (
+            <div className={s.readerProgress}>
+              <span role='status'>
+                {busy
+                  ? t('Сохраняем…')
+                  : error
+                    ? t('Изменения не сохранены')
+                    : t('Прогресс сохранён')}
+              </span>
+              <progress
+                aria-label={t('Пройдено уроков')}
+                value={data.completed_lessons.length}
+                max={Math.max(1, data.lesson_count)}
+              />
+              <span>
+                {data.completed_lessons.length} {t('из')} {data.lesson_count}
+              </span>
+            </div>
+          )}
+        </header>
+      }
       title={data?.title ?? t('Обучение')}
       description={
         data
@@ -183,6 +216,11 @@ export default function LearningCourse() {
       }
     >
       <div className={s.page}>
+        {data && !resultsOnly && (
+          <a className={s.readerContentsLink} href='#learning-contents'>
+            {t('Содержание курса')} ↓
+          </a>
+        )}
         {!!query.error && (
           <RequestError error={query.error} onRetry={() => void query.reload()} fullPage={!data} />
         )}{' '}
@@ -191,28 +229,33 @@ export default function LearningCourse() {
         )}
         {data && (
           <>
-            <div className={s.stats}>
-              <div className={s.stat}>
-                <span>{t('Пройдено уроков')}</span>
-                <strong>
-                  {data.completed_lessons.length} / {data.lesson_count}
-                </strong>
+            {resultsOnly && (
+              <div className={s.stats}>
+                <div className={s.stat}>
+                  <span>{t('Пройдено уроков')}</span>
+                  <strong>
+                    {data.completed_lessons.length} / {data.lesson_count}
+                  </strong>
+                </div>
+                <div className={s.stat}>
+                  <span>{t('Баллы')}</span>
+                  <strong>
+                    {data.max_points ? `${data.points} / ${data.max_points}` : t('Без оценки')}
+                  </strong>
+                </div>
+                <div className={s.stat}>
+                  <span>{t('Статус обучения')}</span>
+                  <strong style={{ fontSize: 23 }}>
+                    {t(stateLabel[data.status] ?? String(data.status)) ?? data.status}
+                  </strong>
+                </div>
               </div>
-              <div className={s.stat}>
-                <span>{t('Баллы')}</span>
-                <strong>
-                  {data.max_points ? `${data.points} / ${data.max_points}` : t('Без оценки')}
-                </strong>
-              </div>
-              <div className={s.stat}>
-                <span>{t('Статус обучения')}</span>
-                <strong style={{ fontSize: 23 }}>
-                  {t(stateLabel[data.status] ?? String(data.status)) ?? data.status}
-                </strong>
-              </div>
-            </div>
-            {!resultsOnly && data.content && (
-              <LearnerSources assignmentId={data.id} sources={data.content.sources ?? []} />
+            )}
+            {!resultsOnly && data.content && !!data.content.sources?.length && (
+              <details className={s.readerSources}>
+                <summary>{t('Материалы курса')}</summary>
+                <LearnerSources assignmentId={data.id} sources={data.content.sources ?? []} />
+              </details>
             )}
             <div className={s.tablist}>
               <button
@@ -295,13 +338,20 @@ export default function LearningCourse() {
                   )}
                   {!!error && <RequestError error={error} onRetry={() => void query.reload()} />}
                 </div>
-                <nav className={s.rail} aria-label={t('Уроки и задания курса')}>
+                <nav
+                  id='learning-contents'
+                  className={s.rail}
+                  aria-label={t('Уроки и задания курса')}
+                >
+                  <h2>{t(business ? 'Содержание регламента' : 'Содержание курса')}</h2>
                   {data.content.modules.map((m, i) => (
                     <div className={s.stack} style={{ gap: 10 }} key={m.id}>
-                      {!business && <div className={s.railSection}>
-                        {t('Модуль') + ' '}
-                        {i + 1} · {m.title}
-                      </div>}
+                      {!business && (
+                        <div className={s.railSection}>
+                          {t('Модуль') + ' '}
+                          {i + 1} · {m.title}
+                        </div>
+                      )}
                       {m.lessons.map((l, n) => (
                         <button
                           key={l.id}

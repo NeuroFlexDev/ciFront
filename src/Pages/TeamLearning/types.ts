@@ -84,7 +84,8 @@ export const roles: Record<string, string> = {
 export const initials = (name: string) =>
   name
     .trim()
-    .split(/\s+/)
+    .split(/[\s—–-]+/)
+    .filter(Boolean)
     .slice(0, 2)
     .map((v) => v[0])
     .join("")

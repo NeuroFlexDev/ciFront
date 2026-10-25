@@ -169,7 +169,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     {authError&&!user?<RequestError error={authError} fullPage onRetry={()=>setCheckVersion(v=>v+1)} retrying={isLoading}/>:children}
     {sessionExpired && user && <div ref={renewDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="renew-title" className="session-recovery"
       style={{position:'fixed',inset:0,zIndex:10000,background:'#10182899',display:'grid',placeItems:'center',padding:16,overflow:'auto'}}>
-      {renewChallenge?<div className={mfaStyles.dialog}><h2 id="renew-title">{t('Подтвердите двухэтапный вход')}</h2><MFAChallengeForm challenge={renewChallenge} onSuccess={completeAuthentication} onCancel={()=>setRenewChallenge(null)}/></div>:<form style={{background:'#171b20',color:'#f5f6f1',padding:28,borderRadius:16,width:'min(460px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
+      {renewChallenge?<div className={mfaStyles.dialog}><h2 id="renew-title">{t('Подтвердите двухэтапный вход')}</h2><MFAChallengeForm challenge={renewChallenge} onSuccess={completeAuthentication} onCancel={()=>setRenewChallenge(null)}/></div>:<form style={{background:'#141414',color:'#f0f0ec',padding:30,borderRadius:24,width:'min(650px,100%)',display:'grid',gap:16,maxHeight:'calc(100dvh - 32px)',overflow:'auto'}}
         onSubmit={async event => {
           event.preventDefault(); if(renewing)return; setRenewing(true); setRenewError('');
           try { await authenticate('/auth/login', {email:user.email || user.username || '',password}); }

@@ -181,12 +181,12 @@ it('provides English configuration and presets without enabling a new provider b
   expect(screen.getByLabelText('New API key')).toHaveValue('');
 });
 
-it('protects unsaved keys, traps focus and restores the triggering control after dismissal', async () => {
+it('protects unsaved keys in the inline panel and restores the triggering control after dismissal', async () => {
   show();
   const trigger = await screen.findByRole('button', { name: 'Настроить VSELLM' });
   trigger.focus();
   fireEvent.click(trigger);
-  const dialog = screen.getByRole('dialog', { name: 'Подключение провайдера' });
+  const dialog = screen.getByRole('region', { name: 'VSELLM' });
   expect(dialog).toContainElement(document.activeElement as HTMLElement);
   fireEvent.change(screen.getByLabelText('Действие с ключом'), { target: { value: 'replace' } });
   fireEvent.change(screen.getByLabelText('Новый API-ключ'), {

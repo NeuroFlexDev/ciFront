@@ -1,3 +1,4 @@
+import GenerationMonitor from './GenerationMonitor';
 import AdminDialog from '@/Components/Admin/AdminDialog';
 import AdminToast from '@/Components/Admin/AdminToast';
 import { useLocale } from '@/i18n/useLocale';
@@ -242,13 +243,18 @@ export default function AdminOperationsPage() {
   const { user } = useAuth();
   return (
     <Shell
-      title={t('Эксплуатация')}
+      title={t('Мониторинг')}
       description={t('Доступность сервисов, очереди, место и использование AI.')}
-      action={<Link to='/admin'>{t('Админка →')}</Link>}
     >
       <div className={`${s.content} ${s.view} ${o.operations}`}>
         {user?.is_admin ? (
-          <Diagnostics />
+          <>
+            <GenerationMonitor />
+            <details className={o.diagnostics}>
+              <summary>{t('Состояние инфраструктуры и доставки')}</summary>
+              <Diagnostics />
+            </details>
+          </>
         ) : (
           <Empty>
             <h2>{t('Доступ только оператору')}</h2>

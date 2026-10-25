@@ -1,5 +1,5 @@
 .root {
-  --progress-accent: #caf432;
+  --progress-accent: #c6f135;
   --progress-muted: #a5a5ad;
   padding: 14px 0 24px;
   min-width: 0;
@@ -57,7 +57,7 @@
   text-wrap: balance;
 }
 .meter {
-  max-width: 900px;
+  max-width: 650px;
   margin: 0 auto 34px;
 }
 .meterLabel {
@@ -127,7 +127,9 @@
 }
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr);
+  grid-template-columns: 1fr;
+  max-width: 650px;
+  margin: auto;
   gap: 24px;
   align-items: start;
 }
@@ -218,7 +220,7 @@
 }
 .preview {
   border: 1px solid #2d2d32;
-  border-radius: 32px;
+  border-radius: 24px;
   padding: 25px;
   min-width: 0;
   background: #141414;
@@ -404,7 +406,7 @@
   background: var(--progress-accent);
   border: 1px solid var(--progress-accent);
   color: #111;
-  border-radius: 32px;
+  border-radius: 24px;
   padding: 15px 24px;
   font-weight: 600;
   text-decoration: none;
@@ -617,5 +619,49 @@
       opacity: 1;
       transform: none;
     }
+  }
+}
+
+.root .header {
+  max-width: 650px;
+  margin-bottom: 24px;
+}
+.root .header h2 {
+  font-size: 32px;
+}
+.mark {
+  width: 132px;
+  height: 108px;
+  margin-bottom: 24px;
+  border: 0;
+  background: transparent;
+  gap: 10px;
+}
+.mark i {
+  width: 17px;
+  height: 65px;
+  border-radius: 6px;
+}
+.mark i:nth-child(2) {
+  height: 86px;
+}
+.stage {
+  min-height: 80px;
+  padding: 18px 20px;
+  border-radius: 20px;
+}
+.stage[data-state='active'] {
+  background: #141414;
+  border-color: #3e432c;
+}
+.stage[data-state='active'] .stageStatus {
+  color: #ff5733;
+}
+.track {
+  height: 4px;
+}
+@media (max-width: 600px) {
+  .root .header h2 {
+    font-size: 24px;
   }
 }

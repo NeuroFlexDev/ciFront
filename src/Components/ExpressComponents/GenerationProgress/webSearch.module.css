@@ -1,3 +1,99 @@
-.card{margin-top:22px;padding:22px 24px;border:1px solid #353b2c;border-radius:22px;background:#151812;color:#e7ebdf;font-family:'GolosText',sans-serif;min-width:0}
-.heading{display:flex;align-items:center;gap:12px}.heading>svg{flex-shrink:0;color:#caf432}.card .heading h3{margin:0;font:500 17px/1.5 'GolosText',sans-serif}.card p{margin:10px 0 0;font-size:13px;line-height:1.7;color:#b5bbab}.card .warning{color:#e5c18a}.card ul{list-style:none;padding:0;margin:16px 0 0;display:grid;gap:8px}.card li{min-width:0;overflow-wrap:anywhere}.card a{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;background:#20251a;border-radius:14px;color:#e0efc5;text-decoration:none;font-size:13px;line-height:1.5}.card a:hover{background:#2a3320;color:#caf432}.card a:focus-visible,.card summary:focus-visible{outline:2px solid #caf432;outline-offset:3px}.card a>svg{flex-shrink:0}.card small{display:block;color:#969e88;font-size:11px;margin-top:4px}.card details{margin-top:16px;font-size:12px;line-height:1.6;color:#aab49a}.card summary{cursor:pointer}.card details ul{list-style:disc;padding-left:20px;margin-top:10px}
-@media(max-width:600px){.card{padding:18px;border-radius:18px}.card .heading h3{font-size:15px}}
+.card {
+  margin-top: 22px;
+  padding: 22px 24px;
+  border: 1px solid #353b2c;
+  border-radius: 22px;
+  background: #151812;
+  color: #e7ebdf;
+  font-family: 'GolosText', sans-serif;
+  min-width: 0;
+}
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.heading > svg {
+  flex-shrink: 0;
+  color: #c6f135;
+}
+.card .heading h3 {
+  margin: 0;
+  font:
+    500 17px/1.5 'GolosText',
+    sans-serif;
+}
+.card p {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #b5bbab;
+}
+.card .warning {
+  color: #e5c18a;
+}
+.card ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.card li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.card a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #20251a;
+  border-radius: 14px;
+  color: #e0efc5;
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.card a:hover {
+  background: #2a3320;
+  color: #c6f135;
+}
+.card a:focus-visible,
+.card summary:focus-visible {
+  outline: 2px solid #c6f135;
+  outline-offset: 3px;
+}
+.card a > svg {
+  flex-shrink: 0;
+}
+.card small {
+  display: block;
+  color: #969e88;
+  font-size: 11px;
+  margin-top: 4px;
+}
+.card details {
+  margin-top: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #aab49a;
+}
+.card summary {
+  cursor: pointer;
+}
+.card details ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .card .heading h3 {
+    font-size: 15px;
+  }
+}
