@@ -80,6 +80,14 @@ export const publicEnglish: Record<string, string> = {
   'В рабочее пространство ↗': 'Go to workspace ↗',
   Войти: 'Sign in',
   'Ошибка интерфейса': 'Interface error',
+  'Ошибка сервиса': 'Service error',
+  'У вашего аккаунта нет прав для этого действия. Вернитесь в рабочее пространство или обратитесь к администратору организации.':
+    'Your account does not have permission for this action. Return to your workspace or contact your organization administrator.',
+  'Сервис временно не смог обработать запрос. Попробуйте снова немного позже.':
+    'The service could not process the request right now. Please try again later.',
+  'Не удалось загрузить страницу': 'The page could not be loaded',
+  'Соединение прервалось или приложение обновилось. Проверьте интернет и обновите страницу. Материалы на сервере сохранятся. Перед обновлением можно скачать копию локальных черновиков.':
+    'The connection was interrupted or the app was updated. Check your connection and reload the page. Your server materials will remain saved. You can download a copy of your local drafts before reloading.',
   Повторить: 'Retry',
   'Обновить страницу': 'Reload page',
   'Скачать копию черновиков': 'Download draft copies',

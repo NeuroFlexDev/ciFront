@@ -111,6 +111,35 @@ describe('R02 recovery', () => {
     expect(screen.getByRole('heading', { name: 'Recovered page' })).toBeInTheDocument();
   });
 
+  it.each([
+    'Failed to fetch dynamically imported module: /assets/AuthPage-old.js',
+    'Importing a module script failed.',
+    'Unable to preload CSS for /assets/editor-old.css',
+  ])(
+    'offers a full reload for an unavailable deployed asset without clearing drafts: %s',
+    (message) => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      writeDraft('asset-recovery', 'Unsaved answer', undefined, user.id);
+      function Page(): never {
+        throw new TypeError(message);
+      }
+      render(
+        <AppErrorBoundary>
+          <Page />
+        </AppErrorBoundary>,
+      );
+      expect(
+        screen.getByRole('heading', { name: 'Не удалось загрузить страницу' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Повторить' }),
+      ).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Обновить страницу' })).toBeEnabled();
+      expect(screen.getByRole('button', { name: 'Скачать копию черновиков' })).toBeEnabled();
+      expect(readDraft<string>('asset-recovery', user.id)?.value).toBe('Unsaved answer');
+    },
+  );
+
   it('shows a dedicated 403 for an unauthorized admin route', () => {
     render(
       <MemoryRouter>
