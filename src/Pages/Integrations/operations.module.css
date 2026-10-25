@@ -126,7 +126,7 @@
   align-items: center;
   font-size: 14px;
 }
-.generationMonitor select {
+.generationMonitor .toolbar select {
   background: #313131;
   border: 0;
   border-radius: 24px;
@@ -189,6 +189,21 @@
   min-width: 140px;
   max-width: 240px;
 }
+.generationMonitor .runTable td button:not(:disabled):hover {
+  background: none;
+  border-color: transparent;
+  color: #c6f135;
+  transform: none;
+}
+.generationMonitor .runDetails {
+  margin: 0;
+}
+.generationMonitor .runDetails header button:not(:disabled):hover {
+  background: none;
+  border-color: transparent;
+  color: #c6f135;
+  transform: none;
+}
 .runTable small {
   display: block;
   color: #888;
@@ -247,6 +262,23 @@
   width: 100%;
   height: 8px;
   accent-color: #c6f135;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #313131;
+}
+.runDetails progress::-webkit-progress-bar {
+  background: #313131;
+  border-radius: 999px;
+}
+.runDetails progress::-webkit-progress-value {
+  background: #c6f135;
+  border-radius: 999px;
+}
+.runDetails progress::-moz-progress-bar {
+  background: #c6f135;
+  border-radius: 999px;
 }
 .runError {
   border: 1px solid #ff5733;

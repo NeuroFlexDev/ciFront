@@ -796,14 +796,14 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .stats {
-    gap: 12px;
+    gap: 24px;
   }
   .metricLink {
-    padding: 20px;
-    min-height: 150px;
+    padding: 30px;
+    min-height: 157px;
   }
   .metricLabel {
-    font-size: 12px;
+    font-size: 20px;
   }
   .metricLabel svg {
     display: none;
@@ -1308,7 +1308,11 @@
 }
 .organizationEditor .panel {
   max-width: 760px;
-  margin: 24px auto 0;
+  width: 100%;
+  margin: 24px auto 0 !important;
+  padding: 30px !important;
+  background: #141414 !important;
+  border-radius: 24px;
 }
 .organizationEditor .form {
   display: grid;
@@ -1342,7 +1346,7 @@
 }
 .customerIdentityForm {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 24px;
 }
 .customerQuotaForm {
@@ -1398,9 +1402,33 @@
   color: #888;
   font-size: 14px;
 }
+.organizationEditor .form input:not([type='checkbox']),
+.organizationEditor .form select {
+  background: #0c0d12;
+  border-color: transparent;
+  border-radius: 16px;
+  min-height: 48px;
+}
+.organizationEditor .form label {
+  font-size: 14px;
+}
+.organizationEditor .panel :global(.draft-notice) {
+  margin: 0 0 24px;
+  background: none;
+  padding: 0;
+  border: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.organizationEditor .panel :global(.draft-notice button) {
+  font-size: 12px;
+}
 @media (max-width: 700px) {
   .organizationEditor {
     width: calc(100vw - 24px) !important;
+  }
+  .organizationEditor .panel {
+    padding: 20px !important;
   }
   .customerIdentityForm {
     grid-template-columns: 1fr;
