@@ -1,12 +1,11 @@
 .layout {
   --admin-surface: #141414;
-  --admin-line: #33372e;
-  --admin-accent: #caf432;
-  --admin-muted: #b0b5a7;
-  --admin-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  --admin-line: #313131;
+  --admin-accent: #c6f135;
+  --admin-muted: #6d6d6d;
+  --admin-ease: var(--ui-ease);
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
   gap: 28px;
   min-width: 0;
   margin: 0;
@@ -19,13 +18,16 @@
   box-sizing: border-box;
 }
 .navigation {
-  position: sticky;
-  top: 22px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   min-width: 0;
-  padding: 22px 16px 16px;
-  background: #141414;
-  border: 1px solid #292d24;
-  border-radius: 28px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 .navigationTitle {
   color: #a6b18e;
@@ -37,57 +39,48 @@
 }
 .tabs {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  gap: 4px;
+  flex-wrap: wrap;
   margin: 0;
-  padding: 0;
+  padding: 4px;
   border: 0;
-  background: transparent;
+  border-radius: 9999px;
+  background: var(--ui-surface);
 }
 .tabs button {
   display: flex;
-  gap: 12px;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 48px;
-  text-align: left;
-  padding: 12px 14px;
-  color: #d4d9cc;
+  padding: 12px 22px;
+  color: var(--ui-text);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 24px;
+  border-radius: 9999px;
   cursor: pointer;
-  font:
-    14px/1.5 "GolosText",
-    sans-serif;
+  font: 400 16px/1.4 var(--ui-font-body);
 }
 .tabs button svg {
-  flex-shrink: 0;
+  display: none;
 }
 .tabs button svg:last-child {
   width: 14px;
   margin-left: auto;
   opacity: 0;
 }
-.tabs button[aria-selected="true"] {
+.tabs button[aria-selected='true'] {
   color: #15170f;
-  background: #caf432;
-  border-color: #caf432;
+  background: #c6f135;
+  border-color: #c6f135;
   font-weight: 600;
 }
-.tabs button[aria-selected="true"] svg:last-child {
+.tabs button[aria-selected='true'] svg:last-child {
   opacity: 1;
 }
 .operationsLink {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-top: 24px;
-  padding: 16px 12px 6px;
-  border-top: 1px solid #32392b;
-  color: #aeba97 !important;
-  font-size: 12px;
-  line-height: 1.6;
-  text-decoration: none;
+  display: none;
 }
 .operationsLink svg {
   flex-shrink: 0;
@@ -111,45 +104,45 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 24px;
   margin: 0;
 }
 .metricLink {
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 26px;
-  min-height: 172px;
+  justify-content: center;
+  gap: 12px;
+  min-height: 157px;
   min-width: 0;
-  padding: 22px;
-  border: 1px solid #47502f;
-  border-radius: 26px;
+  padding: 30px;
+  border: 0;
+  border-radius: 24px;
   text-align: left;
-  background:
-    radial-gradient(ellipse at 100% 0%, #596a274d, transparent 62%), #141414;
-  color: #f6f7ef;
-  cursor: pointer;
+  background: #141414;
+  color: var(--ui-text);
+  box-shadow:
+    inset -8px 1px 13px #c6f135,
+    0 16px 30px #0004;
 }
 .metricLabel {
   display: flex;
   align-items: center;
-  gap: 9px;
-  font:
-    13px/1.5 "GolosText",
-    sans-serif;
-  color: #c9d1b8;
-  padding-right: 16px;
+  gap: 10px;
+  font: 400 20px/1.3 var(--ui-font-heading);
+  color: var(--ui-text);
 }
 .metricLabel svg {
   flex-shrink: 0;
-  color: #caf432;
+  color: #c6f135;
 }
 .metricLink strong {
   font:
-    clamp(30px, 3vw, 48px)/1.1 "Days",
-    "GolosText",
+    clamp(30px, 3vw, 48px)/1.1 'Days',
+    'GolosText',
     sans-serif;
   overflow-wrap: anywhere;
 }
@@ -157,7 +150,7 @@
   position: absolute;
   right: 18px;
   bottom: 24px;
-  color: #caf432;
+  color: #c6f135;
 }
 .overviewGrid {
   display: grid;
@@ -170,7 +163,7 @@
   padding: 28px;
   background: #141414;
   border: 1px solid #292e23;
-  border-radius: 28px;
+  border-radius: 24px;
 }
 .sectionHeading {
   display: flex;
@@ -180,16 +173,16 @@
 }
 .sectionHeading h2 {
   font:
-    21px/1.4 "Days",
-    "GolosText",
+    21px/1.4 'Days',
+    'GolosText',
     sans-serif !important;
   margin: 8px 0 24px !important;
 }
 .sectionHeading > strong {
   font:
-    34px/1.2 "Days",
+    34px/1.2 'Days',
     sans-serif;
-  color: #caf432;
+  color: #c6f135;
 }
 .eyebrow {
   font-size: 11px;
@@ -237,7 +230,7 @@
   width: 100%;
   min-height: 0;
   border-radius: 14px 14px 0 0;
-  background: repeating-linear-gradient(130deg, #caf432 0 7px, #b0d12a 7px 8px);
+  background: repeating-linear-gradient(130deg, #c6f135 0 7px, #b0d12a 7px 8px);
   transform-origin: bottom;
   animation: bar-enter 480ms var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1)) both;
 }
@@ -253,13 +246,13 @@
 }
 .actionCard h2 {
   font:
-    19px/1.45 "Days",
-    "GolosText",
+    19px/1.45 'Days',
+    'GolosText',
     sans-serif !important;
   margin: 12px 0 !important;
 }
 .actionCard > svg {
-  color: #caf432;
+  color: #c6f135;
 }
 .actionCard p {
   font-size: 13px !important;
@@ -274,8 +267,8 @@
 .runStats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border: 1px solid #2b3025;
-  border-radius: 28px;
+  border: 1px solid #313131;
+  border-radius: 24px;
   padding: 24px 10px;
   background: #141414;
 }
@@ -297,8 +290,8 @@
 }
 .runStat strong {
   font:
-    clamp(20px, 2vw, 32px)/1.4 "Days",
-    "GolosText",
+    clamp(20px, 2vw, 32px)/1.4 'Days',
+    'GolosText',
     sans-serif;
   overflow-wrap: anywhere;
 }
@@ -316,9 +309,9 @@
   min-height: 46px;
   padding: 12px 20px;
   border: 1px solid #3d4531;
-  border-radius: 26px;
+  border-radius: 24px;
   font:
-    14px/1.4 "GolosText",
+    14px/1.4 'GolosText',
     sans-serif;
   cursor: pointer;
   text-decoration: none;
@@ -326,8 +319,8 @@
 }
 .primary {
   color: #14170c !important;
-  background: #caf432;
-  border-color: #caf432;
+  background: #c6f135;
+  border-color: #c6f135;
   font-weight: 600;
 }
 .secondary {
@@ -347,8 +340,7 @@
     background-color var(--ui-motion-fast, 160ms),
     border-color var(--ui-motion-fast, 160ms),
     color var(--ui-motion-fast, 160ms),
-    transform var(--ui-motion-fast, 160ms)
-      var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
+    transform var(--ui-motion-fast, 160ms) var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .layout :is(button, input, select, textarea):disabled,
 .deliveryPage :is(button, input, select, textarea):disabled {
@@ -357,21 +349,21 @@
 }
 .layout :focus-visible,
 .deliveryPage :focus-visible {
-  outline: 2px solid #caf432;
+  outline: 2px solid #c6f135;
   outline-offset: 4px;
 }
 .panel {
   background: #141414;
   border: 1px solid #32382a;
-  border-radius: 28px;
+  border-radius: 24px;
   padding: clamp(22px, 2.5vw, 36px);
   margin: 0;
   min-width: 0;
 }
 .panel h2 {
   font:
-    22px/1.45 "Days",
-    "GolosText",
+    22px/1.45 'Days',
+    'GolosText',
     sans-serif;
   margin: 0 0 24px;
   overflow-wrap: anywhere;
@@ -393,16 +385,16 @@
   gap: 10px;
   color: #d6dfc9;
   font:
-    13px/1.6 "GolosText",
+    13px/1.6 'GolosText',
     sans-serif;
   min-width: 0;
 }
-.form input:not([type="checkbox"]),
+.form input:not([type='checkbox']),
 .form select,
 .form textarea,
 .search input,
 .search select,
-.deliveryPage input:not([type="checkbox"]),
+.deliveryPage input:not([type='checkbox']),
 .deliveryPage select,
 .deliveryPage textarea {
   width: 100%;
@@ -412,9 +404,9 @@
   background: #0c0f09;
   color: #f2f6e9;
   border: 1px solid #424b35;
-  border-radius: 15px;
+  border-radius: 16px;
   font:
-    14px/1.5 "GolosText",
+    14px/1.5 'GolosText',
     sans-serif;
   color-scheme: dark;
   box-shadow: none;
@@ -422,7 +414,7 @@
 .form :is(input, select, textarea):focus,
 .search :is(input, select):focus,
 .deliveryPage :is(input, select, textarea):focus {
-  border-color: #caf432;
+  border-color: #c6f135;
   outline: 2px solid #caf43222;
   outline-offset: 1px;
 }
@@ -479,7 +471,7 @@
   flex-wrap: wrap;
   gap: 8px 24px;
 }
-.layout .form :is(input:not([type="checkbox"]), select, textarea) {
+.layout .form :is(input:not([type='checkbox']), select, textarea) {
   background: #1a1a1a;
   border-color: #424242;
 }
@@ -512,7 +504,7 @@
 .check input {
   width: 19px;
   height: 19px;
-  accent-color: #caf432;
+  accent-color: #c6f135;
   flex-shrink: 0;
   margin: 0;
 }
@@ -548,9 +540,9 @@
   display: flex;
   flex-direction: column;
   padding: 28px;
-  border-radius: 28px;
+  border-radius: 24px;
   background: #141414;
-  border: 1px solid #2b3025;
+  border: 1px solid #313131;
 }
 .cardAction {
   position: absolute;
@@ -562,21 +554,21 @@
   height: 58px;
   border: 8px solid #0b0c0f;
   border-radius: 50%;
-  background: #caf432;
+  background: #c6f135;
   color: #15180d !important;
   z-index: 1;
 }
 .card h2 {
   font:
-    20px/1.4 "Days",
-    "GolosText",
+    20px/1.4 'Days',
+    'GolosText',
     sans-serif !important;
   margin: 22px 0 12px !important;
   padding-right: 14px;
   overflow-wrap: anywhere;
 }
 .card > p {
-  color: #aebc94;
+  color: #aaa;
   font-size: 12px !important;
 }
 .badge {
@@ -600,16 +592,16 @@
   gap: 5px 12px;
 }
 .quotaList dt {
-  color: #b4bfa4;
+  color: #aaa;
   font-size: 12px;
 }
 .quotaList dd {
   margin: 0;
   font-size: 17px;
-  color: #e6efd7;
+  color: #f0f0ec;
 }
 .quotaList dd span {
-  color: #8b9978;
+  color: #6d6d6d;
   font-size: 12px;
 }
 .quotaList progress {
@@ -619,14 +611,14 @@
   border: 0;
   border-radius: 4px;
   overflow: hidden;
-  background: #303729;
-  accent-color: #caf432;
+  background: #313131;
+  accent-color: #c6f135;
 }
 .quotaList progress::-webkit-progress-bar {
-  background: #303729;
+  background: #313131;
 }
 .quotaList progress::-webkit-progress-value {
-  background: #caf432;
+  background: #c6f135;
   border-radius: 4px;
 }
 .card .row {
@@ -641,35 +633,34 @@
 .tableWrap {
   min-width: 0;
   overflow: auto;
-  border: 1px solid #30372a;
-  border-radius: 26px;
+  border: 0;
+  border-radius: 24px;
   background: #141414;
-  scrollbar-color: #4a5737 #141414;
+  padding: 20px 30px;
+  scrollbar-width: thin;
 }
 .table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 12px;
   min-width: 660px;
 }
 .table th {
   text-align: left;
-  padding: 18px 22px;
-  border-bottom: 1px solid #3a432e;
-  background: #1a2014;
-  color: #bccda5;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  white-space: nowrap;
+  padding: 0 20px 4px;
+  border: 0;
+  background: transparent;
+  color: #6d6d6d;
+  font: 400 14px/1.4 var(--ui-font-body);
 }
 .table td {
-  padding: 22px;
-  border-bottom: 1px solid #2c3325;
-  color: #e0e6d6;
-  font-size: 13px;
-  line-height: 1.65;
-  vertical-align: top;
+  padding: 20px;
+  border: 0;
+  background: #0c0d12;
+  color: #f0f0ec;
+  font-size: 14px;
+  line-height: 1.5;
+  vertical-align: middle;
   overflow-wrap: anywhere;
   max-width: 420px;
 }
@@ -709,7 +700,7 @@
   min-width: 0;
   padding: 36px;
   border: 1px dashed #4a553a;
-  border-radius: 26px;
+  border-radius: 24px;
   background: #141a10;
   color: #b8c8a0;
   text-align: center;
@@ -767,7 +758,7 @@
   }
 }
 @media (hover: hover) {
-  .tabs button:not([aria-selected="true"]):hover {
+  .tabs button:not([aria-selected='true']):hover {
     background: #28321d;
     border-color: #43572d;
   }
@@ -780,7 +771,7 @@
     border-color: #758d4b;
   }
   .metricLink:hover {
-    border-color: #caf432;
+    border-color: #c6f135;
     transform: translateY(-3px);
   }
   .cardAction:hover {
@@ -790,7 +781,7 @@
     background: #192013;
   }
   .operationsLink:hover {
-    color: #caf432 !important;
+    color: #c6f135 !important;
   }
   .danger:not(:disabled):hover {
     background: #503127;
@@ -798,7 +789,7 @@
 }
 @media (max-width: 1500px) {
   .layout {
-    grid-template-columns: 210px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     gap: 20px;
   }
   .grid {
@@ -1046,7 +1037,383 @@
 }
 
 /* Portal forms share the same controls as the workspace. */
-.dialogScope{font-family:'GolosText',sans-serif;line-height:1.6}
-.dialogScope *{box-sizing:border-box}.dialogScope p{font-size:13px;color:#adb3a3;line-height:1.65}.dialogScope h3{font-size:16px;font-weight:600}.dialogScope button:disabled{opacity:.5;cursor:not-allowed}.dialogScope a{color:#caf432}.dialogScope :focus-visible{outline:2px solid #caf432;outline-offset:3px}
-.dialogScope fieldset>section>h2:first-child{display:none}.dialogScope .panel{margin:0;padding:0;background:transparent;border:0}.dialogScope .form{gap:18px}.dialogScope .form label{font-size:13px}.dialogScope .form input:not([type=checkbox]),.dialogScope .form select,.dialogScope .form textarea{min-height:46px;padding:12px 14px;border-radius:12px;font-size:14px}
-.card .row{gap:8px}.card .row>*{flex:1 1 45%;padding:10px 12px;border-radius:14px}.card .row>.primary{flex-basis:100%}.card h2{font-family:'GolosText',sans-serif!important;font-weight:600!important}.card .row>.danger{background:transparent;color:#d7a69a;border-color:#544138}
+.dialogScope {
+  font-family: 'GolosText', sans-serif;
+  line-height: 1.6;
+}
+.dialogScope * {
+  box-sizing: border-box;
+}
+.dialogScope p {
+  font-size: 13px;
+  color: #adb3a3;
+  line-height: 1.65;
+}
+.dialogScope h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.dialogScope button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.dialogScope a {
+  color: #c6f135;
+}
+.dialogScope :focus-visible {
+  outline: 2px solid #c6f135;
+  outline-offset: 3px;
+}
+.dialogScope fieldset > section > h2:first-child {
+  display: none;
+}
+.dialogScope .panel {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.dialogScope .form {
+  gap: 18px;
+}
+.dialogScope .form label {
+  font-size: 13px;
+}
+.dialogScope .form input:not([type='checkbox']),
+.dialogScope .form select,
+.dialogScope .form textarea {
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+}
+.card .row {
+  gap: 8px;
+}
+.card .row > * {
+  flex: 1 1 45%;
+  padding: 10px 12px;
+  border-radius: 14px;
+}
+.card .row > .primary {
+  flex-basis: 100%;
+}
+.card h2 {
+  font-family: 'GolosText', sans-serif !important;
+  font-weight: 600 !important;
+}
+.card .row > .danger {
+  background: transparent;
+  color: #d7a69a;
+  border-color: #544138;
+}
+
+/* Customer index: Figma 1885:15152. A row keeps all existing management actions. */
+.metricLink::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -42px -300px -110px 222px;
+  background: url('../../assets/figma/stat-glow.svg') center/100% 100% no-repeat;
+  pointer-events: none;
+}
+.table td:first-child {
+  border-radius: 16px 0 0 16px;
+}
+.table td:last-child {
+  border-radius: 0 16px 16px 0;
+}
+.customerList {
+  display: grid;
+  gap: 12px;
+  padding: 30px;
+  background: #141414;
+  border-radius: 24px;
+}
+.customerRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(360px, 1.6fr) 150px;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 72px 20px 20px;
+  background: #0c0d12;
+  border-radius: 16px;
+  min-width: 0;
+}
+.customerIdentity {
+  min-width: 0;
+}
+.customerIdentity h2 {
+  font: 600 18px/1.35 var(--ui-font-body);
+  margin: 10px 0 6px;
+  overflow-wrap: anywhere;
+}
+.customerIdentity p {
+  font-size: 12px;
+  margin: 0;
+  color: #6d6d6d;
+}
+.customerIdentity .badge {
+  max-width: none;
+  border: 0;
+  background: #313131;
+  color: #f0f0ec;
+  font-size: 12px;
+  padding: 5px 10px;
+}
+.customerIdentity .badge[data-active='true'] {
+  background: #c6f135;
+  color: #0c0d12;
+}
+.customerRow .quotaList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+.customerRow .quotaList dd {
+  font-size: 16px;
+}
+.customerRow .quotaList dt {
+  font-size: 12px;
+}
+.customerRow .cardAction {
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: 0;
+}
+.customerActions {
+  position: relative;
+}
+.customerActions summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #6d6d6d;
+  border-radius: 9999px;
+  color: #f0f0ec;
+  cursor: pointer;
+  font-size: 14px;
+  list-style: none;
+}
+.customerActions summary::-webkit-details-marker {
+  display: none;
+}
+.customerActions .row {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  gap: 8px;
+  width: 240px;
+  padding: 12px;
+  background: #141414;
+  border: 1px solid #313131;
+  border-radius: 20px;
+  box-shadow: var(--ui-shadow);
+}
+.customerActions .row > * {
+  width: 100%;
+  font-size: 13px;
+  min-height: 40px;
+  padding: 10px 14px;
+}
+@media (max-width: 1120px) {
+  .navigation {
+    position: relative;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .tabs {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    flex: 1;
+    white-space: nowrap;
+  }
+  .customerRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .customerActions {
+    grid-column: 1/-1;
+    max-width: 200px;
+  }
+  .customerRow .cardAction {
+    top: 24px;
+    transform: none;
+  }
+  .metricLabel {
+    font-size: 16px;
+  }
+}
+@media (max-width: 760px) {
+  .customerList {
+    padding: 16px;
+  }
+  .customerRow {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .customerIdentity {
+    padding-right: 40px;
+  }
+  .customerRow .quotaList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .customerActions {
+    max-width: none;
+  }
+  .customerActions .row {
+    left: 0;
+    right: auto;
+    max-width: 100%;
+  }
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .metricLink {
+    padding: 20px;
+    min-height: 130px;
+  }
+  .metricLabel {
+    font-size: 15px;
+  }
+  .tabs {
+    border-radius: 24px;
+  }
+  .tableWrap {
+    padding: 16px;
+  }
+}
+
+.organizationEditor {
+  max-width: 1100px !important;
+  width: calc(100vw - 64px) !important;
+  background: #0c0d12 !important;
+}
+.organizationEditor > header {
+  padding-bottom: 24px;
+}
+.organizationEditor .panel {
+  max-width: 760px;
+  margin: 24px auto 0;
+}
+.organizationEditor .form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+.customerSteps {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 32px;
+}
+.customerSteps li {
+  padding: 12px 24px;
+  background: #141414;
+  color: #6d6d6d;
+  clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%, 5% 50%);
+}
+.customerSteps li:first-child {
+  clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
+}
+.customerSteps li[aria-current='step'] {
+  background: #c6f135;
+  color: #0c0d12;
+}
+.customerSteps small {
+  display: block;
+  margin-bottom: 4px;
+}
+.customerIdentityForm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.customerQuotaForm {
+  display: grid;
+  gap: 12px;
+}
+.customerQuotaForm > label {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 16px;
+  background: #0c0d12;
+  border-radius: 24px;
+}
+.customerQuotaForm input[type='number'] {
+  width: 110px;
+  flex: none;
+  text-align: center;
+  font-weight: 600;
+  border-radius: 16px;
+  background: #141414;
+}
+.customerQuotaForm label.check {
+  justify-content: flex-start;
+  background: none;
+  padding: 8px 0;
+}
+.customerReview {
+  background: #0c0d12;
+  border-radius: 24px;
+  padding: 24px;
+}
+.customerReview dl {
+  margin: 24px 0;
+}
+.customerReview dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px 0;
+  border-bottom: 1px solid #313131;
+}
+.customerReview dd {
+  margin: 0;
+  font-weight: 600;
+}
+.customerReview p {
+  line-height: 1.5;
+}
+.customerReview p:last-child {
+  color: #888;
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  .organizationEditor {
+    width: calc(100vw - 24px) !important;
+  }
+  .customerIdentityForm {
+    grid-template-columns: 1fr;
+  }
+  .customerSteps li {
+    padding: 12px;
+    font-size: 12px;
+  }
+  .customerQuotaForm > label {
+    gap: 12px;
+    font-size: 14px;
+  }
+  .customerQuotaForm input[type='number'] {
+    width: 80px;
+  }
+}

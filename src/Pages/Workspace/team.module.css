@@ -1,5 +1,5 @@
 .team {
-  --team-accent: var(--ui-accent, #caf432);
+  --team-accent: var(--ui-accent, #c6f135);
   --team-canvas: var(--ui-bg, #0b0c0f);
   --team-surface: #141414;
   --team-fast: var(--ui-motion-fast, 160ms);
@@ -116,7 +116,7 @@
   animation: team-enter 300ms var(--team-ease) both;
 }
 .person:has(.cornerAction)::before {
-  content: "";
+  content: '';
   position: absolute;
   right: -1px;
   top: -1px;
@@ -126,7 +126,7 @@
   background: var(--team-canvas);
 }
 .team .person h2 {
-  font-family: "Days", "GolosText", sans-serif;
+  font-family: 'Days', 'GolosText', sans-serif;
   font-size: clamp(18px, 1.38vw, 23px);
   line-height: 1.4;
   margin: 0 0 8px;
@@ -143,8 +143,8 @@
   color: #d6ef9a;
   border-radius: 50%;
   font:
-    400 20px "Days",
-    "GolosText",
+    400 20px 'Days',
+    'GolosText',
     sans-serif;
 }
 .team .role {
@@ -174,7 +174,7 @@
   background: #929489;
   border-radius: 50%;
 }
-.access[data-active="true"] > span {
+.access[data-active='true'] > span {
   background: var(--team-accent);
   box-shadow: 0 0 0 3px #caf43210;
 }

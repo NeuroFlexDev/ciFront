@@ -1,0 +1,37 @@
+{
+  "fileKey": "mCBsEO0lXXeQTMSf7IgWEj",
+  "source": "Figma MCP get_design_context",
+  "retrieved": "2026-10-25",
+  "assets": [
+    {
+      "file": "auth-shutter.png",
+      "url": "https://www.figma.com/api/mcp/asset/72463d35-0fe3-4f32-a827-2e9b5f6778a7.png",
+      "frame": "1656:5905"
+    },
+    {
+      "file": "auth-glow-wide.svg",
+      "url": "https://www.figma.com/api/mcp/asset/af58073a-502c-4071-b6ec-79d888c4d9bb.svg",
+      "frame": "1656:5905"
+    },
+    {
+      "file": "auth-glow-diagonal.svg",
+      "url": "https://www.figma.com/api/mcp/asset/bd466e21-b4f0-44fd-9a05-c8676961632d.svg",
+      "frame": "1656:5905"
+    },
+    {
+      "file": "brand.svg",
+      "url": "https://www.figma.com/api/mcp/asset/54da15b1-345d-4e0d-b7b4-9d057f48a27a.svg",
+      "frame": "1789:6459"
+    },
+    {
+      "file": "stat-glow.svg",
+      "url": "https://www.figma.com/api/mcp/asset/2f21a529-904c-4d60-acec-3bc4343277e4.svg",
+      "frame": "1158:4117"
+    },
+    {
+      "file": "notification.svg",
+      "url": "https://www.figma.com/api/mcp/asset/01b77b9d-4c9f-429a-b305-e93e45a142d7.svg",
+      "frame": "1915:21366"
+    }
+  ]
+}

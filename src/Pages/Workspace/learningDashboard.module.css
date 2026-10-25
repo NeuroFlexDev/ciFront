@@ -1,6 +1,6 @@
 .page {
-  width: min(calc(100% - 64px), 1760px);
-  margin: 64px auto 70px;
+  width: var(--ui-page-width);
+  margin: 40px auto 70px;
   color: #fff;
   font-family: 'GolosText', sans-serif;
 }
@@ -14,7 +14,7 @@
   margin-bottom: 14px;
 }
 .scope button {
-  color: #caf432;
+  color: #c6f135;
   background: none;
   border: 0;
   padding: 8px;
@@ -24,14 +24,14 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-template-rows: minmax(350px, auto) minmax(200px, auto) minmax(265px, auto);
-  gap: 28px;
+  grid-template-rows: minmax(343px, auto) minmax(193px, auto) minmax(265px, auto);
+  gap: 24px;
 }
 .card {
   min-width: 0;
   background: #141414;
-  border-radius: 34px;
-  padding: 32px;
+  border-radius: 24px;
+  padding: 30px;
   overflow: hidden;
 }
 .card header {
@@ -42,12 +42,12 @@
 }
 .card h2 {
   font-family: Days, sans-serif;
-  font-size: clamp(20px, 1.8vw, 30px);
+  font-size: 24px;
   line-height: 1.25;
   margin: 0;
 }
 .card a {
-  color: #caf432;
+  color: #c6f135;
   text-decoration: none;
 }
 .card p {
@@ -131,7 +131,7 @@
   stroke-linecap: round;
 }
 .fill {
-  stroke: #caf432;
+  stroke: #c6f135;
 }
 .gaugeValue {
   position: absolute;
@@ -151,7 +151,7 @@
 .pill {
   display: inline-block;
   border-radius: 20px;
-  background: #caf432;
+  background: #c6f135;
   color: #111;
   padding: 6px 12px;
   font-size: 12px;
@@ -185,7 +185,7 @@
 }
 .courseMetrics strong {
   font:
-    clamp(32px, 3.6vw, 62px)/1.1 Days,
+    clamp(32px, 3.4vw, 48px)/1.1 Days,
     sans-serif;
   letter-spacing: -1.4px;
   overflow-wrap: anywhere;
@@ -201,7 +201,7 @@
   font-size: 11px;
 }
 .courseMetrics .accentMetric {
-  border-color: #caf432;
+  border-color: #c6f135;
 }
 .ticks {
   height: 82px;
@@ -210,7 +210,7 @@
   margin-top: auto;
 }
 .accentMetric .ticks {
-  background: repeating-linear-gradient(90deg, #caf432 0 4px, transparent 4px 12px);
+  background: repeating-linear-gradient(90deg, #c6f135 0 4px, transparent 4px 12px);
 }
 .assistantBody {
   display: flex;
@@ -254,7 +254,7 @@
   justify-content: space-between;
   gap: 16px;
   background: #0c0d12;
-  border-radius: 28px;
+  border-radius: 24px;
   padding: 14px 16px 14px 20px;
   margin-top: 12px;
   font-size: 13px;
@@ -263,7 +263,7 @@
 }
 .assistantFooter .roundLink {
   background: #141414;
-  color: #caf432;
+  color: #c6f135;
   width: 32px;
   height: 32px;
   flex-basis: 32px;
@@ -272,14 +272,14 @@
 .largeNumber {
   display: block;
   font:
-    clamp(38px, 3.8vw, 62px)/1.1 Days,
+    48px/1.1 Days,
     sans-serif;
   margin-top: 30px;
   letter-spacing: -1.5px;
 }
 .circleGauge {
   position: relative;
-  width: min(100%, 240px);
+  width: min(100%, 206px);
   aspect-ratio: 1;
 }
 .circleGauge svg {
@@ -316,7 +316,7 @@
 }
 .activityTotal {
   font:
-    clamp(30px, 2.7vw, 46px)/1.2 Days,
+    32px/1.2 Days,
     sans-serif;
   margin-top: 26px;
   letter-spacing: -1px;
@@ -359,7 +359,7 @@
   width: 100%;
 }
 .highlight {
-  background: repeating-linear-gradient(135deg, #caf432 0 8px, #ecffa7 8px 9px);
+  background: repeating-linear-gradient(135deg, #c6f135 0 8px, #ecffa7 8px 9px);
 }
 .barValue {
   text-align: center;
@@ -412,7 +412,7 @@
   color: #b0b0b5;
 }
 .footer a {
-  color: #caf432;
+  color: #c6f135;
   text-underline-offset: 4px;
 }
 .footer details {
@@ -437,7 +437,7 @@
   border: 0;
 }
 .page :focus-visible {
-  outline: 2px solid #caf432;
+  outline: 2px solid #c6f135;
   outline-offset: 3px;
 }
 .page button:disabled {
@@ -446,14 +446,14 @@
 }
 @media (min-width: 1800px) {
   .grid {
-    grid-template-rows: minmax(410px, auto) minmax(230px, auto) minmax(300px, auto);
-    gap: 32px;
+    grid-template-rows: minmax(343px, auto) minmax(193px, auto) minmax(265px, auto);
+    gap: 24px;
   }
   .card {
-    padding: 38px;
+    padding: 30px;
   }
   .columns {
-    height: 300px;
+    height: 245px;
   }
 }
 @media (max-width: 1100px) {
@@ -546,7 +546,7 @@
   }
   .card {
     padding: 24px;
-    border-radius: 28px;
+    border-radius: 24px;
   }
   .card h2 {
     font-size: 21px;
@@ -624,12 +624,12 @@
 }
 @media (hover: hover) {
   .roundLink:hover {
-    background: #caf432;
+    background: #c6f135;
     color: #141414;
   }
   .assistantActions a:hover {
     background: #262a1c;
-    color: #caf432;
+    color: #c6f135;
   }
   .assistantFooter:hover {
     background: #20231a;

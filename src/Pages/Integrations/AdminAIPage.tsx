@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   CheckCircle2,
 } from 'lucide-react';
+import AdminInlinePanel from '@/Components/Admin/AdminInlinePanel';
 import AdminDialog from '@/Components/Admin/AdminDialog';
 import AdminToast from '@/Components/Admin/AdminToast';
 import { useLocale } from '@/i18n/useLocale';
@@ -79,9 +80,11 @@ function ProviderEditor({
   initial,
   done,
   cancel,
-}: EditorProps & { initial: AIProvider | AIPreset | null }) {
+  inline = false,
+}: EditorProps & { initial: AIProvider | AIPreset | null; inline?: boolean }) {
   const { t } = useLocale();
   const existing = initial && 'has_key' in initial;
+  const Frame = inline ? AdminInlinePanel : AdminDialog;
   const [id, setId] = useState(initial?.id || '');
   const [name, setName] = useState(initial?.name || '');
   const [endpoint, setEndpoint] = useState(initial?.base_url || '');
@@ -119,8 +122,8 @@ function ProviderEditor({
     }
   }
   return (
-    <AdminDialog
-      title={t('Подключение провайдера')}
+    <Frame
+      title={initial?.name || t('Подключение провайдера')}
       onClose={cancel}
       busy={busy}
       guard
@@ -239,7 +242,7 @@ function ProviderEditor({
           </fieldset>
         </form>
       </section>
-    </AdminDialog>
+    </Frame>
   );
 }
 
@@ -675,28 +678,31 @@ export function AIManagement() {
       <AdminToast message={message} onClose={() => setMessage('')} />
       {data && (
         <>
-          <div className={a.summary}>
-            <div>
-              <Plug size={20} />
-              <span>{t('Доступные подключения')}</span>
-              <strong>
-                {data.providers.filter((p) => p.available).length}
-                <small> / {data.providers.length}</small>
-              </strong>
+          <details className={a.summaryDisclosure}>
+            <summary>{t('Сводка подключений и моделей')}</summary>
+            <div className={a.summary}>
+              <div>
+                <Plug size={20} />
+                <span>{t('Доступные подключения')}</span>
+                <strong>
+                  {data.providers.filter((p) => p.available).length}
+                  <small> / {data.providers.length}</small>
+                </strong>
+              </div>
+              <div>
+                <Layers3 size={20} />
+                <span>{t('Моделей допущено')}</span>
+                <strong>{data.models.filter((m) => m.approved).length}</strong>
+              </div>
+              <div>
+                <ShieldCheck size={20} />
+                <span>{t('Режим работы')}</span>
+                <strong className={a.textMetric}>
+                  {t(data.policy.local_only ? 'Свой контур' : 'Умный выбор')}
+                </strong>
+              </div>
             </div>
-            <div>
-              <Layers3 size={20} />
-              <span>{t('Моделей допущено')}</span>
-              <strong>{data.models.filter((m) => m.approved).length}</strong>
-            </div>
-            <div>
-              <ShieldCheck size={20} />
-              <span>{t('Режим работы')}</span>
-              <strong className={a.textMetric}>
-                {t(data.policy.local_only ? 'Свой контур' : 'Умный выбор')}
-              </strong>
-            </div>
-          </div>
+          </details>
           <div className={a.workspaceBar}>
             <nav className={a.tabs} aria-label={t('Разделы AI')}>
               {sections.map(([id, label, Icon]) => (
@@ -704,6 +710,7 @@ export function AIManagement() {
                   key={id}
                   className={s.secondary}
                   aria-current={section === id ? 'page' : undefined}
+                  disabled={!!editor}
                   onClick={() => navigate(id)}
                 >
                   <Icon size={17} />
@@ -732,99 +739,116 @@ export function AIManagement() {
                   {t('Добавить подключение')}
                 </button>
               </div>
-              <div className={a.cards}>
-                {data.providers.map((provider) => {
-                  const assigned = data.models.filter(
-                    (m) => m.provider === provider.id && m.approved,
-                  ).length;
-                  return (
-                    <article className={a.card} key={provider.id}>
-                      <header>
-                        <div className={a.providerTitle}>
-                          <span className={a.providerIcon}>
-                            {provider.name.slice(0, 1).toUpperCase()}
-                          </span>
-                          <div>
-                            <h3>{provider.name}</h3>
-                            <span className={a.endpoint}>{provider.base_url}</span>
-                          </div>
-                        </div>
-                        <span className={a.badge} data-good={provider.available && assigned > 0}>
-                          {t(
-                            !provider.enabled
-                              ? 'Отключён'
-                              : !provider.has_key
-                                ? 'Нужен ключ'
-                                : provider.available
-                                  ? assigned
-                                    ? 'В маршрутизации'
-                                    : 'Нет включённых моделей'
-                                  : 'Временно исключён',
-                          )}
-                        </span>
-                      </header>
-                      <div className={a.providerInfo}>
-                        <span>
-                          <ShieldCheck size={16} />
-                          {t(
-                            provider.has_key
-                              ? 'Ключ сохранён'
-                              : provider.local
-                                ? 'Локальный API без ключа'
-                                : 'Ключ не задан',
-                          )}
-                        </span>
-                        <span>
-                          {t('Моделей допущено')}: <b>{assigned}</b>
-                        </span>
-                      </div>
-                      <div className={a.checkResult}>
-                        {provider.last_check ? (
-                          <>
-                            <span data-good={provider.last_check.status === 'catalog_available'}>
-                              {t(checkLabels[provider.last_check.status] || 'Нет связи с API')}
+              <div
+                className={a.providerWorkspace}
+                data-editing={
+                  editor?.kind === 'provider' && !!editor.initial && 'has_key' in editor.initial
+                }
+              >
+                <div className={a.cards}>
+                  {data.providers.map((provider) => {
+                    const assigned = data.models.filter(
+                      (m) => m.provider === provider.id && m.approved,
+                    ).length;
+                    return (
+                      <article className={a.card} key={provider.id}>
+                        <header>
+                          <div className={a.providerTitle}>
+                            <span className={a.providerIcon}>
+                              {provider.name.slice(0, 1).toUpperCase()}
                             </span>
-                            <small>
-                              {dateText(provider.last_check.checked_at)} ·{' '}
-                              {provider.last_check.models.length} {t('моделей в каталоге')}
-                            </small>
-                          </>
-                        ) : (
-                          <span>{t('Проверка подключения ещё не запускалась')}</span>
-                        )}
-                      </div>
-                      <footer>
-                        <button
-                          className={s.secondary}
-                          disabled={blocked || !provider.has_key}
-                          onClick={() => void check(provider)}
-                        >
-                          <RefreshCw size={15} />
-                          {busy === provider.id ? t('Проверяем…') : t('Проверить API')}
-                        </button>
-                        <button
-                          className={s.secondary}
-                          disabled={blocked}
-                          aria-label={`${t('Настроить')} ${provider.name}`}
-                          onClick={() => edit({ kind: 'provider', initial: provider, data })}
-                        >
-                          <SlidersHorizontal size={15} />
-                          {t('Настроить')}
-                        </button>
-                        <button
-                          className={a.textButton}
-                          onClick={() => {
-                            setProviderFilter(provider.id);
-                            navigate('models');
-                          }}
-                        >
-                          {t('Модели')}
-                          <ArrowUpRight size={16} />
-                        </button>
-                      </footer>
-                    </article>
-                  );
-                })}
+                            <div>
+                              <h3>{provider.name}</h3>
+                              <span className={a.endpoint}>{provider.base_url}</span>
+                            </div>
+                          </div>
+                          <span className={a.badge} data-good={provider.available && assigned > 0}>
+                            {t(
+                              !provider.enabled
+                                ? 'Отключён'
+                                : !provider.has_key
+                                  ? 'Нужен ключ'
+                                  : provider.available
+                                    ? assigned
+                                      ? 'В маршрутизации'
+                                      : 'Нет включённых моделей'
+                                    : 'Временно исключён',
+                            )}
+                          </span>
+                        </header>
+                        <div className={a.providerInfo}>
+                          <span>
+                            <ShieldCheck size={16} />
+                            {t(
+                              provider.has_key
+                                ? 'Ключ сохранён'
+                                : provider.local
+                                  ? 'Локальный API без ключа'
+                                  : 'Ключ не задан',
+                            )}
+                          </span>
+                          <span>
+                            {t('Моделей допущено')}: <b>{assigned}</b>
+                          </span>
+                        </div>
+                        <div className={a.checkResult}>
+                          {provider.last_check ? (
+                            <>
+                              <span data-good={provider.last_check.status === 'catalog_available'}>
+                                {t(checkLabels[provider.last_check.status] || 'Нет связи с API')}
+                              </span>
+                              <small>
+                                {dateText(provider.last_check.checked_at)} ·{' '}
+                                {provider.last_check.models.length} {t('моделей в каталоге')}
+                              </small>
+                            </>
+                          ) : (
+                            <span>{t('Проверка подключения ещё не запускалась')}</span>
+                          )}
+                        </div>
+                        <footer>
+                          <button
+                            className={s.secondary}
+                            disabled={blocked || !provider.has_key}
+                            onClick={() => void check(provider)}
+                          >
+                            <RefreshCw size={15} />
+                            {busy === provider.id ? t('Проверяем…') : t('Проверить API')}
+                          </button>
+                          <button
+                            className={s.secondary}
+                            disabled={blocked}
+                            aria-label={`${t('Настроить')} ${provider.name}`}
+                            onClick={() => edit({ kind: 'provider', initial: provider, data })}
+                          >
+                            <SlidersHorizontal size={15} />
+                            {t('Настроить')}
+                          </button>
+                          <button
+                            className={a.textButton}
+                            disabled={!!editor}
+                            onClick={() => {
+                              setProviderFilter(provider.id);
+                              navigate('models');
+                            }}
+                          >
+                            {t('Модели')}
+                            <ArrowUpRight size={16} />
+                          </button>
+                        </footer>
+                      </article>
+                    );
+                  })}
+                </div>
+                {editor?.kind === 'provider' && !!editor.initial && 'has_key' in editor.initial && (
+                  <ProviderEditor
+                    key={editor.initial.id}
+                    {...editor}
+                    inline
+                    done={done}
+                    cancel={() => setEditor(null)}
+                  />
+                )}
               </div>
               <p className={a.footnote}>
                 {t(
@@ -1114,7 +1138,7 @@ export function AIManagement() {
               </button>
             </AdminDialog>
           )}
-          {editor?.kind === 'provider' && (
+          {editor?.kind === 'provider' && (!editor.initial || !('has_key' in editor.initial)) && (
             <ProviderEditor {...editor} done={done} cancel={() => setEditor(null)} />
           )}
           {editor?.kind === 'model' && (
@@ -1133,7 +1157,7 @@ export default function AdminAIPage() {
   const { user } = useAuth();
   return (
     <Shell
-      title={t('AI-провайдеры')}
+      title={t('Мониторинг')}
       description={t('Подключения, модели, расходы и правила выбора для каждого этапа.')}
     >
       {user?.is_admin ? <AIManagement /> : <Empty>{t('Доступ только оператору')}</Empty>}

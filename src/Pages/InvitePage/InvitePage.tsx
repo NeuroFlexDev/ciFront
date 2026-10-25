@@ -7,7 +7,8 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api, setAuthToken, captureAuthSession, assertAuthSession } from '@/shared/api';
 import catalog from '@/legal/catalog.json';
-import styles from '@/Pages/Workspace/workspace.module.css';
+import AuthStory from '@/Pages/AuthPage/AuthStory';
+import styles from '@/Pages/AuthPage/styles.module.css';
 import { errorText } from '@/Pages/Workspace/shared';
 type Preview = {
   email: string;
@@ -56,7 +57,7 @@ export default function InvitePage() {
     if (busy) return;
     setBusy(true);
     setError('');
-    const session=captureAuthSession();
+    const session = captureAuthSession();
     api
       .post<AuthResponse>(
         preview?.existing_account
@@ -75,8 +76,8 @@ export default function InvitePage() {
       )
       .then((r) => {
         assertAuthSession(session);
-        if (auth.completeAuthentication) auth.completeAuthentication(r.data,session);
-        else setAuthToken(r.data.access_token,session);
+        if (auth.completeAuthentication) auth.completeAuthentication(r.data, session);
+        else setAuthToken(r.data.access_token, session);
         window.location.replace('/dashboard');
       })
       .catch((e) => setError(errorText(e)))
@@ -97,162 +98,162 @@ export default function InvitePage() {
     }
   }
   return (
-    <main className={styles.page} style={{ maxWidth: 740, paddingTop: 45 }}>
-      <a href='/' style={{ fontSize: 28, fontWeight: 800, textDecoration: 'none' }}>
-        {t('ЛЕРНИУМ')}
-      </a>
-      <LanguageSwitch />
-      <section className={styles.panel}>
-        <h1>{t('Присоединиться к команде')}</h1>
-        {error && (
-          <p className={styles.error} role='alert'>
-            {error}
-          </p>
-        )}
-        {!preview && inspectError != null && (
-          <RequestError error={inspectError} onRetry={() => setRetry((value) => value + 1)} />
-        )}
-        {!preview && !error && !inspectError && <p>{t('Проверяем приглашение…')}</p>}
-        {preview && (
-          <>
-            <h2>{preview.organization_name}</h2>
-            <p>
-              {preview.email} ·{' '}
-              {(
-                {
-                  owner: t('Владелец организации'),
-                  admin: t('Администратор'),
-                  author: t('Автор'),
-                  reviewer: t('Проверяющий'),
-                  manager: t('Руководитель'),
-                  member: t('Участник'),
-                } as Record<string, string>
-              )[preview.role] ?? preview.role}
+    <main className={styles.page}>
+      <div className={styles.shell}>
+        <AuthStory title={t('Ваша компания уже в Лерниуме')} registration showBrand={false} />
+        <section className={`${styles.card} ${styles.inviteCard}`}>
+          <LanguageSwitch />
+          <h2>{t('Примите приглашение')}</h2>
+          {error && (
+            <p className={styles.error} role='alert'>
+              {error}
             </p>
-            {preview.existing_account ? (
-              <section>
-                <p>
-                  {t(
-                    'У вас уже есть аккаунт. Присоединение сохранит ваш пароль и существующие материалы.',
+          )}
+          {!preview && inspectError != null && (
+            <RequestError error={inspectError} onRetry={() => setRetry((value) => value + 1)} />
+          )}
+          {!preview && !error && !inspectError && <p>{t('Проверяем приглашение…')}</p>}
+          {preview && (
+            <>
+              <h2>{preview.organization_name}</h2>
+              <p>
+                {preview.email} ·{' '}
+                {(
+                  {
+                    owner: t('Владелец организации'),
+                    admin: t('Администратор'),
+                    author: t('Автор'),
+                    reviewer: t('Проверяющий'),
+                    manager: t('Руководитель'),
+                    member: t('Участник'),
+                  } as Record<string, string>
+                )[preview.role] ?? preview.role}
+              </p>
+              {preview.existing_account ? (
+                <section>
+                  <p>
+                    {t(
+                      'У вас уже есть аккаунт. Присоединение сохранит ваш пароль и существующие материалы.',
+                    )}
+                  </p>
+                  {auth.user?.email?.toLowerCase() === preview.email.toLowerCase() ? (
+                    <form className={styles.form} onSubmit={submit}>
+                      <p>{t('Вы вошли под адресом приглашения.')}</p>
+                      <button className={styles.submit} disabled={busy}>
+                        {busy ? t('Подключаем…') : t('Присоединиться к организации')}
+                      </button>
+                    </form>
+                  ) : auth.user ? (
+                    <>
+                      <p>
+                        {t(
+                          'Сейчас открыт другой аккаунт. Выйдите из него и войдите под адресом приглашения.',
+                        )}
+                      </p>
+                      <button className={styles.secondary} disabled={busy} onClick={auth.logout}>
+                        {t('Выйти из другого аккаунта')}
+                      </button>
+                    </>
+                  ) : (
+                    <form className={styles.form} onSubmit={signIn}>
+                      <label>
+                        {t('Пароль существующего аккаунта')}
+                        <input
+                          type='password'
+                          required
+                          maxLength={128}
+                          autoComplete='current-password'
+                          disabled={busy}
+                          value={password}
+                          onChange={(event) => setPassword(event.target.value)}
+                        />
+                      </label>
+                      <p>
+                        <Link to='/forgot-password'>{t('Не помню пароль')}</Link>
+                      </p>
+                      <button className={styles.submit} disabled={busy}>
+                        {busy ? t('Подождите…') : t('Войти для принятия приглашения')}
+                      </button>
+                    </form>
                   )}
-                </p>
-                {auth.user?.email?.toLowerCase() === preview.email.toLowerCase() ? (
-                  <form onSubmit={submit}>
-                    <p>{t('Вы вошли под адресом приглашения.')}</p>
-                    <button className={styles.primary} disabled={busy}>
-                      {busy ? t('Подключаем…') : t('Присоединиться к организации')}
-                    </button>
-                  </form>
-                ) : auth.user ? (
-                  <>
-                    <p>
-                      {t(
-                        'Сейчас открыт другой аккаунт. Выйдите из него и войдите под адресом приглашения.',
-                      )}
-                    </p>
-                    <button className={styles.secondary} disabled={busy} onClick={auth.logout}>
-                      {t('Выйти из другого аккаунта')}
-                    </button>
-                  </>
-                ) : (
-                  <form onSubmit={signIn}>
-                    <label>
-                      {t('Пароль существующего аккаунта')}
-                      <input
-                        type='password'
-                        required
-                        maxLength={128}
-                        autoComplete='current-password'
-                        disabled={busy}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                      />
-                    </label>
-                    <p>
-                      <Link to='/forgot-password'>{t('Не помню пароль')}</Link>
-                    </p>
-                    <button className={styles.primary} disabled={busy}>
-                      {busy ? t('Подождите…') : t('Войти для принятия приглашения')}
-                    </button>
-                  </form>
-                )}
-              </section>
-            ) : (
-              <form onSubmit={submit} style={{ display: 'grid', gap: 20 }}>
-                <label>
-                  {t('Имя и фамилия')}
-                  <input
-                    disabled={busy}
-                    required
-                    maxLength={160}
-                    autoComplete='name'
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </label>
-                <label>
-                  {t('Придумайте пароль')}
-                  <input
-                    disabled={busy}
-                    required
-                    type='password'
-                    minLength={12}
-                    maxLength={128}
-                    autoComplete='new-password'
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </label>
-                <p>{t('Минимум 12 символов. Используйте отдельный пароль для Лерниума.')}</p>
-                <label className={styles.check}>
-                  <input
-                    disabled={busy}
-                    type='checkbox'
-                    required
-                    checked={accepted}
-                    onChange={(e) => setAccepted(e.target.checked)}
-                  />
-                  <span>
-                    {t('Мне есть 18 лет. Принимаю') + ' '}
-                    <a href='/legal/terms/' target='_blank' rel='noopener'>
-                      {t('пользовательское соглашение')}
+                </section>
+              ) : (
+                <form className={styles.form} onSubmit={submit}>
+                  <label>
+                    {t('Имя и фамилия')}
+                    <input
+                      disabled={busy}
+                      required
+                      maxLength={160}
+                      autoComplete='name'
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    {t('Придумайте пароль')}
+                    <input
+                      disabled={busy}
+                      required
+                      type='password'
+                      minLength={12}
+                      maxLength={128}
+                      autoComplete='new-password'
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </label>
+                  <p>{t('Минимум 12 символов. Используйте отдельный пароль для Лерниума.')}</p>
+                  <label className={styles.checkbox}>
+                    <input
+                      disabled={busy}
+                      type='checkbox'
+                      required
+                      checked={accepted}
+                      onChange={(e) => setAccepted(e.target.checked)}
+                    />
+                    <span>
+                      {t('Мне есть 18 лет. Принимаю') + ' '}
+                      <a href='/legal/terms/' target='_blank' rel='noopener'>
+                        {t('пользовательское соглашение')}
+                      </a>
+                      .
+                    </span>
+                  </label>
+                  <p>
+                    {t('Обработка данных описана в') + ' '}
+                    <a href='/legal/privacy/' target='_blank' rel='noopener'>
+                      {t('политике')}
                     </a>
                     .
-                  </span>
-                </label>
-                <p>
-                  {t('Обработка данных описана в') + ' '}
-                  <a href='/legal/privacy/' target='_blank' rel='noopener'>
-                    {t('политике')}
-                  </a>
-                  .
-                </p>
-                <label className={styles.check}>
-                  <input
-                    disabled={busy}
-                    type='checkbox'
-                    checked={marketing}
-                    onChange={(e) => setMarketing(e.target.checked)}
-                  />
-                  <span>
-                    {t('Хочу получать новости: даю отдельное') + ' '}
-                    <a href='/legal/marketing-consent/' target='_blank' rel='noopener'>
-                      {t('согласие на рассылку')}
-                    </a>
-                    {t('. Необязательно.')}
-                  </span>
-                </label>
-                <button className={styles.primary} disabled={busy || !accepted}>
-                  {busy ? t('Создаём аккаунт…') : t('Принять приглашение')}
-                </button>
-              </form>
-            )}
-          </>
-        )}
-        <p style={{ marginTop: 24 }}>
-          <Link to='/auth'>{t('Уже есть аккаунт? Войти')}</Link>
-        </p>
-      </section>
+                  </p>
+                  <label className={styles.checkbox}>
+                    <input
+                      disabled={busy}
+                      type='checkbox'
+                      checked={marketing}
+                      onChange={(e) => setMarketing(e.target.checked)}
+                    />
+                    <span>
+                      {t('Хочу получать новости: даю отдельное') + ' '}
+                      <a href='/legal/marketing-consent/' target='_blank' rel='noopener'>
+                        {t('согласие на рассылку')}
+                      </a>
+                      {t('. Необязательно.')}
+                    </span>
+                  </label>
+                  <button className={styles.submit} disabled={busy || !accepted}>
+                    {busy ? t('Создаём аккаунт…') : t('Принять приглашение')}
+                  </button>
+                </form>
+              )}
+            </>
+          )}
+          <p style={{ marginTop: 24 }}>
+            <Link to='/auth'>{t('Уже есть аккаунт? Войти')}</Link>
+          </p>
+        </section>
+      </div>
     </main>
   );
 }

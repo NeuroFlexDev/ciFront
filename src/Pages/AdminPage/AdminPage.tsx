@@ -128,8 +128,16 @@ const roleLabels: Record<string, string> = {
   member: 'Участник',
   candidate: 'Кандидат',
 };
-const companyRoles = { owner: 'Владелец', manager: 'Руководитель', member: 'Сотрудник', candidate: 'Кандидат' };
-const rolesForKind = (kind?: string) => Object.entries(kind === 'business' ? companyRoles : roleLabels).filter(([key]) => kind === 'business' || key !== 'candidate');
+const companyRoles = {
+  owner: 'Владелец',
+  manager: 'Руководитель',
+  member: 'Сотрудник',
+  candidate: 'Кандидат',
+};
+const rolesForKind = (kind?: string) =>
+  Object.entries(kind === 'business' ? companyRoles : roleLabels).filter(
+    ([key]) => kind === 'business' || key !== 'candidate',
+  );
 const kinds: Record<string, string> = {
   business: 'Компания',
   education: 'Образовательная организация',
@@ -172,7 +180,7 @@ export default function AdminPage() {
   const { t, locale } = useLocale();
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
-  const tab = tabs.some(([k]) => k === params.get('tab')) ? params.get('tab')! : 'overview';
+  const tab = tabs.some(([k]) => k === params.get('tab')) ? params.get('tab')! : 'organizations';
   const [version, setVersion] = useState(0);
   const [q, setQ] = useState('');
   const [offset, setOffset] = useState(0);
@@ -208,6 +216,7 @@ export default function AdminPage() {
   const [userSearch, setUserSearch] = useState('');
   const [orgOptions, setOrgOptions] = useState<Organization[]>([]);
   const [userOptions, setUserOptions] = useState<Member[]>([]);
+  const [orgStep, setOrgStep] = useState(0);
   const [orgForm, setOrgForm] = useDurableState<OrgForm | null>('admin:organization-form', null);
   const [userForm, setUserForm] = useDurableState<Member | null>('admin:member-form', null);
   const [inviteOrg, setInviteOrg] = useDurableState('admin:invite-organization', '');
@@ -353,6 +362,7 @@ export default function AdminPage() {
     setUserSearch('');
   }
   function openOrgForm(next: OrgForm) {
+    setOrgStep(0);
     if (orgForm)
       writeDraft(`admin:org:${orgForm.id ?? 'new'}`, orgForm, undefined, user?.id ?? null);
     setOrgForm(
@@ -433,8 +443,12 @@ export default function AdminPage() {
     );
   return (
     <Shell
-      title={t('Управление Лерниумом')}
-      description={t('Заказчики, доступ, ограничения и обращения в одном месте.')}
+      title={t(tabs.find(([key]) => key === tab)?.[1] || 'Заказчики')}
+      description={t(
+        tab === 'organizations'
+          ? 'Организации, которые работают в Лерниуме'
+          : 'Заказчики, доступ, ограничения и обращения в одном месте.',
+      )}
       action={
         <button
           className={styles.secondary}
@@ -448,7 +462,6 @@ export default function AdminPage() {
     >
       <fieldset disabled={busy} className={styles.layout}>
         <aside className={styles.navigation}>
-          <div className={styles.navigationTitle}>{t('Управление платформой')}</div>
           <div
             className={styles.tabs}
             role='tablist'
@@ -567,6 +580,28 @@ export default function AdminPage() {
               }}
             />
           )}
+          {tab === 'organizations' && !loading && (
+            <div className={styles.stats} aria-label={t('Заказчики: сводка результатов')}>
+              {[
+                [t('Найдено заказчиков'), total],
+                [t('Активны на странице'), organizations.filter((o) => o.is_active).length],
+                [t('Приостановлены'), organizations.filter((o) => !o.is_active).length],
+                [
+                  t('Достигли лимита'),
+                  organizations.filter(
+                    (o) =>
+                      o.reserved_seats >= o.seat_limit ||
+                      (!o.ai_unlimited && o.courses >= o.course_limit),
+                  ).length,
+                ],
+              ].map(([label, value]) => (
+                <div className={styles.metricLink} key={label}>
+                  <span className={styles.metricLabel}>{label}</span>
+                  <strong>{value}</strong>
+                </div>
+              ))}
+            </div>
+          )}
           {(tab === 'organizations' || tab === 'users') && (
             <div className={styles.between}>
               <label className={styles.search}>
@@ -605,11 +640,31 @@ export default function AdminPage() {
               onClose={() => setOrgForm(null)}
               busy={busy}
               guard
-              className={styles.dialogScope}
+              className={`${styles.dialogScope} ${styles.organizationEditor}`}
             >
               {!!error && <RequestError error={error} />}
+              {!orgForm.id && (
+                <ol className={styles.customerSteps}>
+                  {['Организация', 'Квоты', 'Проверка'].map((label, index) => (
+                    <li key={label} aria-current={index === orgStep ? 'step' : undefined}>
+                      <small>
+                        {t('Шаг')} {index + 1}
+                      </small>
+                      {t(label)}
+                    </li>
+                  ))}
+                </ol>
+              )}
               <section className={styles.panel}>
-                <form className={styles.form} onSubmit={saveOrg}>
+                <form
+                  className={styles.form}
+                  onSubmit={(event) => {
+                    if (!orgForm.id && orgStep < 2) {
+                      event.preventDefault();
+                      setOrgStep(orgStep + 1);
+                    } else saveOrg(event);
+                  }}
+                >
                   {(!!error || !orgForm.state_token) && orgForm.id && managementReady && (
                     <button
                       type='button'
@@ -655,82 +710,142 @@ export default function AdminPage() {
                       <p>{t('Затем нажмите сохранение. Ваш введённый текст останется в форме.')}</p>
                     </section>
                   )}
-                  <label>
-                    {t('Название')}
-                    <input
-                      required
-                      minLength={2}
-                      maxLength={200}
-                      value={orgForm.name}
-                      onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    {t('Тип')}
-                    <select
-                      value={orgForm.kind}
-                      onChange={(e) => setOrgForm({ ...orgForm, kind: e.target.value })}
-                    >
-                      {Object.entries(kinds).map(([k, v]) => (
-                        <option key={k} value={k}>
-                          {t(v)}
-                        </option>
+                  {(orgForm.id || orgStep === 0) && (
+                    <div className={styles.customerIdentityForm}>
+                      <label>
+                        {t('Название')}
+                        <input
+                          required
+                          minLength={2}
+                          maxLength={200}
+                          value={orgForm.name}
+                          onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
+                        />
+                      </label>
+                      <label>
+                        {t('Тип')}
+                        <select
+                          value={orgForm.kind}
+                          onChange={(e) => setOrgForm({ ...orgForm, kind: e.target.value })}
+                        >
+                          {Object.entries(kinds).map(([k, v]) => (
+                            <option key={k} value={k}>
+                              {t(v)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+                  {(orgForm.id || orgStep === 1) && (
+                    <div className={styles.customerQuotaForm}>
+                      {(
+                        [
+                          ['seat_limit', t('Участников, включая приглашения')],
+                          ['course_limit', t('Курсов в организации')],
+                          ['source_limit', t('Источников на один курс')],
+                          ['generation_limit', t('Запусков генерации в месяц')],
+                        ] as const
+                      ).map(([key, label]) => (
+                        <label key={key}>
+                          {label}
+                          <input
+                            type='number'
+                            required
+                            min={key === 'generation_limit' ? 0 : 1}
+                            max={key === 'source_limit' ? 1000 : 100000}
+                            disabled={Boolean(orgForm.ai_unlimited) && key !== 'seat_limit'}
+                            value={orgForm[key]}
+                            onChange={(e) =>
+                              setOrgForm({
+                                ...orgForm,
+                                [key]: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </label>
                       ))}
-                    </select>
-                  </label>
-                  {(
-                    [
-                      ['seat_limit', t('Участников, включая приглашения')],
-                      ['course_limit', t('Курсов в организации')],
-                      ['source_limit', t('Источников на один курс')],
-                      ['generation_limit', t('Запусков генерации в месяц')],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <label key={key}>
-                      {label}
-                      <input
-                        type='number'
-                        required
-                        min={key === 'generation_limit' ? 0 : 1}
-                        max={key === 'source_limit' ? 1000 : 100000}
-                        disabled={Boolean(orgForm.ai_unlimited) && key !== 'seat_limit'}
-                        value={orgForm[key]}
-                        onChange={(e) =>
-                          setOrgForm({
-                            ...orgForm,
-                            [key]: Number(e.target.value),
-                          })
-                        }
-                      />
-                    </label>
-                  ))}
-                  <label className={styles.check}>
-                    <input type='checkbox' checked={Boolean(orgForm.ai_unlimited)}
-                      onChange={(e) => setOrgForm({ ...orgForm, ai_unlimited: e.target.checked })} />
-                    {t('Без квот на генерации и ИИ')}
-                  </label>
-                  {orgForm.ai_unlimited && <p>{t('Курсы, источники, генерации и запросы к ИИ без продуктовых квот. Расход учитывается. Одновременная нагрузка и размер файлов ограничены возможностями сервера.')}</p>}
-                  <label className={styles.check}>
-                    <input
-                      type='checkbox'
-                      checked={orgForm.is_active}
-                      onChange={(e) => setOrgForm({ ...orgForm, is_active: e.target.checked })}
-                    />
-                    {t('Доступ организации включён')}
-                  </label>
+                      <label className={styles.check}>
+                        <input
+                          type='checkbox'
+                          checked={Boolean(orgForm.ai_unlimited)}
+                          onChange={(e) =>
+                            setOrgForm({ ...orgForm, ai_unlimited: e.target.checked })
+                          }
+                        />
+                        {t('Без квот на генерации и ИИ')}
+                      </label>
+                      {orgForm.ai_unlimited && (
+                        <p>
+                          {t(
+                            'Курсы, источники, генерации и запросы к ИИ без продуктовых квот. Расход учитывается. Одновременная нагрузка и размер файлов ограничены возможностями сервера.',
+                          )}
+                        </p>
+                      )}
+                      <label className={styles.check}>
+                        <input
+                          type='checkbox'
+                          checked={orgForm.is_active}
+                          onChange={(e) => setOrgForm({ ...orgForm, is_active: e.target.checked })}
+                        />
+                        {t('Доступ организации включён')}
+                      </label>
+                    </div>
+                  )}
+                  {!orgForm.id && orgStep === 2 && (
+                    <section className={styles.customerReview}>
+                      <h3>{orgForm.name}</h3>
+                      <p>{t(kinds[orgForm.kind] ?? orgForm.kind)}</p>
+                      <dl>
+                        {[
+                          ['Участники и приглашения:', orgForm.seat_limit],
+                          ['Курсы:', orgForm.ai_unlimited ? t('Без лимита') : orgForm.course_limit],
+                          [
+                            'Источников на курс:',
+                            orgForm.ai_unlimited ? t('Без лимита') : orgForm.source_limit,
+                          ],
+                          [
+                            'Генераций в месяц:',
+                            orgForm.ai_unlimited ? t('Без лимита') : orgForm.generation_limit,
+                          ],
+                        ].map(([label, value]) => (
+                          <div key={String(label)}>
+                            <dt>{t(String(label))}</dt>
+                            <dd>{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <p>{t(orgForm.is_active ? 'Доступ включён' : 'Приостановлен')}</p>
+                      <p>
+                        {t(
+                          'После создания можно включить функции и пригласить владельца из карточки заказчика.',
+                        )}
+                      </p>
+                    </section>
+                  )}
                   <p className={styles.span}>
                     {t(
                       'При снижении лимита существующие данные сохраняются, новые операции сверх лимита блокируются. Приостановка доступа запрещает вход участникам. Месячный лимит учитывает новые запуски, включая неудачные; продолжение приостановленного запуска не расходует новое место.',
                     )}
                   </p>
                   <div className={styles.row}>
+                    {!orgForm.id && orgStep > 0 && (
+                      <button
+                        type='button'
+                        className={styles.secondary}
+                        disabled={busy}
+                        onClick={() => setOrgStep(orgStep - 1)}
+                      >
+                        {t('← Назад')}
+                      </button>
+                    )}
                     <button
                       className={styles.primary}
                       disabled={
                         busy || (!!orgForm.id && (!orgForm.state_token || !managementReady))
                       }
                     >
-                      {t('Сохранить заказчика')}
+                      {t(!orgForm.id && orgStep < 2 ? 'Далее →' : 'Сохранить заказчика')}
                     </button>
                     <button
                       type='button'
@@ -746,9 +861,9 @@ export default function AdminPage() {
             </AdminDialog>
           )}
           {tab === 'organizations' && !loading && (
-            <div className={styles.grid}>
+            <div className={styles.customerList}>
               {organizations.map((o) => (
-                <article className={styles.card} key={o.id}>
+                <article className={styles.customerRow} key={o.id}>
                   <Link
                     className={styles.cardAction}
                     to={`/admin/organizations/${o.id}/delivery`}
@@ -756,13 +871,15 @@ export default function AdminPage() {
                   >
                     <ArrowUpRight size={24} aria-hidden='true' />
                   </Link>
-                  <span className={styles.badge}>
-                    {o.is_active ? t('Доступ включён') : t('Приостановлен')}
-                  </span>
-                  <h2>{o.name}</h2>
-                  <p>
-                    {t(kinds[o.kind] ?? o.kind)} · №{o.id}
-                  </p>
+                  <div className={styles.customerIdentity}>
+                    <span className={styles.badge} data-active={o.is_active}>
+                      {o.is_active ? t('Доступ включён') : t('Приостановлен')}
+                    </span>
+                    <h2>{o.name}</h2>
+                    <p>
+                      {t(kinds[o.kind] ?? o.kind)} · №{o.id}
+                    </p>
+                  </div>
                   <dl className={styles.quotaList}>
                     <div>
                       <dt>{t('Участники и приглашения:')}</dt>
@@ -778,13 +895,16 @@ export default function AdminPage() {
                     <div>
                       <dt>{t('Курсы:')}</dt>
                       <dd>
-                        {o.courses} <span>/ {o.ai_unlimited ? t('Без лимита') : o.course_limit}</span>
+                        {o.courses}{' '}
+                        <span>/ {o.ai_unlimited ? t('Без лимита') : o.course_limit}</span>
                       </dd>
-                      {!o.ai_unlimited && <progress
-                        value={Math.min(o.courses, o.course_limit)}
-                        max={o.course_limit}
-                        aria-label={t('Курсы:')}
-                      />}
+                      {!o.ai_unlimited && (
+                        <progress
+                          value={Math.min(o.courses, o.course_limit)}
+                          max={o.course_limit}
+                          aria-label={t('Курсы:')}
+                        />
+                      )}
                     </div>
                     <div>
                       <dt>{t('Источников на курс:')}</dt>
@@ -795,61 +915,72 @@ export default function AdminPage() {
                       <dd>{o.ai_unlimited ? t('Без лимита') : o.generation_limit}</dd>
                     </div>
                   </dl>
-                  <div className={styles.row}>
-                    <button
-                      className={styles.secondary}
-                      onClick={() =>
-                        openOrgForm({
-                          id: o.id,
-                          name: o.name,
-                          kind: o.kind,
-                          is_active: o.is_active,
-                          seat_limit: o.seat_limit,
-                          course_limit: o.course_limit,
-                          source_limit: o.source_limit,
-                          generation_limit: o.generation_limit,
-                          ai_unlimited: Boolean(o.ai_unlimited),
-                          state_token: o.state_token,
-                        })
-                      }
-                    >
-                      {t('Настроить лимиты')}
-                    </button>
-                    <button
-                      className={o.is_active ? styles.danger : styles.secondary}
-                      disabled={!managementReady || !o.state_token}
-                      onClick={() =>
-                        setConfirmAction({
-                          title: `${t(o.is_active ? 'Приостановить организацию?' : 'Восстановить организацию?')} ${o.name}`,
-                          explanation: t(
-                            'Участники, курсы и история сохранятся. Приостановленная организация не сможет работать до восстановления.',
-                          ),
-                          path: `/admin/organizations/${o.id}/${o.is_active ? 'archive' : 'restore'}`,
-                          body: { expected_state: o.state_token },
-                        })
-                      }
-                    >
-                      {t(o.is_active ? 'Приостановить' : 'Восстановить')}
-                    </button>
-                    <Link className={styles.secondary} to={`/admin/organizations/${o.id}/delivery`}>
-                      {t('Функции и профиль')}
-                    </Link>
-                    <Link className={styles.secondary} to={`/admin/organizations/${o.id}/billing`}>
-                      {t('Договор и счета')}
-                    </Link>
-                    <button
-                      className={styles.primary}
-                      disabled={!o.is_active}
-                      onClick={() => {
-                        switchTab('invitations');
-                        setInviteOpen(true);
-                        setInviteOrg(String(o.id));
-                        setInviteRole('owner');
-                      }}
-                    >
-                      {t('Пригласить владельца')}
-                    </button>
-                  </div>
+                  <details className={styles.customerActions}>
+                    <summary>
+                      {t('Управление')} <span aria-hidden='true'>⌄</span>
+                    </summary>
+                    <div className={styles.row}>
+                      <button
+                        className={styles.secondary}
+                        onClick={() =>
+                          openOrgForm({
+                            id: o.id,
+                            name: o.name,
+                            kind: o.kind,
+                            is_active: o.is_active,
+                            seat_limit: o.seat_limit,
+                            course_limit: o.course_limit,
+                            source_limit: o.source_limit,
+                            generation_limit: o.generation_limit,
+                            ai_unlimited: Boolean(o.ai_unlimited),
+                            state_token: o.state_token,
+                          })
+                        }
+                      >
+                        {t('Настроить лимиты')}
+                      </button>
+                      <button
+                        className={o.is_active ? styles.danger : styles.secondary}
+                        disabled={!managementReady || !o.state_token}
+                        onClick={() =>
+                          setConfirmAction({
+                            title: `${t(o.is_active ? 'Приостановить организацию?' : 'Восстановить организацию?')} ${o.name}`,
+                            explanation: t(
+                              'Участники, курсы и история сохранятся. Приостановленная организация не сможет работать до восстановления.',
+                            ),
+                            path: `/admin/organizations/${o.id}/${o.is_active ? 'archive' : 'restore'}`,
+                            body: { expected_state: o.state_token },
+                          })
+                        }
+                      >
+                        {t(o.is_active ? 'Приостановить' : 'Восстановить')}
+                      </button>
+                      <Link
+                        className={styles.secondary}
+                        to={`/admin/organizations/${o.id}/delivery`}
+                      >
+                        {t('Функции и профиль')}
+                      </Link>
+                      <Link
+                        className={styles.secondary}
+                        to={`/admin/organizations/${o.id}/billing`}
+                      >
+                        {t('Договор и счета')}
+                      </Link>
+                      <button
+                        className={styles.primary}
+                        disabled={!o.is_active}
+                        onClick={() => {
+                          switchTab('invitations');
+                          setInviteOpen(true);
+                          setInviteOrg(String(o.id));
+                          setInviteRole('owner');
+                        }}
+                      >
+                        {t('Пригласить владельца')}
+                      </button>
+                    </div>
+                  </details>
                 </article>
               ))}
               {!organizations.length && (
@@ -959,7 +1090,21 @@ export default function AdminPage() {
                         })
                       }
                     >
-                      {rolesForKind(orgOptions.find(o => o.id === userForm.organization_id)?.kind).map(([key, label]) => <option key={key} value={key} disabled={key === 'owner' && users.find(item => item.id === userForm.id)?.organization_role !== 'owner'}>{t(label)}</option>)}
+                      {rolesForKind(
+                        orgOptions.find((o) => o.id === userForm.organization_id)?.kind,
+                      ).map(([key, label]) => (
+                        <option
+                          key={key}
+                          value={key}
+                          disabled={
+                            key === 'owner' &&
+                            users.find((item) => item.id === userForm.id)?.organization_role !==
+                              'owner'
+                          }
+                        >
+                          {t(label)}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className={styles.check}>
@@ -1118,7 +1263,10 @@ export default function AdminPage() {
                         <select
                           required
                           value={inviteOrg}
-                          onChange={(e) => { setInviteOrg(e.target.value); setInviteRole('member'); }}
+                          onChange={(e) => {
+                            setInviteOrg(e.target.value);
+                            setInviteRole('member');
+                          }}
                         >
                           <option value=''>{t('Выберите заказчика')}</option>
                           {orgOptions
@@ -1143,7 +1291,13 @@ export default function AdminPage() {
                       <label>
                         {t('Роль')}
                         <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}>
-                          {rolesForKind(orgOptions.find(o => o.id === Number(inviteOrg))?.kind).map(([key, label]) => <option key={key} value={key}>{t(label)}</option>)}
+                          {rolesForKind(
+                            orgOptions.find((o) => o.id === Number(inviteOrg))?.kind,
+                          ).map(([key, label]) => (
+                            <option key={key} value={key}>
+                              {t(label)}
+                            </option>
+                          ))}
                         </select>
                       </label>
                       <button className={styles.primary} disabled={busy}>
@@ -1212,7 +1366,9 @@ export default function AdminPage() {
                                     })
                                   }
                                 >
-                                  {rolesForKind(orgOptions.find(o => o.id === i.organization_id)?.kind).map(([key, value]) => (
+                                  {rolesForKind(
+                                    orgOptions.find((o) => o.id === i.organization_id)?.kind,
+                                  ).map(([key, value]) => (
                                     <option key={key} value={key}>
                                       {t(value)}
                                     </option>

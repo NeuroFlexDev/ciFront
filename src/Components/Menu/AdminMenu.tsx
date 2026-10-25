@@ -1,18 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import {
-  Building2,
-  Activity,
-  Sparkles,
-  LifeBuoy,
-  ChevronDown,
-  LogOut,
-  UserRound,
-} from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, LogOut, UserRound } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { useLocale } from '@/i18n/useLocale';
 import LanguageSwitch from '@/Components/LanguageSwitch';
-import logo from '@/assets/icons/logo.svg';
+import logo from '@/assets/figma/brand.svg';
+import bell from '@/assets/figma/notification.svg';
 import styles from './adminMenu.module.css';
 export default function AdminMenu() {
   const { user, logout } = useAuth();
@@ -45,34 +38,46 @@ export default function AdminMenu() {
     <header className={styles.header}>
       <Link className={styles.brand} to='/admin'>
         <img src={logo} alt={t('Лерниум')} />
-        <span>{t('Управление')}</span>
       </Link>
       <nav className={styles.navigation} aria-label={t('Управление платформой')}>
-        {(
+        {[
           [
-            ['/admin', 'Заказчики и доступ', Building2],
-            ['/admin/ai', 'AI-провайдеры', Sparkles],
-            ['/admin/operations', 'Состояние сервисов', Activity],
-            ['/support-access', 'Доступ поддержки', LifeBuoy],
-          ] as const
-        ).map(([path, label, Icon]) => (
-          <NavLink
-            key={path}
-            to={path}
-            end
-            className={({ isActive }) =>
-              `${styles.link} ${isActive || (path === '/admin' && location.pathname.startsWith('/admin/organizations/')) ? styles.active : ''}`
-            }
+            '/admin',
+            'Заказчики',
+            (location.pathname === '/admin' &&
+              new URLSearchParams(location.search).get('tab') !== 'audit') ||
+              location.pathname.startsWith('/admin/organizations/'),
+          ],
+          [
+            '/admin/operations',
+            'Мониторинг',
+            ['/admin/operations', '/admin/ai', '/support-access'].includes(location.pathname),
+          ],
+          [
+            '/admin?tab=audit',
+            'Журнал',
+            location.pathname === '/admin' &&
+              new URLSearchParams(location.search).get('tab') === 'audit',
+          ],
+        ].map(([path, label, active]) => (
+          <Link
+            key={String(path)}
+            to={String(path)}
+            aria-current={active ? 'page' : undefined}
+            className={`${styles.link} ${active ? styles.active : ''}`}
           >
-            <Icon size={17} />
-            {t(label)}
-          </NavLink>
+            {t(String(label))}
+          </Link>
         ))}
       </nav>
+      <Link className={styles.bell} to='/admin/operations' aria-label={t('Генерации и сбои')}>
+        <img src={bell} alt='' />
+      </Link>
       <details ref={account} className={styles.account}>
         <summary aria-label={t('Меню аккаунта')}>
-          <span className={styles.avatar}>
-            {(user?.full_name || user?.email || 'A').slice(0, 1).toUpperCase()}
+          <span className={styles.identity}>
+            <span>{user?.full_name || t('Администратор')}</span>
+            <small>{t('Оператор Лерниума')}</small>
           </span>
           <ChevronDown size={15} />
         </summary>

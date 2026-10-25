@@ -1,12 +1,12 @@
 .workspacePage {
-  --canvas-bg: #0b0c0f;
+  --canvas-bg: #0c0d12;
   --canvas-surface: #141414;
-  --canvas-surface-strong: #1b1c1b;
-  --canvas-soft: #242720;
-  --canvas-line: #34372e;
-  --canvas-text: #f3f4ee;
-  --canvas-muted: #afb2a9;
-  --canvas-accent: #caf432;
+  --canvas-surface-strong: #1b1b1b;
+  --canvas-soft: #313131;
+  --canvas-line: #3d3d3d;
+  --canvas-text: #f0f0ec;
+  --canvas-muted: #aaa;
+  --canvas-accent: #c6f135;
   --canvas-ease: var(--ui-ease, cubic-bezier(0.22, 1, 0.36, 1));
   --canvas-edge: 16px;
   --canvas-controls-top: 104px;
@@ -80,7 +80,7 @@
   padding: 12px;
   background: var(--canvas-surface);
   border: 1px solid #30322b;
-  border-radius: 28px;
+  border-radius: 24px;
   box-shadow: 0 10px 36px #0005;
 }
 .toolbarIdentity {
@@ -121,7 +121,7 @@
   min-height: 48px;
   padding: 0 8px 0 16px;
   border: 1px solid #393c34;
-  border-radius: 28px;
+  border-radius: 24px;
   background: var(--canvas-bg);
 }
 .toolbarSearch:focus-within {
@@ -179,7 +179,7 @@
 .aiActionButton {
   border: 1px solid var(--canvas-line);
   color: var(--canvas-text);
-  background: #1b1d18;
+  background: #1b1b1b;
   cursor: pointer;
   text-decoration: none;
 }
@@ -203,7 +203,7 @@
   gap: 8px;
   min-height: 44px;
   padding: 10px 16px;
-  border-radius: 28px;
+  border-radius: 24px;
   line-height: 1.4;
 }
 .saveButton {
@@ -223,7 +223,7 @@
   padding: 12px 18px;
   min-height: 46px;
   border: 1px solid #424a2e;
-  border-radius: 28px;
+  border-radius: 24px;
   color: var(--canvas-accent);
   background: #20241a;
   cursor: pointer;
@@ -246,7 +246,7 @@
   padding: 16px;
   background: var(--canvas-surface);
   border: 1px solid #414836;
-  border-radius: 28px;
+  border-radius: 24px;
   box-shadow: 0 20px 60px #0008;
   animation: panel-enter 180ms var(--canvas-ease);
 }
@@ -354,7 +354,7 @@
   gap: 18px;
   padding: 32px;
   border: 1px solid #3b4430;
-  border-radius: 28px;
+  border-radius: 24px;
   background: #171a14;
   box-shadow: 0 16px 48px #0006;
   text-align: center;
@@ -385,7 +385,7 @@
   color: #141414;
   background: var(--canvas-accent);
   border: 0;
-  border-radius: 28px;
+  border-radius: 24px;
   cursor: pointer;
 }
 .emptyBoard a {
@@ -464,7 +464,7 @@
 }
 .canvasStage :global(.react-flow__selection) {
   background: #caf43212;
-  border-color: #caf432;
+  border-color: #c6f135;
 }
 .canvasStage :global(.react-flow__attribution) {
   bottom: 0;
@@ -480,7 +480,7 @@
   color: inherit;
 }
 .canvasStage :global(.react-flow__node:focus-visible) {
-  outline: 2px solid #caf432;
+  outline: 2px solid #c6f135;
   outline-offset: 7px;
   border-radius: 26px;
 }
@@ -706,13 +706,13 @@
 .canvasNodeSelected {
   box-shadow:
     0 14px 32px #0006,
-    0 0 0 2px #caf432;
+    0 0 0 2px #c6f135;
 }
 .frameNode {
   width: 100%;
   height: 100%;
   padding: 14px;
-  border-radius: 28px;
+  border-radius: 24px;
   background: #caf43205;
   box-shadow: inset 0 0 0 1px #798d464d;
 }
@@ -802,7 +802,7 @@
   border: 6px solid #0c0e0b;
   box-sizing: content-box !important;
   border-radius: 50%;
-  background: #caf432;
+  background: #c6f135;
   color: #141414;
   cursor: pointer;
 }
@@ -988,7 +988,7 @@
   width: min(600px, calc(100% - 32px));
   max-height: calc(100% - var(--canvas-controls-top) - 144px);
   overflow: auto;
-  border-radius: 28px;
+  border-radius: 24px;
   background: var(--canvas-surface);
   border: 1px solid #606e39;
   box-shadow: 0 20px 60px #0009;
@@ -1010,7 +1010,7 @@
   padding: 6px;
   background: var(--canvas-surface);
   border: 1px solid #3e4533;
-  border-radius: 28px;
+  border-radius: 24px;
   box-shadow: 0 10px 30px #0005;
 }
 .navigationDock button,
@@ -1147,7 +1147,7 @@
   }
   .floatingPanel {
     max-height: calc(100% - var(--canvas-controls-top) - 136px);
-    border-radius: 28px;
+    border-radius: 24px;
   }
   .leftPanel,
   .sidebar {
