@@ -1133,6 +1133,11 @@
   color: #141414;
   border-color: #c6f135;
 }
+.container .addBlock:hover:not(:disabled) {
+  background: #d7ff50;
+  border-color: #d7ff50;
+  color: #141414;
+}
 .blockTypes {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
