@@ -206,4 +206,5 @@ export const figmaUiEnglish: Record<string, string> = {
   'Участник не найден в вашей области доступа.':
     'The participant was not found within your access scope.',
   '← Все участники': '← All participants',
+  'Назначенные курсы': 'Assigned courses',
 };
