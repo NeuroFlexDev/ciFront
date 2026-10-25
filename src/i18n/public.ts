@@ -80,6 +80,9 @@ export const publicEnglish: Record<string, string> = {
   'В рабочее пространство ↗': 'Go to workspace ↗',
   Войти: 'Sign in',
   'Ошибка интерфейса': 'Interface error',
+  'Не удалось загрузить страницу': 'The page could not be loaded',
+  'Соединение прервалось или приложение обновилось. Проверьте интернет и обновите страницу. Материалы на сервере сохранятся. Перед обновлением можно скачать копию локальных черновиков.':
+    'The connection was interrupted or the app was updated. Check your connection and reload the page. Your server materials will remain saved. You can download a copy of your local drafts before reloading.',
   Повторить: 'Retry',
   'Обновить страницу': 'Reload page',
   'Скачать копию черновиков': 'Download draft copies',
