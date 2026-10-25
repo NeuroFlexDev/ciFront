@@ -517,7 +517,7 @@ export default function AdminPage() {
           aria-labelledby={`admin-tab-${tab}`}
           className={styles.content}
         >
-          <DraftNotice />
+          <DraftNotice quiet />
           {managementReady === false && (
             <p role='status'>
               {t(
@@ -656,6 +656,7 @@ export default function AdminPage() {
                 </ol>
               )}
               <section className={styles.panel}>
+                <DraftNotice />
                 <form
                   className={styles.form}
                   onSubmit={(event) => {
@@ -1001,6 +1002,9 @@ export default function AdminPage() {
               {!!error && <RequestError error={error} />}
               <section className={styles.panel}>
                 <form className={styles.form} onSubmit={saveUser}>
+                  <div className={styles.span}>
+                    <DraftNotice />
+                  </div>
                   {(!!error || userForm.auth_version == null) && managementReady && (
                     <button
                       type='button'
@@ -1249,6 +1253,9 @@ export default function AdminPage() {
                       )}
                     </p>
                     <form className={styles.form} onSubmit={createInvite}>
+                      <div className={styles.span}>
+                        <DraftNotice />
+                      </div>
                       <label>
                         {t('Поиск организации')}
                         <input
