@@ -43,7 +43,9 @@ The client defaults to `https://dev.platform.lernium.ru`. Production is explicit
 
 ## Verification status
 
-Local type checking, lint, 9 auth concurrency tests, all-platform JavaScript/Hermes export, Expo Doctor (20/20) and Android prebuild have passed during implementation. GitHub CI also passed the full web suite (331 tests), native checks/export and SQLCipher prebuild. Expo/Firebase are connected and the first Android cloud build is in progress; physical-device push, iOS native compilation, visual acceptance and store submission are not yet accepted. No mobile app has been deployed to an app store.
+Local type checking, lint, 9 auth concurrency tests, all-platform JavaScript/Hermes export, Expo Doctor (20/20) and Android prebuild have passed during implementation. GitHub CI also passed the full web suite (331 tests), native checks/export and SQLCipher prebuild. Expo/Firebase are connected; FCM accepted a validation-only request, which is not evidence of device delivery.
+
+Native cloud compilation succeeded for [Android APK dc6ada23](https://expo.dev/accounts/nosignalx2k/projects/lernium/builds/dc6ada23-3e39-4f7f-83fe-1d62ed29fa8f) and [iOS Simulator 748795e0](https://expo.dev/accounts/nosignalx2k/projects/lernium/builds/748795e0-54dd-4f10-9d51-e0532ecbb1a9). Android archive inspection confirmed the package and SQLCipher symbols for all four native architectures; this does not prove encrypted persistence on a phone. The iOS artifact is simulator-only. Physical-device push, persistence, visual acceptance, iPhone signing/APNs and store submission remain pending. No mobile app has been deployed to an app store.
 
 `npm audit` has no high/critical findings after the compatible dependency overrides; remaining low findings are inherited build tooling. `markdown-it` and `linkify-it` overrides protect rendering of uploaded educational content. The Expo CLI Zod override is verified with export and prebuild.
 
