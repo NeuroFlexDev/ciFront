@@ -69,6 +69,18 @@ export const drafts = {
     }
     await (await db()).runAsync('DELETE FROM drafts WHERE scope=? AND id=?', scope, id);
   },
+  async removeIfUnchanged(scope: string, id: string, submitted: Draft) {
+    const payload = JSON.stringify(submitted);
+    if (Platform.OS === 'web') {
+      if (JSON.stringify(preview.get(scope + ':' + id)) === payload)
+        preview.delete(scope + ':' + id);
+      return;
+    }
+    // A late cleanup must not remove an answer edited after this submission.
+    await (
+      await db()
+    ).runAsync('DELETE FROM drafts WHERE scope=? AND id=? AND payload=?', scope, id, payload);
+  },
   async clear(scope: string) {
     if (Platform.OS === 'web') {
       for (const key of preview.keys()) if (key.startsWith(scope + ':')) preview.delete(key);

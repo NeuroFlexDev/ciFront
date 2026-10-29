@@ -60,6 +60,7 @@ export type Assessment = {
 };
 export type Response = {
   id: number;
+  submission_key?: string | null;
   assessment_id: string;
   attempt: number;
   revision: number;

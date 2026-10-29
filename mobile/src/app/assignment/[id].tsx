@@ -3,8 +3,8 @@ import { Linking } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
-import { api, useResource, useSession } from '../../lib/session';
-import type { Detail, Lesson } from '../../lib/types';
+import { api, queryClient, useResource, useSession } from '../../lib/session';
+import type { Detail, Lesson, Response } from '../../lib/types';
 import { states } from '../../lib/types';
 import { Page, Card, Txt, Button, Loading, ErrorState, Chips, Progress } from '../../ui/components';
 import { AnswerEditor } from '../../ui/AnswerEditor';
@@ -12,12 +12,13 @@ import { LessonImage } from '../../ui/LessonImage';
 import { c } from '../../ui/theme';
 export default function AssignmentScreen() {
   const { id, results } = useLocalSearchParams<{ id: string; results?: string }>(),
-    { user } = useSession(),
+    { user, scope } = useSession(),
     query = useResource<Detail>(/^\d+$/.test(id) ? '/learning/assignments/' + id : null),
     [selected, setSelected] = useState<number | null>(null),
     [tab, setTab] = useState(results ? 'tests' : 'materials'),
     [error, setError] = useState<unknown>(null),
     [busy, setBusy] = useState(false),
+    [refreshing, setRefreshing] = useState(false),
     ops = useRef(new Map<number, string>());
   const data = query.data,
     lessons = data?.content.modules.flatMap((m) => m.lessons) || [],
@@ -27,6 +28,30 @@ export default function AssignmentScreen() {
       ...(data?.content.assessments || []),
       ...(data?.content.modules.flatMap((m) => m.assessments) || []),
     ].filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i);
+  function answerSaved(response: Response) {
+    queryClient.setQueryData<Detail>([scope, '/learning/assignments/' + id], (current) => {
+      if (
+        !current ||
+        current.responses.some(
+          (item) => item.id === response.id && item.revision > response.revision,
+        )
+      )
+        return current;
+      return {
+        ...current,
+        responses: [...current.responses.filter((item) => item.id !== response.id), response],
+      };
+    });
+    void query.refetch();
+  }
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      await query.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }
   async function complete() {
     if (!data || !lesson) return;
     setBusy(true);
@@ -55,8 +80,8 @@ export default function AssignmentScreen() {
     <Page
       title={data?.title || 'Обучение'}
       back
-      refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      refreshing={refreshing}
+      onRefresh={() => void refresh()}
     >
       {query.isPending && <Loading />}
       {!!(query.error || error) && (
@@ -158,7 +183,7 @@ export default function AssignmentScreen() {
                       .filter((r) => r.assessment_id === question.id)
                       .sort((a, b) => b.attempt - a.attempt)[0]
                   }
-                  onSaved={() => void query.refetch()}
+                  onSaved={answerSaved}
                 />
               ))}
               {!assessments.length && (

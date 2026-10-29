@@ -4,6 +4,7 @@ import * as Crypto from 'expo-crypto';
 import { api, useSession } from '../lib/session';
 import { drafts, type Draft } from '../lib/drafts';
 import { ApiError } from '../lib/client';
+import { bounded, deliverAnswer } from '../lib/answer-delivery';
 import type { Assessment, Answer, Response } from '../lib/types';
 import { Button, Card, ErrorState, Field, Txt } from './components';
 import { c } from './theme';
@@ -11,14 +12,14 @@ export function AnswerEditor({
   assignmentId,
   versionId,
   question,
-  response,
+  response: serverResponse,
   onSaved,
 }: {
   assignmentId: number;
   versionId: number;
   question: Assessment;
   response?: Response;
-  onSaved: () => void;
+  onSaved: (response: Response) => void;
 }) {
   const { scope } = useSession(),
     key = versionId + ':' + assignmentId + ':' + question.id;
@@ -27,10 +28,21 @@ export function AnswerEditor({
     [busy, setBusy] = useState(false),
     [saved, setSaved] = useState(false),
     [conflict, setConflict] = useState<Response | null>(null),
-    [retrying, setRetrying] = useState(false);
+    [retrying, setRetrying] = useState(false),
+    [accepted, setAccepted] = useState<Response | null>(null),
+    [phase, setPhase] = useState<'saving' | 'sending' | 'checking'>('saving'),
+    [storageWarning, setStorageWarning] = useState(false);
+  const response =
+    accepted &&
+    (!serverResponse ||
+      accepted.attempt > serverResponse.attempt ||
+      (accepted.attempt === serverResponse.attempt && accepted.revision >= serverResponse.revision))
+      ? accepted
+      : serverResponse;
   const pending = useRef(Promise.resolve()),
     current = useRef<Draft | null>(null),
-    mounted = useRef(true);
+    mounted = useRef(true),
+    sending = useRef(false);
   const locked = !!response && response.status !== 'draft' && !retrying;
   const localVariant =
     locked &&
@@ -83,53 +95,69 @@ export function AnswerEditor({
     if (current.current) persist({ ...current.current, answer });
   }
   async function send(submit: boolean) {
-    if (!current.current) return;
+    if (!current.current || sending.current) return;
+    sending.current = true;
+    const snapshot = current.current;
     setBusy(true);
     setError(null);
     try {
-      await pending.current;
-      const snapshot = current.current;
-      const payload = {
-        answer: snapshot.answer,
-        expected_revision: snapshot.revision,
-        attempt: snapshot.attempt,
-        ...(submit ? { submission_key: snapshot.submission_key } : {}),
-      };
-      const result = await api.request<Response>(
-        `/learning/assignments/${assignmentId}/responses/${encodeURIComponent(question.id)}` +
-          (submit ? '/submit' : ''),
-        submit ? 'POST' : 'PUT',
-        payload,
-      );
+      const result = await deliverAnswer({
+        request: (path, method, body) => api.request(path, method, body),
+        assignmentId,
+        questionId: question.id,
+        draft: snapshot,
+        submit,
+        persisted: pending.current,
+        phase: (value) => {
+          if (mounted.current) setPhase(value);
+        },
+      });
+      if (!mounted.current) return;
+      setAccepted(result);
+      setConflict(null);
       if (submit) {
-        await drafts.remove(scope, key);
         setRetrying(false);
+        // Server confirmation immediately ends the sending UI. Local cleanup is optional.
+        void bounded(
+          drafts.removeIfUnchanged(scope, key, snapshot),
+          5000,
+          'Draft cleanup timeout',
+        ).catch(() => {
+          if (mounted.current) setStorageWarning(true);
+        });
       } else {
         const next = { ...snapshot, revision: result.revision };
-        await drafts.set(scope, key, next);
         current.current = next;
         setDraft(next);
+        pending.current = drafts.set(scope, key, next);
+        void pending.current.catch(() => {
+          if (mounted.current) setStorageWarning(true);
+        });
       }
       setSaved(true);
-      setConflict(null);
-      onSaved();
+      onSaved(result);
     } catch (e) {
+      if (!mounted.current) return;
       setError(e);
       if (e instanceof ApiError && e.status === 409) {
         try {
-          const detail = await api.request<{ responses: Response[] }>(
-            `/learning/assignments/${assignmentId}`,
+          const detail = await bounded(
+            api.request<{ responses: Response[] }>(`/learning/assignments/${assignmentId}`),
+            10000,
+            'Не удалось загрузить текущий ответ.',
           );
-          setConflict(
-            detail.responses
-              .filter((r) => r.assessment_id === question.id)
-              .sort((a, b) => b.attempt - a.attempt)[0] || null,
-          );
+          if (mounted.current)
+            setConflict(
+              detail.responses
+                .filter((r) => r.assessment_id === question.id)
+                .sort((a, b) => b.attempt - a.attempt)[0] || null,
+            );
         } catch {
           /* Keep the original conflict and local answer. */
         }
       }
     } finally {
+      sending.current = false;
       if (mounted.current) setBusy(false);
     }
   }
@@ -155,7 +183,12 @@ export function AnswerEditor({
           {criterion.title} — до {criterion.max_points}
         </Txt>
       ))}
-      {!!error && <ErrorState error={error} />}
+      {storageWarning && (
+        <Txt muted size={13}>
+          Ответ сохранён на сервере. Локальную копию пока не удалось обновить; она будет сверена при
+          следующем открытии.
+        </Txt>
+      )}
       {locked ? (
         <>
           <Txt>
@@ -163,10 +196,16 @@ export function AnswerEditor({
           </Txt>
           <Txt style={{ color: c.lime }}>
             {response?.status === 'pending_review'
-              ? 'Ожидает проверки'
+              ? 'Ответ отправлен · Ожидает проверки'
               : String(response?.points) + ' / ' + question.max_points + ' баллов'}
           </Txt>
           {!!response?.feedback && <Txt muted>{response.feedback}</Txt>}
+          {response?.status === 'pending_review' && (
+            <Txt muted size={13}>
+              Проверяющий получил ваш ответ. Повторно отправлять его не нужно. Результат появится
+              здесь и в уведомлениях.
+            </Txt>
+          )}
           {localVariant && (
             <View style={{ gap: 8 }}>
               <Txt muted>
@@ -280,6 +319,16 @@ export function AnswerEditor({
                 </Txt>
               )}
             </View>
+          )}
+          {!!error && <ErrorState error={error} />}
+          {busy && (
+            <Txt muted size={13}>
+              {phase === 'saving'
+                ? 'Сохраняем ответ на устройстве…'
+                : phase === 'checking'
+                  ? 'Проверяем, получил ли сервер ваш ответ…'
+                  : 'Отправляем ответ…'}
+            </Txt>
           )}
           <Button
             title='Отправить на проверку'
