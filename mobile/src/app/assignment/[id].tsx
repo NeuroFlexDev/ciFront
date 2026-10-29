@@ -1,0 +1,175 @@
+import { useState, useRef } from 'react';
+import { Linking } from 'react-native';
+import Markdown from 'react-native-markdown-display';
+import { useLocalSearchParams } from 'expo-router';
+import * as Crypto from 'expo-crypto';
+import { api, useResource, useSession } from '../../lib/session';
+import type { Detail, Lesson } from '../../lib/types';
+import { states } from '../../lib/types';
+import { Page, Card, Txt, Button, Loading, ErrorState, Chips, Progress } from '../../ui/components';
+import { AnswerEditor } from '../../ui/AnswerEditor';
+import { LessonImage } from '../../ui/LessonImage';
+import { c } from '../../ui/theme';
+export default function AssignmentScreen() {
+  const { id, results } = useLocalSearchParams<{ id: string; results?: string }>(),
+    { user } = useSession(),
+    query = useResource<Detail>(/^\d+$/.test(id) ? '/learning/assignments/' + id : null),
+    [selected, setSelected] = useState<number | null>(null),
+    [tab, setTab] = useState(results ? 'tests' : 'materials'),
+    [error, setError] = useState<unknown>(null),
+    [busy, setBusy] = useState(false),
+    ops = useRef(new Map<number, string>());
+  const data = query.data,
+    lessons = data?.content.modules.flatMap((m) => m.lessons) || [],
+    lesson: Lesson | undefined =
+      lessons.find((l) => l.id === (selected ?? data?.last_lesson_id)) || lessons[0],
+    assessments = [
+      ...(data?.content.assessments || []),
+      ...(data?.content.modules.flatMap((m) => m.assessments) || []),
+    ].filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i);
+  async function complete() {
+    if (!data || !lesson) return;
+    setBusy(true);
+    setError(null);
+    const key = ops.current.get(lesson.id) || Crypto.randomUUID();
+    ops.current.set(lesson.id, key);
+    try {
+      await api.request('/learning/assignments/' + id + '/progress', 'PUT', {
+        expected_revision: data.progress_revision,
+        lesson_id: lesson.id,
+        completed: true,
+        operation_key: key,
+      });
+      await query.refetch();
+      const next = lessons[lessons.findIndex((l) => l.id === lesson.id) + 1];
+      if (next) setSelected(next.id);
+      else setTab('tests');
+      ops.current.delete(lesson.id);
+    } catch (e) {
+      setError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <Page
+      title={data?.title || 'Обучение'}
+      back
+      refreshing={query.isRefetching}
+      onRefresh={() => void query.refetch()}
+    >
+      {query.isPending && <Loading />}
+      {!!(query.error || error) && (
+        <ErrorState error={query.error || error} retry={() => void query.refetch()} />
+      )}
+      {data && (
+        <>
+          <Progress value={data.progress_percent} />
+          <Txt muted size={13}>
+            {states[data.status] || data.status} · {data.completed_lessons.length} из{' '}
+            {data.lesson_count} материалов
+          </Txt>
+          <Chips
+            items={[
+              {
+                id: 'materials',
+                label: user?.organization_kind === 'business' ? 'Регламент' : 'Материалы',
+              },
+              { id: 'tests', label: 'Тесты и ответы' },
+            ]}
+            value={tab}
+            onChange={setTab}
+          />
+          {tab === 'materials' ? (
+            <>
+              <Chips
+                items={lessons.map((l, i) => ({
+                  id: String(l.id),
+                  label:
+                    (data.completed_lessons.includes(l.id) ? '✓ ' : '') + (i + 1) + '. ' + l.title,
+                }))}
+                value={String(lesson?.id)}
+                onChange={(value) => setSelected(Number(value))}
+              />
+              {lesson ? (
+                <Card>
+                  <Txt size={23}>{lesson.title}</Txt>
+                  <Markdown
+                    rules={{
+                      image: (node) => (
+                        <LessonImage
+                          key={node.key}
+                          src={String(node.attributes.src || '')}
+                          alt={String(node.attributes.alt || 'Иллюстрация')}
+                        />
+                      ),
+                    }}
+                    onLinkPress={(url) => {
+                      if (/^https:\/\//.test(url)) void Linking.openURL(url).catch(setError);
+                      return false;
+                    }}
+                    style={{
+                      body: { color: c.text, fontFamily: 'Golos', fontSize: 16, lineHeight: 26 },
+                      heading1: {
+                        fontFamily: 'Days',
+                        fontSize: 25,
+                        color: c.text,
+                        marginVertical: 12,
+                      },
+                      heading2: { fontSize: 22, color: c.text, marginVertical: 12 },
+                      heading3: { fontSize: 19, color: c.text },
+                      link: { color: c.lime },
+                      code_inline: { backgroundColor: c.inner, color: c.text },
+                      code_block: { backgroundColor: c.bg, color: c.text, borderColor: c.line },
+                      fence: { backgroundColor: c.bg, color: c.text, borderColor: c.line },
+                      blockquote: { backgroundColor: c.inner, borderLeftColor: c.lime },
+                      table: { borderColor: c.line },
+                      tr: { borderBottomColor: c.line },
+                    }}
+                  >
+                    {lesson.content || lesson.description}
+                  </Markdown>
+                  <Button
+                    title={
+                      data.completed_lessons.includes(lesson.id)
+                        ? 'Изучено · дальше'
+                        : 'Отметить изученным'
+                    }
+                    busy={busy}
+                    onPress={() => void complete()}
+                  />
+                </Card>
+              ) : (
+                <Card>
+                  <Txt>{data.content.course.description || 'Перейдите к тестам.'}</Txt>
+                </Card>
+              )}
+            </>
+          ) : (
+            <>
+              {assessments.map((question) => (
+                <AnswerEditor
+                  key={question.id}
+                  assignmentId={data.id}
+                  versionId={data.course_version_id}
+                  question={question}
+                  response={
+                    data.responses
+                      .filter((r) => r.assessment_id === question.id)
+                      .sort((a, b) => b.attempt - a.attempt)[0]
+                  }
+                  onSaved={() => void query.refetch()}
+                />
+              ))}
+              {!assessments.length && (
+                <Card>
+                  <Txt>В этом назначении нет тестов. Для завершения изучите материалы.</Txt>
+                </Card>
+              )}
+            </>
+          )}
+        </>
+      )}
+    </Page>
+  );
+}
