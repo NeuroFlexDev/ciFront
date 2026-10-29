@@ -1,7 +1,11 @@
+import CourseNavigation from '@/Components/CourseNavigation';
 import { useAuth } from '@/auth/useAuth';
 import { isBusiness } from '@/shared/business';
 import businessCss from '../Business/business.module.css';
-import { ArrowUpRight, Network } from 'lucide-react';
+import { Info, UserRoundPlus } from 'lucide-react';
+import Dialog from '@/Components/Admin/AdminDialog';
+import CourseInfoDialog from './CourseInfoDialog';
+import { useLearningData } from '../Learning/useLearningData';
 import cs from './myCourses.module.css';
 import { useLocale } from '@/i18n/useLocale';
 import { RequestError, LoadingState } from '@/Components/RequestState';
@@ -10,11 +14,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '@/shared/api';
 import { Shell, styles } from '@/Pages/Workspace/shared';
-type Course = {
+export type Course = {
   id: number;
   title: string | null;
   description?: string | null;
   publication_status: string;
+  updated_at?: string;
   module_count: number;
   lesson_count: number;
 };
@@ -22,6 +27,11 @@ export default function MyCoursesPage() {
   const { t } = useLocale();
   const { user } = useAuth();
   const business = isBusiness(user);
+  const permissions = useLearningData<{ can_manage_team: boolean; can_report: boolean }>(
+    '/team/permissions',
+  );
+  const [info, setInfo] = useState<Course | null>(null);
+  const [confirmation, setConfirmation] = useState<Course | null>(null);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [offset, setOffset] = useState(0);
@@ -55,19 +65,11 @@ export default function MyCoursesPage() {
     };
   }, [offset, filter, version]);
   async function remove(course: Course) {
-    if (
-      !window.confirm(
-        t(
-          'Удалить курс «{v0}»? Он исчезнет из вашего списка, опубликованная версия станет недоступна.',
-          { v0: course.title?.trim() || t('Черновик №{v0}', { v0: course.id }) },
-        ),
-      )
-    )
-      return;
     setRemoving(course.id);
     setError(null);
     try {
       await api.delete(`/courses/${course.id}`);
+      setConfirmation(null);
       if (courses.length === 1 && offset > 0) setOffset((n) => n - 20);
       else setVersion((n) => n + 1);
     } catch (e) {
@@ -87,7 +89,8 @@ export default function MyCoursesPage() {
         </Link>
       }
     >
-      <div className={styles.tabs} aria-label={t('Фильтр курсов')}>
+      <CourseNavigation />
+      <div className={cs.filters} aria-label={t('Фильтр курсов')}>
         {[
           ['', t('Все курсы')],
           ['draft', t('Черновики')],
@@ -132,30 +135,29 @@ export default function MyCoursesPage() {
               <article className={cs.card} key={c.id}>
                 <div className={cs.cardTop}>
                   <div className={cs.status}>
-                    <span className={cs.eyebrow}>{t('Курс')}</span>
-                    <span>
-                      {c.publication_status === 'published' ? t('Опубликован') : t('Черновик')}
-                    </span>
+                    <span className={cs.eyebrow}>{t('Автор курса')}</span>
+                    <span>{user?.full_name || user?.username || user?.email}</span>
                   </div>
                   <div className={cs.quickActions}>
-                    {!business && (
+                    <button
+                      className={cs.circle}
+                      type='button'
+                      onClick={() => setInfo(c)}
+                      aria-label={`${t('Информация о курсе')}: ${title}`}
+                      title={t('Информация о курсе')}
+                    >
+                      <Info size={24} strokeWidth={1.5} />
+                    </button>
+                    {permissions.data?.can_manage_team && c.publication_status === 'published' && (
                       <Link
                         className={cs.circle}
-                        to={`/courses/${c.id}/canvas`}
-                        aria-label={`${t('Канва')}: ${title}`}
-                        title={t('Канва')}
+                        to={`/assignments?course=${c.id}`}
+                        aria-label={`${t('Назначить обучение')}: ${title}`}
+                        title={t('Назначить обучение')}
                       >
-                        <Network size={23} strokeWidth={1.5} />
+                        <UserRoundPlus size={24} strokeWidth={1.5} />
                       </Link>
                     )}
-                    <Link
-                      className={cs.circle}
-                      to={href}
-                      aria-label={`${t('Открыть курс')}: ${title}`}
-                      title={t('Открыть курс')}
-                    >
-                      <ArrowUpRight size={27} strokeWidth={1.6} />
-                    </Link>
                   </div>
                 </div>
                 <div className={cs.cardBody}>
@@ -175,6 +177,9 @@ export default function MyCoursesPage() {
                     </dl>
                   )}
                   {c.description && <p className={cs.description}>{c.description}</p>}
+                  <span className={cs.publishBadge}>
+                    {t(c.publication_status === 'published' ? 'Опубликован' : 'Черновик')}
+                  </span>
                   <div className={cs.actions}>
                     <Link className={cs.open} to={href}>
                       {c.lesson_count ? t('Открыть курс') : t('Продолжить создание')}{' '}
@@ -183,7 +188,10 @@ export default function MyCoursesPage() {
                     <button
                       className={cs.remove}
                       disabled={removing !== null}
-                      onClick={() => void remove(c)}
+                      onClick={() => {
+                        setError(null);
+                        setConfirmation(c);
+                      }}
                     >
                       {removing === c.id ? t('Удаляем…') : t('Удалить')}
                     </button>
@@ -211,6 +219,46 @@ export default function MyCoursesPage() {
             {t('Далее')}
           </button>
         </div>
+      )}
+      {info && (
+        <CourseInfoDialog
+          key={info.id}
+          course={info}
+          canReport={!!permissions.data?.can_report}
+          canAssign={!!permissions.data?.can_manage_team}
+          onClose={() => setInfo(null)}
+        />
+      )}
+      {confirmation && (
+        <Dialog
+          title={t('Удалить курс?')}
+          busy={removing !== null}
+          onClose={() => setConfirmation(null)}
+          className={cs.infoDialog}
+        >
+          <p>
+            {t('Курс «{v0}» исчезнет из вашего списка. Это действие нельзя отменить.', {
+              v0: confirmation.title || t('Черновик №{v0}', { v0: confirmation.id }),
+            })}
+          </p>
+          {!!error && <RequestError error={error} />}
+          <div className={cs.infoActions}>
+            <button
+              className={styles.secondary}
+              disabled={removing !== null}
+              onClick={() => setConfirmation(null)}
+            >
+              {t('Отмена')}
+            </button>
+            <button
+              className={styles.primary}
+              disabled={removing !== null}
+              onClick={() => void remove(confirmation)}
+            >
+              {t(removing !== null ? 'Удаляем…' : 'Удалить')}
+            </button>
+          </div>
+        </Dialog>
       )}
     </Shell>
   );

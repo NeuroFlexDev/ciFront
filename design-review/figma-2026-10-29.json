@@ -1,0 +1,3360 @@
+{
+  "date": "2026-10-29",
+  "source_file": "mCBsEO0lXXeQTMSf7IgWEj",
+  "source_page": "75:1209",
+  "baseline_frontend": "9ba9cc0",
+  "baseline_backend": "b038afb",
+  "status": "partial_visual_alignment",
+  "scope": "Seven current role sections: owner, staff, candidate (desktop and mobile), and platform administration. Action annotations, link placeholders, competitor analysis and historical drafts are excluded from screen counts.",
+  "coverage_note": "Inventory and reference availability are evidence of inspection, not a claim that every frame is implemented or visually verified. The role sections contain 354 screen/state frames.",
+  "screen_count": 354,
+  "saved_reference_count": 65,
+  "saved_context_count": 25,
+  "external_blocker": "Figma MCP stopped further exports: Full seat / Professional plan tool-call limit reached. Complete visual verification requires restored access or a current design export.",
+  "implemented_areas": [
+    {
+      "area": "Role navigation and mobile profile menu",
+      "routes": [
+        "/company",
+        "/dashboard",
+        "/learning"
+      ],
+      "details": "Figma SVG icons, fixed mobile navigation, accessible profile drawer, results and authorized workspace links."
+    },
+    {
+      "area": "First-login walkthrough",
+      "routes": [
+        "/company",
+        "/learning",
+        "/help"
+      ],
+      "details": "Four owner steps, three staff steps, two learner steps; per-user completion; restart from Help."
+    },
+    {
+      "area": "Dashboard",
+      "routes": [
+        "/company?tab=overview",
+        "/dashboard"
+      ],
+      "details": "Mobile card sizing and stacking; original optimized Figma assistant artwork; real API metrics retained."
+    },
+    {
+      "area": "Team and account handoff",
+      "routes": [
+        "/company?tab=employees",
+        "/company?tab=candidates"
+      ],
+      "details": "Mobile person cards, visible active tab, account-created dialog with temporary credentials and assignment link. No email required."
+    },
+    {
+      "area": "Course catalog and information",
+      "routes": [
+        "/courses",
+        "/templates",
+        "/programs"
+      ],
+      "details": "Catalog tabs, metadata/progress/source dialog, assignment links and explicit deletion confirmation."
+    },
+    {
+      "area": "Learner course list and results",
+      "routes": [
+        "/learning",
+        "/learning?view=courses",
+        "/results"
+      ],
+      "details": "Compact mobile cards, separate course-only view, real graded and pending responses, retry eligibility and read-only historical assignments."
+    },
+    {
+      "area": "Profile",
+      "routes": [
+        "/account"
+      ],
+      "details": "Readonly detail cards, explicit edit/cancel/save, horizontal mobile tabs, email and account security flows retained."
+    },
+    {
+      "area": "Notifications and support",
+      "routes": [
+        "/notifications",
+        "/help"
+      ],
+      "details": "Full notification page; searchable role FAQs; support request with durable draft and server reference."
+    }
+  ],
+  "verification": {
+    "unit_tests": {
+      "files": 70,
+      "passed": 327,
+      "command": "NODE_OPTIONS=--no-experimental-webstorage npm test -- --run",
+      "environment_note": "Local Node 26 exposes experimental Web Storage; CI uses Node 24."
+    },
+    "lint": "npm run lint passed",
+    "build": "npm run build passed for platform and admin; existing large-chunk warnings remain",
+    "production_dependency_audit": "npm audit --omit=dev --audit-level=critical: 0 vulnerabilities",
+    "browser_fixture_review": {
+      "page_openings": 34,
+      "roles": [
+        "owner",
+        "manager",
+        "candidate"
+      ],
+      "widths": [
+        1440,
+        393
+      ],
+      "extra_interactions": [
+        "course information",
+        "profile edit/cancel",
+        "create login/password account",
+        "four-step tour",
+        "support dialog",
+        "mobile menu"
+      ],
+      "javascript_errors": 0,
+      "horizontal_overflow": 0
+    },
+    "live_dev_api_review": {
+      "page_openings": 28,
+      "roles": [
+        "owner",
+        "manager",
+        "candidate"
+      ],
+      "widths": [
+        1440,
+        393
+      ],
+      "mode": "Local frontend with live DEV API; login followed by read-only GET requests. Not a deployment.",
+      "javascript_errors": 0,
+      "api_errors": 0
+    },
+    "mobile_active_tab_followup": "At 393px, the selected Candidates tab spans x=266..373 after fonts load, within the 20px page gutters."
+  },
+  "remaining": [
+    {
+      "area": "Complete visual verification",
+      "reason": "The Figma quota prevented exporting and checking every screen/state, especially the full administrative, billing, integration and mobile edge-state sequences."
+    },
+    {
+      "area": "Organization switcher",
+      "reason": "The current user model has a single organization_id. A real membership/switching API is required before implementing the multi-organization design."
+    },
+    {
+      "area": "Learner certificates",
+      "reason": "No certificate issuance/download flow is implemented. The new results screen shows actual scores without simulated certificates."
+    },
+    {
+      "area": "Support conversation and request history",
+      "reason": "The user-facing API accepts a support request and returns a reference. The full customer conversation/history shown in Figma needs a separate read/reply contract."
+    },
+    {
+      "area": "Owner course archive",
+      "reason": "The current course catalog accepts draft/published filters. Operator-side archiving exists; owner archive/restore requires an authorized API and explicit assignment/version behavior."
+    },
+    {
+      "area": "Mobile authoring restriction",
+      "reason": "The prototype describes creating/editing on desktop. The current functional editor remains accessible on mobile; the exact desktop-only gate is not implemented in this change."
+    },
+    {
+      "area": "Results aggregation",
+      "reason": "Results load from up to 24 assignments on the current page. Pagination is labeled; global course/result statistics require an aggregate endpoint."
+    }
+  ],
+  "screens": [
+    {
+      "node": "1981:27148",
+      "name": "Письмо отправлено",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27148",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27324",
+      "name": "ССылка устарела",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27324",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27227",
+      "name": "Письмо повторно отправлено",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27227",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27276",
+      "name": "Почта подтверждена",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27276",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27370",
+      "name": "Ссылка уже использована",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27370",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27093",
+      "name": "sign up",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27093",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2000:43333",
+      "name": "Первый вход / Подсказки владельца",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2000-43333",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "2162:73443",
+      "name": "Первый вход / Подсказки владельца — шаг 2",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-73443",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "2162:73860",
+      "name": "Первый вход / Подсказки владельца — шаг 3",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-73860",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "2162:74265",
+      "name": "Первый вход / Подсказки владельца — шаг 4",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-74265",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "1981:27426",
+      "name": "dashboard main",
+      "role": "1. Кабинет владельца",
+      "flow": "1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27426",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "1981:27623",
+      "name": "Аккаунт / Выбор организации",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27623",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27579",
+      "name": "sign in",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27579",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27669",
+      "name": "Аккаунт / Нет доступа к организации",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27669",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27807",
+      "name": "Восстановление пароля / новый пароль",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27807",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27751",
+      "name": "Восстановление пароля / нейтральное сообщение",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27751",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7740",
+      "name": "Организация приостановлена / дата известна",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7740",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27685",
+      "name": "Восстановление пароля / запрос ссылки",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27685",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27859",
+      "name": "Восстановление пароля / ссылка истекла",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27859",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27906",
+      "name": "Восстановление пароля/ пароль изменен",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27906",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7783",
+      "name": "Организация приостановлена / дата неизвестна",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7783",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7806",
+      "name": "Организация приостановлена / дата неизвестна",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7806",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7850",
+      "name": "Заблокирован личный аккаунт",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7850",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7869",
+      "name": " Временная блокировка аккаунта / дата известна",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7869",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:7830",
+      "name": "Удалено членство",
+      "role": "1. Кабинет владельца",
+      "flow": "1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-7830",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:27990",
+      "name": "courses",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27990",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "1981:27998",
+      "name": "Пустые состояния / Курсы — автор",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27998",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28005",
+      "name": "step1",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28005",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28475",
+      "name": "Авторинг / Источники проекта",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28475",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28613",
+      "name": "step 3",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28613",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28283",
+      "name": "step2",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28283",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29058",
+      "name": "Генерация / Подтверждение запуска",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29058",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28934",
+      "name": "Авторинг / План — заменить текущий",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28934",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:28731",
+      "name": "Авторинг / План курса с AI",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-28731",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29294",
+      "name": "Генерация / Подтверждение — не хватает квоты",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29294",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29486",
+      "name": "Генерация — варианты",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29486",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29361",
+      "name": "Генерация / Выполняется",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29361",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29541",
+      "name": "step 5",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29541",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29645",
+      "name": "Авторинг / Проверка качества курса",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29645",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:29899",
+      "name": "Desktop - 71",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-29899",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:8030",
+      "name": "Авторинг / Источник — предпросмотр",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-8030",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1981:30027",
+      "name": "popup | appoint eployee",
+      "role": "1. Кабинет владельца",
+      "flow": "1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-30027",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:29367",
+      "name": "text editor",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-29367",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:29418",
+      "name": "teSt editor",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-29418",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:29963",
+      "name": "Редактор / Блок изображения — настройки",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-29963",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:29481",
+      "name": "Редактор / Добавление блока",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-29481",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:30559",
+      "name": "Редактор / Предпросмотр участника",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-30559",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:30469",
+      "name": "Редактор / Блок вопроса — ошибки заполнения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-30469",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:31155",
+      "name": "Авторинг / Отправить на согласование",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-31155",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:31286",
+      "name": "Авторинг / Согласование курса",
+      "role": "1. Кабинет владельца",
+      "flow": "1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-31286",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:31826",
+      "name": "Авторинг / История версий",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-31826",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:31899",
+      "name": "Авторинг / Конфликт версий",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-31899",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:32083",
+      "name": "Курсы / Отправить в архив",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32083",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:31971",
+      "name": "Авторинг / Обновление опубликованного курса",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-31971",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:32176",
+      "name": "Курсы / Удаление недоступно",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32176",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:32202",
+      "name": "Состояния / Подтверждение удаления",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32202",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:32269",
+      "name": "Курсы / Фильтр «Архив»",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32269",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33240",
+      "name": "Шаблоны / Предпросмотр",
+      "role": "1. Кабинет владельца",
+      "flow": "1.6 / Курс по шаблону",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33240",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33479",
+      "name": "Шаблоны / Создать курс по шаблону",
+      "role": "1. Кабинет владельца",
+      "flow": "1.6 / Курс по шаблону",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33479",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33869",
+      "name": "Desktop - 72",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33869",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1982:32680",
+      "name": "Авторинг / Экспорт — состояния",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32680",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33879",
+      "name": "Пустые состояния / Сотрудники — администратор",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33879",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33886",
+      "name": "Сотрудники / Приглашения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33886",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34142",
+      "name": "Сотрудники / Приглашения — пригласить",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34142",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33205",
+      "name": "Шаблоны / Нет шаблонов",
+      "role": "1. Кабинет владельца",
+      "flow": "1.6 / Курс по шаблону",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33205",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:33167",
+      "name": "Шаблоны / Каталог",
+      "role": "1. Кабинет владельца",
+      "flow": "1.6 / Курс по шаблону",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-33167",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:32464",
+      "name": "Авторинг / Экспорт курса",
+      "role": "1. Кабинет владельца",
+      "flow": "1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-32464",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2016:4486",
+      "name": "Кандидаты / Список — владелец",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-4486",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34660",
+      "name": "Сотрудники / Роли и доступ — добавить роль",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34660",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34871",
+      "name": "Сотрудники / Импорт — загрузка",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34871",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34895",
+      "name": "Сотрудники / Импорт — сопоставление столбцов",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34895",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34308",
+      "name": "Сотрудники / Приглашения — результат",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34308",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:34500",
+      "name": "Сотрудники / Роли и доступ",
+      "role": "1. Кабинет владельца",
+      "flow": "1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-34500",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35032",
+      "name": "Сотрудники / Импорт — проверка",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35032",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35464",
+      "name": "Сотрудники / Подразделения — удаление",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35464",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35316",
+      "name": "Сотрудники / Подразделения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35316",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35557",
+      "name": "Сотрудники / Подразделения — новое",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35557",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35872",
+      "name": "Сотрудники / Группы — новая группа",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35872",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35733",
+      "name": "Сотрудники / Группы",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35733",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36084",
+      "name": "Сотрудники / Группа — карточка",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36084",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36422",
+      "name": "popup | appoint course",
+      "role": "1. Кабинет владельца",
+      "flow": "1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36422",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36336",
+      "name": "Сотрудники / Карточка участника",
+      "role": "1. Кабинет владельца",
+      "flow": "1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36336",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36523",
+      "name": "Программы / Каталог",
+      "role": "1. Кабинет владельца",
+      "flow": "1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36523",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36681",
+      "name": "Программы / Редактор",
+      "role": "1. Кабинет владельца",
+      "flow": "1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36681",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:36808",
+      "name": "Повторное обучение / Правило",
+      "role": "1. Кабинет владельца",
+      "flow": "1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-36808",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:36374",
+      "name": "Аналитика / Обзор",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-36374",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:36470",
+      "name": "Аналитика / Список «Просрочили»",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-36470",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1982:35209",
+      "name": "Сотрудники / Импорт — результат",
+      "role": "1. Кабинет владельца",
+      "flow": "1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1982-35209",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:36786",
+      "name": "Аналитика / Отчёт по участнику",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-36786",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37159",
+      "name": "Уведомления / Центр уведомлений",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37159",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37135",
+      "name": "Настройки организации / Журнал — пусто",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37135",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:36989",
+      "name": "Настройки организации / Журнал действий",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-36989",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2016:4688",
+      "name": "Проверка работ / Очередь — владелец",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-4688",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37428",
+      "name": "Уведомления — состояния",
+      "role": "1. Кабинет владельца",
+      "flow": "1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37428",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37821",
+      "name": "Настройки организации / Правила — применить изменения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37821",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37632",
+      "name": "Настройки организации / Правила обучения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37632",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38045",
+      "name": "Настройки организации / Передача владения — статусы",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38045",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37938",
+      "name": "Настройки организации / Передача владения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37938",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38175",
+      "name": "Организация / Принять владение",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38175",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38252",
+      "name": "Настройки организации / Тариф и лимиты",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38252",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38361",
+      "name": "Тариф / Исчерпание квоты — варианты",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38361",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38452",
+      "name": "Оплата / Оформление",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38452",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38547",
+      "name": "Оплата / Результат платежа — 4 варианта",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38547",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38819",
+      "name": "Оплата / Обращение по возврату",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38819",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38947",
+      "name": "Тариф / Документы",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38947",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38904",
+      "name": "Оплата / Возврат — статус обращения",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38904",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:37501",
+      "name": "Настройки организации",
+      "role": "1. Кабинет владельца",
+      "flow": "1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-37501",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:38657",
+      "name": "Тариф / Счета",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-38657",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39194",
+      "name": "Тариф / Подписка",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39194",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39043",
+      "name": "Тариф / Реквизиты",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39043",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39425",
+      "name": "Тариф / Подписка — продление отключено",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39425",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39533",
+      "name": "Интеграции / Обзор",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39533",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39314",
+      "name": "Тариф / Подписка — отключить продление",
+      "role": "1. Кабинет владельца",
+      "flow": "1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39314",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39565",
+      "name": "Интеграции / API-ключи",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39565",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39714",
+      "name": "Интеграции / API — отозвать ключ",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39714",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39789",
+      "name": "Интеграции / API — новый ключ",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39789",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:39951",
+      "name": "Интеграции / API — ключ создан",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-39951",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40127",
+      "name": "Интеграции / SSO — проверка успешна",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40127",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40497",
+      "name": "Интеграции / Синхронизация участников",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40497",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40316",
+      "name": "Интеграции / Подключение LMS",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40316",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40256",
+      "name": "Интеграции / SSO — ошибка настройки",
+      "role": "1. Кабинет владельца",
+      "flow": "1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40256",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40671",
+      "name": "Профиль / основные настройки",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40671",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1983:41011",
+      "name": "Профиль / вход через корпоративную систему",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41011",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41135",
+      "name": "Профиль / Уведомления",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41135",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:40826",
+      "name": "Профиль / безопасность",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-40826",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41511",
+      "name": "Помощь / Главная",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41511",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41440",
+      "name": "Профиль / ПД — запрос удаления аккаунта",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41440",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41309",
+      "name": "Профиль / Персональные данные",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41309",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:42086",
+      "name": "Документы / Политика обработки ПД",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-42086",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41839",
+      "name": "Помощь / Обращение",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41839",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2006:4827",
+      "name": "Обзор / Меню профиля — владелец",
+      "role": "1. Кабинет владельца",
+      "flow": "1.15 / Меню профиля",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2006-4827",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:42199",
+      "name": "Документы / Новая редакция — требуется согласие",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-42199",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41649",
+      "name": "Помощь / Новое обращение",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41649",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1983:41982",
+      "name": "Документы / Главная (публичная)",
+      "role": "1. Кабинет владельца",
+      "flow": "1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1983-41982",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2001:4490",
+      "name": "Письмо / Приглашение сотрудника",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2001-4490",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40074",
+      "name": "Приглашение/новый пользователь",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40074",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40220",
+      "name": "Открыто под другой почтой",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40220",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2000:43740",
+      "name": "Первый вход / Подсказки сотрудника",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2000-43740",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1984:40280",
+      "name": "Приглашение истекло",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40280",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40375",
+      "name": "Приглашение отозвано",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40375",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40155",
+      "name": "Приглашение/есть аккаунт, нужен вход",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40155",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40426",
+      "name": "Приглашение уже принято",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40426",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2000:5265",
+      "name": "Обзор / Дашборд сотрудника",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2000-5265",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2043:8295",
+      "name": "Приглашение/ уже вошёл под нужной почтой",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-8295",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2162:74670",
+      "name": "Первый вход / Подсказки сотрудника — шаг 2",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-74670",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2162:75075",
+      "name": "Первый вход / Подсказки сотрудника — шаг 3",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-75075",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2016:5144",
+      "name": "Шаблоны — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-5144",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2009:22238",
+      "name": "Курсы — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2009-22238",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1999:4486",
+      "name": "Кандидаты / Список",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1999-4486",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2016:5265",
+      "name": "Программы — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-5265",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1999:19823",
+      "name": "Кандидаты / Добавить кандидата",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1999-19823",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1999:20067",
+      "name": "Кандидаты / Кандидат создан",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1999-20067",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40521",
+      "name": "Сотрудники / Карточка участника",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40521",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40715",
+      "name": "Проверка работ / Очередь",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40715",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2016:4888",
+      "name": "Участники — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-4888",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40611",
+      "name": "popup | appoint course",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40611",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40975",
+      "name": "Проверка работ / Изменение опубликованной оценки",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40975",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1984:40819",
+      "name": "Проверка работ / Проверка работы",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1984-40819",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2009:22559",
+      "name": "Результаты — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2009-22559",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2000:20663",
+      "name": "Кандидаты / Повысить до наставника",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2000-20663",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2016:5390",
+      "name": "Просрочили — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2016-5390",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2006:4489",
+      "name": "Обзор / Меню профиля — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.7 / Меню профиля и ограничения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2006-4489",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2171:79189",
+      "name": "Уведомления / Центр уведомлений — сотрудник",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-79189",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:79392",
+      "name": "Профиль / основные настройки",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-79392",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:79892",
+      "name": "Профиль / Уведомления",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-79892",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2006:4671",
+      "name": "Нет доступа / Раздел только для владельца",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.7 / Меню профиля и ограничения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2006-4671",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:79652",
+      "name": "Профиль / безопасность",
+      "role": "2. Кабинет сотрудника",
+      "flow": "2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-79652",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2001:20993",
+      "name": "Письмо / Доступы кандидата",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2001-20993",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:40644",
+      "name": "sign in",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-40644",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2000:44147",
+      "name": "Первый вход / Подсказки кандидата",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2000-44147",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1985:40787",
+      "name": "Моё обучение / Пусто",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-40787",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:40798",
+      "name": "Обучение / Карточка курса",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-40798",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2162:75480",
+      "name": "Первый вход / Подсказки кандидата — шаг 2",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2162-75480",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1985:40932",
+      "name": "Обучение / Урок",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-40932",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41491",
+      "name": "Обучение / AI-помощник — состояния",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41491",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41271",
+      "name": "Обучение / Урок — AI-помощник",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41271",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41617",
+      "name": "Обучение / Тест — перед стартом",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41617",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41228",
+      "name": "Обучение / Урок — состояния",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41228",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:40725",
+      "name": "Моё обучение / Главная участника",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-40725",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "1985:41725",
+      "name": "Обучение / Тест — вопрос",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41725",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41810",
+      "name": "Обучение / Тест — завершить попытку",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41810",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42016",
+      "name": "Обучение / Результат теста",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42016",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:41955",
+      "name": "Обучение / Тест — состояния",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-41955",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42165",
+      "name": "Обучение / Результат теста — статусы",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42165",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42370",
+      "name": "Обучение / Практическое задание — после отправки",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42370",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42206",
+      "name": "Обучение / Практическое задание",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42206",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42532",
+      "name": "Обучение / Курс завершён",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42532",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "1985:42621",
+      "name": "Обучение / Курс завершён — с документом",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1985-42621",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2002:4486",
+      "name": "Результаты / Мои результаты",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.3 / Прогресс, профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2002-4486",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2171:80313",
+      "name": "Уведомления / Центр уведомлений — кандидат",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.4 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-80313",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2025:45531",
+      "name": "Меню профиля — кандидат",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.3 / Прогресс, профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2025-45531",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:80428",
+      "name": "Профиль / основные настройки",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.4 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-80428",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:80682",
+      "name": "Профиль / безопасность",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.4 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-80682",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2171:80916",
+      "name": "Профиль / Уведомления",
+      "role": "3. Кабинет кандидата",
+      "flow": "3.4 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2171-80916",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5588",
+      "name": "Админка / Заказчики",
+      "role": "4. Админка Лерниума",
+      "flow": "4.1 / Заказчики и подключение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5588",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5749",
+      "name": "Админка / Новый заказчик — шаг 1",
+      "role": "4. Админка Лерниума",
+      "flow": "4.1 / Заказчики и подключение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5749",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5775",
+      "name": "Админка / Новый заказчик — проверка",
+      "role": "4. Админка Лерниума",
+      "flow": "4.1 / Заказчики и подключение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5775",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5822",
+      "name": "Админка / Новый заказчик — результаты",
+      "role": "4. Админка Лерниума",
+      "flow": "4.1 / Заказчики и подключение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5822",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5852",
+      "name": "Админка / Карточка заказчика — лимиты",
+      "role": "4. Админка Лерниума",
+      "flow": "4.1 / Заказчики и подключение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5852",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:5971",
+      "name": "Админка / Управление доступом заказчика",
+      "role": "4. Админка Лерниума",
+      "flow": "4.2 / Доступ заказчика",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-5971",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6041",
+      "name": "Админка / Мониторинг — генерации и сбои",
+      "role": "4. Админка Лерниума",
+      "flow": "4.3 / Мониторинг генераций",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6041",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6268",
+      "name": "Админка / AI-настройки — провайдеры",
+      "role": "4. Админка Лерниума",
+      "flow": "4.4 / AI-настройки",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6268",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6318",
+      "name": "Админка / AI-настройки — промпты",
+      "role": "4. Админка Лерниума",
+      "flow": "4.4 / AI-настройки",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6318",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6377",
+      "name": "Админка / Доступ поддержки",
+      "role": "4. Админка Лерниума",
+      "flow": "4.5 / Доступ поддержки",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6377",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6434",
+      "name": "Админка / Активный доступ поддержки — вид организации",
+      "role": "4. Админка Лерниума",
+      "flow": "4.5 / Доступ поддержки",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6434",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2043:6149",
+      "name": "Админка / Мониторинг — повтор этапа",
+      "role": "4. Админка Лерниума",
+      "flow": "4.3 / Мониторинг генераций",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2043-6149",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2044:15087",
+      "name": "Админка / Журнал операторов",
+      "role": "4. Админка Лерниума",
+      "flow": "4.6 / Журнал операторов",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2044-15087",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60662",
+      "name": "Письмо отправлено / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60662",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60673",
+      "name": "Письмо повторно отправлено / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60673",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60684",
+      "name": "Почта подтверждена / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60684",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60643",
+      "name": "sign up / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60643",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60691",
+      "name": "ССылка устарела / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60691",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60699",
+      "name": "Ссылка уже использована / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60699",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60781",
+      "name": "dashboard main / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60781",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60707",
+      "name": "Первый вход / Подсказки владельца / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60707",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2164:76736",
+      "name": "Первый вход / Подсказки владельца — шаг 2 / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-76736",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2164:76884",
+      "name": "Первый вход / Подсказки владельца — шаг 4 / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-76884",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60884",
+      "name": "Аккаунт / Выбор организации / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60884",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60895",
+      "name": "Аккаунт / Нет доступа к организации / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60895",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60876",
+      "name": "sign in / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60876",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60908",
+      "name": "Восстановление пароля / запрос ссылки / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60908",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60926",
+      "name": "Восстановление пароля / новый пароль / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60926",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60917",
+      "name": "Восстановление пароля / нейтральное сообщение / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60917",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2164:76810",
+      "name": "Первый вход / Подсказки владельца — шаг 3 / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.1 / Регистрация и первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-76810",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60950",
+      "name": "Организация приостановлена / дата известна / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60950",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60943",
+      "name": "Восстановление пароля/ пароль изменен / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60943",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60990",
+      "name": "Организация приостановлена / дата неизвестна / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60990",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:60934",
+      "name": "Восстановление пароля / ссылка истекла / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-60934",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61010",
+      "name": "Организация приостановлена / дата неизвестна / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61010",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61031",
+      "name": "Удалено членство / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61031",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61048",
+      "name": "Заблокирован личный аккаунт / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61048",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61064",
+      "name": "Временная блокировка аккаунта / дата известна / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.2 / Вход и восстановление доступа",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61064",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61127",
+      "name": "courses / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61127",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61149",
+      "name": "Генерация / Выполняется / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61149",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61140",
+      "name": "Пустые состояния / Курсы — автор / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61140",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2144:69994",
+      "name": "Курсы / Назначить сотрудникам / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2144-69994",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61186",
+      "name": "Генерация — варианты / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61186",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61313",
+      "name": "Авторинг / Согласование курса / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.4 / Редактирование курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61313",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61428",
+      "name": "Авторинг / История версий / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61428",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2153:71724",
+      "name": "Курсы / Информация о курсе / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.3 / Создание курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2153-71724",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61502",
+      "name": "Состояния / Подтверждение удаления / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.5 / Версии, архив и экспорт",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61502",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61569",
+      "name": "Desktop - 72 / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61569",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61585",
+      "name": "Пустые состояния / Сотрудники — администратор / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61585",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61595",
+      "name": "Сотрудники / Приглашения / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61595",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61654",
+      "name": "Сотрудники / Приглашения — пригласить / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61654",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61834",
+      "name": "Сотрудники / Роли и доступ / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61834",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61744",
+      "name": "Сотрудники / Приглашения — результат / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61744",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:61915",
+      "name": "Сотрудники / Роли и доступ — добавить роль / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-61915",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62029",
+      "name": "Кандидаты / Список — владелец / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.7 / Команда: приглашение сотрудников и роли",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62029",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62143",
+      "name": "Сотрудники / Импорт — загрузка / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62143",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62211",
+      "name": "Сотрудники / Импорт — проверка / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62211",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62172",
+      "name": "Сотрудники / Импорт — сопоставление столбцов / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62172",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62460",
+      "name": "Сотрудники / Подразделения — новое / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62460",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62277",
+      "name": "Сотрудники / Импорт — результат / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62277",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62371",
+      "name": "Сотрудники / Подразделения — удаление / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62371",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62297",
+      "name": "Сотрудники / Подразделения / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62297",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62545",
+      "name": "Сотрудники / Группы / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62545",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62570",
+      "name": "Сотрудники / Группы — новая группа / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62570",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62619",
+      "name": "Сотрудники / Группа — карточка / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.8 / Структура компании",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62619",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62795",
+      "name": "popup | appoint course / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62795",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62708",
+      "name": "Сотрудники / Карточка участника / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62708",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62904",
+      "name": "Программы / Каталог / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62904",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:62950",
+      "name": "Повторное обучение / Правило / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.9 / Назначение обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-62950",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63042",
+      "name": "Аналитика / Обзор / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63042",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63209",
+      "name": "Аналитика / Отчёт по участнику / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63209",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63134",
+      "name": "Аналитика / Список «Просрочили» / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63134",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63338",
+      "name": "Настройки организации / Журнал действий / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63338",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63418",
+      "name": "Настройки организации / Журнал — пусто / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63418",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63440",
+      "name": "Уведомления / Центр уведомлений / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63440",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63489",
+      "name": "Уведомления — состояния / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63489",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63560",
+      "name": "Проверка работ / Очередь — владелец / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.10 / Контроль обучения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63560",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63731",
+      "name": "Настройки организации / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63731",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63857",
+      "name": "Настройки организации / Правила обучения / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63857",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63972",
+      "name": "Настройки организации / Тариф и лимиты / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63972",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:63954",
+      "name": "Организация / Принять владение / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.11 / Настройки компании и владение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-63954",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64085",
+      "name": "Тариф / Исчерпание квоты — варианты / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64085",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64276",
+      "name": "Оплата / Возврат — статус обращения / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64276",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64346",
+      "name": "Тариф / Реквизиты / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64346",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64315",
+      "name": "Тариф / Документы / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64315",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64386",
+      "name": "Тариф / Подписка / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64386",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64437",
+      "name": "Интеграции / Обзор / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.13 / Интеграции",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64437",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64174",
+      "name": "Тариф / Счета / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.12 / Тариф и оплата",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64174",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64472",
+      "name": "Профиль / основные настройки / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64472",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64626",
+      "name": "Профиль / безопасность / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64626",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64931",
+      "name": "Профиль / Персональные данные / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64931",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64858",
+      "name": "Профиль / Уведомления / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64858",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64736",
+      "name": "Профиль / вход через корпоративную систему / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64736",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65132",
+      "name": "Помощь / Новое обращение / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65132",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:64988",
+      "name": "Профиль / ПД — запрос удаления аккаунта / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-64988",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65237",
+      "name": "Помощь / Обращение / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65237",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65059",
+      "name": "Помощь / Главная / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65059",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65260",
+      "name": "Документы / Главная (публичная) / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65260",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65347",
+      "name": "Документы / Новая редакция — требуется согласие / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65347",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65291",
+      "name": "Документы / Политика обработки ПД / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.14 / Профиль, помощь и документы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65291",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:65475",
+      "name": "Меню / владелец / mobile",
+      "role": "М / 1. Кабинет владельца",
+      "flow": "М 1.15 / Меню профиля",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-65475",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2126:72788",
+      "name": "Приглашение истекло / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72788",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72768",
+      "name": "Открыто под другой почтой / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72768",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72743",
+      "name": "Приглашение/есть аккаунт, нужен вход / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72743",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72702",
+      "name": "Приглашение/новый пользователь / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72702",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72800",
+      "name": "Первый вход / Подсказки сотрудника / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72800",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72886",
+      "name": "Приглашение уже принято / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72886",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72898",
+      "name": "Обзор / Дашборд сотрудника / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72898",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2126:72969",
+      "name": "Приглашение/ уже вошёл под нужной почтой / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72969",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2164:77289",
+      "name": "Первый вход / Подсказки сотрудника — шаг 3 / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-77289",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:72874",
+      "name": "Приглашение отозвано / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-72874",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2164:77215",
+      "name": "Первый вход / Подсказки сотрудника — шаг 2 / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.1 / Вход по приглашению",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-77215",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73015",
+      "name": "Курсы — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73015",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2144:70493",
+      "name": "Курсы / Назначить сотрудникам / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2144-70493",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73028",
+      "name": "Программы — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73028",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2153:72201",
+      "name": "Курсы / Информация о курсе / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.2 / Курсы",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2153-72201",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73169",
+      "name": "Кандидаты / Добавить кандидата / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73169",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73290",
+      "name": "Кандидаты / Кандидат создан / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73290",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73501",
+      "name": "popup | appoint course / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73501",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73610",
+      "name": "Участники — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73610",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73414",
+      "name": "Сотрудники / Карточка участника / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73414",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73640",
+      "name": "Проверка работ / Очередь / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73640",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73871",
+      "name": "Проверка работ / Изменение опубликованной оценки / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73871",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73791",
+      "name": "Проверка работ / Проверка работы / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.4 / Проверка работ",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73791",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73976",
+      "name": "Результаты — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73976",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74067",
+      "name": "Кандидаты / Повысить до наставника / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74067",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:73076",
+      "name": "Кандидаты / Список / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.3 / Кандидаты: доступ и обучение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-73076",
+      "reference_image_saved": true,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74186",
+      "name": "Просрочили — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.5 / Контроль своих и повышение",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74186",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74268",
+      "name": "Нет доступа / Раздел только для владельца / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.7 / Меню профиля и ограничения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74268",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74266",
+      "name": "Меню / сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.7 / Меню профиля и ограничения",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74266",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:72719",
+      "name": "Уведомления / Центр уведомлений — сотрудник / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-72719",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:72832",
+      "name": "Профиль / основные настройки / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-72832",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:73138",
+      "name": "Профиль / безопасность / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-73138",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:73426",
+      "name": "Профиль / Уведомления / mobile",
+      "role": "М / 2. Кабинет сотрудника",
+      "flow": "М 2.8 / Профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-73426",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74280",
+      "name": "sign in / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74280",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74288",
+      "name": "Первый вход / Подсказки кандидата / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74288",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74411",
+      "name": "Моё обучение / Пусто / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74411",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74351",
+      "name": "Моё обучение / Главная участника / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74351",
+      "reference_image_saved": true,
+      "design_context_saved": true
+    },
+    {
+      "node": "2164:77520",
+      "name": "Первый вход / Подсказки кандидата — шаг 2 / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.1 / Первый вход",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2164-77520",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74429",
+      "name": "Обучение / Карточка курса / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74429",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2126:74516",
+      "name": "Обучение / Урок / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74516",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74622",
+      "name": "Обучение / Урок — состояния / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74622",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74663",
+      "name": "Обучение / Урок — AI-помощник / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74663",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74906",
+      "name": "Обучение / Тест — перед стартом / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74906",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74780",
+      "name": "Обучение / AI-помощник — состояния / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74780",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:74955",
+      "name": "Обучение / Тест — вопрос / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-74955",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75027",
+      "name": "Обучение / Тест — завершить попытку / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75027",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75118",
+      "name": "Обучение / Тест — состояния / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75118",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75177",
+      "name": "Обучение / Результат теста / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75177",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75306",
+      "name": "Обучение / Практическое задание / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75306",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75267",
+      "name": "Обучение / Результат теста — статусы / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75267",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75425",
+      "name": "Обучение / Практическое задание — после отправки / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75425",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75461",
+      "name": "Обучение / Курс завершён / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75461",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75498",
+      "name": "Обучение / Курс завершён — с документом / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.2 / Прохождение курса",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75498",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75580",
+      "name": "Результаты / Мои результаты / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.3 / Прогресс, профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75580",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2126:75716",
+      "name": "Меню / кандидат / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.3 / Прогресс, профиль и уведомления",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2126-75716",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:73659",
+      "name": "Уведомления / Центр уведомлений — кандидат / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.4 / Профиль и уведомления (мобилка)",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-73659",
+      "reference_image_saved": false,
+      "design_context_saved": true
+    },
+    {
+      "node": "2158:74132",
+      "name": "Профиль / безопасность / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.4 / Профиль и уведомления (мобилка)",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-74132",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:74419",
+      "name": "Профиль / Уведомления / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.4 / Профиль и уведомления (мобилка)",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-74419",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    },
+    {
+      "node": "2158:73827",
+      "name": "Профиль / основные настройки / mobile",
+      "role": "М / 3. Кабинет кандидата",
+      "flow": "М 3.4 / Профиль и уведомления (мобилка)",
+      "url": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2158-73827",
+      "reference_image_saved": false,
+      "design_context_saved": false
+    }
+  ],
+  "previews": {
+    "data": "Synthetic fixture data only; no live DEV account data or credentials.",
+    "files": [
+      "previews/dashboard-desktop.png",
+      "previews/profile-mobile.png",
+      "previews/team-mobile.png",
+      "previews/course-info-mobile.png",
+      "previews/account-handoff-mobile.png"
+    ]
+  }
+}

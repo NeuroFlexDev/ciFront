@@ -19,7 +19,7 @@ type Update = {
   warning?: boolean;
 };
 
-function Updates({ author, close }: { author: boolean; close: () => void }) {
+export function NotificationUpdates({ author, close }: { author: boolean; close: () => void }) {
   const { t, locale } = useLocale();
   const { user } = useAuth();
   const assignments = useLearningData<{ items: Assignment[] }>(
@@ -223,7 +223,7 @@ export default function NotificationMenu({ author }: { author: boolean }) {
           className={styles.panel}
           aria-label={t('Центр уведомлений')}
         >
-          <Updates key={user?.id} author={author} close={() => setOpen(false)} />
+          <NotificationUpdates key={user?.id} author={author} close={() => setOpen(false)} />
         </section>
       )}
     </div>

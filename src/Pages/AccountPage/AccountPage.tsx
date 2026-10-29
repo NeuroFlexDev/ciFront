@@ -1,3 +1,4 @@
+import { UserRound, Globe2, Mail, Pencil } from 'lucide-react';
 import { isAdminSurface } from '@/shared/surface';
 import { useLocale } from '@/i18n/useLocale';
 import { RequestError, LoadingState } from '@/Components/RequestState';
@@ -48,6 +49,7 @@ export default function AccountPage() {
     });
   const roleName = useRoleNames();
   const [name, setName, clearName] = useDurableState('account:name', user?.full_name ?? '');
+  const [profileEditing, setProfileEditing] = useState(name !== (user?.full_name ?? ''));
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -101,6 +103,7 @@ export default function AccountPage() {
       clearName(savedName);
       await refreshUser?.();
       setMessage(t('Имя сохранено.'));
+      setProfileEditing(false);
     });
   }
   function password(event: FormEvent) {
@@ -181,7 +184,12 @@ export default function AccountPage() {
               <section className={styles.card}>
                 <div className={styles.identity}>
                   <div className={styles.avatar}>
-                    {(name || user?.email || t('Л')).slice(0, 2).toUpperCase()}
+                    {(name || user?.username || user?.email || t('Л'))
+                      .split(/\s+/)
+                      .slice(0, 2)
+                      .map((part) => part[0])
+                      .join('')
+                      .toUpperCase()}
                   </div>
                   <div>
                     <h2>{name || t('Ваш аккаунт')}</h2>
@@ -197,48 +205,87 @@ export default function AccountPage() {
                 {isAdminSurface ? <p>{t('Оператор платформы')}</p> : <OrganizationDetails />}
               </section>
               <section className={styles.card}>
-                <h2>{t('Личные данные')}</h2>
-                <DraftNotice />
-                <form onSubmit={profile}>
-                  <label>
-                    {t('Имя и фамилия')}
-                    <input
-                      autoComplete='name'
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      maxLength={160}
-                      minLength={1}
-                      required
-                    />
-                  </label>
-                  {user?.email && (
-                    <>
-                      <label>
-                        {t('Электронная почта')}
-                        <input type='email' value={user.email} readOnly />
-                      </label>
-                      <p className={styles.muted}>
-                        {t(
-                          'Для изменения почты обратитесь в поддержку: сначала потребуется подтвердить владение аккаунтом.',
-                        )}
-                      </p>
-                    </>
+                <div className={styles.sectionHead}>
+                  <h2>{t('Личные данные')}</h2>
+                  {!profileEditing && (
+                    <button className={styles.editProfile} onClick={() => setProfileEditing(true)}>
+                      <Pencil size={18} />
+                      {t('Редактировать')}
+                    </button>
                   )}
-                  <div className={styles.profilePreferences}>
-                    <LanguageSwitch />
-                    <p>
-                      {t('Часовой пояс устройства')}:{' '}
-                      {Intl.DateTimeFormat().resolvedOptions().timeZone}
-                    </p>
+                </div>
+                {profileEditing ? (
+                  <>
+                    <DraftNotice quiet />
+                    <form onSubmit={profile}>
+                      <label>
+                        {t('Имя и фамилия')}
+                        <input
+                          autoComplete='name'
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          maxLength={160}
+                          minLength={1}
+                          required
+                        />
+                      </label>
+                      <button className={styles.primary} disabled={busy}>
+                        {t('Сохранить изменения')}
+                      </button>
+                      <button
+                        type='button'
+                        className={styles.secondary}
+                        disabled={busy}
+                        onClick={() => {
+                          const saved = user?.full_name ?? '';
+                          setName(saved);
+                          clearName(saved);
+                          setProfileEditing(false);
+                        }}
+                      >
+                        {t('Отмена')}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <div className={styles.profileFields}>
+                    <div>
+                      <UserRound size={24} />
+                      <div>
+                        <span>{t('Имя и фамилия')}</span>
+                        <strong>{user?.full_name || user?.username}</strong>
+                      </div>
+                    </div>
+                    <div>
+                      <Globe2 size={24} />
+                      <LanguageSwitch />
+                    </div>
+                    <div>
+                      <Globe2 size={24} />
+                      <div>
+                        <span>{t('Часовой пояс')}</span>
+                        <strong>{Intl.DateTimeFormat().resolvedOptions().timeZone}</strong>
+                      </div>
+                    </div>
                   </div>
-                  <button className={styles.primary} disabled={busy}>
-                    {t('Сохранить изменения')}
-                  </button>
-                </form>
+                )}
               </section>
             </div>
           )}
-          {tab === 'profile' && <EmailBinding key={user?.id} />}
+          {tab === 'profile' &&
+            (user?.email ? (
+              <section className={`${styles.card} ${styles.emailCard}`}>
+                <Mail size={24} />
+                <h2>{t('Электронная почта')}</h2>
+                <p>{user.email}</p>
+                <p>{t('Для смены почты потребуется подтвердить владение аккаунтом.')}</p>
+                <Link className={styles.secondary} to='/help'>
+                  {t('Помощь со сменой почты')} ↗
+                </Link>
+              </section>
+            ) : (
+              <EmailBinding key={user?.id} />
+            ))}
           {tab === 'security' && (
             <div className={styles.grid}>
               <section className={styles.card}>

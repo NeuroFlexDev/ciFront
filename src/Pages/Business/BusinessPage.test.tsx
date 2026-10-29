@@ -293,9 +293,9 @@ it('candidate conversion and owner reporting-line changes use current versions',
   );
 });
 
-it('manager lands on job roles and opens invitations only from personnel actions', async () => {
+it('manager can manage job roles and opens invitations only from personnel actions', async () => {
   state.role = 'manager';
-  open('/company');
+  open('/company?tab=positions');
   expect(await screen.findByRole('tab', { name: 'Должности' })).toHaveAttribute(
     'aria-selected',
     'true',
@@ -350,6 +350,13 @@ it('creates an employee with login and password without requiring email or persi
     }),
   );
   await waitFor(() => expect(screen.queryByLabelText('Пароль сотрудника')).not.toBeInTheDocument());
+  const access = within(screen.getByRole('dialog', { name: 'Аккаунт создан' }));
+  expect(access.getByLabelText('Логин')).toHaveValue('beslim.ivan');
+  expect(access.getByLabelText('Пароль')).toHaveAttribute('type', 'password');
+  expect(access.getByRole('link', { name: 'Назначить обучение' })).toHaveAttribute('href', '/assignments?user=90');
+  expect(JSON.stringify(localStorage)).not.toContain('employee-password-2026');
+  expect(JSON.stringify(sessionStorage)).not.toContain('employee-password-2026');
+  fireEvent.click(access.getByRole('button', { name: 'Закрыть окно' }));
   fireEvent.click(screen.getByRole('button', { name: 'Добавить сотрудника' }));
   expect(screen.getByLabelText('Пароль сотрудника')).toHaveValue('');
 });

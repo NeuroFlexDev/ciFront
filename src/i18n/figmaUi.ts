@@ -1,4 +1,6 @@
+import { roleFlowsEnglish } from './roleFlows';
 export const figmaUiEnglish: Record<string, string> = {
+  ...roleFlowsEnglish,
   'AI-провайдеры и промпты': 'AI settings',
   '{v0} недель': '{v0} weeks',
   Авторизация: 'Sign in',

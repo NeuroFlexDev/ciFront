@@ -708,3 +708,181 @@
     font-size: 30px;
   }
 }
+
+/* The profile uses the same page gutter as the header. */
+.container {
+  width: 100%;
+  margin-top: 0;
+}
+.tabs {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: transparent;
+  padding: 0;
+  gap: 8px;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+.tabs button {
+  flex: 0 0 auto;
+  background: var(--ui-surface);
+  white-space: nowrap;
+  border-radius: 9999px;
+}
+.profilePreferences {
+  display: grid;
+  gap: 12px;
+}
+.profilePreferences > * {
+  margin: 0;
+}
+@media (max-width: 700px) {
+  .page {
+    margin-top: 16px;
+    padding-bottom: 32px;
+  }
+  .container h1 {
+    font-size: 28px;
+  }
+  .subtitle {
+    margin-bottom: 24px;
+  }
+  .tabs {
+    margin: 24px 0;
+    border-radius: 0;
+  }
+  .tabs button {
+    padding: 14px 32px;
+    min-height: 50px;
+    font-size: 16px;
+  }
+  .card {
+    padding: 20px;
+  }
+  .identity {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .avatar {
+    width: 156px;
+    height: 156px;
+    font-size: 40px;
+  }
+  .identity h2 {
+    font:
+      600 20px/1.4 'GolosText',
+      sans-serif;
+  }
+  .identity p {
+    margin: 6px 0 12px;
+  }
+  .card h2,
+  .card h3 {
+    font:
+      500 16px/1.4 'GolosText',
+      sans-serif;
+  }
+  .page hr {
+    margin: 20px 0;
+  }
+  .primary,
+  .secondary {
+    font-size: 14px;
+  }
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.sectionHead h2 {
+  margin: 0;
+}
+.editProfile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #b0b0b0;
+  background: none;
+  border: 1px solid #6d6d6d;
+  border-radius: 9999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.editProfile svg {
+  color: #c6f135;
+}
+.profileFields {
+  display: grid;
+  gap: 12px;
+}
+.profileFields > div {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: #0c0d12;
+  border-radius: 20px;
+}
+.profileFields > div > svg {
+  flex-shrink: 0;
+}
+.profileFields > div > div {
+  min-width: 0;
+  flex: 1;
+}
+.profileFields span,
+.profileFields strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.profileFields span {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+.emailCard {
+  margin-top: 24px;
+}
+.emailCard > svg {
+  margin-bottom: 16px;
+}
+.emailCard .secondary {
+  display: inline-flex;
+  min-height: 0;
+  padding: 6px 16px;
+  text-decoration: none;
+  font-weight: 400;
+}
+@media (max-width: 700px) {
+  .sectionHead {
+    flex-wrap: wrap;
+  }
+  .profileFields > div {
+    padding: 24px;
+  }
+}
+
+.page section[aria-labelledby='account-organization-heading'] p:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.page section[aria-labelledby='account-organization-heading'] .secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-size: 13px;
+}

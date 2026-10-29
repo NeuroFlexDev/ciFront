@@ -1,3 +1,4 @@
+import CourseNavigation from '@/Components/CourseNavigation';
 import { useLocale } from "@/i18n/useLocale";
 import { useState } from "react";
 import { api } from "@/shared/api";
@@ -11,7 +12,7 @@ import {
   dateLabel,
   stateLabel,
 } from "../Learning/types";
-import { ActionStatus, TeamTabs, useTeamAction } from "./TeamTools";
+import { ActionStatus, useTeamAction } from "./TeamTools";
 import {
   type CatalogueItem,
   type Program,
@@ -43,7 +44,7 @@ export default function ProgramsPage() {
       )}
     >
       <div className={s.page}>
-        <TeamTabs />
+        <CourseNavigation />
         <ManagementCapabilityNotice capability={capability} />
         <button className={s.secondary} disabled={!capability.supported} aria-pressed={archived} onClick={() => { setArchived(!archived); setSelected(null); }}>{t(archived ? 'К активным записям' : 'Открыть архив')}</button>
         {archived && <ArchivePanel kind="programs" onRestored={programs.reload} />}

@@ -10,7 +10,7 @@
 }
 .workspace > header h1 {
   font:
-    600 clamp(28px, 3vw, 38px)/1.2 'GolosText',
+    600 clamp(28px, 3vw, 38px) / 1.2 'GolosText',
     sans-serif;
   letter-spacing: -0.04em;
   margin: 0;
@@ -773,5 +773,70 @@
 @media (max-width: 800px) {
   .workspace > header {
     align-items: flex-start;
+  }
+}
+
+.mobileAction {
+  display: none;
+}
+@media (max-width: 700px) {
+  .workspace.workspace {
+    width: var(--ui-page-width);
+    margin: 16px auto 32px;
+  }
+  .personTable {
+    display: block;
+    padding: 20px;
+  }
+  .personTable thead {
+    display: none;
+  }
+  .personTable tbody {
+    display: grid;
+    gap: 12px;
+  }
+  .personTable tr {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 20px;
+    background: #0c0d12;
+  }
+  .personTable td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+  }
+  .personTable td:nth-child(2) {
+    display: flex;
+  }
+  .personTable td[data-label]::before {
+    content: attr(data-label);
+    color: #959595;
+    font-size: 12px;
+    margin-right: 12px;
+  }
+  .personTable small {
+    max-width: none;
+  }
+  .personTable td:last-child .iconButton {
+    width: 100%;
+    border: 1px solid #6d6d6d;
+    border-radius: 9999px;
+    min-height: 36px;
+    height: auto;
+    padding: 8px 12px;
+    color: #f0f0ec;
+    background: transparent;
+    justify-content: flex-start;
+  }
+  .personTable .iconButton svg {
+    display: none;
+  }
+  .mobileAction {
+    display: inline;
+    font-size: 12px;
   }
 }
