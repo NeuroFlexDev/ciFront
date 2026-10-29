@@ -174,7 +174,7 @@ export default function AssignmentScreen() {
             <>
               {assessments.map((question) => (
                 <AnswerEditor
-                  key={question.id}
+                  key={`${scope}:${data.course_version_id}:${data.id}:${question.id}`}
                   assignmentId={data.id}
                   versionId={data.course_version_id}
                   question={question}
