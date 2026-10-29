@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import Menu from './Menu';
@@ -59,8 +59,9 @@ it('reloads permissions after same-account renewal without remounting the open e
   state.get.mockResolvedValueOnce({ data: { can_author: true, can_manage_team: true, can_review: true, can_report: true } });
   act(() => window.dispatchEvent(new Event('lernium-session-renewed')));
   await screen.findByRole('link', { name: 'Создать курс' });
-  expect(screen.getByRole('link', { name: 'Курсы' })).toHaveAttribute('href', '/courses');
-  expect(screen.getByRole('link', { name: 'Аналитика' })).toHaveAttribute('href', '/learning-analytics');
+  const navigation = within(screen.getByRole('navigation', { name: 'Разделы платформы' }));
+  expect(navigation.getByRole('link', { name: 'Курсы' })).toHaveAttribute('href', '/courses');
+  expect(navigation.getByRole('link', { name: 'Аналитика' })).toHaveAttribute('href', '/learning-analytics');
   expect(state.get).toHaveBeenCalledTimes(2);
   expect(screen.getByRole('textbox', { name: 'Текст урока' })).toBe(text);
   expect(text).toHaveValue('Несохранённый ответ автора');

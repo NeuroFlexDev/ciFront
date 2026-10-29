@@ -125,6 +125,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if(expectedSession)assertAuthSession(expectedSession);
     if(!data.access_token||!data.user?.id)throw new Error('Сервис входа вернул неполный ответ. Повторите вход.');
     if(currentUser.current&&data.user.id!==currentUser.current.id)throw new Error('Для продолжения войдите в аккаунт этой страницы. Черновик остаётся у исходного владельца.');
+    if (!currentUser.current) {
+      try { sessionStorage.setItem(`lernium:welcome:${data.user.id}`, '1'); } catch { /* Optional welcome tour. */ }
+    }
     setAuthToken(data.access_token,expectedSession);
     updateUser(data.user);
     setIsLoading(false);

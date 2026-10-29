@@ -335,7 +335,7 @@
 }
 @media (max-width: 800px) {
   .page {
-    width: calc(100% - 32px);
+    width: var(--ui-page-width);
     padding: 0;
     margin-top: 28px;
   }
@@ -355,6 +355,20 @@
   }
   .stat strong {
     font-size: 29px;
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    margin-top: 16px;
+    margin-bottom: 28px;
+  }
+  .heading {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .heading h1 {
+    font-size: 28px;
   }
 }
 

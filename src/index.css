@@ -247,9 +247,10 @@ select {
 }
 @media (max-width: 700px) {
   :root {
-    --ui-page-width: calc(100% - 32px);
+    --ui-page-width: calc(100% - 40px);
     --ui-space-section: 28px;
   }
+  body.has-mobile-navigation { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
 }
 button,
 a,

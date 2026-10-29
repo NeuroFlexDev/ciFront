@@ -1,7 +1,7 @@
 {
   "fileKey": "mCBsEO0lXXeQTMSf7IgWEj",
   "source": "Figma MCP get_design_context",
-  "retrieved": "2026-10-25",
+  "retrieved": "2026-10-29",
   "assets": [
     {
       "file": "auth-shutter.png",
@@ -32,6 +32,55 @@
       "file": "notification.svg",
       "url": "https://www.figma.com/api/mcp/asset/01b77b9d-4c9f-429a-b305-e93e45a142d7.svg",
       "frame": "1915:21366"
+    },
+    {
+      "file": "mobile-overview.svg",
+      "frame": "2027:41109",
+      "variable": "imgMobileIconDashboard",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2027-41109"
+    },
+    {
+      "file": "mobile-team.svg",
+      "frame": "2027:41164",
+      "variable": "imgGroup1",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2027-41164"
+    },
+    {
+      "file": "mobile-courses.svg",
+      "frame": "2027:41199",
+      "variable": "imgGroup1",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2027-41199"
+    },
+    {
+      "file": "mobile-results.svg",
+      "frame": "2031:41256",
+      "variable": "imgGroup1",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2031-41256"
+    },
+    {
+      "file": "mobile-profile.svg",
+      "frame": "2031:41377",
+      "variable": "imgGroup1",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2031-41377"
+    },
+    {
+      "file": "mobile-notifications.svg",
+      "frame": "2077:47602",
+      "variable": "imgGroup1",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2077-47602"
+    },
+    {
+      "file": "mobile-menu.svg",
+      "frame": "2076:47509",
+      "variable": "imgPlatformMenu",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=2076-47509"
+    },
+    {
+      "file": "assistant-orb.webp",
+      "frame": "1981:27426",
+      "variable": "imgAiAgent4",
+      "source": "https://www.figma.com/design/mCBsEO0lXXeQTMSf7IgWEj/AI-Course-Builder?node-id=1981-27426",
+      "optimization": "Original artwork resized to 384px and encoded as WebP, quality 94."
     }
   ]
 }

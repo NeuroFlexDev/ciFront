@@ -1,4 +1,12 @@
-import { createContext, useContext, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import { useDurableState } from '@/hooks/useDurableState';
 import BusinessDialog from '@/Components/Admin/AdminDialog';
 import Toast from '@/Components/Admin/AdminToast';
@@ -113,7 +121,7 @@ function CompanyWorkspace() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const owner = user?.organization_role === 'owner';
-  const requestedTab = params.get('tab') ?? (owner ? 'overview' : 'positions');
+  const requestedTab = params.get('tab') ?? 'overview';
   const tab = ['positions', 'employees', 'candidates', ...(owner ? ['managers'] : [])].includes(
     requestedTab,
   )
@@ -125,6 +133,25 @@ function CompanyWorkspace() {
     setParams({ tab: value });
   };
   const memberRole = tab === 'candidates' ? 'candidate' : tab === 'managers' ? 'manager' : 'member';
+  const tabsRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const tabs = tabsRef.current;
+    const selected = tabs?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!tabs || !selected) return;
+    const reveal = () => {
+      if (tabs.scrollWidth <= tabs.clientWidth) return;
+      const left = selected.getBoundingClientRect().left - tabs.getBoundingClientRect().left;
+      if (left < 0) tabs.scrollLeft += left;
+      else if (left + selected.offsetWidth > tabs.clientWidth)
+        tabs.scrollLeft += left + selected.offsetWidth - tabs.clientWidth;
+    };
+    reveal();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(reveal);
+    observer.observe(tabs);
+    observer.observe(selected);
+    return () => observer.disconnect();
+  }, [tab]);
   const managerFilter = owner ? (params.get('manager_id') ?? '') : '';
   const [archived, setArchived] = useState(false);
   const [positionOffset, setPositionOffset] = useState(0);
@@ -138,6 +165,14 @@ function CompanyWorkspace() {
   const [employeeName, setEmployeeName] = useState('');
   const [initialPassword, setInitialPassword] = useState('');
   const [resetPassword, setResetPassword] = useState('');
+  const [createdAccount, setCreatedAccount] = useState<{
+    id: number;
+    name: string;
+    username: string;
+    password: string;
+  } | null>(null);
+  const [copiedAccess, setCopiedAccess] = useState(false);
+  const [revealAccess, setRevealAccess] = useState(false);
   function closeInvitation() {
     setInviteOpen(false);
     setInitialPassword('');
@@ -210,15 +245,18 @@ function CompanyWorkspace() {
               ? Number(invite.manager_id)
               : null,
         });
+        setCreatedAccount({
+          id: data.id,
+          name: data.full_name || employeeName,
+          username: data.username || loginName,
+          password: initialPassword,
+        });
+        setCopiedAccess(false);
+        setRevealAccess(false);
         closeInvitation();
         setLoginName('');
         setEmployeeName('');
         clearInvite({ email: '', role: 'member', position_id: '', manager_id: '' });
-        setMessage(
-          t('Аккаунт создан. Передайте сотруднику логин {login} и заданный пароль.', {
-            login: data.username ?? loginName,
-          }),
-        );
         return;
       }
       const { data } = await api.post<{ url: string; mail_status: string }>(
@@ -248,10 +286,22 @@ function CompanyWorkspace() {
       );
     });
   }
+  async function copyAccess() {
+    if (!createdAccount) return;
+    setError('');
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/auth\n${t('Логин')}: ${createdAccount.username}\n${t('Пароль')}: ${createdAccount.password}`,
+      );
+      setCopiedAccess(true);
+    } catch {
+      setError(t('Не удалось скопировать. Выделите данные и скопируйте вручную.'));
+    }
+  }
   return (
     <Shell
       className={`${css.workspace} ${tab === 'overview' ? css.overviewWorkspace : ''}`}
-      title={t(tab === 'overview' ? 'Обзор' : 'Персонал')}
+      title={t(tab === 'overview' ? 'Обзор' : 'Команда')}
       action={
         tab !== 'overview' && (
           <button
@@ -286,6 +336,57 @@ function CompanyWorkspace() {
         </p>
       )}
       <Toast message={message} onClose={() => setMessage('')} />
+      {createdAccount && (
+        <BusinessDialog
+          title={t('Аккаунт создан')}
+          description={t(
+            'Передайте данные для входа лично. После закрытия окна пароль больше не показывается.',
+          )}
+          onClose={() => setCreatedAccount(null)}
+          className={css.modal}
+        >
+          <div className={css.form}>
+            <h3>{createdAccount.name}</h3>
+            <label>
+              {t('Адрес входа')}
+              <input readOnly value={`${window.location.origin}/auth`} />
+            </label>
+            <label>
+              {t('Логин')}
+              <input readOnly value={createdAccount.username} />
+            </label>
+            <label>
+              {t('Пароль')}
+              <input
+                type={revealAccess ? 'text' : 'password'}
+                readOnly
+                value={createdAccount.password}
+                autoComplete='off'
+              />
+            </label>
+            <button
+              type='button'
+              className={styles.secondary}
+              onClick={() => setRevealAccess((value) => !value)}
+            >
+              {t(revealAccess ? 'Скрыть пароль' : 'Показать пароль')}
+            </button>
+            <div className={css.actions}>
+              <button type='button' className={styles.primary} onClick={() => void copyAccess()}>
+                {t(copiedAccess ? 'Скопировано' : 'Скопировать доступы')}
+              </button>
+              <Link className={styles.secondary} to={`/assignments?user=${createdAccount.id}`}>
+                {t('Назначить обучение')}
+              </Link>
+            </div>
+            {!!error && (
+              <p className={css.error} role='alert'>
+                {error}
+              </p>
+            )}
+          </div>
+        </BusinessDialog>
+      )}
       {invitationLink && (
         <BusinessDialog
           title={t('Приглашение готово')}
@@ -468,6 +569,7 @@ function CompanyWorkspace() {
       )}
       {tab !== 'overview' && (
         <div
+          ref={tabsRef}
           className={css.tabs}
           role='tablist'
           aria-label={t('Управление компанией')}
@@ -689,7 +791,7 @@ function CompanyWorkspace() {
             </p>
           )}
           <div className={css.tableWrap}>
-            <table className={css.table}>
+            <table className={`${css.table} ${css.personTable}`}>
               <thead>
                 <tr>
                   <th>{t('Участник')}</th>
@@ -718,13 +820,13 @@ function CompanyWorkspace() {
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label={t('Должность')}>
                       {person.position_name ||
                         (['manager', 'admin'].includes(person.organization_role)
                           ? roleName(person.organization_role)
                           : t('Без должности'))}
                     </td>
-                    <td>
+                    <td data-label={t('Доступ')}>
                       <span className={`${css.badge} ${person.is_active ? css.activeBadge : ''}`}>
                         {t(person.is_active ? 'Активен' : 'Приостановлен')}
                       </span>
@@ -740,6 +842,7 @@ function CompanyWorkspace() {
                         }}
                       >
                         <MoreHorizontal size={20} />
+                        <span className={css.mobileAction}>{t('Открыть карточку')}</span>
                       </button>
                     </td>
                   </tr>
@@ -914,6 +1017,11 @@ function CompanyWorkspace() {
                     )}
                   {['member', 'candidate'].includes(person.organization_role) && (
                     <div className={css.actions}>
+                      {person.is_active && (
+                        <Link className={styles.primary} to={`/assignments?user=${person.id}`}>
+                          {t('Назначить обучение')}
+                        </Link>
+                      )}
                       <Link
                         className={css.backLink}
                         to={`/learning-analytics?user_id=${person.id}`}

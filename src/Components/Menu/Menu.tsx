@@ -1,6 +1,8 @@
 import { isAdminSurface, adminAppUrl } from '@/shared/surface';
 import AdminMenu from './AdminMenu';
 import NotificationMenu from './NotificationMenu';
+import MobileNavigation from './MobileNavigation';
+import WorkspaceTour from './WorkspaceTour';
 import { isBusiness, isBusinessManager, businessHome } from '@/shared/business';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
 import { useLocale } from '@/i18n/useLocale';
@@ -35,7 +37,7 @@ function PlatformMenu() {
   const accountRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     if (accountRef.current) accountRef.current.open = false;
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
   useEffect(() => {
     const outside = (event: PointerEvent) => {
       if (accountRef.current && !accountRef.current.contains(event.target as Node))
@@ -92,26 +94,34 @@ function PlatformMenu() {
   const manager = isBusinessManager(user);
   const companyOverview =
     location.pathname === '/company' &&
-    (new URLSearchParams(location.search).get('tab') === 'overview' ||
-      (!location.search && user?.organization_role === 'owner'));
+    (new URLSearchParams(location.search).get('tab') === 'overview' || !location.search);
   const companyPersonnel = location.pathname.startsWith('/company') && !companyOverview;
-  const learner = !author && user?.organization_role === 'member';
+  const learner = !author && ['member', 'candidate'].includes(user?.organization_role ?? '');
   const links = manager
     ? [
         ['/company?tab=overview', t('Обзор')],
-        ['/company?tab=positions', t('Персонал')],
-        ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
+        ['/company?tab=employees', t('Команда')],
         ['/courses', t('Регламенты')],
+        ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
       ]
     : business
       ? [
-          ['/learning', t('Мои регламенты')],
-          ['/dashboard', t('Мои результаты')],
+          ...(author
+            ? [
+                ['/dashboard', t('Обзор')],
+                ['/employees', t('Команда')],
+                ['/courses', t('Регламенты')],
+                ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
+              ]
+            : [
+                ['/learning', t('Обучение')],
+                ['/results', t('Результаты')],
+              ]),
         ]
       : learner
         ? [
             ['/learning', t('Моё обучение')],
-            ['/dashboard', t('Прогресс')],
+            ['/results', t('Результаты')],
           ]
         : [
             ['/dashboard', t('Дашборд')],
@@ -167,6 +177,15 @@ function PlatformMenu() {
           <NavLink
             key={path}
             to={path}
+            data-tour={
+              path.includes('overview') || path === '/dashboard'
+                ? 'overview'
+                : path.startsWith('/company') || path === '/employees'
+                  ? 'team'
+                  : path === '/courses' || path === '/learning'
+                    ? 'courses'
+                    : 'results'
+            }
             aria-current={
               path.startsWith('/company')
                 ? (path.includes('overview') ? companyOverview : companyPersonnel)
@@ -182,9 +201,11 @@ function PlatformMenu() {
           </NavLink>
         ))}
       </nav>
-      <NotificationMenu author={author} />
+      <div className={styles.desktopNotification}>
+        <NotificationMenu author={author} />
+      </div>
       <details ref={accountRef} className={styles.accountBlock}>
-        <summary>
+        <summary data-tour='profile'>
           <span className={styles.userInfo}>
             <span className={styles.userName}>
               {user?.full_name || user?.email || t('Профиль')}
@@ -215,13 +236,57 @@ function PlatformMenu() {
           </svg>
         </summary>
         <nav className={styles.dropdown} aria-label={t('Профиль и дополнительные разделы')}>
-          <Link to='/account'>{t('Профиль и безопасность')}</Link>
+          <div className={styles.profileIdentity}>
+            <span>
+              {(user?.full_name || user?.username || user?.email || 'Л')
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join('')
+                .toUpperCase()}
+            </span>
+            <div>
+              <strong>{user?.full_name || user?.username || t('Профиль')}</strong>
+              {user?.email && <small>{user.email}</small>}
+              <small className={styles.userRole}>
+                {roleName(user?.organization_role ?? 'member')}
+              </small>
+            </div>
+          </div>
+          <Link to='/account'>{t('Личный профиль')}</Link>
           {user?.is_admin && <a href={`${adminAppUrl}/admin`}>{t('Управление платформой')} ↗</a>}
-          {extra.map(([path, title]) => (
-            <NavLink key={path} to={path}>
-              {title}
-            </NavLink>
-          ))}
+          {user?.organization_role === 'owner' && (
+            <>
+              <Link to='/team-settings'>{t('Организация')}</Link>
+              <Link to='/billing'>{t('Тариф и оплата')}</Link>
+            </>
+          )}
+          {extra.some(
+            ([path]) =>
+              user?.organization_role !== 'owner' || !['/team-settings', '/billing'].includes(path),
+          ) && (
+            <details className={styles.workSections}>
+              <summary>
+                {t('Рабочие разделы')}
+                <span aria-hidden='true'>⌄</span>
+              </summary>
+              <div>
+                {extra
+                  .filter(
+                    ([path]) =>
+                      user?.organization_role !== 'owner' ||
+                      !['/team-settings', '/billing'].includes(path),
+                  )
+                  .map(([path, title]) => (
+                    <NavLink key={path} to={path}>
+                      {title}
+                    </NavLink>
+                  ))}
+              </div>
+            </details>
+          )}
+          <Link to='/help'>{t('Помощь и поддержка')}</Link>
+          <a href='/legal/'>{t('Документы и политика')}</a>
           {failed && (
             <button
               onClick={() => {
@@ -252,6 +317,29 @@ function PlatformMenu() {
           </button>
         </nav>
       </details>
+      <MobileNavigation
+        home={
+          manager
+            ? '/company?tab=overview'
+            : learner || (business && !author)
+              ? '/learning'
+              : '/dashboard'
+        }
+        team={manager ? '/company?tab=employees' : '/employees'}
+        author={author}
+        manager={manager}
+        owner={user?.organization_role === 'owner'}
+        role={roleName(user?.organization_role ?? 'member')}
+        extra={extra}
+        results={
+          permissions?.can_report ? '/learning-analytics' : author ? '/analytics' : undefined
+        }
+      />
+      <WorkspaceTour
+        ready={!!permissions}
+        owner={user?.organization_role === 'owner'}
+        staff={manager || author}
+      />
     </header>
   );
 }

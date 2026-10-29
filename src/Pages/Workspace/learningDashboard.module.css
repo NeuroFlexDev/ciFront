@@ -144,7 +144,7 @@
 }
 .gaugeValue strong {
   font:
-    clamp(42px, 4vw, 72px)/1 Days,
+    clamp(42px, 4vw, 72px) / 1 Days,
     sans-serif;
   letter-spacing: -2px;
 }
@@ -185,7 +185,7 @@
 }
 .courseMetrics strong {
   font:
-    clamp(32px, 3.4vw, 48px)/1.1 Days,
+    clamp(32px, 3.4vw, 48px) / 1.1 Days,
     sans-serif;
   letter-spacing: -1.4px;
   overflow-wrap: anywhere;
@@ -302,7 +302,7 @@
 }
 .circleGauge strong {
   font:
-    clamp(38px, 3.8vw, 64px)/1 Days,
+    clamp(38px, 3.8vw, 64px) / 1 Days,
     sans-serif;
   letter-spacing: -1.5px;
 }
@@ -673,5 +673,113 @@
     to {
       transform: scaleY(1);
     }
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    width: var(--ui-page-width);
+    margin-top: 16px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .completion,
+  .courses,
+  .assistant,
+  .people,
+  .lessons,
+  .activity {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .card {
+    padding: 24px 20px;
+  }
+  .card h2 {
+    font-size: 20px;
+  }
+  .courseMetrics {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .courseMetrics > div {
+    margin: 0;
+    padding: 0 0 0 12px;
+    gap: 5px;
+  }
+  .courseMetrics span {
+    font-size: 12px;
+    min-height: 0;
+  }
+  .courseMetrics strong {
+    font-size: 30px;
+    letter-spacing: 0;
+  }
+  .courseMetrics p {
+    min-height: 0;
+  }
+  .ticks {
+    display: none;
+  }
+  .gaugeValue strong {
+    font-size: 36px;
+    letter-spacing: -1px;
+  }
+  .gaugeValue {
+    gap: 2px;
+  }
+  .completion {
+    min-height: 274px;
+  }
+  .assistantBody {
+    align-items: flex-start;
+    text-align: left;
+    padding: 24px 0 16px;
+  }
+  .assistantBody img {
+    width: 90px;
+    height: 90px;
+  }
+  .assistantBody h3 {
+    font-size: 16px;
+  }
+  .people {
+    min-height: 194px;
+  }
+  .largeNumber {
+    font-size: 32px;
+    margin-top: 46px;
+  }
+  .lessons {
+    min-height: 264px;
+  }
+  .circleGauge strong {
+    font-size: 36px;
+  }
+  .activity {
+    min-height: 318px;
+  }
+  .activity h2 {
+    font:
+      500 14px/1.4 'GolosText',
+      sans-serif;
+  }
+  .activityTotal {
+    font-size: 18px;
+    margin-top: 16px;
+  }
+  .activity .period select {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+  .activity .chart {
+    min-height: 200px;
+  }
+  .columns {
+    height: 210px;
   }
 }

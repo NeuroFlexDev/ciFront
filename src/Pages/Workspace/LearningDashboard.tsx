@@ -1,3 +1,4 @@
+import assistantOrb from '@/assets/figma/assistant-orb.webp';
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Menu from "@/Components/Menu/Menu";
@@ -214,7 +215,7 @@ export default function LearningDashboard() {
                 </header>
                 <div className={s.assistantBody}>
                   <img
-                    src="/images/learning-assistant.webp"
+                    src={assistantOrb}
                     width="480"
                     height="480"
                     alt=""

@@ -207,7 +207,7 @@ describe('R02 recovery', () => {
   });
 
   it('retrying a failed list read recovers without showing a false empty state', async () => {
-    const fetchMock = vi
+    const courseRead = vi
       .fn()
       .mockRejectedValueOnce(new TypeError('offline'))
       .mockResolvedValueOnce(
@@ -221,6 +221,8 @@ describe('R02 recovery', () => {
           },
         ]),
       );
+    const fetchMock = vi.fn((url: unknown) => String(url).includes('/team/permissions')
+      ? Promise.resolve(json({can_manage_team:false, can_report:false})) : courseRead());
     vi.stubGlobal('fetch', fetchMock);
     render(
       <MemoryRouter>

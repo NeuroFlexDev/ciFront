@@ -1,3 +1,4 @@
+import assistantOrb from '@/assets/figma/assistant-orb.webp';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
@@ -176,7 +177,7 @@ export default function BusinessDashboard({ data }: { data: BusinessOverview }) 
             </Link>
           </header>
           <div className={s.assistantBody}>
-            <img src='/images/learning-assistant.webp' alt='' width='100' height='100' />
+            <img src={assistantOrb} alt='' width='100' height='100' />
             <h3>{t('С чего начнём подготовку?')}</h3>
             <p>{t('Соберите регламент из рабочих материалов.')}</p>
           </div>

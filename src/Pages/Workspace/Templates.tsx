@@ -1,3 +1,4 @@
+import CourseNavigation from '@/Components/CourseNavigation';
 import { useState } from 'react';
 import { useLocale } from '@/i18n/useLocale';
 import { Link } from 'react-router-dom';
@@ -31,6 +32,7 @@ export default function Templates() {
         'Выберите основу настроек. Содержание курса будет подготовлено из ваших источников.',
       )}
     >
+      <CourseNavigation />
       <div className={s.filters}>
         <span>{t('Тема')}</span>
         <div role='group' aria-label={t('Тема шаблона')}>

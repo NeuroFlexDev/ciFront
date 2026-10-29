@@ -220,10 +220,10 @@ it('uses the shared learner navigation without author-only links', async () => {
     'href',
     '/learning',
   );
-  expect(navigation.getByRole('link', { name: 'Прогресс' })).toHaveAttribute('href', '/dashboard');
+  expect(navigation.getByRole('link', { name: 'Результаты' })).toHaveAttribute('href', '/results');
   expect(navigation.queryByRole('link', { name: 'Создать курс' })).not.toBeInTheDocument();
   expect(navigation.queryByRole('link', { name: 'Курсы' })).not.toBeInTheDocument();
-  expect(screen.queryByRole('link', { name: 'Мои курсы' })).not.toBeInTheDocument();
+  expect(navigation.queryByRole('link', { name: 'Мои курсы' })).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Помощь и контакты' })).toHaveAttribute(
     'href',
     '/legal/contacts/',
@@ -248,6 +248,7 @@ it('shows server-granted author navigation without resetting an edited profile d
     return path.startsWith('/team?') ? { data: team() } : otherRead(path);
   });
   render(page());
+  fireEvent.click(screen.getByRole('button', { name: 'Редактировать' }));
   const input = screen.getByRole('textbox', { name: 'Имя и фамилия' });
   fireEvent.change(input, { target: { value: 'Edited profile name' } });
   expect(screen.queryByRole('link', { name: 'Создать курс' })).not.toBeInTheDocument();

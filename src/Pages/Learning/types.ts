@@ -156,6 +156,7 @@ export type Review = LearnerResponse & {
 export const stateLabel: Record<string, string> = {
   assigned: "Назначен",
   in_progress: "В процессе",
+  overdue: "Просрочен",
   completed: "Завершён",
   locked: "Следующий этап",
   revoked: "Назначение отозвано",

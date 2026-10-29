@@ -1,6 +1,52 @@
 .root {
   flex: 0 0 69px;
 }
+.fullPage > header {
+  display: none;
+}
+.fullCenter {
+  max-width: 760px;
+}
+.fullCenter .heading h2 {
+  font-family: var(--ui-font-heading);
+  font-size: 32px;
+}
+.fullCenter .filters {
+  margin: 20px 0;
+  gap: 6px;
+}
+.fullCenter .filters button {
+  font-size: 14px;
+  padding: 10px 14px;
+}
+.fullCenter .items > a {
+  padding: 20px 16px;
+}
+@media (max-width: 700px) {
+  .fullCenter .heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fullCenter .heading h2 {
+    font: 600 16px/1.4 var(--ui-font-body);
+  }
+  .fullCenter .heading button {
+    padding: 0;
+    font-size: 12px;
+  }
+  .fullCenter .filters {
+    flex-wrap: nowrap;
+    overflow: auto;
+    margin: 12px 0;
+    scrollbar-width: none;
+  }
+  .fullCenter .filters button {
+    flex-shrink: 0;
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+}
 .trigger {
   display: grid;
   place-items: center;

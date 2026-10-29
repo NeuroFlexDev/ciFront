@@ -1,8 +1,8 @@
 import { useLocale } from '@/i18n/useLocale';
 import { pluralForm } from '@/i18n/plurals';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, Clock3, FileCheck2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { BookOpen, Clock3, FileCheck2, SlidersHorizontal } from 'lucide-react';
 import { Shell } from '@/Pages/Workspace/shared';
 import { LoadingState, RequestError } from '@/Components/RequestState';
 import { useLearningData } from './useLearningData';
@@ -11,6 +11,8 @@ import s from './learning.module.css';
 
 export default function LearningHome() {
   const { t, locale } = useLocale();
+  const [params] = useSearchParams();
+  const coursesOnly = params.get('view') === 'courses';
 
   const [filter, setFilter] = useState('all');
   const [history, setHistory] = useState(false);
@@ -34,30 +36,44 @@ export default function LearningHome() {
   const pending = assignments.filter((a) => a.pending_reviews > 0);
   return (
     <Shell
-      title={t('Моё обучение')}
-      description={t('Назначенные курсы, ваши ответы и результаты. Прогресс сохранён в аккаунте.')}
+      title={t(coursesOnly ? 'Мои курсы' : 'Моё обучение')}
+      description={
+        courses.data
+          ? t('{v0} назначено · {v1} просрочено', {
+              v0: courses.data.total,
+              v1: assignments.filter((a) => a.status === 'overdue').length,
+            })
+          : t('Назначенные курсы и сроки обучения')
+      }
+      action={
+        <details className={s.learningOptions}>
+          <summary aria-label={t('Настройки списка')}>
+            <SlidersHorizontal size={20} />
+          </summary>
+          <div>
+            <label>
+              <input
+                type='checkbox'
+                checked={history}
+                onChange={(event) => {
+                  setHistory(event.target.checked);
+                  setPage(0);
+                }}
+              />
+              {t('Показывать историю назначений')}
+            </label>
+            <button
+              className={s.secondary}
+              disabled={courses.loading}
+              onClick={() => void courses.reload()}
+            >
+              {t('Обновить')}
+            </button>
+          </div>
+        </details>
+      }
     >
       <div className={s.page}>
-        <div className={`${s.spread} ${s.filterBar}`}>
-          <label className={s.check}>
-            <input
-              type='checkbox'
-              checked={history}
-              onChange={(e) => {
-                setHistory(e.target.checked);
-                setPage(0);
-              }}
-            />
-            {t('Показывать историю назначений')}
-          </label>
-          <button
-            className={s.secondary}
-            disabled={courses.loading}
-            onClick={() => void courses.reload()}
-          >
-            {t('Обновить')}
-          </button>
-        </div>
         {!!courses.error && (
           <RequestError error={courses.error} onRetry={() => void courses.reload()} />
         )}
@@ -141,7 +157,7 @@ export default function LearningHome() {
             {(courses.data?.total ?? 0) > 24 && <small>{t('На текущей странице')}</small>}
           </nav>
         )}
-        <div className={s.learningOverview}>
+        <div className={`${s.learningOverview} ${coursesOnly ? s.coursesOnly : ''}`}>
           <div className={`${s.grid} ${s.learningCards}`}>
             {assignments
               .filter((a) => matches(a, filter))
@@ -204,7 +220,7 @@ export default function LearningHome() {
                 </article>
               ))}
           </div>
-          {assignments.length > 0 && (
+          {assignments.length > 0 && !coursesOnly && (
             <aside className={s.learningAside}>
               <section className={s.card}>
                 <h2>{t('Ближайшие сроки')}</h2>

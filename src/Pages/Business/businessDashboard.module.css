@@ -11,7 +11,7 @@
 .card {
   min-width: 0;
   background: #141414;
-  border-radius: 28px;
+  border-radius: 24px;
   padding: 28px 30px;
   overflow: hidden;
 }
@@ -510,5 +510,129 @@
   }
   .progress {
     padding: 22px;
+  }
+}
+
+@media (max-width: 700px) {
+  .grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    gap: 24px;
+  }
+  .completion,
+  .regulations,
+  .assistant,
+  .people,
+  .progress,
+  .activity {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .card {
+    padding: 24px 20px;
+    border-radius: 24px;
+  }
+  .dashboard .card h2 {
+    font-size: 20px;
+    letter-spacing: 0;
+  }
+  .completion {
+    min-height: 274px;
+  }
+  .halfGauge {
+    margin: 20px auto 14px;
+    max-width: 340px;
+  }
+  .gaugeValue strong {
+    font-size: 36px;
+    letter-spacing: -1px;
+  }
+  .gaugeValue {
+    gap: 2px;
+    bottom: 8%;
+  }
+  .regulationMetrics {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .regulationMetrics > div {
+    padding: 0 0 0 12px;
+    gap: 5px;
+  }
+  .regulationMetrics span {
+    font-size: 12px;
+    min-height: 0;
+  }
+  .regulationMetrics strong {
+    font-size: 30px;
+    letter-spacing: 0;
+  }
+  .regulationMetrics p {
+    margin: 0;
+    font-size: 11px;
+  }
+  .ticks {
+    display: none;
+  }
+  .assistant {
+    min-height: 368px;
+  }
+  .assistantBody {
+    align-items: flex-start;
+    text-align: left;
+    padding: 24px 0 16px;
+  }
+  .assistantBody img {
+    width: 90px;
+    height: 90px;
+  }
+  .assistantBody h3 {
+    font-size: 16px;
+  }
+  .assistantBody p {
+    max-width: none;
+    font-size: 12px;
+  }
+  .assistantAction {
+    min-height: 58px;
+  }
+  .people {
+    min-height: 194px;
+  }
+  .largeNumber {
+    font-size: 32px;
+    margin-top: 46px;
+  }
+  .progress {
+    min-height: 264px;
+  }
+  .circleGauge {
+    width: 210px;
+  }
+  .circleGauge strong {
+    font-size: 36px;
+  }
+  .activity {
+    height: 318px;
+  }
+  .dashboard .activity h2 {
+    font:
+      500 14px/1.4 'GolosText',
+      sans-serif;
+  }
+  .activity .period select {
+    font-size: 10px;
+    min-height: 24px;
+    padding: 5px 8px;
+  }
+  .activityTotal {
+    font-size: 18px;
+    margin-top: 16px;
+  }
+  .chart {
+    margin-top: 24px;
   }
 }

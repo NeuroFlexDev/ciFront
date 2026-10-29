@@ -29,6 +29,9 @@ const MyCoursesPage = lazy(() => import('./Pages/MyCourses/MyCourses'));
 const CourseEditPage = lazy(() => import('./Components/CourseEditPage/CourseEditPage'));
 const LerniumCanvasPage = lazy(() => import('./Pages/LerniumCanvasPage/LerniumCanvasPage'));
 const LearningHome = lazy(() => import('./Pages/Learning/LearningHome'));
+const LearningResults = lazy(() => import('./Pages/Learning/LearningResults'));
+const NotificationsPage = lazy(() => import('./Pages/Workspace/NotificationsPage'));
+const HelpPage = lazy(() => import('./Pages/Help/HelpPage'));
 const LearningCourse = lazy(() => import('./Pages/Learning/LearningCourse'));
 const ReviewsPage = lazy(() => import('./Pages/Learning/ReviewsPage'));
 const CourseReviewsPage = lazy(() => import('./Pages/Learning/CourseReviewsPage'));
@@ -59,6 +62,9 @@ function App() {
           <Routes>
             <Route path='/' element={<MainPage />} />
             <Route path='/auth' element={<AuthPage />} />
+            <Route path='/results' element={<ProtectedRoute><LearningResults /></ProtectedRoute>} />
+            <Route path='/notifications' element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+            <Route path='/help' element={<ProtectedRoute><HelpPage /></ProtectedRoute>} />
             <Route path='/privacy' element={<PrivacyRedirect />} />
             <Route
               path='/account'
