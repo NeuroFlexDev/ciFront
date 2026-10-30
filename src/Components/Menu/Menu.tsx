@@ -114,12 +114,14 @@ function PlatformMenu() {
                 ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
               ]
             : [
+                ['/dashboard', t('Обзор')],
                 ['/learning', t('Обучение')],
                 ['/results', t('Результаты')],
               ]),
         ]
       : learner
         ? [
+            ['/dashboard', t('Обзор')],
             ['/learning', t('Моё обучение')],
             ['/results', t('Результаты')],
           ]
@@ -318,13 +320,7 @@ function PlatformMenu() {
         </nav>
       </details>
       <MobileNavigation
-        home={
-          manager
-            ? '/company?tab=overview'
-            : learner || (business && !author)
-              ? '/learning'
-              : '/dashboard'
-        }
+        home={manager ? '/company?tab=overview' : '/dashboard'}
         team={manager ? '/company?tab=employees' : '/employees'}
         author={author}
         manager={manager}

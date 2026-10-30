@@ -18,6 +18,30 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+it('keeps a learner overview distinct from the regulation catalogue', () => {
+  render(
+    <MemoryRouter initialEntries={['/learning']}>
+      <MobileNavigation
+        home='/dashboard'
+        team='/employees'
+        author={false}
+        manager={false}
+        owner={false}
+        role='Сотрудник'
+        results='/results'
+        extra={[]}
+      />
+    </MemoryRouter>,
+  );
+  const nav = within(screen.getByRole('navigation', { name: 'Мобильная навигация' }));
+  expect(nav.getByRole('link', { name: 'Обзор' })).toHaveAttribute('href', '/dashboard');
+  const catalogue = nav
+    .getAllByRole('link')
+    .find((link) => link.getAttribute('href') === '/learning');
+  expect(catalogue).toHaveAttribute('aria-current', 'page');
+  expect(nav.getByRole('link', { name: 'Обзор' })).not.toHaveAttribute('aria-current');
+});
+
 it('keeps authorized team settings and results reachable for a manager on mobile', () => {
   render(
     <MemoryRouter>

@@ -69,13 +69,12 @@ export default function MobileNavigation({
         : location.pathname === home && !location.search,
     },
     {
-      href: staff ? '/courses' : '/learning?view=courses',
+      href: staff ? '/courses' : '/learning',
       label: t(staff ? (business ? 'Регламенты' : 'Курсы') : 'Мои курсы'),
       icon: 'courses',
       active: staff
         ? location.pathname.startsWith('/courses') || location.pathname === '/express'
-        : location.pathname.startsWith('/learning/') ||
-          (location.pathname === '/learning' && !!location.search),
+        : location.pathname.startsWith('/learning/') || location.pathname === '/learning',
     },
     {
       href: staff && user?.organization_id ? team : results || '/results',
@@ -93,7 +92,9 @@ export default function MobileNavigation({
       href: staff && user?.organization_id && results ? results : '/notifications',
       label: t(staff && user?.organization_id && results ? 'Результаты' : 'Уведомления'),
       icon: staff && user?.organization_id && results ? 'results' : 'notifications',
-      active: location.pathname === (staff && user?.organization_id && results ? results : '/notifications'),
+      active:
+        location.pathname ===
+        (staff && user?.organization_id && results ? results : '/notifications'),
     },
     {
       href: '/account',

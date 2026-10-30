@@ -14,6 +14,8 @@ import LearningAssistant from './LearningAssistant';
 import type { Assignment, AssignmentDetail, LearnerResponse } from './types';
 import { dateLabel, stateLabel } from './types';
 import s from './learning.module.css';
+import backIcon from '@/assets/figma/mobile-back.svg';
+import FigmaNavIcon from '@/Components/Menu/FigmaNavIcon';
 
 export default function LearningCourse() {
   const { t } = useLocale();
@@ -200,36 +202,55 @@ export default function LearningCourse() {
     <Shell
       className={s.readerPage}
       readerHeader={
-        <header className={s.readerTop}>
-          <Link className={s.secondary} to='/learning'>
-            {t('← Моё обучение')}
-          </Link>
-          <div className={s.readerTitle}>
-            <h1>{data?.title ?? t('Обучение')}</h1>
-            <span>
-              {lesson?.title ?? (assessment ? t('Проверка знаний') : t('Материалы курса'))}
-            </span>
-          </div>
-          {data && (
-            <div className={s.readerProgress}>
-              <span role='status'>
-                {busy
-                  ? t('Сохраняем…')
-                  : error
-                    ? t('Изменения не сохранены')
-                    : t('Прогресс сохранён')}
-              </span>
-              <progress
-                aria-label={t('Пройдено уроков')}
-                value={data.completed_lessons.length}
-                max={Math.max(1, data.lesson_count)}
-              />
+        <>
+          <nav className={s.readerMobileTop} aria-label={t('Навигация обучения')}>
+            <Link to='/learning' aria-label={t('Назад к обучению')}>
+              <img src={backIcon} alt='' />
+            </Link>
+            <span>{t(assessment ? 'Проверка знаний' : 'Урок')}</span>
+            <a href='#learning-contents' aria-label={t('Содержание курса')}>
+              <FigmaNavIcon name='menu' />
+            </a>
+          </nav>
+          <header className={s.readerTop}>
+            <Link className={`${s.secondary} ${s.readerDesktopBack}`} to='/learning'>
+              {t('← Моё обучение')}
+            </Link>
+            <div className={s.readerTitle}>
+              <h1>{data?.title ?? t('Обучение')}</h1>
               <span>
-                {data.completed_lessons.length} {t('из')} {data.lesson_count}
+                {lesson?.title ?? (assessment ? t('Проверка знаний') : t('Материалы курса'))}
               </span>
             </div>
-          )}
-        </header>
+            {data && (
+              <div className={s.readerProgress}>
+                <span role='status' data-state={error ? 'error' : busy ? 'busy' : 'saved'}>
+                  {busy
+                    ? t('Сохраняем…')
+                    : error
+                      ? t('Изменения не сохранены')
+                      : t('Прогресс сохранён')}
+                </span>
+                <progress
+                  aria-label={t('Пройдено уроков')}
+                  value={data.completed_lessons.length}
+                  max={Math.max(1, data.lesson_count)}
+                />
+                <span>
+                  {data.completed_lessons.length} {t('из')} {data.lesson_count}
+                  <span className={s.readerMobilePercent}>
+                    {' '}
+                    ·{' '}
+                    {data.lesson_count
+                      ? Math.round((data.completed_lessons.length / data.lesson_count) * 100)
+                      : 0}
+                    %
+                  </span>
+                </span>
+              </div>
+            )}
+          </header>
+        </>
       }
       title={data?.title ?? t('Обучение')}
       description={
