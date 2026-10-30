@@ -29,7 +29,7 @@
     gap: 8px;
   }
   .fullCenter .heading h2 {
-    font: 600 16px/1.4 var(--ui-font-body);
+    font: 600 16px/normal var(--ui-font-body);
   }
   .fullCenter .heading button {
     padding: 0;
@@ -40,12 +40,16 @@
     overflow: auto;
     margin: 12px 0;
     scrollbar-width: none;
+    gap: 4px;
   }
   .fullCenter .filters button {
     flex-shrink: 0;
     font-size: 12px;
-    padding: 10px 12px;
+    padding: 5px 10px;
+    min-height: 36px;
   }
+  .fullCenter .items time { font-size: 11px; }
+  .fullCenter .settings { text-align: left; }
 }
 .trigger {
   display: grid;

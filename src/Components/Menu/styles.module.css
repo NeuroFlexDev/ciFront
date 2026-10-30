@@ -13,6 +13,9 @@
   display: flex;
   flex: 0 0 auto;
 }
+.mobileContext {
+  display: none;
+}
 .brand img {
   display: block;
   width: 226.61px;
@@ -323,6 +326,35 @@
     display: block;
     margin-left: auto;
     flex: 0 0 40px;
+  }
+  .menuContainer[data-context='notifications'] .brand {
+    display: none;
+  }
+  .mobileContext {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .mobileContext a {
+    display: grid;
+    place-items: center;
+    flex: 0 0 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--ui-surface);
+  }
+  .mobileContext img {
+    width: 24px;
+    height: 24px;
+  }
+  .mobileContext span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
