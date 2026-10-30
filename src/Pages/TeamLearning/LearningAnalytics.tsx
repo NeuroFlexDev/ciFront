@@ -11,6 +11,7 @@ import { type Assignment, dateLabel, stateLabel } from '../Learning/types';
 import { ActionStatus, useTeamAction } from './TeamTools';
 import { type Group, type Team } from './types';
 import s from '../Learning/learning.module.css';
+import StatusPage from '../AccessPage/StatusPage';
 
 type Report = {
   items: Assignment[];
@@ -24,6 +25,32 @@ type Report = {
   };
 };
 export default function LearningAnalytics() {
+  const { t } = useLocale();
+  const permission = useLearningData<{ can_report: boolean }>('/team/permissions');
+  if (permission.error)
+    return (
+      <Shell title={t('Результаты')}>
+        <RequestError error={permission.error} onRetry={() => void permission.reload()} />
+      </Shell>
+    );
+  if (!permission.data)
+    return (
+      <Shell title={t('Результаты')}>
+        <LoadingState>{t('Проверяем доступ…')}</LoadingState>
+      </Shell>
+    );
+  if (!permission.data.can_report)
+    return (
+      <StatusPage
+        code='403'
+        title='Этот раздел доступен руководителям'
+        description='Ваши личные оценки и пройденные регламенты доступны в разделе «Результаты» рабочего пространства.'
+      />
+    );
+  return <LearningAnalyticsReport />;
+}
+
+function LearningAnalyticsReport() {
   const { t } = useLocale();
 
   const [params, setParams] = useSearchParams();
@@ -215,7 +242,20 @@ export default function LearningAnalytics() {
                           </p>
                         </td>
                         <td>
-                          <span className={s.badge} data-tone={a.pending_reviews ? 'pending' : a.status === 'completed' ? 'passed' : a.status === 'overdue' || (a.score_percent !== null && a.score_percent < a.rules.pass_percent) ? 'failed' : 'neutral'}>
+                          <span
+                            className={s.badge}
+                            data-tone={
+                              a.pending_reviews
+                                ? 'pending'
+                                : a.status === 'completed'
+                                  ? 'passed'
+                                  : a.status === 'overdue' ||
+                                      (a.score_percent !== null &&
+                                        a.score_percent < a.rules.pass_percent)
+                                    ? 'failed'
+                                    : 'neutral'
+                            }
+                          >
                             {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
                           </span>
                           <p className={s.caption}>
