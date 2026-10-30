@@ -5,6 +5,7 @@ import businessCss from '../Business/business.module.css';
 import { Info, UserRoundPlus } from 'lucide-react';
 import Dialog from '@/Components/Admin/AdminDialog';
 import CourseInfoDialog from './CourseInfoDialog';
+import CreateRegulationDialog from './CreateRegulationDialog';
 import { useLearningData } from '../Learning/useLearningData';
 import cs from './myCourses.module.css';
 import { useLocale } from '@/i18n/useLocale';
@@ -22,6 +23,9 @@ export type Course = {
   updated_at?: string;
   module_count: number;
   lesson_count: number;
+  author_name?: string | null;
+  position_id?: number | null;
+  position_name?: string | null;
 };
 export default function MyCoursesPage() {
   const { t } = useLocale();
@@ -32,6 +36,7 @@ export default function MyCoursesPage() {
   );
   const [info, setInfo] = useState<Course | null>(null);
   const [confirmation, setConfirmation] = useState<Course | null>(null);
+  const [creation, setCreation] = useState<'files' | 'assistant' | null>(null);
 
   const [courses, setCourses] = useState<Course[]>([]);
   const [offset, setOffset] = useState(0);
@@ -82,17 +87,32 @@ export default function MyCoursesPage() {
     <Shell
       className={business ? businessCss.workspace : ''}
       title={t(business ? 'Регламенты' : 'Мои курсы')}
-      description={business ? undefined : t('Ваши материалы, черновики и опубликованные курсы.')}
+      description={
+        business
+          ? t('Инструкции компании: добавляйте готовые документы или создавайте вместе с ИИ.')
+          : t('Ваши материалы, черновики и опубликованные курсы.')
+      }
       action={
-        <Link className={styles.primary} to={business ? '/company?tab=positions' : '/express'}>
-          {t(business ? 'Добавить регламент' : 'Создать курс +')}
-        </Link>
+        business ? (
+          <div className={cs.creationActions}>
+            <button className={styles.secondary} onClick={() => setCreation('files')}>
+              {t('Добавить готовый регламент')}
+            </button>
+            <button className={styles.primary} onClick={() => setCreation('assistant')}>
+              {t('Создать с ИИ')}
+            </button>
+          </div>
+        ) : (
+          <Link className={styles.primary} to='/express'>
+            {t('Создать курс +')}
+          </Link>
+        )
       }
     >
       <CourseNavigation />
       <div className={cs.filters} aria-label={t('Фильтр курсов')}>
         {[
-          ['', t('Все курсы')],
+          ['', t(business ? 'Все регламенты' : 'Все курсы')],
           ['draft', t('Черновики')],
           ['published', t('Опубликованные')],
         ].map(([value, label]) => (
@@ -113,7 +133,11 @@ export default function MyCoursesPage() {
       {loading && <LoadingState>{t('Загружаем курсы…')}</LoadingState>}
       {!loading && !courses.length && !error && (
         <section className={styles.empty}>
-          <h2>{filter ? t('В этом разделе пока пусто') : t('Создайте первый курс')}</h2>
+          <h2>
+            {filter
+              ? t('В этом разделе пока пусто')
+              : t(business ? 'Создайте первый регламент' : 'Создайте первый курс')}
+          </h2>
           <p>
             {t(
               business
@@ -135,8 +159,10 @@ export default function MyCoursesPage() {
               <article className={cs.card} key={c.id}>
                 <div className={cs.cardTop}>
                   <div className={cs.status}>
-                    <span className={cs.eyebrow}>{t('Автор курса')}</span>
-                    <span>{user?.full_name || user?.username || user?.email}</span>
+                    <span className={cs.eyebrow}>
+                      {t(business ? 'Автор регламента' : 'Автор курса')}
+                    </span>
+                    <span>{c.author_name || t('Автор не указан')}</span>
                   </div>
                   <div className={cs.quickActions}>
                     <button
@@ -177,12 +203,22 @@ export default function MyCoursesPage() {
                     </dl>
                   )}
                   {c.description && <p className={cs.description}>{c.description}</p>}
+                  {business &&
+                    (c.position_id ? (
+                      <Link className={cs.positionLabel} to={`/company/positions/${c.position_id}`}>
+                        {c.position_name || t('Должность')}
+                      </Link>
+                    ) : (
+                      <span className={cs.positionLabel}>{t('Общий регламент')}</span>
+                    ))}
                   <span className={cs.publishBadge}>
                     {t(c.publication_status === 'published' ? 'Опубликован' : 'Черновик')}
                   </span>
                   <div className={cs.actions}>
                     <Link className={cs.open} to={href}>
-                      {c.lesson_count ? t('Открыть курс') : t('Продолжить создание')}{' '}
+                      {c.lesson_count
+                        ? t(business ? 'Открыть регламент' : 'Открыть курс')
+                        : t('Продолжить создание')}{' '}
                       <span aria-hidden='true'>↗</span>
                     </Link>
                     <button
@@ -229,6 +265,7 @@ export default function MyCoursesPage() {
           onClose={() => setInfo(null)}
         />
       )}
+      {creation && <CreateRegulationDialog mode={creation} onClose={() => setCreation(null)} />}
       {confirmation && (
         <Dialog
           title={t('Удалить курс?')}

@@ -1,3 +1,24 @@
+.creationActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.positionLabel {
+  color: #c6f135;
+  font:
+    14px/1.5 GolosText,
+    sans-serif;
+  margin-bottom: 16px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .creationActions {
+    width: 100%;
+  }
+  .creationActions > button {
+    flex: 1 1 220px;
+  }
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -4,6 +4,13 @@
   color: #fff;
   font-family: 'GolosText', sans-serif;
 }
+@media (min-width: 701px) and (max-width: 1024px) and (orientation: landscape) {
+  :global(body.has-mobile-navigation) .page {
+    width: calc(100% - 120px);
+    margin-left: 20px;
+    margin-right: 100px;
+  }
+}
 .scope {
   display: flex;
   justify-content: space-between;

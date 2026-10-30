@@ -562,7 +562,13 @@ export default function CourseEditPage() {
         {Boolean(error) && (
           <RequestError error={error} onRetry={() => setVersion((v) => v + 1)} retrying={loading} />
         )}
-        {notice && <p role='status'>{notice}</p>}
+        {notice && <section className={notice === t('Курс опубликован') ? styles.publicationSuccess : ''}>
+          <p role='status'>{notice}</p>
+          {notice === t('Курс опубликован') && <>
+            <p>{t('Версия сохранена. Выберите сотрудников, которым нужно изучить материал, и задайте срок. Ранее выданные назначения сохранят свои результаты.')}</p>
+            <div><Link className={styles.primary} to={`/assignments?course=${id}`}>{t('Выбрать получателей')}</Link><Link to='/courses'>{t('Вернуться к регламентам и курсам')}</Link></div>
+          </>}
+        </section>}
         {publicationProblems.length > 0 && (
           <section className='request-state'>
             <h2>{t('Задания, требующие настройки')}</h2>
@@ -1073,7 +1079,7 @@ export default function CourseEditPage() {
           {structure?.status === 'published' && (
             <Link
               className={styles.primary}
-              to={business ? personnelPath : `/assignments?course=${id}`}
+              to={`/assignments?course=${id}`}
             >
               {t('Назначить участникам')}
             </Link>

@@ -158,6 +158,7 @@ function CompanyWorkspace() {
   const [employeeOffset, setEmployeeOffset] = useState(0);
   const [search, setSearch] = useState('');
   const [managing, setManaging] = useState<number | null>(null);
+  const [personName, setPersonName] = useState('');
   const [editing, setEditing] = useState<Position | 'new' | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [accountMode, setAccountMode] = useState<'login' | 'email'>('login');
@@ -796,6 +797,7 @@ function CompanyWorkspace() {
                 <tr>
                   <th>{t('Участник')}</th>
                   <th>{t('Должность')}</th>
+                  {tab !== 'managers' && <th>{t('Руководитель')}</th>}
                   <th>{t('Доступ')}</th>
                   <th>
                     <span className={css.srOnly}>{t('Действия')}</span>
@@ -826,6 +828,16 @@ function CompanyWorkspace() {
                           ? roleName(person.organization_role)
                           : t('Без должности'))}
                     </td>
+                    {tab !== 'managers' && (
+                      <td data-label={t('Руководитель')}>
+                        {person.manager_id === user?.id
+                          ? user.full_name || user.username || user.email
+                          : overview.data?.managers.find(
+                              (manager) => manager.id === person.manager_id,
+                            )?.full_name ||
+                            (person.manager_id ? t('Руководитель') : t('Без руководителя'))}
+                      </td>
+                    )}
                     <td data-label={t('Доступ')}>
                       <span className={`${css.badge} ${person.is_active ? css.activeBadge : ''}`}>
                         {t(person.is_active ? 'Активен' : 'Приостановлен')}
@@ -839,6 +851,7 @@ function CompanyWorkspace() {
                           setError('');
                           setResetPassword('');
                           setManaging(person.id);
+                          setPersonName(person.full_name || '');
                         }}
                       >
                         <MoreHorizontal size={20} />
@@ -862,6 +875,43 @@ function CompanyWorkspace() {
               className={css.modal}
             >
               <div className={css.form}>
+                <form
+                  className={css.form}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void mutate(async () => {
+                      await api.patch(`/business/employees/${person.id}/profile`, {
+                        full_name: personName.trim(),
+                        expected_full_name: person.full_name,
+                      });
+                      setMessage(t('Имя участника сохранено'));
+                    });
+                  }}
+                >
+                  <label>
+                    {t('Имя и фамилия')}
+                    <input
+                      value={personName}
+                      maxLength={160}
+                      required
+                      onChange={(event) => setPersonName(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    className={styles.secondary}
+                    disabled={busy || !personName.trim() || personName.trim() === person.full_name}
+                  >
+                    {t('Сохранить имя')}
+                  </button>
+                </form>
+                {owner && tab === 'managers' && (
+                  <Link
+                    className={styles.secondary}
+                    to={`/company?tab=employees&manager_id=${person.id}`}
+                  >
+                    {t('Сотрудники руководителя')}
+                  </Link>
+                )}
                 {person.username && person.is_active && (
                   <form
                     onSubmit={(event) => {

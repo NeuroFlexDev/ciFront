@@ -6,7 +6,7 @@ import { api } from '@/shared/api';
 import BusinessPage from './BusinessPage';
 const state = vi.hoisted(() => ({ role: 'owner' }));
 vi.mock('@/shared/api', () => ({
-  api: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
 vi.mock('@/auth/useAuth', () => ({
   useAuth: () => ({
@@ -353,10 +353,28 @@ it('creates an employee with login and password without requiring email or persi
   const access = within(screen.getByRole('dialog', { name: 'Аккаунт создан' }));
   expect(access.getByLabelText('Логин')).toHaveValue('beslim.ivan');
   expect(access.getByLabelText('Пароль')).toHaveAttribute('type', 'password');
-  expect(access.getByRole('link', { name: 'Назначить обучение' })).toHaveAttribute('href', '/assignments?user=90');
+  expect(access.getByRole('link', { name: 'Назначить обучение' })).toHaveAttribute(
+    'href',
+    '/assignments?user=90',
+  );
   expect(JSON.stringify(localStorage)).not.toContain('employee-password-2026');
   expect(JSON.stringify(sessionStorage)).not.toContain('employee-password-2026');
   fireEvent.click(access.getByRole('button', { name: 'Закрыть окно' }));
   fireEvent.click(screen.getByRole('button', { name: 'Добавить сотрудника' }));
   expect(screen.getByLabelText('Пароль сотрудника')).toHaveValue('');
+});
+
+it('shows reporting line and lets the owner edit a name without replacing membership', async () => {
+  vi.mocked(api.patch).mockResolvedValue({ data: { user_id: 2, full_name: 'Иван Петров' } });
+  open('/company?tab=employees');
+  expect(await screen.findByRole('cell', { name: 'Анна' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Настроить доступ: Иван' }));
+  fireEvent.change(screen.getByLabelText('Имя и фамилия'), { target: { value: 'Иван Петров' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Сохранить имя' }));
+  await waitFor(() =>
+    expect(api.patch).toHaveBeenCalledWith('/business/employees/2/profile', {
+      full_name: 'Иван Петров',
+      expected_full_name: 'Иван',
+    }),
+  );
 });

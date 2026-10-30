@@ -140,10 +140,10 @@
   font-size: 16px;
   text-align: left;
 }
-@media (max-width: 700px) {
+@media (max-width: 700px), (min-width: 701px) and (max-width: 1024px) and (orientation: landscape) {
   .trigger {
     display: inline-flex;
-    margin-left: auto;
+    margin-left: 0;
   }
   .bottom {
     display: flex;
@@ -185,6 +185,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+@media (min-width: 701px) and (max-width: 1024px) and (orientation: landscape) {
+  .bottom { left: auto; right: 20px; bottom: 32px; transform: none; width: 60px; flex-direction: column; }
+  .bottom a[aria-current='page'] { padding-right: 10px; }
+  .bottom a span:not(.icon) { display: none; }
+  .menu { padding-top: max(16px, env(safe-area-inset-top)); }
 }
 @media (max-width: 360px) {
   .bottom {

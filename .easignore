@@ -1,0 +1,14 @@
+# Upload only the standalone native client from this repository.
+/*
+!/mobile
+/mobile/*
+!/mobile/src
+!/mobile/assets
+!/mobile/scripts
+!/mobile/app.json
+!/mobile/app.config.ts
+!/mobile/eas.json
+!/mobile/package.json
+!/mobile/package-lock.json
+!/mobile/tsconfig.json
+!/mobile/eslint.config.js

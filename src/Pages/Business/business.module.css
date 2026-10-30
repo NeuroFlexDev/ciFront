@@ -760,11 +760,20 @@
 .workspace .search {
   display: flex;
 }
-.workspace .search input {
+.workspace.workspace .search input {
   padding-left: 44px;
   font-size: 14px;
   background: #141414;
   border-color: #2a2b30;
+}
+.personTable td[data-label] {
+  overflow-wrap: anywhere;
+}
+.tabs {
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 .workspace .jobDescription > summary,
 .workspace .pending > summary {

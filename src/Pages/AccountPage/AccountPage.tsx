@@ -13,6 +13,7 @@ import catalog from '@/legal/catalog.json';
 import styles from './styles.module.css';
 import IdentityLinks from './IdentityLinks';
 import MFASettings from './MFASettings';
+import NotificationPreferences from './NotificationPreferences';
 import EmailBinding from './EmailBinding';
 import { useLearningData } from '@/Pages/Learning/useLearningData';
 import { useRoleNames } from '@/Pages/TeamLearning/useRoleNames';
@@ -353,6 +354,7 @@ export default function AccountPage() {
           )}
           {tab === 'security' && !isAdminSurface && <IdentityLinks />}
           {tab === 'security' && <MFASettings />}
+          {tab === 'notifications' && !isAdminSurface && <NotificationPreferences key={user?.id} />}
           {['documents', 'notifications'].includes(tab) && !!documentsError && (
             <RequestError
               error={documentsError}
