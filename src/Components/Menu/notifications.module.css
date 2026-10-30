@@ -218,7 +218,7 @@
   }
 }
 
-@media (max-width: 700px) {
+@media (max-width: 700px), (min-width: 701px) and (max-width: 1024px) and (orientation: landscape) {
   .root {
     flex: 0 0 40px;
   }
