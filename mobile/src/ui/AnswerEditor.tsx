@@ -6,7 +6,7 @@ import { drafts, type Draft } from '../lib/drafts';
 import { ApiError } from '../lib/client';
 import { bounded, deliverAnswer } from '../lib/answer-delivery';
 import type { Assessment, Answer, Response } from '../lib/types';
-import { Button, Card, ErrorState, Field, Txt } from './components';
+import { Badge, Button, Card, ErrorState, Field, Txt } from './components';
 import { c } from './theme';
 export function AnswerEditor({
   assignmentId,
@@ -172,7 +172,16 @@ export function AnswerEditor({
   }
   return (
     <Card>
-      <Txt size={20}>{question.question}</Txt>
+      <Badge>
+        {question.question_type === 'open'
+          ? 'Практическое задание'
+          : question.question_type === 'multiple'
+            ? 'Несколько вариантов'
+            : 'Один вариант'}
+      </Badge>
+      <Txt heading size={20}>
+        {question.question}
+      </Txt>
       {question.description && <Txt muted>{question.description}</Txt>}
       <Txt muted size={13}>
         Максимум {question.max_points} баллов ·{' '}
@@ -257,12 +266,40 @@ export function AnswerEditor({
                   }}
                   style={{
                     padding: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    backgroundColor: c.bg,
                     borderWidth: 1,
                     borderColor: draft?.answer.selected?.includes(answer) ? c.lime : c.line,
                     borderRadius: 16,
                   }}
                 >
-                  <Txt>{answer}</Txt>
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderWidth: 1,
+                      borderColor: draft?.answer.selected?.includes(answer) ? c.lime : c.muted,
+                      borderRadius: question.question_type === 'single' ? 11 : 5,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {draft?.answer.selected?.includes(answer) && (
+                      <View
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: question.question_type === 'single' ? 6 : 2,
+                          backgroundColor: c.lime,
+                        }}
+                      />
+                    )}
+                  </View>
+                  <Txt size={14} style={{ flex: 1 }}>
+                    {answer}
+                  </Txt>
                 </Pressable>
               ))}
             </View>
@@ -321,6 +358,9 @@ export function AnswerEditor({
             </View>
           )}
           {!!error && <ErrorState error={error} />}
+          {!!question.locked_reason && (
+            <Txt style={{ color: c.alert }}>{question.locked_reason}</Txt>
+          )}
           {busy && (
             <Txt muted size={13}>
               {phase === 'saving'
@@ -336,6 +376,7 @@ export function AnswerEditor({
             disabled={
               !draft ||
               !!conflict ||
+              !!question.locked_reason ||
               !((draft.answer.text || '').trim() || draft.answer.selected?.length)
             }
             onPress={() => void send(true)}

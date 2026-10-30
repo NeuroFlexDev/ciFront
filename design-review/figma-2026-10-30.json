@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-30",
+  "source_file": "mCBsEO0lXXeQTMSf7IgWEj",
+  "source_pages": ["75:1209", "660:5813"],
+  "status": "implementation_pending_dev_visual_acceptance",
+  "inventory": {"current_role_states": 354, "new_duo_adaptation_frames": 6},
+  "coverage_note": "Inventory is not visual acceptance of every frame. Current references were refreshed; implementation focuses on shared components and the near-term business pilot. Native device rendering and push cold-start still require device acceptance.",
+  "references": {
+    "desktop_overview": "1981:27426",
+    "mobile_overview": "2126:60781",
+    "mobile_candidate": "2126:74351",
+    "mobile_profile": "2126:64472",
+    "mobile_results": "2126:75580",
+    "mobile_team": "2126:61569",
+    "mobile_notifications": "2126:63440",
+    "mobile_lesson": "2126:74516",
+    "mobile_question": "2126:74955",
+    "mobile_practice": "2126:75306",
+    "mobile_employee": "2126:72898",
+    "mobile_catalogue": "2126:61127",
+    "course_info": "2153:71724",
+    "desktop_editor": "1982:29367",
+    "preflight": "1981:29058",
+    "admin_customers": "2043:5588",
+    "admin_limits": "2043:5852",
+    "admin_monitoring": "2043:6041",
+    "admin_ai": "2043:6268",
+    "admin_support": "2043:6377",
+    "duo": ["2268:80255", "2268:80405", "2268:80970", "2268:81241", "2268:81607", "2268:81807"]
+  },
+  "implemented": [
+    "Native Days One/Golos typography, Figma icons, header, pill navigation and side rail for unfolded landscape devices",
+    "Native overview with actual business/learning metrics, catalogue with real author/position metadata and info sheet",
+    "Native profile, team, person editing, results, lesson content and selectable question navigation",
+    "Web mobile/foldable navigation, search field spacing, manager column and scoped person editing",
+    "Two regulation creation paths with persistent form drafts; publication confirmation and assignment next action",
+    "Admin AI provider list/editor styling using current Figma reference",
+    "Next question only after confirmed answer receipt; draft retention and practice prerequisite explanations",
+    "Active web session renewal bounded to eight hours with existing MFA age preserved"
+  ],
+  "validation": {
+    "web_tests": "339 passed locally",
+    "native_tests": "20 passed; typecheck and lint passed",
+    "web_admin_build": "passed locally before final publication success-card change; final CI required",
+    "dev_browser": "pending deployment",
+    "native_visual": "not accepted on physical device",
+    "admin_browser": "operator authentication unavailable; no MFA bypass"
+  },
+  "asset_provenance": "../mobile/assets/figma/provenance.json"
+}

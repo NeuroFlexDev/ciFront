@@ -50,6 +50,7 @@ export type Preferences = {
 };
 export type Answer = { text?: string; selected?: string[] };
 export type Assessment = {
+  locked_reason?: string;
   id: string;
   question: string;
   description: string;
@@ -99,6 +100,7 @@ export type Assignment = {
 };
 export type Detail = Assignment & {
   content: {
+    practice_requires_test_pass?: boolean;
     course: { description: string };
     modules: { id: number; title: string; lessons: Lesson[]; assessments: Assessment[] }[];
     assessments: Assessment[];

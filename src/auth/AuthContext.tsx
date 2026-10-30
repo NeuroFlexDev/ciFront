@@ -24,6 +24,7 @@ import {useDialogFocus} from '@/hooks/useDialogFocus';
 import {isMFAChallenge,MFAChallengeError,type MFAChallengeResponse} from './mfa';
 import MFAChallengeForm from './MFAChallengeForm';
 import mfaStyles from './mfa.module.css';
+import { useActiveSession } from './useActiveSession';
 
 async function readErrorMessage(response: Response): Promise<string> {
   try {
@@ -37,6 +38,7 @@ async function readErrorMessage(response: Response): Promise<string> {
 export function AuthProvider({ children }: PropsWithChildren) {
   const {t}=useLocale();
   const [user, setUser] = useState<AuthUser | null>(null);
+  useActiveSession(user?.id);
   const currentUser = useRef<AuthUser | null>(null);
   function updateUser(nextUser:AuthUser|null){currentUser.current=nextUser;setUser(nextUser);}
   const [isLoading, setIsLoading] = useState(true);

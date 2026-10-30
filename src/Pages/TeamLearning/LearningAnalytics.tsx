@@ -215,7 +215,7 @@ export default function LearningAnalytics() {
                           </p>
                         </td>
                         <td>
-                          <span className={s.badge}>
+                          <span className={s.badge} data-tone={a.pending_reviews ? 'pending' : a.status === 'completed' ? 'passed' : a.status === 'overdue' || (a.score_percent !== null && a.score_percent < a.rules.pass_percent) ? 'failed' : 'neutral'}>
                             {t(stateLabel[a.status] ?? String(a.status)) ?? a.status}
                           </span>
                           <p className={s.caption}>

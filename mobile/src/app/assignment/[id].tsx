@@ -1,12 +1,23 @@
 import { useState, useRef } from 'react';
-import { Linking } from 'react-native';
+import { Linking, View, Pressable } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useLocalSearchParams } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { api, queryClient, useResource, useSession } from '../../lib/session';
 import type { Detail, Lesson, Response } from '../../lib/types';
-import { states } from '../../lib/types';
-import { Page, Card, Txt, Button, Loading, ErrorState, Chips, Progress } from '../../ui/components';
+import { states, date } from '../../lib/types';
+import { latestResponses } from '../../lib/learning-summary';
+import {
+  Page,
+  Card,
+  Txt,
+  Button,
+  Loading,
+  ErrorState,
+  Chips,
+  Progress,
+  Badge,
+} from '../../ui/components';
 import { AnswerEditor } from '../../ui/AnswerEditor';
 import { LessonImage } from '../../ui/LessonImage';
 import { c } from '../../ui/theme';
@@ -15,6 +26,7 @@ export default function AssignmentScreen() {
     { user, scope } = useSession(),
     query = useResource<Detail>(/^\d+$/.test(id) ? '/learning/assignments/' + id : null),
     [selected, setSelected] = useState<number | null>(null),
+    [questionIndex, setQuestionIndex] = useState(0),
     [tab, setTab] = useState(results ? 'tests' : 'materials'),
     [error, setError] = useState<unknown>(null),
     [busy, setBusy] = useState(false),
@@ -28,6 +40,10 @@ export default function AssignmentScreen() {
       ...(data?.content.assessments || []),
       ...(data?.content.modules.flatMap((m) => m.assessments) || []),
     ].filter((v, i, a) => a.findIndex((x) => x.id === v.id) === i);
+  if (data?.content.practice_requires_test_pass)
+    assessments.sort(
+      (a, b) => Number(a.question_type === 'open') - Number(b.question_type === 'open'),
+    );
   function answerSaved(response: Response) {
     queryClient.setQueryData<Detail>([scope, '/learning/assignments/' + id], (current) => {
       if (
@@ -42,6 +58,15 @@ export default function AssignmentScreen() {
         responses: [...current.responses.filter((item) => item.id !== response.id), response],
       };
     });
+    if (response.status !== 'draft' && assessments[questionIndex]?.id === response.assessment_id) {
+      const latest = latestResponses(data?.responses || []);
+      const next = assessments.findIndex(
+        (item, index) =>
+          index > questionIndex &&
+          !latest.some((saved) => saved.assessment_id === item.id && saved.status !== 'draft'),
+      );
+      if (next >= 0) setQuestionIndex(next);
+    }
     void query.refetch();
   }
   async function refresh() {
@@ -79,6 +104,7 @@ export default function AssignmentScreen() {
   return (
     <Page
       title={data?.title || 'Обучение'}
+      headerTitle={user?.organization_kind === 'business' ? 'Регламент' : 'Обучение'}
       back
       refreshing={refreshing}
       onRefresh={() => void refresh()}
@@ -89,11 +115,43 @@ export default function AssignmentScreen() {
       )}
       {data && (
         <>
-          <Progress value={data.progress_percent} />
-          <Txt muted size={13}>
-            {states[data.status] || data.status} · {data.completed_lessons.length} из{' '}
-            {data.lesson_count} материалов
-          </Txt>
+          <Card>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              <Txt heading size={18}>
+                Ваш прогресс
+              </Txt>
+              <Txt heading size={20}>
+                {data.progress_percent}%
+              </Txt>
+            </View>
+            <Progress value={data.progress_percent} />
+            <Txt muted size={13}>
+              {states[data.status] || data.status} · {data.completed_lessons.length} из{' '}
+              {data.lesson_count} материалов
+            </Txt>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 8,
+              }}
+            >
+              <Badge tone={data.status === 'overdue' ? 'alert' : 'neutral'}>
+                {date(data.due_at)}
+              </Badge>
+              <Txt muted size={12}>
+                {data.rules.max_attempts} попыток · Порог {data.rules.pass_percent}%
+              </Txt>
+            </View>
+          </Card>
           <Chips
             items={[
               {
@@ -107,18 +165,14 @@ export default function AssignmentScreen() {
           />
           {tab === 'materials' ? (
             <>
-              <Chips
-                items={lessons.map((l, i) => ({
-                  id: String(l.id),
-                  label:
-                    (data.completed_lessons.includes(l.id) ? '✓ ' : '') + (i + 1) + '. ' + l.title,
-                }))}
-                value={String(lesson?.id)}
-                onChange={(value) => setSelected(Number(value))}
-              />
               {lesson ? (
                 <Card>
-                  <Txt size={23}>{lesson.title}</Txt>
+                  <Txt muted size={12}>
+                    Материал {lessons.findIndex((l) => l.id === lesson.id) + 1} из {lessons.length}
+                  </Txt>
+                  <Txt heading size={22}>
+                    {lesson.title}
+                  </Txt>
                   <Markdown
                     rules={{
                       image: (node) => (
@@ -169,23 +223,125 @@ export default function AssignmentScreen() {
                   <Txt>{data.content.course.description || 'Перейдите к тестам.'}</Txt>
                 </Card>
               )}
+              {lessons.length > 0 && (
+                <Card>
+                  <Txt heading size={20}>
+                    Содержание регламента
+                  </Txt>
+                  {lessons.map((item, i) => (
+                    <Pressable
+                      key={item.id}
+                      accessibilityRole='button'
+                      accessibilityState={{ selected: item.id === lesson?.id }}
+                      onPress={() => setSelected(item.id)}
+                      style={{
+                        padding: 16,
+                        borderRadius: 16,
+                        backgroundColor: c.bg,
+                        borderWidth: 1,
+                        borderColor: item.id === lesson?.id ? c.lime : 'transparent',
+                        gap: 6,
+                      }}
+                    >
+                      <Txt size={14}>
+                        {i + 1}. {item.title}
+                      </Txt>
+                      <Txt muted size={12}>
+                        {data.completed_lessons.includes(item.id)
+                          ? '✓ Изучено'
+                          : item.id === lesson?.id
+                            ? 'Сейчас открыто'
+                            : 'Предстоит изучить'}
+                      </Txt>
+                    </Pressable>
+                  ))}
+                </Card>
+              )}
             </>
           ) : (
             <>
-              {assessments.map((question) => (
-                <AnswerEditor
+              {assessments.length > 0 && (
+                <Card>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                    <Txt heading size={20}>
+                      Тесты и задания
+                    </Txt>
+                    <Txt muted size={14}>
+                      {Math.min(questionIndex + 1, assessments.length)} / {assessments.length}
+                    </Txt>
+                  </View>
+                  <Txt muted size={13}>
+                    Выберите вопрос. Введённые ответы сохраняются на устройстве; отправляйте каждый
+                    ответ отдельно.
+                  </Txt>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {assessments.map((q, i) => {
+                      const response = latestResponses(data.responses).find(
+                        (r) => r.assessment_id === q.id,
+                      );
+                      const sent = response && response.status !== 'draft';
+                      return (
+                        <Pressable
+                          key={q.id}
+                          accessibilityRole='button'
+                          accessibilityLabel={`Вопрос ${i + 1}${sent ? ', ответ отправлен' : ''}`}
+                          accessibilityState={{ selected: questionIndex === i }}
+                          onPress={() => setQuestionIndex(i)}
+                          style={{
+                            width: 44,
+                            height: 44,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: questionIndex === i ? c.lime : c.bg,
+                            borderWidth: 1,
+                            borderColor: sent ? c.lime : c.line,
+                          }}
+                        >
+                          <Txt size={16} style={{ color: questionIndex === i ? c.bg : c.text }}>
+                            {i + 1}
+                          </Txt>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </Card>
+              )}
+              {assessments.map((question, index) => (
+                <View
                   key={`${scope}:${data.course_version_id}:${data.id}:${question.id}`}
-                  assignmentId={data.id}
-                  versionId={data.course_version_id}
-                  question={question}
-                  response={
-                    data.responses
-                      .filter((r) => r.assessment_id === question.id)
-                      .sort((a, b) => b.attempt - a.attempt)[0]
-                  }
-                  onSaved={answerSaved}
-                />
+                  style={{
+                    display:
+                      index === Math.min(questionIndex, assessments.length - 1) ? 'flex' : 'none',
+                  }}
+                >
+                  <AnswerEditor
+                    assignmentId={data.id}
+                    versionId={data.course_version_id}
+                    question={question}
+                    response={latestResponses(data.responses).find(
+                      (r) => r.assessment_id === question.id,
+                    )}
+                    onSaved={answerSaved}
+                  />
+                </View>
               ))}
+              {assessments.length > 1 && (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
+                  <Button
+                    title='← Назад'
+                    secondary
+                    disabled={questionIndex === 0}
+                    onPress={() => setQuestionIndex((i) => Math.max(0, i - 1))}
+                  />
+                  <Button
+                    title='Следующий →'
+                    secondary
+                    disabled={questionIndex >= assessments.length - 1}
+                    onPress={() => setQuestionIndex((i) => Math.min(assessments.length - 1, i + 1))}
+                  />
+                </View>
+              )}
               {!assessments.length && (
                 <Card>
                   <Txt>В этом назначении нет тестов. Для завершения изучите материалы.</Txt>

@@ -28,6 +28,7 @@ export default function NotificationCenter() {
   const first = query.data?.pages[0],
     items = query.data?.pages.flatMap((p) => p.items) || [];
   async function mark(note?: Notice) {
+    if (note) router.push(noticeRoute(note));
     setBusy(true);
     setError(null);
     try {
@@ -36,12 +37,11 @@ export default function NotificationCenter() {
         'POST',
         note ? undefined : { through_id: first?.latest_id || 0 },
       );
-      await queryClient.invalidateQueries({ queryKey: [scope] });
+      void queryClient.invalidateQueries({ queryKey: [scope] });
       if (Platform.OS !== 'web')
         await Notifications.setBadgeCountAsync(
           Math.max(0, (first?.unread_count || 0) - (note ? 1 : first?.unread_count || 0)),
         );
-      if (note) router.push(noticeRoute(note));
     } catch (e) {
       setError(e);
     } finally {

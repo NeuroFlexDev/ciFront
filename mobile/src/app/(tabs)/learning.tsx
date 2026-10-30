@@ -4,7 +4,14 @@ import { api, useSession } from '../../lib/session';
 import type { Assignment } from '../../lib/types';
 import { Page, Chips, Loading, ErrorState, Empty, Button } from '../../ui/components';
 import { AssignmentCard } from '../../ui/AssignmentCard';
+import { manages } from '../../lib/types';
+import { Catalogue } from '../../ui/Catalogue';
+import { filterAssignments } from '../../lib/learning-summary';
 export default function Learning() {
+  const { user } = useSession();
+  return manages(user) ? <Catalogue /> : <MyLearning />;
+}
+export function MyLearning({ back = false }: { back?: boolean }) {
   const { scope, user } = useSession(),
     [filter, setFilter] = useState('all');
   const query = useInfiniteQuery({
@@ -21,15 +28,10 @@ export default function Learning() {
     enabled: !!user?.organization_id,
   });
   const items = query.data?.pages.flatMap((p) => p.items) || [],
-    visible = items.filter(
-      (a) =>
-        filter === 'all' ||
-        (filter === 'in_progress'
-          ? ['assigned', 'in_progress'].includes(a.status)
-          : a.status === filter),
-    );
+    visible = filterAssignments(items, filter);
   return (
     <Page
+      back={back}
       title={user?.organization_kind === 'business' ? 'Мои регламенты' : 'Моё обучение'}
       subtitle='Изучайте материалы, проходите тесты и отслеживайте результат.'
       refreshing={query.isRefetching}
@@ -45,7 +47,13 @@ export default function Learning() {
         value={filter}
         onChange={setFilter}
       />
-      {query.isPending && <Loading />}
+      {query.isPending && !!user?.organization_id && <Loading />}
+      {!user?.organization_id && (
+        <Empty
+          title='Вы ещё не в команде'
+          body='После приглашения в компанию здесь появятся назначенные вам материалы.'
+        />
+      )}
       {query.error && <ErrorState error={query.error} retry={() => void query.refetch()} />}
       {visible.map((item) => (
         <AssignmentCard key={item.id} item={item} />

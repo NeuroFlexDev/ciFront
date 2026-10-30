@@ -32,12 +32,17 @@ export default function LearningCourse() {
   const writing = useRef(false);
   const reader = useRef<HTMLDivElement>(null);
   const focusNextItem = useRef(false);
+  const [submittedItem, setSubmittedItem] = useState<string | null>(null);
   const data = query.data;
   const lessons =
     data?.content?.modules.flatMap((m) => m.lessons.map((l) => ({ ...l, module: m }))) ?? [];
   const assessments = data?.content
     ? [...data.content.modules.flatMap((m) => m.assessments), ...data.content.assessments]
     : [];
+  if (data?.content?.practice_requires_test_pass)
+    assessments.sort(
+      (a, b) => Number(a.question_type === 'open') - Number(b.question_type === 'open'),
+    );
   const key =
     params.get('item') ??
     data?.last_item_key ??
@@ -68,6 +73,32 @@ export default function LearningCourse() {
   const revision = data?.progress_revision;
   const savedItem = data?.last_item_key;
   const active = data?.state === 'active';
+  useEffect(() => {
+    // Use the refreshed progress revision for the next bookmark. A failed read
+    // leaves the confirmed answer visible and never resubmits it.
+    if (!submittedItem || !data || query.loading || query.error) return;
+    if (
+      !data.responses.some((row) => row.assessment_id === submittedItem && row.status !== 'draft')
+    )
+      return;
+    setSubmittedItem(null);
+    if (key !== submittedItem) return;
+    const items = [
+      ...(data.content?.modules.flatMap((module) => module.assessments) || []),
+      ...(data.content?.assessments || []),
+    ];
+    if (data.content?.practice_requires_test_pass)
+      items.sort((a, b) => Number(a.question_type === 'open') - Number(b.question_type === 'open'));
+    const index = items.findIndex((item) => item.id === submittedItem);
+    const next = items
+      .slice(index + 1)
+      .find(
+        (item) =>
+          !data.responses.some((row) => row.assessment_id === item.id && row.status !== 'draft'),
+      );
+    focusNextItem.current = true;
+    setParams(next ? { item: next.id } : { view: 'results' });
+  }, [submittedItem, data, query.loading, query.error, key, setParams]);
   useEffect(() => {
     if (
       !directItem ||
@@ -329,6 +360,9 @@ export default function LearningCourse() {
                       assessment={assessment}
                       responses={data.responses}
                       onSaved={query.reload}
+                      onSubmitted={(response) => {
+                        setSubmittedItem(response.assessment_id);
+                      }}
                     />
                   ) : (
                     <section className={s.empty}>

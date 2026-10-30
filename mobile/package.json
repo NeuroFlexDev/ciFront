@@ -1,6 +1,6 @@
 {
   "name": "lernium-mobile",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "expo-router/entry",
   "dependencies": {
     "@react-navigation/bottom-tabs": "^7.21.0",

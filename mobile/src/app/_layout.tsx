@@ -6,6 +6,7 @@ import { View } from 'react-native';
 import { SessionProvider, useSession } from '../lib/session';
 import { manages } from '../lib/types';
 import { c } from '../ui/theme';
+import { usePush } from '../lib/push';
 import { Button, Txt, Page, Loading, ErrorState } from '../ui/components';
 class Boundary extends Component<{ children: React.ReactNode }, { failed: boolean }> {
   state = { failed: false };
@@ -47,6 +48,7 @@ export default function RootLayout() {
 }
 function Navigation() {
   const { user, ready, startupError, retry } = useSession();
+  usePush(ready && !startupError);
   if (!ready)
     return (
       <Page>
@@ -73,6 +75,7 @@ function Navigation() {
       <Stack.Protected guard={!!user} redirectTo='/login'>
         <Stack.Screen name='(tabs)' />
         <Stack.Screen name='assignment/[id]' />
+        <Stack.Screen name='my-learning' />
         <Stack.Screen name='notification-settings' />
         <Stack.Screen name='notice/[id]' />
         <Stack.Protected guard={manages(user)}>

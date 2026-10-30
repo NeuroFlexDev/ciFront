@@ -61,11 +61,11 @@ export async function registerPush(ask: boolean) {
   const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
   await api.request('/auth/mobile/push-device', 'PUT', { token, platform: Platform.OS });
 }
-export function usePush() {
+export function usePush(enabled = true) {
   const { user, scope, revalidate } = useSession();
   const userId = user?.id;
   useEffect(() => {
-    if (!userId || Platform.OS === 'web') return;
+    if (!enabled || !userId || Platform.OS === 'web') return;
     let active = true;
     const seen = new Set<string>();
     const handle = async (response: Notifications.NotificationResponse | null) => {
@@ -76,10 +76,12 @@ export function usePush() {
       try {
         const note = await api.request<Notice>('/notifications/' + id);
         if (!active) return;
-        await api.request('/notifications/' + id + '/read', 'POST');
-        if (!active) return;
-        await queryClient.invalidateQueries({ queryKey: [scope] });
         router.push(noticeRoute(note));
+        // Opening a resource must not wait for every dashboard query or badge update.
+        void api
+          .request('/notifications/' + id + '/read', 'POST')
+          .then(() => queryClient.invalidateQueries({ queryKey: [scope] }))
+          .catch(() => {});
       } catch {
         if (active) router.push('/notifications');
       } finally {
@@ -113,5 +115,5 @@ export function usePush() {
       state.remove();
       token.remove();
     };
-  }, [userId, scope, revalidate]);
+  }, [enabled, userId, scope, revalidate]);
 }
