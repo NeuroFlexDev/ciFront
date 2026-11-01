@@ -2,7 +2,7 @@
   "expo": {
     "name": "Lernium",
     "slug": "lernium",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "scheme": "lernium",
     "orientation": "default",
     "userInterfaceStyle": "dark",

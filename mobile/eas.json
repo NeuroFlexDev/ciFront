@@ -33,9 +33,18 @@
       "env": {
         "EXPO_PUBLIC_API_ORIGIN": "https://lernium.ru"
       }
+    },
+    "testflight": {
+      "extends": "production",
+      "distribution": "store",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_ORIGIN": "https://dev.platform.lernium.ru"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "testflight": {}
   }
 }
