@@ -1,7 +1,9 @@
+import { mediaEnglish } from './media';
 import { figmaUiEnglish } from './figmaUi';
 /** Interface text only. Course content, names, answers and review comments are never translated. */
 export const learningEnglish: Record<string, string> = {
   ...figmaUiEnglish,
+  ...mediaEnglish,
   "Цитаты из ответа участника": "Quotes from the participant's answer",
   "Подтверждающих цитат в ответе не найдено.": "No supporting quotes were found in the answer.",
   "Передача опубликованного курса": "Published course transfer",
