@@ -23,12 +23,13 @@ export default function Team() {
   const { user, scope } = useSession(),
     [search, setSearch] = useState(''),
     [filter, setFilter] = useState(''),
-    [role, setRole] = useState('all');
+    [role, setRole] = useState('all'),
+    [removed, setRemoved] = useState('current');
   const report = useResource<{
     items: { user_id: number; state: string; status: string; progress_percent: number }[];
   }>(manages(user) ? '/team/results' : null);
   const q = useInfiniteQuery({
-    queryKey: [scope, 'people', filter, role],
+    queryKey: [scope, 'people', filter, role, removed],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       api.request<{ items: Person[]; total: number }>(
@@ -36,6 +37,8 @@ export default function Team() {
           pageParam +
           '&q=' +
           encodeURIComponent(filter) +
+          '&removed=' +
+          (removed === 'removed') +
           (role === 'all' ? '' : '&role=' + role),
       ),
     getNextPageParam: (last, all) => {
@@ -72,6 +75,19 @@ export default function Team() {
         <Button title='+ Добавить участника' compact onPress={() => router.push('/person/new')} />
         <Button title='Должности' compact secondary onPress={() => router.push('/positions')} />
       </View>
+      <Chips
+        value={removed}
+        onChange={setRemoved}
+        items={[
+          { id: 'current', label: 'В команде' },
+          { id: 'removed', label: 'Удалённые' },
+        ]}
+      />
+      {removed === 'removed' && (
+        <Txt muted size={13}>
+          Аккаунты и результаты сохранены. Откройте профиль участника, чтобы восстановить доступ.
+        </Txt>
+      )}
       <Field
         label='Поиск по имени или логину'
         value={search}
@@ -105,7 +121,11 @@ export default function Team() {
                   </Txt>
                 </View>
               </View>
-              {!p.is_active && <Badge>Доступ закрыт</Badge>}
+              {!p.is_active && (
+                <Badge>
+                  {p.organization_removed_at ? 'Удалён из команды' : 'Доступ приостановлен'}
+                </Badge>
+              )}
               {report.data && (
                 <>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12 }}>
@@ -120,7 +140,11 @@ export default function Team() {
               <Button
                 title='Профиль и результаты'
                 secondary
-                onPress={() => router.push('/person/' + p.id)}
+                onPress={() =>
+                  router.push(
+                    '/person/' + p.id + (p.organization_removed_at ? '?removed=true' : ''),
+                  )
+                }
                 compact
               />
             </Card>

@@ -220,7 +220,7 @@ export const api = {
       body: payload ?? undefined,
     });
   },
-  delete<T = unknown>(path: string) {
-    return request<T>(path, { method: "DELETE" });
+  delete<T = unknown>(path: string, body?: object) {
+    return request<T>(path, { method: "DELETE", body: body ? JSON.stringify(body) : undefined });
   },
 };

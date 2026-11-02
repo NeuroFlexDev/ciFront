@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
+import { ConfirmSheet, type Confirmation } from '../../ui/ConfirmSheet';
 import { api, useResource, useSession, queryClient } from '../../lib/session';
 import type { Person, Assignment, Position } from '../../lib/types';
 import { roles, states } from '../../lib/types';
@@ -18,13 +19,16 @@ import {
   Progress,
 } from '../../ui/components';
 export default function PersonDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>(),
+  const { id, removed } = useLocalSearchParams<{ id: string; removed?: string }>(),
     { scope, user } = useSession(),
-    people = useResource<{ items: Person[] }>('/business/employees?user_id=' + id),
+    people = useResource<{ items: Person[] }>(
+      '/business/employees?user_id=' + id + '&removed=' + (removed === 'true'),
+    ),
     results = useResource<{ items: Assignment[] }>('/team/results?user_id=' + id),
     positions = useResource<{ items: Position[] }>('/business/positions?limit=100'),
     [error, setError] = useState<unknown>(null),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const person = people.data?.items.find((p) => p.id === Number(id));
   async function position(value: string) {
     if (!person) return;
@@ -34,7 +38,7 @@ export default function PersonDetail() {
         position_id: value === 'none' ? null : Number(value),
         expected_position_id: person.position_id,
       });
-      await queryClient.invalidateQueries({ queryKey: [scope] });
+      void queryClient.invalidateQueries({ queryKey: [scope] });
     } catch (e) {
       setError(e);
     } finally {
@@ -55,7 +59,19 @@ export default function PersonDetail() {
           <Avatar name={person.full_name || person.username} size={96} />
           <Badge tone='accent'>{roles[person.organization_role] || person.organization_role}</Badge>
           <Txt muted>{person.email || person.username}</Txt>
-          {person.id !== user?.id && (
+          <Badge>
+            {person.organization_removed_at
+              ? 'Удалён из команды'
+              : person.is_active
+                ? 'Доступ открыт'
+                : 'Доступ приостановлен'}
+          </Badge>
+          {person.organization_removed_at && (
+            <Txt muted>
+              Аккаунт и история обучения сохранены. Восстановление вернёт участника в команду.
+            </Txt>
+          )}
+          {person.id !== user?.id && !person.organization_removed_at && (
             <PersonName
               key={person.id}
               person={person}
@@ -65,24 +81,87 @@ export default function PersonDetail() {
               }}
             />
           )}
-          {['member', 'candidate'].includes(person.organization_role) && (
-            <>
-              <Txt size={20}>Должность</Txt>
-              <Chips
-                items={[
-                  { id: 'none', label: 'Не назначена' },
-                  ...(positions.data?.items || []).map((p) => ({
-                    id: String(p.id),
-                    label: p.name,
-                  })),
-                ]}
-                value={person.position_id ? String(person.position_id) : 'none'}
-                onChange={(value) => {
-                  if (!busy) void position(value);
-                }}
-              />
-            </>
-          )}
+          {!person.organization_removed_at &&
+            ['member', 'candidate'].includes(person.organization_role) && (
+              <>
+                <Txt size={20}>Должность</Txt>
+                <Chips
+                  items={[
+                    { id: 'none', label: 'Не назначена' },
+                    ...(positions.data?.items || []).map((p) => ({
+                      id: String(p.id),
+                      label: p.name,
+                    })),
+                  ]}
+                  value={person.position_id ? String(person.position_id) : 'none'}
+                  onChange={(value) => {
+                    if (!busy) void position(value);
+                  }}
+                />
+              </>
+            )}
+          {person.id !== user?.id &&
+            (['member', 'candidate'].includes(person.organization_role) ||
+              (user?.organization_role === 'owner' &&
+                ['manager', 'admin'].includes(person.organization_role))) && (
+              <>
+                {!person.organization_removed_at && (
+                  <Button
+                    title={person.is_active ? 'Приостановить доступ' : 'Возобновить доступ'}
+                    secondary
+                    disabled={busy}
+                    onPress={() =>
+                      setConfirmation({
+                        title: `${person.is_active ? 'Приостановить' : 'Возобновить'} доступ?`,
+                        description: `${person.full_name || person.username}. Аккаунт и результаты обучения сохранятся. Участник останется в списке команды.`,
+                        actionLabel: person.is_active ? 'Приостановить' : 'Возобновить',
+                        action: async () => {
+                          await api.request('/business/employees/' + id + '/access', 'PUT', {
+                            is_active: !person.is_active,
+                            expected_auth_version: person.auth_version,
+                          });
+                          void queryClient.invalidateQueries({ queryKey: [scope] });
+                        },
+                      })
+                    }
+                  />
+                )}
+                <Button
+                  title={
+                    person.organization_removed_at ? 'Восстановить в команде' : 'Удалить из команды'
+                  }
+                  danger={!person.organization_removed_at}
+                  disabled={busy}
+                  onPress={() =>
+                    setConfirmation({
+                      title: `${person.organization_removed_at ? 'Восстановить' : 'Удалить'} «${person.full_name || person.username}»?`,
+                      description: person.organization_removed_at
+                        ? 'Участник снова сможет войти с прежним паролем. Результаты и назначения сохранены. Старые сеансы и приглашения не восстанавливаются.'
+                        : ['manager', 'admin'].includes(person.organization_role)
+                          ? 'Вход руководителя будет закрыт. Его сотрудники останутся в компании без руководителя. Аккаунт и результаты сохранятся. Восстановить можно в списке удалённых; команду потребуется назначить заново.'
+                          : 'Участник исчезнет из рабочего списка и потеряет доступ. Аккаунт, ответы и результаты сохранятся. Восстановить его можно в списке удалённых.',
+                      actionLabel: person.organization_removed_at
+                        ? 'Восстановить'
+                        : 'Удалить из команды',
+                      danger: !person.organization_removed_at,
+                      action: async () => {
+                        await api.request(
+                          '/business/employees/' +
+                            id +
+                            (person.organization_removed_at ? '/restore' : ''),
+                          person.organization_removed_at ? 'POST' : 'DELETE',
+                          { expected_auth_version: person.auth_version },
+                        );
+                        void queryClient.invalidateQueries({ queryKey: [scope] });
+                        router.setParams({
+                          removed: person.organization_removed_at ? 'false' : 'true',
+                        });
+                      },
+                    })
+                  }
+                />
+              </>
+            )}
         </Card>
       )}
       {people.data && !person && (
@@ -110,6 +189,7 @@ export default function PersonDetail() {
           body='Результаты появятся после назначения регламентов и прохождения тестов.'
         />
       )}
+      {confirmation && <ConfirmSheet value={confirmation} onClose={() => setConfirmation(null)} />}
     </Page>
   );
 }

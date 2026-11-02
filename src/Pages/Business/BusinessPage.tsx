@@ -53,6 +53,7 @@ type Employee = {
   username?: string | null;
   organization_role: string;
   is_active: boolean;
+  organization_removed_at?: string | null;
   auth_version: number;
   position_id: number | null;
   position_name?: string;
@@ -154,6 +155,7 @@ function CompanyWorkspace() {
   }, [tab]);
   const managerFilter = owner ? (params.get('manager_id') ?? '') : '';
   const [archived, setArchived] = useState(false);
+  const [removed, setRemoved] = useState(false);
   const [positionOffset, setPositionOffset] = useState(0);
   const [employeeOffset, setEmployeeOffset] = useState(0);
   const [search, setSearch] = useState('');
@@ -188,14 +190,18 @@ function CompanyWorkspace() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState<{ label: string; action: () => Promise<void> } | null>(
-    null,
-  );
+  const [confirm, setConfirm] = useState<{
+    label: string;
+    title?: string;
+    actionLabel?: string;
+    danger?: boolean;
+    action: () => Promise<void>;
+  } | null>(null);
   const positions = useLearningData<Page<Position>>(
     `/business/positions?archived=${archived}&offset=${positionOffset}&limit=20`,
   );
   const employees = useLearningData<Page<Employee>>(
-    `/business/employees?offset=${employeeOffset}&limit=20&q=${encodeURIComponent(search)}&role=${memberRole}${managerFilter ? `&manager_id=${encodeURIComponent(managerFilter)}` : ''}`,
+    `/business/employees?removed=${removed}&offset=${employeeOffset}&limit=20&q=${encodeURIComponent(search)}&role=${memberRole}${managerFilter ? `&manager_id=${encodeURIComponent(managerFilter)}` : ''}`,
   );
   const invitations = useLearningData<{ items: Invitation[] }>('/business/invitations');
   const overview = useLearningData<BusinessOverview>('/business/dashboard');
@@ -225,7 +231,7 @@ function CompanyWorkspace() {
       setBusy(false);
     }
   }
-  function confirmPerson(value: { label: string; action: () => Promise<void> }) {
+  function confirmPerson(value: NonNullable<typeof confirm>) {
     setManaging(null);
     setError('');
     setConfirm(value);
@@ -399,12 +405,12 @@ function CompanyWorkspace() {
       )}
       {confirm && (
         <BusinessDialog
-          title={t('Подтверждение действия')}
+          title={confirm.title || t('Подтверждение действия')}
           busy={busy}
           onClose={() => setConfirm(null)}
           className={css.modal}
         >
-          <p>{confirm.label}</p>
+          <p className={css.deletionSummary}>{confirm.label}</p>
           {error && (
             <p className={css.error} role='alert'>
               {t(error)}
@@ -415,11 +421,11 @@ function CompanyWorkspace() {
               {t('Отмена')}
             </button>
             <button
-              className={styles.primary}
+              className={confirm.danger ? css.dangerButton : styles.primary}
               disabled={busy}
               onClick={() => void mutate(confirm.action)}
             >
-              {t('Подтвердить')}
+              {busy ? t('Сохранение…') : confirm.actionLabel || t('Подтвердить')}
             </button>
           </div>
         </BusinessDialog>
@@ -717,6 +723,8 @@ function CompanyWorkspace() {
                         disabled={busy}
                         onClick={() =>
                           setConfirm({
+                            title: `${t(position.is_archived ? 'Восстановить должность' : 'В архив')}: «${position.name}»`,
+                            actionLabel: t(position.is_archived ? 'Восстановить' : 'В архив'),
                             label: t(
                               position.is_archived
                                 ? 'Восстановить должность?'
@@ -727,6 +735,13 @@ function CompanyWorkspace() {
                                 expected_revision: position.revision,
                                 is_archived: !position.is_archived,
                               });
+                              setMessage(
+                                t(
+                                  position.is_archived
+                                    ? 'Должность восстановлена. Отозванные приглашения остаются недействительными.'
+                                    : 'Должность перенесена в архив. Регламенты и результаты сохранены.',
+                                ),
+                              );
                             },
                           })
                         }
@@ -748,6 +763,18 @@ function CompanyWorkspace() {
       ) : (
         <section>
           <div className={css.toolbar}>
+            <label className={css.archiveToggle}>
+              <input
+                type='checkbox'
+                checked={removed}
+                onChange={(event) => {
+                  setRemoved(event.target.checked);
+                  setEmployeeOffset(0);
+                  setManaging(null);
+                }}
+              />
+              {t('Удалённые участники')}
+            </label>
             <label className={css.search}>
               <span className={css.srOnly}>{t('Поиск участника')}</span>
               <Search size={18} aria-hidden='true' />
@@ -840,7 +867,13 @@ function CompanyWorkspace() {
                     )}
                     <td data-label={t('Доступ')}>
                       <span className={`${css.badge} ${person.is_active ? css.activeBadge : ''}`}>
-                        {t(person.is_active ? 'Активен' : 'Приостановлен')}
+                        {t(
+                          person.organization_removed_at
+                            ? 'Удалён из команды'
+                            : person.is_active
+                              ? 'Активен'
+                              : 'Приостановлен',
+                        )}
                       </span>
                     </td>
                     <td>
@@ -874,224 +907,197 @@ function CompanyWorkspace() {
               }}
               className={css.modal}
             >
-              <div className={css.form}>
-                <form
-                  className={css.form}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    void mutate(async () => {
-                      await api.patch(`/business/employees/${person.id}/profile`, {
-                        full_name: personName.trim(),
-                        expected_full_name: person.full_name,
-                      });
-                      setMessage(t('Имя участника сохранено'));
-                    });
-                  }}
-                >
-                  <label>
-                    {t('Имя и фамилия')}
-                    <input
-                      value={personName}
-                      maxLength={160}
-                      required
-                      onChange={(event) => setPersonName(event.target.value)}
-                    />
-                  </label>
-                  <button
-                    className={styles.secondary}
-                    disabled={busy || !personName.trim() || personName.trim() === person.full_name}
-                  >
-                    {t('Сохранить имя')}
-                  </button>
-                </form>
-                {owner && tab === 'managers' && (
+              {person.organization_removed_at ? (
+                <div className={css.form}>
+                  <p className={css.deletionSummary}>
+                    {t(
+                      'Участник удалён из команды. Вход закрыт, аккаунт и результаты обучения сохранены. Восстановление вернёт доступ к обучению.',
+                    )}
+                  </p>
                   <Link
                     className={styles.secondary}
-                    to={`/company?tab=employees&manager_id=${person.id}`}
+                    to={`/learning-analytics?user_id=${person.id}`}
                   >
-                    {t('Сотрудники руководителя')}
+                    {t('Результаты обучения')}
                   </Link>
-                )}
-                {person.username && person.is_active && (
+                  <button
+                    className={styles.primary}
+                    disabled={busy}
+                    onClick={() =>
+                      confirmPerson({
+                        title: `${t('Восстановить участника')}: «${person.full_name || person.username || person.email}»`,
+                        label: t(
+                          'Участник снова появится в команде и сможет войти с прежним паролем. Старые сеансы и приглашения не восстанавливаются.',
+                        ),
+                        actionLabel: t('Восстановить'),
+                        action: async () => {
+                          await api.post(`/business/employees/${person.id}/restore`, {
+                            expected_auth_version: person.auth_version,
+                          });
+                          setMessage(t('Участник восстановлен в команде'));
+                        },
+                      })
+                    }
+                  >
+                    {t('Восстановить в команде')}
+                  </button>
+                </div>
+              ) : (
+                <div className={css.form}>
                   <form
+                    className={css.form}
                     onSubmit={(event) => {
                       event.preventDefault();
                       void mutate(async () => {
-                        await api.post(`/business/employees/${person.id}/password`, {
-                          new_password: resetPassword,
-                          expected_auth_version: person.auth_version,
+                        await api.patch(`/business/employees/${person.id}/profile`, {
+                          full_name: personName.trim(),
+                          expected_full_name: person.full_name,
                         });
-                        setResetPassword('');
-                        setMessage(t('Пароль обновлён. Передайте новый пароль сотруднику.'));
+                        setMessage(t('Имя участника сохранено'));
                       });
                     }}
                   >
-                    <p>
-                      {t('Логин')}: <strong>{person.username}</strong>
-                    </p>
                     <label>
-                      {t('Новый пароль сотрудника')}
+                      {t('Имя и фамилия')}
                       <input
-                        type='password'
-                        autoComplete='new-password'
+                        value={personName}
+                        maxLength={160}
                         required
-                        minLength={12}
-                        maxLength={128}
-                        value={resetPassword}
-                        onChange={(e) => setResetPassword(e.target.value)}
+                        onChange={(event) => setPersonName(event.target.value)}
                       />
                     </label>
-                    <button className={styles.secondary} disabled={busy}>
-                      {t('Задать новый пароль')}
-                    </button>
-                  </form>
-                )}
-                {error && (
-                  <p role='alert' className={css.error}>
-                    {t(error)}
-                  </p>
-                )}
-                <label>
-                  {t('Должность')}
-                  {['member', 'candidate'].includes(person.organization_role) &&
-                  person.is_active ? (
-                    <PositionPicker
-                      currentName={person.position_name}
-                      label={`${t('Должность')}: ${person.email}`}
-                      value={person.position_id ? String(person.position_id) : ''}
-                      disabled={busy}
-                      onChange={(value) =>
-                        void mutate(async () => {
-                          await api.put(`/business/employees/${person.id}/position`, {
-                            position_id: value ? Number(value) : null,
-                            expected_position_id: person.position_id,
-                          });
-                          setMessage(t('Должность сотрудника обновлена'));
-                        })
-                      }
-                    />
-                  ) : (
-                    '—'
-                  )}
-                </label>
-                {owner && tab !== 'managers' && (
-                  <label className={css.formLabel}>
-                    {t('Руководитель')}
-                    <div className={css.picker}>
-                      <select
-                        aria-label={`${t('Руководитель')}: ${person.email}`}
-                        disabled={busy}
-                        value={person.manager_id ?? ''}
-                        onChange={(e) => {
-                          const manager_id = e.target.value ? Number(e.target.value) : null;
-                          confirmPerson({
-                            label: t(
-                              'Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.',
-                            ),
-                            action: async () => {
-                              await api.put(`/business/employees/${person.id}/reporting-line`, {
-                                manager_id,
-                                expected_manager_id: person.manager_id,
-                                expected_auth_version: person.auth_version,
-                              });
-                            },
-                          });
-                        }}
-                      >
-                        <option value=''>{t('Без руководителя')}</option>
-                        {overview.data?.managers.map((m) => (
-                          <option key={m.id} value={m.id} disabled={!m.is_active}>
-                            {m.full_name || m.email}
-                            {!m.is_active ? ` (${t('Приостановлен')})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </label>
-                )}
-                <div className={css.personActions}>
-                  {!person.is_active ? (
-                    t('Приостановлен')
-                  ) : owner &&
-                    ['member', 'candidate', 'manager', 'admin'].includes(
-                      person.organization_role,
-                    ) ? (
                     <button
                       className={styles.secondary}
-                      disabled={busy}
-                      onClick={() =>
-                        confirmPerson({
-                          label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
-                          action: async () => {
-                            await api.put(`/business/employees/${person.id}/manager`, {
-                              role: ['member', 'candidate'].includes(person.organization_role)
-                                ? 'manager'
-                                : 'member',
-                              expected_auth_version: person.auth_version,
-                            });
-                          },
-                        })
+                      disabled={
+                        busy || !personName.trim() || personName.trim() === person.full_name
                       }
                     >
-                      {t(
-                        ['member', 'candidate'].includes(person.organization_role)
-                          ? 'Назначить управляющим'
-                          : 'Снять полномочия',
-                      )}
+                      {t('Сохранить имя')}
                     </button>
-                  ) : (
-                    t('Активен')
+                  </form>
+                  {owner && tab === 'managers' && (
+                    <Link
+                      className={styles.secondary}
+                      to={`/company?tab=employees&manager_id=${person.id}`}
+                    >
+                      {t('Сотрудники руководителя')}
+                    </Link>
                   )}
-                  {person.id !== user?.id &&
-                    (['member', 'candidate'].includes(person.organization_role) ||
-                      (owner && ['manager', 'admin'].includes(person.organization_role))) && (
-                      <div className={css.actions}>
-                        <button
-                          className={styles.secondary}
+                  {person.username && person.is_active && (
+                    <form
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        void mutate(async () => {
+                          await api.post(`/business/employees/${person.id}/password`, {
+                            new_password: resetPassword,
+                            expected_auth_version: person.auth_version,
+                          });
+                          setResetPassword('');
+                          setMessage(t('Пароль обновлён. Передайте новый пароль сотруднику.'));
+                        });
+                      }}
+                    >
+                      <p>
+                        {t('Логин')}: <strong>{person.username}</strong>
+                      </p>
+                      <label>
+                        {t('Новый пароль сотрудника')}
+                        <input
+                          type='password'
+                          autoComplete='new-password'
+                          required
+                          minLength={12}
+                          maxLength={128}
+                          value={resetPassword}
+                          onChange={(e) => setResetPassword(e.target.value)}
+                        />
+                      </label>
+                      <button className={styles.secondary} disabled={busy}>
+                        {t('Задать новый пароль')}
+                      </button>
+                    </form>
+                  )}
+                  {error && (
+                    <p role='alert' className={css.error}>
+                      {t(error)}
+                    </p>
+                  )}
+                  <label>
+                    {t('Должность')}
+                    {['member', 'candidate'].includes(person.organization_role) &&
+                    person.is_active ? (
+                      <PositionPicker
+                        currentName={person.position_name}
+                        label={`${t('Должность')}: ${person.email}`}
+                        value={person.position_id ? String(person.position_id) : ''}
+                        disabled={busy}
+                        onChange={(value) =>
+                          void mutate(async () => {
+                            await api.put(`/business/employees/${person.id}/position`, {
+                              position_id: value ? Number(value) : null,
+                              expected_position_id: person.position_id,
+                            });
+                            setMessage(t('Должность сотрудника обновлена'));
+                          })
+                        }
+                      />
+                    ) : (
+                      '—'
+                    )}
+                  </label>
+                  {owner && tab !== 'managers' && (
+                    <label className={css.formLabel}>
+                      {t('Руководитель')}
+                      <div className={css.picker}>
+                        <select
+                          aria-label={`${t('Руководитель')}: ${person.email}`}
                           disabled={busy}
-                          onClick={() =>
+                          value={person.manager_id ?? ''}
+                          onChange={(e) => {
+                            const manager_id = e.target.value ? Number(e.target.value) : null;
                             confirmPerson({
-                              label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
+                              label: t(
+                                'Изменить руководителя? Все назначения, ответы и результаты участника сохранятся.',
+                              ),
                               action: async () => {
-                                await api.put(`/business/employees/${person.id}/access`, {
-                                  is_active: !person.is_active,
+                                await api.put(`/business/employees/${person.id}/reporting-line`, {
+                                  manager_id,
+                                  expected_manager_id: person.manager_id,
                                   expected_auth_version: person.auth_version,
                                 });
                               },
-                            })
-                          }
+                            });
+                          }}
                         >
-                          {t(person.is_active ? 'Приостановить доступ' : 'Восстановить доступ')}
-                        </button>
+                          <option value=''>{t('Без руководителя')}</option>
+                          {overview.data?.managers.map((m) => (
+                            <option key={m.id} value={m.id} disabled={!m.is_active}>
+                              {m.full_name || m.email}
+                              {!m.is_active ? ` (${t('Приостановлен')})` : ''}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    )}
-                  {['member', 'candidate'].includes(person.organization_role) && (
-                    <div className={css.actions}>
-                      {person.is_active && (
-                        <Link className={styles.primary} to={`/assignments?user=${person.id}`}>
-                          {t('Назначить обучение')}
-                        </Link>
-                      )}
-                      <Link
-                        className={css.backLink}
-                        to={`/learning-analytics?user_id=${person.id}`}
-                      >
-                        {t('Результаты')} ↗
-                      </Link>
+                    </label>
+                  )}
+                  <div className={css.personActions}>
+                    {!person.is_active ? (
+                      t('Приостановлен')
+                    ) : owner &&
+                      ['member', 'candidate', 'manager', 'admin'].includes(
+                        person.organization_role,
+                      ) ? (
                       <button
                         className={styles.secondary}
                         disabled={busy}
                         onClick={() =>
                           confirmPerson({
-                            label: t(
-                              person.organization_role === 'candidate'
-                                ? 'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.'
-                                : 'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.',
-                            ),
+                            label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(['member', 'candidate'].includes(person.organization_role) ? 'назначить управляющим компанией?' : 'снять полномочия управляющего? Его команда перейдёт в список без руководителя.')} ${t('Пользователю потребуется войти заново.')}`,
                             action: async () => {
-                              await api.put(`/business/employees/${person.id}/role`, {
-                                role:
-                                  person.organization_role === 'candidate' ? 'member' : 'candidate',
+                              await api.put(`/business/employees/${person.id}/manager`, {
+                                role: ['member', 'candidate'].includes(person.organization_role)
+                                  ? 'manager'
+                                  : 'member',
                                 expected_auth_version: person.auth_version,
                               });
                             },
@@ -1099,19 +1105,119 @@ function CompanyWorkspace() {
                         }
                       >
                         {t(
-                          person.organization_role === 'candidate'
-                            ? 'Принять в сотрудники'
-                            : 'Перевести в кандидаты',
+                          ['member', 'candidate'].includes(person.organization_role)
+                            ? 'Назначить управляющим'
+                            : 'Снять полномочия',
                         )}
                       </button>
-                    </div>
-                  )}
+                    ) : (
+                      t('Активен')
+                    )}
+                    {person.id !== user?.id &&
+                      (['member', 'candidate'].includes(person.organization_role) ||
+                        (owner && ['manager', 'admin'].includes(person.organization_role))) && (
+                        <div className={css.actions}>
+                          <button
+                            className={styles.secondary}
+                            disabled={busy}
+                            onClick={() =>
+                              confirmPerson({
+                                label: `${person.full_name || person.username || person.email || t('Сотрудник')}: ${t(person.is_active ? 'приостановить доступ? Данные и результаты сохранятся.' : 'восстановить доступ?')}`,
+                                action: async () => {
+                                  await api.put(`/business/employees/${person.id}/access`, {
+                                    is_active: !person.is_active,
+                                    expected_auth_version: person.auth_version,
+                                  });
+                                },
+                              })
+                            }
+                          >
+                            {t(person.is_active ? 'Приостановить доступ' : 'Восстановить доступ')}
+                          </button>
+                          <button
+                            className={css.dangerButton}
+                            disabled={busy}
+                            onClick={() =>
+                              confirmPerson({
+                                title: `${t('Удалить из команды')}: «${person.full_name || person.username || person.email}»?`,
+                                label: t(
+                                  ['manager', 'admin'].includes(person.organization_role)
+                                    ? 'Вход руководителя будет закрыт, сотрудники останутся в компании без руководителя. Аккаунт и результаты обучения сохранятся. Восстановить участника можно в списке удалённых; команду потребуется назначить заново.'
+                                    : 'Участник исчезнет из рабочего списка и потеряет доступ к платформе. Аккаунт, ответы и результаты обучения сохранятся. Его можно восстановить в списке удалённых.',
+                                ),
+                                actionLabel: t('Удалить из команды'),
+                                danger: true,
+                                action: async () => {
+                                  await api.delete(`/business/employees/${person.id}`, {
+                                    expected_auth_version: person.auth_version,
+                                  });
+                                  setMessage(
+                                    t('Участник удалён из команды. История обучения сохранена.'),
+                                  );
+                                },
+                              })
+                            }
+                          >
+                            {t('Удалить из команды')}
+                          </button>
+                        </div>
+                      )}
+                    {['member', 'candidate'].includes(person.organization_role) && (
+                      <div className={css.actions}>
+                        {person.is_active && (
+                          <Link className={styles.primary} to={`/assignments?user=${person.id}`}>
+                            {t('Назначить обучение')}
+                          </Link>
+                        )}
+                        <Link
+                          className={css.backLink}
+                          to={`/learning-analytics?user_id=${person.id}`}
+                        >
+                          {t('Результаты')} ↗
+                        </Link>
+                        <button
+                          className={styles.secondary}
+                          disabled={busy}
+                          onClick={() =>
+                            confirmPerson({
+                              label: t(
+                                person.organization_role === 'candidate'
+                                  ? 'Перевести кандидата в сотрудники? Назначения и результаты сохранятся.'
+                                  : 'Перевести сотрудника в кандидаты? Назначения и результаты сохранятся.',
+                              ),
+                              action: async () => {
+                                await api.put(`/business/employees/${person.id}/role`, {
+                                  role:
+                                    person.organization_role === 'candidate'
+                                      ? 'member'
+                                      : 'candidate',
+                                  expected_auth_version: person.auth_version,
+                                });
+                              },
+                            })
+                          }
+                        >
+                          {t(
+                            person.organization_role === 'candidate'
+                              ? 'Принять в сотрудники'
+                              : 'Перевести в кандидаты',
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </BusinessDialog>
           )}
           {!employees.loading && employees.data?.total === 0 && (
-            <p>{t('Участники не найдены. Добавьте сотрудника или измените поиск.')}</p>
+            <p>
+              {t(
+                removed
+                  ? 'Удалённых участников нет. Результаты удалённых участников сохраняются в отчётах.'
+                  : 'Участники не найдены. Добавьте сотрудника или измените поиск.',
+              )}
+            </p>
           )}
           <Pager
             offset={employeeOffset}
@@ -1398,6 +1504,7 @@ function PositionDetail({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [assigning, setAssigning] = useState<Course | null>(null);
+  const [deleting, setDeleting] = useState<Course | null>(null);
   const [renaming, setRenaming] = useState<EditableEntity | null>(null);
   const [editPosition, setEditPosition] = useState(false);
   async function create(e: FormEvent) {
@@ -1431,6 +1538,22 @@ function PositionDetail({
         `${t('Назначено')}: ${data.created}. ${t('Уже назначено')}: ${data.already_assigned}.`,
       );
       setAssigning(null);
+    } catch (reason) {
+      setError(errorText(reason));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function removeRegulation() {
+    if (!deleting || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await api.delete(`/courses/${deleting.id}?expected_revision=${deleting.content_revision}`);
+      setDeleting(null);
+      setMessage(t('Регламент удалён из рабочих списков. Выданные версии и результаты сохранены.'));
+      if (courses.data?.items.length === 1 && offset > 0) setOffset(Math.max(0, offset - 20));
+      await Promise.all([courses.reload(), onRefresh()]);
     } catch (reason) {
       setError(errorText(reason));
     } finally {
@@ -1622,12 +1745,69 @@ function PositionDetail({
                   >
                     {t('Результаты сотрудников')}
                   </Link>
+                  <button
+                    className={css.dangerButton}
+                    disabled={busy || course.status === 'generating'}
+                    title={
+                      course.status === 'generating'
+                        ? t('Дождитесь завершения или отмените генерацию')
+                        : undefined
+                    }
+                    onClick={() => {
+                      setError('');
+                      setDeleting(course);
+                    }}
+                  >
+                    {t(
+                      course.status === 'generating'
+                        ? 'Удаление после генерации'
+                        : 'Удалить регламент',
+                    )}
+                  </button>
                 </div>
               </details>
             </div>
           </article>
         ))}
         <Pager offset={offset} total={courses.data?.total ?? 0} onChange={setOffset} />
+        {deleting && (
+          <BusinessDialog
+            title={`${t('Удалить регламент')} «${deleting.name}»?`}
+            busy={busy}
+            onClose={() => setDeleting(null)}
+            className={css.modal}
+          >
+            <p className={css.deletionSummary}>
+              {t(
+                'Регламент исчезнет из каталога и должности. Новые назначения будут недоступны. Уже выданные материалы, ответы и результаты останутся у сотрудников и в отчётах.',
+              )}
+            </p>
+            <p>
+              {t('При необходимости восстановить регламент сможет оператор платформы из архива.')}
+            </p>
+            {error && (
+              <p className={css.error} role='alert'>
+                {t(error)}
+              </p>
+            )}
+            <div className={css.actions}>
+              <button
+                className={styles.secondary}
+                disabled={busy}
+                onClick={() => setDeleting(null)}
+              >
+                {t('Отмена')}
+              </button>
+              <button
+                className={css.dangerButton}
+                disabled={busy}
+                onClick={() => void removeRegulation()}
+              >
+                {t(busy ? 'Удаление…' : 'Удалить регламент')}
+              </button>
+            </div>
+          </BusinessDialog>
+        )}
         {renaming && (
           <EntityEditor
             entity={renaming}

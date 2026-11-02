@@ -274,9 +274,12 @@ export default function MyCoursesPage() {
           className={cs.infoDialog}
         >
           <p>
-            {t('Курс «{v0}» исчезнет из вашего списка. Это действие нельзя отменить.', {
-              v0: confirmation.title || t('Черновик №{v0}', { v0: confirmation.id }),
-            })}
+            {t(
+              'Курс «{v0}» исчезнет из каталога. Выданные версии и результаты обучения сохранятся. Восстановление доступно оператору платформы.',
+              {
+                v0: confirmation.title || t('Черновик №{v0}', { v0: confirmation.id }),
+              },
+            )}
           </p>
           {!!error && <RequestError error={error} />}
           <div className={cs.infoActions}>

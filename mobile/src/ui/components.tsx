@@ -67,6 +67,7 @@ export function Button({
   secondary = false,
   disabled = false,
   compact = false,
+  danger = false,
 }: {
   title: string;
   onPress: () => void;
@@ -74,6 +75,7 @@ export function Button({
   secondary?: boolean;
   disabled?: boolean;
   compact?: boolean;
+  danger?: boolean;
 }) {
   return (
     <Pressable
@@ -84,6 +86,7 @@ export function Button({
       style={({ pressed }) => [
         s.button,
         secondary && s.secondary,
+        danger && { backgroundColor: c.alert, borderColor: c.alert },
         compact && { minHeight: 40, paddingVertical: 8, paddingHorizontal: 16 },
         { opacity: disabled ? 0.5 : pressed ? 0.75 : 1 },
       ]}

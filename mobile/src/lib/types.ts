@@ -114,6 +114,7 @@ export type Person = {
   email: string | null;
   organization_role: string;
   is_active: boolean;
+  organization_removed_at?: string | null;
   manager_id: number | null;
   position_id: number | null;
   position_name: string;

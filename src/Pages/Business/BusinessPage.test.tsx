@@ -155,6 +155,55 @@ it('owner invites a manager with no employee position or password', async () => 
     locale: 'ru',
   });
 });
+
+it('removes an employee only after a named confirmation and keeps failures visible', async () => {
+  vi.mocked(api.delete).mockRejectedValueOnce(new Error('Участник уже изменён'));
+  open('/company?tab=employees');
+  fireEvent.click(await screen.findByRole('button', { name: 'Настроить доступ: Иван' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Удалить из команды' }));
+  const dialog = screen.getByRole('dialog', { name: 'Удалить из команды: «Иван»?' });
+  expect(within(dialog).getByText(/ответы и результаты обучения сохранятся/)).toBeInTheDocument();
+  expect(api.delete).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Удалить из команды' }));
+  await waitFor(() => expect(within(dialog).getByRole('alert')).toHaveTextContent('Участник уже изменён'));
+  expect(api.delete).toHaveBeenCalledWith('/business/employees/2', { expected_auth_version: 4 });
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+  vi.mocked(api.delete).mockResolvedValueOnce({ data: {} });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Удалить из команды' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(await screen.findByRole('status')).toHaveTextContent('История обучения сохранена');
+});
+
+it('shows removed participants separately and restores with their current version', async () => {
+  const base = vi.mocked(api.get).getMockImplementation()!;
+  vi.mocked(api.get).mockImplementation(async (path) => {
+    const result = await base(path);
+    if (path.includes('/employees') && path.includes('removed=true')) return { data: { total: 1, items: [{ id: 2, full_name: 'Иван', organization_role: 'member', is_active: false, auth_version: 5, organization_removed_at: '2026-11-03T00:00:00Z' }] } } as never;
+    return result;
+  });
+  vi.mocked(api.post).mockResolvedValue({ data: {} });
+  open('/company?tab=employees');
+  fireEvent.click(await screen.findByLabelText('Удалённые участники'));
+  await screen.findByText('Удалён из команды');
+  fireEvent.click(screen.getByRole('button', { name: 'Настроить доступ: Иван' }));
+  expect(screen.queryByRole('button', { name: 'Сохранить имя' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Восстановить в команде' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Восстановить' }));
+  await waitFor(() => expect(api.post).toHaveBeenCalledWith('/business/employees/2/restore', { expected_auth_version: 5 }));
+});
+
+it('deletes a regulation from its position with revision protection and explains preserved results', async () => {
+  vi.mocked(api.delete).mockResolvedValue({ data: {} });
+  open('/company/positions/10');
+  fireEvent.click(await screen.findByLabelText('Действия: Поддержка клиентов'));
+  fireEvent.click(screen.getByRole('button', { name: 'Удалить регламент' }));
+  const dialog = screen.getByRole('dialog', { name: 'Удалить регламент «Поддержка клиентов»?' });
+  expect(within(dialog).getByText(/Уже выданные материалы, ответы и результаты/)).toBeInTheDocument();
+  expect(api.delete).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Удалить регламент' }));
+  await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/courses/50?expected_revision=4'));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+});
 it('manager creates a named regulation without curriculum settings', async () => {
   state.role = 'manager';
   vi.mocked(api.post).mockResolvedValue({ data: { url: '/express?course=51&step=1' } });
