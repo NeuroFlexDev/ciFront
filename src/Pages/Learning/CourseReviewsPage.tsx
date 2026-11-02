@@ -84,6 +84,7 @@ function ReviewForm({courseId,current,onReload}:{courseId:number;current:ReviewC
     </section>}
     <ContentPreview content={current.content}/>
     <details className={s.panel}><summary>{t('Иллюстрации курса')}</summary><ImageLibrary courseId={courseId}/></details>
+    <details className={s.panel}><summary>{t('Видео курса')}</summary><ImageLibrary courseId={courseId} kind="video"/></details>
     <section className={s.panel}><h2>{t('Решение по курсу')}</h2><DraftNotice/>
       {!!error&&<RequestError error={error}/>}{notice&&<p role="status" className={s.success}>{notice}</p>}
       <form onSubmit={event=>{event.preventDefault();void submit();}}>

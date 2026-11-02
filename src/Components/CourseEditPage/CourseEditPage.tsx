@@ -1,6 +1,7 @@
 import {
   Type,
   Image,
+  Film,
   Code2,
   Workflow,
   Table2,
@@ -106,6 +107,7 @@ export default function CourseEditPage() {
   const [assessment, setAssessment] = useState<AssessmentTarget | null>(null);
   const [blockMenu, setBlockMenu] = useState(false);
   const [showImages, setShowImages] = useState(false);
+  const [mediaKind, setMediaKind] = useState<'image' | 'video'>('image');
   const [showDiagram, setShowDiagram] = useState(false);
   const pendingPublication = useRef<{ cancelled: boolean } | null>(null);
   const pendingSave = useRef<{ cancelled: boolean } | null>(null);
@@ -702,7 +704,18 @@ export default function CourseEditPage() {
                         {
                           label: 'Добавить иллюстрацию',
                           Icon: Image,
-                          action: () => setShowImages(true),
+                          action: () => {
+                            setMediaKind('image');
+                            setShowImages(true);
+                          },
+                        },
+                        {
+                          label: 'Добавить видео',
+                          Icon: Film,
+                          action: () => {
+                            setMediaKind('video');
+                            setShowImages(true);
+                          },
                         },
                         { label: 'Код', Icon: Code2, insert: '\n\n```text\n\n```\n\n' },
                         {
@@ -744,7 +757,7 @@ export default function CourseEditPage() {
                     )}
                     {showImages && (
                       <button onClick={() => setShowImages(false)}>
-                        {t('Закрыть иллюстрации')}
+                        {t(mediaKind === 'video' ? 'Закрыть видео' : 'Закрыть иллюстрации')}
                       </button>
                     )}
                   </div>
@@ -760,6 +773,8 @@ export default function CourseEditPage() {
                 )}
                 {showImages && (
                   <ImageLibrary
+                    key={mediaKind}
+                    kind={mediaKind}
                     courseId={id!}
                     onInsert={(markdown) => {
                       if (insertMarkdown('\n' + markdown + '\n')) setShowImages(false);

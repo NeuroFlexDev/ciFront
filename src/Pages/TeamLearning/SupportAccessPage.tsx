@@ -394,8 +394,8 @@ function SupportPreview({ grantId, onClose }: { grantId: number; onClose: () => 
   }, [query.data?.grant.expires_at]);
   const content = (value: string) =>
     value.replace(
-      /(?<![\w/])(?:\/api)?\/images\/(\d+)\/content(?=$|[\s?#)\]>"'])/g,
-      `/api/support/grants/${grantId}/images/$1/content`,
+      /(?<![\w/])(?:\/api)?\/(images|media)\/(\d+)\/content(?=$|[\s?#)\]>"'])/g,
+      `/api/support/grants/${grantId}/$1/$2/content`,
     );
   return (
     <section className={s.stack}>
