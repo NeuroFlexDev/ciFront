@@ -19,6 +19,7 @@ export type Criterion = {
   levels?: { title: string; description: string; points: number }[];
 };
 export type Assessment = {
+  locked_reason?: string;
   id: string;
   question: string;
   description: string;
@@ -112,6 +113,7 @@ export type Assignment = {
 };
 export type AssignmentDetail = Assignment & {
   content: {
+    practice_requires_test_pass?: boolean;
     sources?: SourceAttachment[];
     course: {
       id: number;

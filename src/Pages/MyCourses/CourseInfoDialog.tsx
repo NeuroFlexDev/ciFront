@@ -3,7 +3,6 @@ import { FileText } from 'lucide-react';
 import Dialog from '@/Components/Admin/AdminDialog';
 import { LoadingState, RequestError } from '@/Components/RequestState';
 import { useLocale } from '@/i18n/useLocale';
-import { useAuth } from '@/auth/useAuth';
 import { useLearningData } from '@/Pages/Learning/useLearningData';
 import type { Assignment } from '@/Pages/Learning/types';
 import type { SourceAttachment } from '@/Components/SourceReleasePanel';
@@ -23,7 +22,6 @@ export default function CourseInfoDialog({
   onClose: () => void;
 }) {
   const { t, locale } = useLocale();
-  const { user } = useAuth();
   const assignments = useLearningData<{ items: Assignment[] }>(
     canReport ? `/courses/${course.id}/assignments` : null,
   );
@@ -52,7 +50,7 @@ export default function CourseInfoDialog({
           <dl className={s.facts}>
             <div>
               <dt>{t('Автор')}</dt>
-              <dd>{user?.full_name || user?.username || user?.email}</dd>
+              <dd>{course.author_name || t('Автор не указан')}</dd>
             </div>
             <div>
               <dt>{t('Уроков')}</dt>

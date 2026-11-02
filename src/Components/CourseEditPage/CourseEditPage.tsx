@@ -1,6 +1,7 @@
 import {
   Type,
   Image,
+  Film,
   Code2,
   Workflow,
   Table2,
@@ -106,6 +107,7 @@ export default function CourseEditPage() {
   const [assessment, setAssessment] = useState<AssessmentTarget | null>(null);
   const [blockMenu, setBlockMenu] = useState(false);
   const [showImages, setShowImages] = useState(false);
+  const [mediaKind, setMediaKind] = useState<'image' | 'video'>('image');
   const [showDiagram, setShowDiagram] = useState(false);
   const pendingPublication = useRef<{ cancelled: boolean } | null>(null);
   const pendingSave = useRef<{ cancelled: boolean } | null>(null);
@@ -562,7 +564,13 @@ export default function CourseEditPage() {
         {Boolean(error) && (
           <RequestError error={error} onRetry={() => setVersion((v) => v + 1)} retrying={loading} />
         )}
-        {notice && <p role='status'>{notice}</p>}
+        {notice && <section className={notice === t('Курс опубликован') ? styles.publicationSuccess : ''}>
+          <p role='status'>{notice}</p>
+          {notice === t('Курс опубликован') && <>
+            <p>{t('Версия сохранена. Выберите сотрудников, которым нужно изучить материал, и задайте срок. Ранее выданные назначения сохранят свои результаты.')}</p>
+            <div><Link className={styles.primary} to={`/assignments?course=${id}`}>{t('Выбрать получателей')}</Link><Link to='/courses'>{t('Вернуться к регламентам и курсам')}</Link></div>
+          </>}
+        </section>}
         {publicationProblems.length > 0 && (
           <section className='request-state'>
             <h2>{t('Задания, требующие настройки')}</h2>
@@ -702,7 +710,18 @@ export default function CourseEditPage() {
                         {
                           label: 'Добавить иллюстрацию',
                           Icon: Image,
-                          action: () => setShowImages(true),
+                          action: () => {
+                            setMediaKind('image');
+                            setShowImages(true);
+                          },
+                        },
+                        {
+                          label: 'Добавить видео',
+                          Icon: Film,
+                          action: () => {
+                            setMediaKind('video');
+                            setShowImages(true);
+                          },
                         },
                         { label: 'Код', Icon: Code2, insert: '\n\n```text\n\n```\n\n' },
                         {
@@ -744,7 +763,7 @@ export default function CourseEditPage() {
                     )}
                     {showImages && (
                       <button onClick={() => setShowImages(false)}>
-                        {t('Закрыть иллюстрации')}
+                        {t(mediaKind === 'video' ? 'Закрыть видео' : 'Закрыть иллюстрации')}
                       </button>
                     )}
                   </div>
@@ -760,6 +779,8 @@ export default function CourseEditPage() {
                 )}
                 {showImages && (
                   <ImageLibrary
+                    key={mediaKind}
+                    kind={mediaKind}
                     courseId={id!}
                     onInsert={(markdown) => {
                       if (insertMarkdown('\n' + markdown + '\n')) setShowImages(false);
@@ -1073,7 +1094,7 @@ export default function CourseEditPage() {
           {structure?.status === 'published' && (
             <Link
               className={styles.primary}
-              to={business ? personnelPath : `/assignments?course=${id}`}
+              to={`/assignments?course=${id}`}
             >
               {t('Назначить участникам')}
             </Link>

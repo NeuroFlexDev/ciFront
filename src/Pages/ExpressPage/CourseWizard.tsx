@@ -878,9 +878,9 @@ export default function CourseWizard() {
                   <legend>{t('Сложность курса')}</legend>
                   <div className={styles.difficulty}>
                     {[
-                      ['basic', t('Базовый'), t('Минимальный уровень')],
-                      ['intermediate', t('Средний'), t('Есть опыт')],
-                      ['advanced', t('Продвинутый'), t('Эксперт')],
+                      ['basic', t('Базовый'), t(singleDocument ? 'Тестирование по регламенту' : 'Минимальный уровень')],
+                      ['intermediate', t('Средний'), t(singleDocument ? 'Тест и два практических вопроса' : 'Есть опыт')],
+                      ['advanced', t('Продвинутый'), t(singleDocument ? 'Тест и два развёрнутых вопроса' : 'Эксперт')],
                     ].map(([value, title, description]) => (
                       <label
                         key={value}

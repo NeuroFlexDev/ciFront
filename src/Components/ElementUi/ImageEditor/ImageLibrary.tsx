@@ -1,15 +1,20 @@
-import { useLocale } from "@/i18n/useLocale";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, ImagePlus, Check, RefreshCw, Upload, X } from "lucide-react";
-import { api } from "@/shared/api";
-import { ApiError } from "@/shared/errors";
-import { useDurableState } from "@/hooks/useDurableState";
-import { useReconnect } from "@/hooks/useReconnect";
-import { RequestError, LoadingState } from "@/Components/RequestState";
-import { ProtectedImage } from "@/Components/MarkdownContent";
-import styles from "./styles.module.css";
+import { useLocale } from '@/i18n/useLocale';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowUp, ImagePlus, Check, RefreshCw, Upload, X } from 'lucide-react';
+import { api } from '@/shared/api';
+import { ApiError } from '@/shared/errors';
+import { useDurableState } from '@/hooks/useDurableState';
+import { useReconnect } from '@/hooks/useReconnect';
+import { RequestError, LoadingState } from '@/Components/RequestState';
+import { ProtectedImage } from '@/Components/MarkdownContent';
+import styles from './styles.module.css';
+import ProtectedVideo from '@/Components/ProtectedVideo';
 
 type Asset = {
+  mime_type?: string;
+  original_filename?: string | null;
+  duration_seconds?: number | null;
+  size_bytes?: number;
   id: number;
   course_id: number;
   status: string;
@@ -33,6 +38,9 @@ type Page = {
   independent_review_required?: boolean;
 };
 type Capabilities = {
+  video_max_bytes?: number;
+  video_max_seconds?: number;
+  video_library_available?: boolean;
   image_max_bytes: number;
   image_max_pixels: number;
   image_generation_available: boolean;
@@ -48,37 +56,34 @@ type Draft = {
   imageId?: number;
 };
 const labels: Record<string, string> = {
-  queued: "В очереди",
-  generating: "Генерация",
-  pending_review: "Ожидает вашей проверки",
-  approved: "Утверждено",
-  rejected: "Отклонено",
-  failed: "Не удалось создать",
+  queued: 'В очереди',
+  generating: 'Генерация',
+  pending_review: 'Ожидает вашей проверки',
+  approved: 'Утверждено',
+  rejected: 'Отклонено',
+  failed: 'Не удалось создать',
 };
 const errors: Record<string, string> = {
-  image_price_unconfigured:
-    "Администратор ещё не настроил бюджет генерации изображений.",
+  image_price_unconfigured: 'Администратор ещё не настроил бюджет генерации изображений.',
   image_configuration_changed:
-    "Настройки генератора изменились. Запрос не отправлялся; описание сохранено для нового запуска.",
+    'Настройки генератора изменились. Запрос не отправлялся; описание сохранено для нового запуска.',
   image_url_blocked:
-    "Провайдер вернул изображение с неразрешённого адреса. Администратору нужно проверить разрешённые адреса сервиса.",
+    'Провайдер вернул изображение с неразрешённого адреса. Администратору нужно проверить разрешённые адреса сервиса.',
   image_download_failed:
-    "Провайдер создал результат, но файл не удалось получить. Автоматического платного повтора не было.",
+    'Провайдер создал результат, но файл не удалось получить. Автоматического платного повтора не было.',
   invalid_image_response:
-    "Провайдер вернул недопустимое изображение. Автоматического платного повтора не было.",
+    'Провайдер вернул недопустимое изображение. Автоматического платного повтора не было.',
   image_access_revoked:
-    "Доступ изменился во время генерации. Обновите библиотеку или обратитесь к администратору.",
+    'Доступ изменился во время генерации. Обновите библиотеку или обратитесь к администратору.',
   image_capacity_unavailable:
-    "Очередь занята. Этот запрос не отправлен провайдеру; можно запустить новую попытку.",
-  image_queue_unavailable:
-    "Очередь временно недоступна. Можно запустить новую попытку.",
+    'Очередь занята. Этот запрос не отправлен провайдеру; можно запустить новую попытку.',
+  image_queue_unavailable: 'Очередь временно недоступна. Можно запустить новую попытку.',
   image_result_unknown:
-    "Провайдер не подтвердил результат. Автоматического платного повтора не было.",
-  image_generation_failed:
-    "Провайдер не смог подготовить изображение. Исходный запрос сохранён.",
+    'Провайдер не подтвердил результат. Автоматического платного повтора не было.',
+  image_generation_failed: 'Провайдер не смог подготовить изображение. Исходный запрос сохранён.',
 };
 const terminal = (status: string) =>
-  ["approved", "rejected", "pending_review", "failed"].includes(status);
+  ['approved', 'rejected', 'pending_review', 'failed'].includes(status);
 
 function AssetCard({
   asset,
@@ -90,51 +95,60 @@ function AssetCard({
   onInsert?: (markdown: string) => void;
 }) {
   const { t } = useLocale();
-  const [comment, setComment] = useDurableState(`image:${asset.id}:review`, "");
+  const video = asset.mime_type?.startsWith('video/');
+  const [comment, setComment] = useDurableState(`image:${asset.id}:review`, '');
   const [alt, setAlt] = useDurableState(
     `image:${asset.id}:alt`,
-    asset.prompt || t("Иллюстрация к уроку"),
+    asset.original_filename || asset.prompt || t(video ? 'Видео к уроку' : 'Иллюстрация к уроку'),
   );
   const [busy, setBusy] = useState(false);
   return (
     <article className={styles.asset}>
       <div className={styles.preview}>
         {asset.content_url ? (
-          <ProtectedImage src={asset.content_url} alt={alt} />
+          video ? (
+            <ProtectedVideo src={asset.content_url} title={alt} />
+          ) : (
+            <ProtectedImage src={asset.content_url} alt={alt} />
+          )
         ) : (
           <ImagePlus size={42} aria-hidden />
         )}
       </div>
       <div className={styles.assetBody}>
-        <span
-          className={styles.badge}
-          data-approved={asset.status === "approved"}
-        >
+        <span className={styles.badge} data-approved={asset.status === 'approved'}>
           {t(labels[asset.status] || asset.status)}
         </span>
+        {asset.original_filename && <p>{asset.original_filename}</p>}
         {asset.prompt && <p>{asset.prompt}</p>}
+        {video && (
+          <small>
+            {Math.ceil((asset.size_bytes ?? 0) / 1024 / 1024)} {t('МБ')} ·{' '}
+            {Math.ceil(asset.duration_seconds ?? 0)} {t('сек.')}
+          </small>
+        )}
         {asset.width && (
           <small>
             {asset.width} × {asset.height} px · №{asset.id}
           </small>
         )}
         {asset.error_code && (
-          <p role="status">
+          <p role='status'>
             {t(
               errors[asset.error_code] ||
-                "Изображение недоступно. Проверьте настройки сервиса и повторите явно.",
+                'Изображение недоступно. Проверьте настройки сервиса и повторите явно.',
             )}
           </p>
         )}
         {asset.review_comment && (
           <p>
-            {t("Результат проверки:")} {asset.review_comment}
+            {t('Результат проверки:')} {asset.review_comment}
           </p>
         )}
-        {asset.status === "pending_review" && (
+        {asset.status === 'pending_review' && (
           <>
             <label>
-              {t("Комментарий к проверке")}
+              {t('Комментарий к проверке')}
               <textarea
                 value={comment}
                 maxLength={2000}
@@ -144,7 +158,7 @@ function AssetCard({
             </label>
             <p className={styles.help}>
               {t(
-                "Проверьте точность, читаемость и отсутствие лишних деталей. Утверждение фиксирует эту версию.",
+                'Проверьте точность, читаемость и отсутствие лишних деталей. Утверждение фиксирует эту версию.',
               )}
             </p>
             <div className={styles.actions}>
@@ -154,13 +168,13 @@ function AssetCard({
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    await onReview(asset.id, "approved", comment);
+                    await onReview(asset.id, 'approved', comment);
                   } finally {
                     setBusy(false);
                   }
                 }}
               >
-                <Check size={16} /> {t("Утвердить")}
+                <Check size={16} /> {t('Утвердить')}
               </button>
               <button
                 className={styles.secondary}
@@ -168,28 +182,26 @@ function AssetCard({
                 onClick={async () => {
                   setBusy(true);
                   try {
-                    await onReview(asset.id, "rejected", comment);
+                    await onReview(asset.id, 'rejected', comment);
                   } finally {
                     setBusy(false);
                   }
                 }}
               >
-                <X size={16} /> {t("Отклонить")}
+                <X size={16} /> {t('Отклонить')}
               </button>
             </div>
             {asset.can_approve === false && (
               <p className={styles.help}>
-                {t(
-                  "Утверждение недоступно для вашей роли или правил организации.",
-                )}
+                {t('Утверждение недоступно для вашей роли или правил организации.')}
               </p>
             )}
           </>
         )}
-        {asset.status === "approved" && onInsert && (
+        {asset.status === 'approved' && onInsert && (
           <>
             <label>
-              {t("Описание для читателей")}
+              {t('Описание для читателей')}
               <textarea
                 value={alt}
                 maxLength={500}
@@ -201,12 +213,10 @@ function AssetCard({
               className={styles.primary}
               disabled={!alt.trim()}
               onClick={() =>
-                onInsert(
-                  `![${alt.trim().replace(/[\\[\]]/g, "\\$&")}](${asset.content_url})`,
-                )
+                onInsert(`![${alt.trim().replace(/[\\[\]]/g, '\\$&')}](${asset.content_url})`)
               }
             >
-              {t("Добавить в урок")}
+              {t('Добавить в урок')}
             </button>
           </>
         )}
@@ -218,22 +228,23 @@ function AssetCard({
 export default function ImageLibrary({
   courseId,
   onInsert,
+  kind = 'image',
 }: {
+  kind?: 'image' | 'video';
   courseId: number | string;
   onInsert?: (markdown: string) => void;
 }) {
   const { t } = useLocale();
+  const video = kind === 'video';
+  const endpoint = video ? 'media' : 'images';
   const [page, setPage] = useState<Page | null>(null);
   const [capabilities, setCapabilities] = useState<Capabilities | null>(null);
   const [offset, setOffset] = useState(0);
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [notice, setNotice] = useState("");
-  const [draft, setDraft] = useDurableState<Draft>(
-    `images:${courseId}:generation`,
-    { prompt: "" },
-  );
+  const [notice, setNotice] = useState('');
+  const [draft, setDraft] = useDurableState<Draft>(`images:${courseId}:generation`, { prompt: '' });
   const [current, setCurrent] = useState<Asset | null>(null);
   const currentStatus = current?.status;
   const input = useRef<HTMLInputElement>(null);
@@ -243,8 +254,8 @@ export default function ImageLibrary({
     setLoading(true);
     try {
       const [images, limits] = await Promise.all([
-        api.get<Page>(`/courses/${courseId}/images?limit=12&offset=${offset}`),
-        api.get<Capabilities>("/materials/capabilities"),
+        api.get<Page>(`/courses/${courseId}/${endpoint}?limit=12&offset=${offset}`),
+        api.get<Capabilities>('/materials/capabilities'),
       ]);
       if (seq === sequence.current) {
         setPage(images.data);
@@ -256,7 +267,7 @@ export default function ImageLibrary({
     } finally {
       if (seq === sequence.current) setLoading(false);
     }
-  }, [courseId, offset]);
+  }, [courseId, offset, endpoint]);
   const invalidate = useCallback(() => {
     sequence.current++;
   }, []);
@@ -270,6 +281,7 @@ export default function ImageLibrary({
     void load();
   });
   useEffect(() => {
+    if (video) return;
     let active = true;
     const poll = async () => {
       if (!draft.imageId) return;
@@ -300,7 +312,7 @@ export default function ImageLibrary({
       active = false;
       clearInterval(timer);
     };
-  }, [draft.imageId, currentStatus]);
+  }, [draft.imageId, currentStatus, video]);
   useEffect(() => {
     if (!page?.items.some((item) => !terminal(item.status))) return;
     const timer = setInterval(() => {
@@ -313,51 +325,61 @@ export default function ImageLibrary({
     if (page?.can_upload === false) {
       setNotice(
         t(
-          "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.",
+          video
+            ? 'Загрузка видео недоступна для вашей роли. Сохранённые материалы доступны для просмотра.'
+            : 'Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.',
         ),
       );
       return;
     }
     if (!capabilities) {
-      setNotice(t("Подождите загрузки допустимых размеров файла."));
+      setNotice(t('Подождите загрузки допустимых размеров файла.'));
       return;
     }
-    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      setNotice(t("Выберите PNG, JPEG или WebP."));
-      return;
-    }
-    if (file.size > capabilities.image_max_bytes) {
+    if (
+      !(video
+        ? /\.(mp4|webm)$/i.test(file.name)
+        : ['image/png', 'image/jpeg', 'image/webp'].includes(file.type))
+    ) {
       setNotice(
-        t("Файл превышает {v0} МБ.", {
-          v0: Math.floor(capabilities.image_max_bytes / 1024 / 1024),
+        t(video ? 'Выберите MP4 (H.264) или WebM (VP8/VP9).' : 'Выберите PNG, JPEG или WebP.'),
+      );
+      return;
+    }
+    const maxBytes = video ? (capabilities.video_max_bytes ?? 0) : capabilities.image_max_bytes;
+    if (!maxBytes || file.size > maxBytes) {
+      setNotice(
+        t('Файл превышает {v0} МБ.', {
+          v0: Math.floor(maxBytes / 1024 / 1024),
         }),
       );
       return;
     }
     setBusy(true);
     setError(null);
-    setNotice("");
+    setNotice('');
     try {
       const form = new FormData();
-      form.append("file", file);
-      await api.post(`/courses/${courseId}/images`, form);
+      form.append('file', file);
+      await api.post(`/courses/${courseId}/${endpoint}`, form);
       setOffset(0);
       await load();
       setNotice(
-        t("Изображение сохранено. Проверьте его перед добавлением в урок."),
+        t(
+          video
+            ? 'Видео сохранено. Проверьте его перед добавлением в урок.'
+            : 'Изображение сохранено. Проверьте его перед добавлением в урок.',
+        ),
       );
-      if (input.current) input.current.value = "";
+      if (input.current) input.current.value = '';
     } catch (e) {
       setError(e);
-      setNotice(
-        t("Сначала обновите библиотеку: файл мог сохраниться до обрыва связи."),
-      );
+      setNotice(t('Сначала обновите библиотеку: файл мог сохраниться до обрыва связи.'));
     } finally {
       setBusy(false);
     }
   };
-  const generating =
-    !!draft.requestId && (!current || !terminal(current.status));
+  const generating = !!draft.requestId && (!current || !terminal(current.status));
   const generate = async () => {
     if (busy || page?.can_generate === false) return;
     const pending = generating
@@ -372,29 +394,26 @@ export default function ImageLibrary({
     setDraft(pending);
     setBusy(true);
     setError(null);
-    setNotice("");
+    setNotice('');
     try {
-      const { data } = await api.post<Asset>(
-        `/courses/${courseId}/images/generate`,
-        { prompt: pending.submittedPrompt, request_id: pending.requestId },
-      );
+      const { data } = await api.post<Asset>(`/courses/${courseId}/images/generate`, {
+        prompt: pending.submittedPrompt,
+        request_id: pending.requestId,
+      });
       setCurrent(data);
       setDraft({ ...pending, imageId: data.id });
       setOffset(0);
       await load();
     } catch (e) {
       setError(e);
-      if (
-        e instanceof ApiError &&
-        [400, 401, 403, 404, 413, 422, 429].includes(e.status)
-      ) {
+      if (e instanceof ApiError && [400, 401, 403, 404, 413, 422, 429].includes(e.status)) {
         setDraft({ prompt: pending.prompt });
         setCurrent(null);
-        setNotice(t("Запуск отклонён сервером. Описание сохранено."));
+        setNotice(t('Запуск отклонён сервером. Описание сохранено.'));
       } else
         setNotice(
           t(
-            "Запрос сохранён. Проверка запуска повторит тот же ключ и не создаст вторую генерацию.",
+            'Запрос сохранён. Проверка запуска повторит тот же ключ и не создаст вторую генерацию.',
           ),
         );
     } finally {
@@ -413,15 +432,15 @@ export default function ImageLibrary({
   return (
     <section
       className={styles.library}
-      aria-label={t("Библиотека иллюстраций")}
+      aria-label={t(video ? 'Библиотека видео' : 'Библиотека иллюстраций')}
     >
       <header className={styles.header}>
         <h2>
-          <ImagePlus size={24} /> {t("Изображения")}
+          <ImagePlus size={24} /> {t(video ? 'Видео' : 'Изображения')}
         </h2>
         <button
           className={styles.iconButton}
-          aria-label={t("Обновить библиотеку")}
+          aria-label={t('Обновить библиотеку')}
           onClick={() => void load()}
           disabled={loading}
         >
@@ -430,18 +449,20 @@ export default function ImageLibrary({
       </header>
       <div className={styles.content}>
         {!!error && <RequestError error={error} onRetry={() => void load()} />}
-        {notice && <p role="status">{notice}</p>}
+        {notice && <p role='status'>{notice}</p>}
         {page?.independent_review_required && (
           <p className={styles.help}>
             {t(
-              "Иллюстрацию утверждает независимый проверяющий курса, который не является автором курса или изображения.",
+              'Иллюстрацию утверждает независимый проверяющий курса, который не является автором курса или изображения.',
             )}
           </p>
         )}
         {page?.can_upload === false && (
           <p className={styles.help}>
             {t(
-              "Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.",
+              video
+                ? 'Загрузка видео недоступна для вашей роли. Сохранённые материалы доступны для просмотра.'
+                : 'Загрузка и генерация недоступны для вашей роли или поставки. Сохранённые иллюстрации доступны для просмотра.',
             )}
           </p>
         )}
@@ -453,101 +474,114 @@ export default function ImageLibrary({
             void upload(e.dataTransfer.files[0]);
           }}
         >
-          <h3>{t("Перетащите изображение сюда")}</h3>
+          <h3>{t(video ? 'Перетащите видео сюда' : 'Перетащите изображение сюда')}</h3>
           <p>
-            PNG, JPEG, WebP
+            {video ? 'MP4 (H.264), WebM (VP8/VP9)' : 'PNG, JPEG, WebP'}
             {capabilities &&
-              t(" · до {v0} МБ", {
-                v0: Math.floor(capabilities.image_max_bytes / 1024 / 1024),
+              t(' · до {v0} МБ', {
+                v0: Math.floor(
+                  (video ? (capabilities.video_max_bytes ?? 0) : capabilities.image_max_bytes) /
+                    1024 /
+                    1024,
+                ),
               })}
           </p>
+          {video && capabilities?.video_max_seconds && (
+            <p>
+              {t('До {minutes} мин., разрешение до 4K', {
+                minutes: Math.floor(capabilities.video_max_seconds / 60),
+              })}
+            </p>
+          )}
           <button
             className={styles.primary}
             disabled={
               busy ||
               page?.can_upload === false ||
               !capabilities ||
-              capabilities.image_library_available === false
+              (video
+                ? !capabilities.video_library_available
+                : capabilities.image_library_available === false)
             }
             onClick={() => input.current?.click()}
           >
             <Upload size={20} />
-            {busy ? t("Сохраняем…") : t("Выбрать файл")}
+            {busy ? t('Сохраняем…') : t('Выбрать файл')}
           </button>
           <input
-            aria-label={t("Загрузить изображение")}
+            aria-label={t(video ? 'Загрузить видео' : 'Загрузить изображение')}
             ref={input}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
+            type='file'
+            accept={video ? '.mp4,.webm,video/mp4,video/webm' : 'image/png,image/jpeg,image/webp'}
             hidden
             onChange={(e) => void upload(e.target.files?.[0])}
           />
         </div>
-        <div className={styles.divider}>
-          <span>{t("или сгенерируйте")}</span>
-        </div>
-        <label className={styles.prompt}>
-          <span className={styles.srOnly}>{t("Описание изображения")}</span>
-          <textarea
-            value={draft.prompt}
-            disabled={generating}
-            maxLength={4000}
-            onChange={(e) => setDraft({ ...draft, prompt: e.target.value })}
-            placeholder={t(
-              "Опишите иллюстрацию: объекты, подписи, стиль и учебную задачу",
+        {!video && (
+          <>
+            <div className={styles.divider}>
+              <span>{t('или сгенерируйте')}</span>
+            </div>
+            <label className={styles.prompt}>
+              <span className={styles.srOnly}>{t('Описание изображения')}</span>
+              <textarea
+                value={draft.prompt}
+                disabled={generating}
+                maxLength={4000}
+                onChange={(e) => setDraft({ ...draft, prompt: e.target.value })}
+                placeholder={t('Опишите иллюстрацию: объекты, подписи, стиль и учебную задачу')}
+                rows={3}
+              />
+              <button
+                aria-label={
+                  generating ? t('Проверить запуск генерации') : t('Сгенерировать изображение')
+                }
+                className={styles.send}
+                disabled={
+                  busy ||
+                  page?.can_generate === false ||
+                  (!capabilities?.image_generation_available && !generating) ||
+                  draft.prompt.trim().length < 3
+                }
+                onClick={() => void generate()}
+              >
+                {generating ? <RefreshCw size={20} /> : <ArrowUp size={20} />}
+              </button>
+            </label>
+            {capabilities && !capabilities.image_generation_available && (
+              <p className={styles.help}>
+                {t(
+                  errors[capabilities.image_generation_error ?? ''] ||
+                    'Генерация не настроена на этой установке. Загрузите готовую иллюстрацию или обратитесь к администратору для подключения сервиса изображений.',
+                )}
+              </p>
             )}
-            rows={3}
-          />
-          <button
-            aria-label={
-              generating
-                ? t("Проверить запуск генерации")
-                : t("Сгенерировать изображение")
-            }
-            className={styles.send}
-            disabled={
-              busy ||
-              page?.can_generate === false ||
-              (!capabilities?.image_generation_available && !generating) ||
-              draft.prompt.trim().length < 3
-            }
-            onClick={() => void generate()}
-          >
-            {generating ? <RefreshCw size={20} /> : <ArrowUp size={20} />}
-          </button>
-        </label>
-        {capabilities && !capabilities.image_generation_available && (
-          <p className={styles.help}>
-            {t(
-              errors[capabilities.image_generation_error ?? ""] ||
-                "Генерация не настроена на этой установке. Загрузите готовую иллюстрацию или обратитесь к администратору для подключения сервиса изображений.",
-            )}
-          </p>
-        )}
-        {capabilities?.image_generation_available &&
-          capabilities.image_price_rub_upper_bound != null && (
-            <p className={styles.help}>
-              {t(
-                "На один запуск резервируется до {v0} ₽ из бюджета организации. Это верхняя граница резерва, а не точная стоимость счёта провайдера.",
-                { v0: capabilities.image_price_rub_upper_bound },
+            {capabilities?.image_generation_available &&
+              capabilities.image_price_rub_upper_bound != null && (
+                <p className={styles.help}>
+                  {t(
+                    'На один запуск резервируется до {v0} ₽ из бюджета организации. Это верхняя граница резерва, а не точная стоимость счёта провайдера.',
+                    { v0: capabilities.image_price_rub_upper_bound },
+                  )}
+                </p>
               )}
-            </p>
-          )}
-        {generating && (
-          <p role="status">
-            {current
-              ? t(labels[current.status])
-              : t("Проверка результата запроса")}{" "}
-            {t("· исходное описание сохранено.")}
-          </p>
+            {generating && (
+              <p role='status'>
+                {current ? t(labels[current.status]) : t('Проверка результата запроса')}{' '}
+                {t('· исходное описание сохранено.')}
+              </p>
+            )}
+          </>
         )}
         {loading && !page && (
-          <LoadingState>{t("Загружаем иллюстрации…")}</LoadingState>
+          <LoadingState>{t(video ? 'Загружаем видео…' : 'Загружаем иллюстрации…')}</LoadingState>
         )}
         {page && !page.items.length && (
           <p className={styles.empty}>
             {t(
-              "В этом курсе ещё нет иллюстраций. Загрузите первую и проверьте её перед публикацией.",
+              video
+                ? 'Видео пока нет. Загрузите первое и проверьте его перед публикацией.'
+                : 'В этом курсе ещё нет иллюстраций. Загрузите первую и проверьте её перед публикацией.',
             )}
           </p>
         )}
@@ -555,12 +589,7 @@ export default function ImageLibrary({
           <>
             <div className={styles.grid}>
               {page.items.map((asset) => (
-                <AssetCard
-                  key={asset.id}
-                  asset={asset}
-                  onReview={review}
-                  onInsert={onInsert}
-                />
+                <AssetCard key={asset.id} asset={asset} onReview={review} onInsert={onInsert} />
               ))}
             </div>
             <div className={styles.pagination}>
@@ -569,23 +598,23 @@ export default function ImageLibrary({
                 disabled={offset === 0 || loading}
                 onClick={() => setOffset(Math.max(0, offset - 12))}
               >
-                {t("Назад")}
+                {t('Назад')}
               </button>
               <span>
                 {page.total
-                  ? t("{v0}–{v1} из {v2}", {
+                  ? t('{v0}–{v1} из {v2}', {
                       v0: offset + 1,
                       v1: Math.min(offset + 12, page.total),
                       v2: page.total,
                     })
-                  : t("0 изображений")}
+                  : t('0 изображений')}
               </span>
               <button
                 className={styles.secondary}
                 disabled={offset + 12 >= page.total || loading}
                 onClick={() => setOffset(offset + 12)}
               >
-                {t("Далее")}
+                {t('Далее')}
               </button>
             </div>
           </>

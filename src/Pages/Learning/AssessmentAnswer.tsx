@@ -25,12 +25,14 @@ export function AnswerForm({
   attempt,
   server,
   onSaved,
+  onSubmitted,
 }: {
   assignmentId: number;
   assessment: Assessment;
   attempt: number;
   server?: LearnerResponse;
   onSaved: () => Promise<void>;
+  onSubmitted?: (response: LearnerResponse) => void;
 }) {
   const { t } = useLocale();
 
@@ -111,7 +113,10 @@ export function AnswerForm({
       setRestored(false);
       setConflict(null);
       setNotice(submit ? t('Ответ принят сервером.') : t('Черновик сохранён на сервере.'));
-      if (result.data.status !== 'draft') setConfirmed(result.data);
+      if (result.data.status !== 'draft') {
+        setConfirmed(result.data);
+        onSubmitted?.(result.data);
+      }
       await onSaved();
     } catch (e) {
       setError(e);
@@ -257,6 +262,7 @@ export function AnswerForm({
         </fieldset>
       )}
       {!!error && <RequestError error={error} />}{' '}
+      {assessment.locked_reason && <p className={s.notice}>{t(assessment.locked_reason)}</p>}
       {notice && (
         <p className={s.notice} role='status'>
           {notice}
@@ -275,7 +281,10 @@ export function AnswerForm({
           className={s.primary}
           type='button'
           disabled={
-            busy || !!remote || !(draft.answer.text?.trim() || draft.answer.selected?.length)
+            busy ||
+            !!remote ||
+            !!assessment.locked_reason ||
+            !(draft.answer.text?.trim() || draft.answer.selected?.length)
           }
           onClick={() => void save(true)}
         >
@@ -304,11 +313,13 @@ export default function AssessmentAnswer({
   assessment,
   responses,
   onSaved,
+  onSubmitted,
 }: {
   assignmentId: number;
   assessment: Assessment;
   responses: LearnerResponse[];
   onSaved: () => Promise<void>;
+  onSubmitted?: (response: LearnerResponse) => void;
 }) {
   const { t } = useLocale();
 
@@ -402,6 +413,7 @@ export default function AssessmentAnswer({
           attempt={attempt}
           server={latest?.status === 'draft' ? latest : undefined}
           onSaved={afterSave}
+          onSubmitted={onSubmitted}
         />
       ) : latest?.can_retry ? (
         <button type='button' className={s.secondary} onClick={() => setNewAttempt(true)}>

@@ -760,11 +760,20 @@
 .workspace .search {
   display: flex;
 }
-.workspace .search input {
+.workspace.workspace .search input {
   padding-left: 44px;
   font-size: 14px;
   background: #141414;
   border-color: #2a2b30;
+}
+.personTable td[data-label] {
+  overflow-wrap: anywhere;
+}
+.tabs {
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 .workspace .jobDescription > summary,
 .workspace .pending > summary {
@@ -839,4 +848,38 @@
     display: inline;
     font-size: 12px;
   }
+}
+.dangerButton {
+  min-height: 44px;
+  padding: 12px 22px;
+  border: 1px solid #ff5733;
+  border-radius: 999px;
+  background: #ff5733;
+  color: #0c0d12;
+  font:
+    600 14px/1.4 'GolosText',
+    sans-serif;
+  cursor: pointer;
+}
+.dangerButton:hover:not(:disabled) {
+  background: #ff7355;
+}
+.deletionSummary {
+  padding: 20px;
+  border-radius: 20px;
+  background: #0c0d12;
+  color: #f0f0ec;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.archiveToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.archiveToggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c6f135;
 }

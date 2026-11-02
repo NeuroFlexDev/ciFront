@@ -1100,6 +1100,14 @@
   align-self: flex-start;
   width: fit-content;
 }
+.badge[data-tone='pending'], .badge[data-tone='failed'] {
+  color: #ff9a80;
+  background: #ff57331a;
+}
+.badge[data-tone='neutral'] {
+  color: #c3c3c3;
+  background: #313131;
+}
 .learningCards .courseCard[data-status='in_progress'] > .badge {
   color: #141414;
   background: #c6f135;
@@ -1336,6 +1344,7 @@
 .readerPage {
   margin-top: 30px !important;
 }
+.readerMobileTop, .readerMobilePercent { display: none; }
 .readerTop {
   display: flex;
   align-items: center;
@@ -1513,6 +1522,28 @@
     gap: 8px;
     font-size: 11px;
   }
+}
+@media (max-width: 700px) {
+  .readerPage.readerPage { margin-top: max(54px, env(safe-area-inset-top)) !important; }
+  .readerMobileTop { display: flex; align-items: center; gap: 12px; height: 64px; margin-bottom: 16px; }
+  .readerMobileTop > span { flex: 1; font: 600 16px var(--ui-font-body); }
+  .readerMobileTop a { width: 40px; height: 40px; flex: 0 0 40px; display: grid; place-items: center; border-radius: 50%; background: #141414; color: #f0f0ec; }
+  .readerMobileTop img { width: 24px; height: 24px; }
+  .readerTop .readerDesktopBack { display: none; }
+  .readerTop { flex-direction: column; align-items: stretch; padding: 20px; gap: 12px; border-radius: 20px; margin-bottom: 16px; }
+  .readerTitle h1 { font: 600 16px/1.4 var(--ui-font-body); }
+  .readerTitle > span { font-size: 14px; }
+  .readerProgress { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 0; margin: 0; gap: 12px; font-size: 12px; }
+  .readerProgress [role='status'] { grid-column: 1 / -1; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+  .readerProgress [role='status']::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #c6f135; }
+  .readerProgress [data-state='error']::before { background: #ff5733; }
+  .readerProgress [data-state='busy']::before { background: #959595; }
+  .readerProgress progress { width: 100%; }
+  .readerMobilePercent { display: inline; }
+  .readerPage .readerContentsLink { display: none; }
+  .readerPage .article { padding: 24px 20px; border-radius: 20px; }
+  .readerPage .article > h2 { font-size: 26px; margin-top: 0; }
+  .readerPage .rail { padding: 24px 20px; border-radius: 20px; }
 }
 
 .organizationTabs {

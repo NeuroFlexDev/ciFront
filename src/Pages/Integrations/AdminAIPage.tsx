@@ -746,12 +746,13 @@ export function AIManagement() {
                 }
               >
                 <div className={a.cards}>
+                  <h3 className={a.providerListTitle}>{t('Подключённые провайдеры')}</h3>
                   {data.providers.map((provider) => {
                     const assigned = data.models.filter(
                       (m) => m.provider === provider.id && m.approved,
                     ).length;
                     return (
-                      <article className={a.card} key={provider.id}>
+                      <article className={a.card} key={provider.id} data-selected={editor?.kind === 'provider' && editor.initial?.id === provider.id}>
                         <header>
                           <div className={a.providerTitle}>
                             <span className={a.providerIcon}>

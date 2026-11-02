@@ -12,6 +12,7 @@ import { useAuth } from '@/auth/useAuth';
 import { api, getAuthToken } from '@/shared/api';
 import { useReconnect } from '@/hooks/useReconnect';
 import logo from '@/assets/figma/brand.svg';
+import back from '@/assets/figma/mobile-back.svg';
 import styles from './styles.module.css';
 type Permissions = {
   can_manage_team: boolean;
@@ -114,12 +115,14 @@ function PlatformMenu() {
                 ...(permissions?.can_report ? [['/learning-analytics', t('Результаты')]] : []),
               ]
             : [
+                ['/dashboard', t('Обзор')],
                 ['/learning', t('Обучение')],
                 ['/results', t('Результаты')],
               ]),
         ]
       : learner
         ? [
+            ['/dashboard', t('Обзор')],
             ['/learning', t('Моё обучение')],
             ['/results', t('Результаты')],
           ]
@@ -168,7 +171,13 @@ function PlatformMenu() {
     ...(user?.organization_role === 'owner' ? [['/support-access', t('Доступ поддержки')]] : []),
   ];
   return (
-    <header className={`${styles.menuContainer} ${business ? styles.businessMenu : ''}`}>
+    <header className={`${styles.menuContainer} ${business ? styles.businessMenu : ''}`} data-context={location.pathname === '/notifications' ? 'notifications' : undefined}>
+      {location.pathname === '/notifications' && <div className={styles.mobileContext}>
+        <Link to={businessHome(user, '/dashboard')} aria-label={t('Назад к обзору')}>
+          <img src={back} alt='' />
+        </Link>
+        <span>{t('Уведомления')}</span>
+      </div>}
       <Link className={styles.brand} to={businessHome(user, '/dashboard')}>
         <img src={logo} alt={t('Лерниум')} />
       </Link>
@@ -318,13 +327,7 @@ function PlatformMenu() {
         </nav>
       </details>
       <MobileNavigation
-        home={
-          manager
-            ? '/company?tab=overview'
-            : learner || (business && !author)
-              ? '/learning'
-              : '/dashboard'
-        }
+        home={manager ? '/company?tab=overview' : '/dashboard'}
         team={manager ? '/company?tab=employees' : '/employees'}
         author={author}
         manager={manager}
