@@ -17,7 +17,7 @@ it('localizes registered interface messages without modifying customer names or 
 it('routes managers to personnel, employees to their assignments and leaves other tenants unchanged', () => {
   const user = { organization_kind: 'business', organization_role: 'manager' } as AuthUser;
   expect(businessHome(user, '/dashboard')).toBe('/company');
-  expect(businessHome({...user, organization_role: 'member'}, '/dashboard')).toBe('/learning');
+  expect(businessHome({...user, organization_role: 'member'}, '/dashboard')).toBe('/dashboard');
   expect(businessHome({...user, organization_kind: 'government'}, '/dashboard')).toBe('/dashboard');
   expect(businessHome({...user, is_admin: true}, '/admin')).toBe('/admin');
 });

@@ -1,0 +1,11 @@
+{
+  "fileKey": "mCBsEO0lXXeQTMSf7IgWEj",
+  "source": "Figma MCP get_design_context",
+  "retrieved": "2026-10-30",
+  "sharedAssets": "../../../src/assets/figma/provenance.json",
+  "assets": [
+    {"file":"arrow-left.svg","frame":"2126:63440","url":"https://www.figma.com/api/mcp/asset/7263ef28-28a1-454e-8b8e-f16f42a22a96.svg"},
+    {"file":"info.svg","frame":"2126:61127","url":"https://www.figma.com/api/mcp/asset/55c3ec25-9014-4ead-8774-8c48c0d4832a.svg"},
+    {"file":"assign.svg","frame":"2126:61127","url":"https://www.figma.com/api/mcp/asset/df7c3782-0309-459a-be8f-88effa6c01c2.svg"}
+  ]
+}

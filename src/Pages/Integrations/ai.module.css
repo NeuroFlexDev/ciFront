@@ -671,12 +671,32 @@
 }
 .providerWorkspace[data-editing='true'] > .cards {
   grid-template-columns: 1fr;
+  background: #141414;
+  border-radius: 24px;
+  padding: 30px;
+  gap: 8px;
+}
+.providerListTitle { display: none; }
+.providerWorkspace[data-editing='true'] .providerListTitle {
+  display: block;
+  font: 600 18px/1.4 'GolosText', sans-serif;
+  margin: 0 0 8px;
+}
+.providerWorkspace[data-editing='true'] .card > footer,
+.providerWorkspace[data-editing='true'] .card .checkResult,
+.providerWorkspace[data-editing='true'] .card .providerIcon { display: none; }
+.providerWorkspace[data-editing='true'] .card {
+  padding: 16px;
+  border-radius: 24px;
+}
+.providerWorkspace[data-editing='true'] .card[data-selected='true'] {
+  border-color: #c6f135;
 }
 .providerWorkspace .card {
   border: 0;
 }
 .providerWorkspace[data-editing='true'] .card {
-  background: #141414;
+  background: #0c0d12;
   border: 1px solid #313131;
 }
 .providerWorkspace[data-editing='true'] .providerInfo {

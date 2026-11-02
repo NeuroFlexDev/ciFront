@@ -420,7 +420,7 @@ export default function LearningDashboard() {
                     ? "/reviews"
                     : permissions.data?.can_report
                       ? "/learning-analytics"
-                      : "/learning"
+                      : "/results"
                 }
               >
                 {permissions.data?.can_review

@@ -123,4 +123,7 @@ it("keeps empty percentages unknown rather than rendering invented learning prog
     screen.getByRole("link", { name: "Открыть назначения" }),
   ).toHaveAttribute("href", "/learning");
   expect(screen.getAllByText("—")).toHaveLength(3);
+  expect(
+    screen.getByRole("link", { name: "Перейти к результатам →" }),
+  ).toHaveAttribute("href", "/results");
 });

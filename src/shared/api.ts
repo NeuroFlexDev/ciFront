@@ -1,4 +1,5 @@
 import {ApiError} from './errors';
+import { sameWebSession } from './webSession';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 export const AUTH_TOKEN_KEY = "lernium_auth_token";
 export const LEGACY_AUTH_TOKEN_KEY = "access_token";
@@ -12,7 +13,7 @@ export function captureAuthSession(): AuthSessionStamp {
 }
 
 export function authSessionIsCurrent(stamp: AuthSessionStamp): boolean {
-  return stamp.generation === sessionGeneration && stamp.storedToken === storedAuthToken();
+  return stamp.generation === sessionGeneration && sameWebSession(stamp.storedToken, storedAuthToken());
 }
 
 export function assertAuthSession(stamp: AuthSessionStamp): void {
@@ -84,11 +85,20 @@ export function bindAuthSession(): () => void {
 }
 
 export function authSessionChanged(): boolean {
-  return boundToken !== undefined && storedAuthToken() !== boundToken;
+  return boundToken !== undefined && !sameWebSession(storedAuthToken(), boundToken);
 }
 
 export function getAuthToken(): string | null {
+  if (boundToken !== undefined && sameWebSession(boundToken, storedAuthToken())) boundToken = storedAuthToken();
   return boundToken === undefined ? storedAuthToken() : boundToken;
+}
+
+export function renewAuthToken(token: string, expectedSession: AuthSessionStamp): void {
+  assertAuthSession(expectedSession);
+  if (!sameWebSession(expectedSession.storedToken, token)) throw new ApiError('Сервис продления вернул другой сеанс.', 409, 'http');
+  if (boundToken !== undefined) boundToken = token;
+  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  window.localStorage.setItem(LEGACY_AUTH_TOKEN_KEY, token);
 }
 
 export function setAuthToken(token: string | null, expectedSession?: AuthSessionStamp): void {
@@ -144,7 +154,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
     const response = await fetch(apiUrl(path), {...init,headers,signal:controller.signal});
     assertAuthSession(session);
     if(response.status<500) window.dispatchEvent(new Event('lernium-network-restored'));
-    if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new CustomEvent('lernium-session-expired'));
+    if (response.status === 401 && !path.startsWith('/auth/') && token === getAuthToken()) window.dispatchEvent(new CustomEvent('lernium-session-expired'));
     if (response.status === 403) {
       try {
         const body=await response.clone().json();
