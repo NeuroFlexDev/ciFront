@@ -794,7 +794,7 @@
   justify-content: flex-end;
   gap: 10px;
 }
-.assignButton {
+.workspace .assignButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -808,10 +808,10 @@
   text-decoration: none;
   text-align: center;
 }
-.assignButton:hover {
+.workspace .assignButton:hover {
   background: #d8ff52;
 }
-.assignButton:focus-visible {
+.workspace .assignButton:focus-visible {
   outline: 2px solid #caf432;
   outline-offset: 4px;
 }

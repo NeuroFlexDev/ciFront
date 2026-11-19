@@ -394,6 +394,7 @@
 }
 .recoveryActions {
   margin-bottom: 24px;
+  justify-content: center;
 }
 .connection button {
   margin-top: 16px;

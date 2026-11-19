@@ -83,6 +83,10 @@ it('shows a paused stage, keeps confirmed progress, and only resumes on explicit
     screen.getByRole('button', { name: 'Продолжить генерацию' }).compareDocumentPosition(stages) &
       Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy();
+  expect(
+    screen.getByRole('button', { name: 'Продолжить генерацию' }).compareDocumentPosition(screen.getByRole('progressbar')) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   await act(() => vi.advanceTimersByTimeAsync(60000));
   expect(screen.getByText('01:00')).toBeInTheDocument();
   expect(callbacks.onResume).not.toHaveBeenCalled();
