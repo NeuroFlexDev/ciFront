@@ -163,7 +163,7 @@ export default function GenerationProgress({
         : done
           ? 'Курс готов к проверке'
           : paused
-            ? 'Прогресс сохранён'
+            ? 'Генерация приостановлена'
             : failed
               ? 'Генерация остановлена'
               : 'Генерация курса';
@@ -175,7 +175,7 @@ export default function GenerationProgress({
         : done
           ? 'Материалы сохранены. Проверьте курс в редакторе перед публикацией.'
           : paused
-            ? 'Завершённые этапы сохранены. Продолжение начнётся с доступной контрольной точки.'
+            ? 'Материалы и завершённые этапы сохранены. Генерация сейчас не идёт. Нажмите «Продолжить генерацию», чтобы возобновить работу.'
             : failed
               ? 'Посмотрите причину ниже. Готовые этапы сохраняются для доступного повторного запуска.'
               : queued
@@ -310,7 +310,9 @@ export default function GenerationProgress({
             <p>
               {t(
                 connection === 'session'
-                  ? 'После входа наблюдение продолжится автоматически. Новый запуск не потребуется.'
+                  ? paused
+                    ? 'Войдите снова, затем подтвердите продолжение генерации. Материалы и завершённые этапы сохранены.'
+                    : 'После входа наблюдение продолжится автоматически. Новый запуск не потребуется.'
                   : connection === 'unavailable'
                     ? 'Автоматическое обновление приостановлено. Проверьте доступ к курсу или вернитесь в рабочее пространство.'
                     : 'Это не означает остановку генерации. Показываем последнее полученное состояние и проверяем связь.',
@@ -321,6 +323,15 @@ export default function GenerationProgress({
                 {t('Последний ответ сервера')}:{' '}
                 {new Date(receivedAt).toLocaleTimeString(locale === 'en' ? 'en-GB' : 'ru-RU')}
               </small>
+            )}
+            {connection === 'session' && (
+              <button
+                type='button'
+                className={styles.primary}
+                onClick={() => window.dispatchEvent(new Event('lernium-session-expired'))}
+              >
+                {t('Войти снова')}
+              </button>
             )}
           </div>
         </aside>
@@ -342,6 +353,20 @@ export default function GenerationProgress({
         <p className={styles.notice} role='status'>
           {t(run.status_notice)}
         </p>
+      )}
+      {(paused || (failed && run?.status_error?.retryable)) && (
+        <div className={`${styles.actions} ${styles.recoveryActions}`}>
+          <button className={styles.primary} disabled={busy || disconnected} onClick={onResume}>
+            {paused ? <Sparkles size={18} /> : <RefreshCw size={18} />}
+            {t(
+              busy
+                ? 'Запрашиваем продолжение…'
+                : paused
+                  ? 'Продолжить генерацию'
+                  : 'Повторить генерацию',
+            )}
+          </button>
+        </div>
       )}
       <div className={styles.workspace}>
         <ol className={styles.stages} aria-label={t('Этапы генерации')}>
@@ -482,22 +507,16 @@ export default function GenerationProgress({
               </button>
             </>
           )}
-          {paused && (
-            <button className={styles.primary} disabled={busy || disconnected} onClick={onResume}>
-              <Sparkles size={18} />
-              {t(busy ? 'Запрашиваем продолжение…' : 'Продолжить генерацию')}
-            </button>
-          )}
-          {failed && run?.status_error?.retryable && (
-            <button className={styles.primary} disabled={busy || disconnected} onClick={onResume}>
-              <RefreshCw size={18} />
-              {t(busy ? 'Запрашиваем продолжение…' : 'Повторить генерацию')}
-            </button>
-          )}
           {active && (
             <button disabled={busy || stopping || disconnected} onClick={onCancel}>
               <Pause size={17} />
-              {t(stopping ? 'Останавливаем…' : busy ? 'Отправляем запрос остановки…' : 'Остановить после текущего этапа')}
+              {t(
+                stopping
+                  ? 'Останавливаем…'
+                  : busy
+                    ? 'Отправляем запрос остановки…'
+                    : 'Остановить после текущего этапа',
+              )}
             </button>
           )}
           {done && (

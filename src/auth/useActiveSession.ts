@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { apiFetch, getAuthToken, renewAuthToken, captureAuthSession } from '@/shared/api';
 import { shouldRenewWebSession } from '@/shared/webSession';
+import { hasSessionWork } from './useSessionWork';
 
 export function useActiveSession(userId: number | undefined) {
   useEffect(() => {
@@ -17,7 +18,7 @@ export function useActiveSession(userId: number | undefined) {
         busy ||
         document.visibilityState !== 'visible' ||
         now - lastAttempt < 60_000 ||
-        !shouldRenewWebSession(getAuthToken(), now, lastActivity)
+        !shouldRenewWebSession(getAuthToken(), now, hasSessionWork(userId) ? now : lastActivity)
       )
         return;
       busy = true;
@@ -30,8 +31,11 @@ export function useActiveSession(userId: number | undefined) {
         });
         if (response.ok) {
           const data = await response.json();
-          if (active && data.user?.id === userId && typeof data.access_token === 'string')
+          if (active && data.user?.id === userId && typeof data.access_token === 'string') {
             renewAuthToken(data.access_token, session);
+            // Restart read observers that may have received a late 401 during rotation.
+            window.dispatchEvent(new Event('lernium-session-renewed'));
+          }
         } else if (response.status === 401 && active && getAuthToken() === session.storedToken)
           window.dispatchEvent(new Event('lernium-session-expired'));
       } catch {
@@ -46,12 +50,19 @@ export function useActiveSession(userId: number | undefined) {
     };
     const events = ['pointerdown', 'keydown', 'scroll'] as const;
     for (const event of events) window.addEventListener(event, activity, { passive: true });
+    const visibility = () => {
+      if (document.visibilityState === 'visible') activity();
+    };
+    document.addEventListener('visibilitychange', visibility);
+    window.addEventListener('focus', activity);
     const timer = window.setInterval(() => void check(), 30_000);
     return () => {
       active = false;
       controller.abort();
       window.clearInterval(timer);
       for (const event of events) window.removeEventListener(event, activity);
+      document.removeEventListener('visibilitychange', visibility);
+      window.removeEventListener('focus', activity);
     };
   }, [userId]);
 }

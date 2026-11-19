@@ -111,7 +111,7 @@ it('resumes polling when a paused run keeps the same checkpoint ID', async () =>
        stages:[],status_error:null,status_notice:resumed ? null : 'Материалы и готовые этапы сохранены.'}}));
   vi.mocked(api.post).mockImplementation(async () => {resumed = true; return {data:{run_id:99}};});
   render(<MemoryRouter initialEntries={['/express?course=7&run=99']}><ExpressPage/></MemoryRouter>);
-  expect(await screen.findByRole('heading',{name:'Прогресс сохранён'})).toBeInTheDocument();
+  expect(await screen.findByRole('heading',{name:'Генерация приостановлена'})).toBeInTheDocument();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'Продолжить генерацию'}));
   expect(await screen.findByRole('link',{name:'Проверить и опубликовать курс'})).toBeInTheDocument();
@@ -187,7 +187,7 @@ it('stops only on request, keeps the checkpoint visible, and offers an explicit 
   vi.mocked(api.post).mockImplementation(async()=>{stopped=true;return{data:{}};});
   render(<MemoryRouter initialEntries={['/express?course=7&run=99']}><ExpressPage/></MemoryRouter>);
   fireEvent.click(await screen.findByRole('button',{name:'Остановить после текущего этапа'}));
-  expect(await screen.findByRole('heading',{name:'Прогресс сохранён'})).toBeInTheDocument();
+  expect(await screen.findByRole('heading',{name:'Генерация приостановлена'})).toBeInTheDocument();
   expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow','50');
   expect(screen.getByRole('button',{name:'Продолжить генерацию'})).toBeEnabled();
   expect(vi.mocked(api.post).mock.calls.filter(([path])=>path.includes('generation-runs'))).toEqual([['/generation-runs/99/cancel']]);

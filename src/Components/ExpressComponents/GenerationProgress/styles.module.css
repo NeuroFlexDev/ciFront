@@ -392,6 +392,12 @@
 .footer {
   margin-top: 32px;
 }
+.recoveryActions {
+  margin-bottom: 24px;
+}
+.connection button {
+  margin-top: 16px;
+}
 .actions {
   display: flex;
   gap: 14px;

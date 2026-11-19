@@ -75,15 +75,35 @@ it('shows an indeterminate pending acceptance with no invented completion or sto
 it('shows a paused stage, keeps confirmed progress, and only resumes on explicit action', async () => {
   const callbacks = actions();
   page({ ...callbacks, run: { ...run, status: 'paused', finished_at: '2026-10-22T10:01:00Z' } });
-  expect(screen.getByRole('heading', { name: 'Прогресс сохранён' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Генерация приостановлена' })).toBeInTheDocument();
   const stages = screen.getByRole('list', { name: 'Этапы генерации' });
   expect(within(stages).getByText('На паузе')).toBeInTheDocument();
   expect(within(stages).queryByText('В работе')).not.toBeInTheDocument();
+  expect(
+    screen.getByRole('button', { name: 'Продолжить генерацию' }).compareDocumentPosition(stages) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
   await act(() => vi.advanceTimersByTimeAsync(60000));
   expect(screen.getByText('01:00')).toBeInTheDocument();
   expect(callbacks.onResume).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Продолжить генерацию' }));
   expect(callbacks.onResume).toHaveBeenCalledOnce();
+});
+
+it('offers sign-in for a paused expired session without automatically resuming paid work', () => {
+  const expired = vi.fn();
+  const callbacks = actions();
+  window.addEventListener('lernium-session-expired', expired);
+  try {
+    page({ ...callbacks, connection: 'session', run: { ...run, status: 'paused' } });
+    expect(screen.getByRole('button', { name: 'Продолжить генерацию' })).toBeDisabled();
+    expect(screen.getByText(/Войдите снова, затем подтвердите продолжение/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Войти снова' }));
+    expect(expired).toHaveBeenCalledOnce();
+    expect(callbacks.onResume).not.toHaveBeenCalled();
+  } finally {
+    window.removeEventListener('lernium-session-expired', expired);
+  }
 });
 
 it('does not present disconnected progress as live or offer a duplicate launch', () => {

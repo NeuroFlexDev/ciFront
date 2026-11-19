@@ -618,6 +618,13 @@
   color: #929299;
   font-weight: 400;
 }
+.difficultyHelp {
+  margin: 16px 0 0;
+  color: #b6b8c0;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 80ch;
+}
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
