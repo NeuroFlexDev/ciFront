@@ -133,6 +133,50 @@ afterEach(() => {
   cleanup();
   vi.resetAllMocks();
 });
+it('offers assignment directly from the employee row and before editing in the card', async () => {
+  state.role = 'manager';
+  open('/company?tab=employees');
+  const action = await screen.findByRole('button', { name: 'Настроить доступ: Иван' });
+  const row = within(action.closest('tr')!);
+  expect(row.getByRole('link', { name: 'Назначить обучение' })).toHaveAttribute(
+    'href',
+    '/assignments?user=2',
+  );
+  fireEvent.click(action);
+  const card = within(screen.getByRole('dialog', { name: 'Иван' }));
+  const assign = card.getByRole('link', { name: 'Назначить обучение' });
+  expect(assign).toHaveAttribute('href', '/assignments?user=2');
+  expect(
+    assign.compareDocumentPosition(card.getByRole('button', { name: 'Удалить из команды' })) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+it.each([
+  { is_active: false, organization_role: 'member' },
+  { is_active: true, organization_role: 'manager' },
+  { is_active: true, organization_role: 'member', organization_removed_at: '2026-11-01T00:00:00Z' },
+])('does not offer assignments to unavailable or non-learner accounts: %j', async (member) => {
+  const get = vi.mocked(api.get).getMockImplementation()!;
+  vi.mocked(api.get).mockImplementation(async (path, ...args) => {
+    if (path.includes('/employees'))
+      return {
+        data: { total: 1, items: [{ id: 2, full_name: 'Иван', auth_version: 4, ...member }] },
+      } as never;
+    return get(path, ...args);
+  });
+  open('/company?tab=employees');
+  const action = await screen.findByRole('button', { name: 'Настроить доступ: Иван' });
+  expect(
+    within(action.closest('tr')!).queryByRole('link', { name: 'Назначить обучение' }),
+  ).not.toBeInTheDocument();
+  fireEvent.click(action);
+  expect(
+    within(screen.getByRole('dialog', { name: 'Иван' })).queryByRole('link', {
+      name: 'Назначить обучение',
+    }),
+  ).not.toBeInTheDocument();
+});
 it('owner invites a manager with no employee position or password', async () => {
   vi.mocked(api.post).mockResolvedValue({
     data: { url: 'https://example.test/invite#token=opaque', mail_status: 'queued' },
@@ -165,7 +209,9 @@ it('removes an employee only after a named confirmation and keeps failures visib
   expect(within(dialog).getByText(/ответы и результаты обучения сохранятся/)).toBeInTheDocument();
   expect(api.delete).not.toHaveBeenCalled();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Удалить из команды' }));
-  await waitFor(() => expect(within(dialog).getByRole('alert')).toHaveTextContent('Участник уже изменён'));
+  await waitFor(() =>
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Участник уже изменён'),
+  );
   expect(api.delete).toHaveBeenCalledWith('/business/employees/2', { expected_auth_version: 4 });
   expect(screen.getByRole('dialog')).toBeInTheDocument();
   vi.mocked(api.delete).mockResolvedValueOnce({ data: {} });
@@ -178,7 +224,22 @@ it('shows removed participants separately and restores with their current versio
   const base = vi.mocked(api.get).getMockImplementation()!;
   vi.mocked(api.get).mockImplementation(async (path) => {
     const result = await base(path);
-    if (path.includes('/employees') && path.includes('removed=true')) return { data: { total: 1, items: [{ id: 2, full_name: 'Иван', organization_role: 'member', is_active: false, auth_version: 5, organization_removed_at: '2026-11-03T00:00:00Z' }] } } as never;
+    if (path.includes('/employees') && path.includes('removed=true'))
+      return {
+        data: {
+          total: 1,
+          items: [
+            {
+              id: 2,
+              full_name: 'Иван',
+              organization_role: 'member',
+              is_active: false,
+              auth_version: 5,
+              organization_removed_at: '2026-11-03T00:00:00Z',
+            },
+          ],
+        },
+      } as never;
     return result;
   });
   vi.mocked(api.post).mockResolvedValue({ data: {} });
@@ -189,7 +250,11 @@ it('shows removed participants separately and restores with their current versio
   expect(screen.queryByRole('button', { name: 'Сохранить имя' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Восстановить в команде' }));
   fireEvent.click(screen.getByRole('button', { name: 'Восстановить' }));
-  await waitFor(() => expect(api.post).toHaveBeenCalledWith('/business/employees/2/restore', { expected_auth_version: 5 }));
+  await waitFor(() =>
+    expect(api.post).toHaveBeenCalledWith('/business/employees/2/restore', {
+      expected_auth_version: 5,
+    }),
+  );
 });
 
 it('deletes a regulation from its position with revision protection and explains preserved results', async () => {
@@ -198,7 +263,9 @@ it('deletes a regulation from its position with revision protection and explains
   fireEvent.click(await screen.findByLabelText('Действия: Поддержка клиентов'));
   fireEvent.click(screen.getByRole('button', { name: 'Удалить регламент' }));
   const dialog = screen.getByRole('dialog', { name: 'Удалить регламент «Поддержка клиентов»?' });
-  expect(within(dialog).getByText(/Уже выданные материалы, ответы и результаты/)).toBeInTheDocument();
+  expect(
+    within(dialog).getByText(/Уже выданные материалы, ответы и результаты/),
+  ).toBeInTheDocument();
   expect(api.delete).not.toHaveBeenCalled();
   fireEvent.click(within(dialog).getByRole('button', { name: 'Удалить регламент' }));
   await waitFor(() => expect(api.delete).toHaveBeenCalledWith('/courses/50?expected_revision=4'));

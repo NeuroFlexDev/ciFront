@@ -3,6 +3,8 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileUp, Globe2, LayoutTemplate, Plus, Sparkles } from 'lucide-react';
 import { AuthContext } from '@/auth/auth-context';
+import { useSessionWork } from '@/auth/useSessionWork';
+import { generationActive } from '@/Components/ExpressComponents/GenerationProgress/types';
 import { isBusiness } from '@/shared/business';
 import Menu from '@/Components/Menu/Menu';
 import { api } from '@/shared/api';
@@ -112,7 +114,8 @@ export function WizardSteps({ step, onStep }: { step: number; onStep?: (step: nu
 export default function CourseWizard() {
   const { t, locale } = useLocale();
 
-  const business = isBusiness(useContext(AuthContext)?.user);
+  const user = useContext(AuthContext)?.user;
+  const business = isBusiness(user);
   const [params, setParams] = useSearchParams();
   const positionId = Number(params.get('position')) || null;
   const positionParams: Record<string, string> = positionId ? { position: String(positionId) } : {};
@@ -158,6 +161,7 @@ export default function CourseWizard() {
     receivedAt,
   } = useGenerationProgress(runId, version);
   const [submission, setSubmission] = useState<'idle' | 'submitting' | 'uncertain'>('idle');
+  useSessionWork(user?.id, busy || submission === 'submitting' || generationActive(run));
   const pageRef = useRef<HTMLElement>(null);
   const showingProgress = Boolean(runId || submission !== 'idle');
   useEffect(() => {
@@ -878,9 +882,33 @@ export default function CourseWizard() {
                   <legend>{t('Сложность курса')}</legend>
                   <div className={styles.difficulty}>
                     {[
-                      ['basic', t('Базовый'), t(singleDocument ? 'Тестирование по регламенту' : 'Минимальный уровень')],
-                      ['intermediate', t('Средний'), t(singleDocument ? 'Тест и два практических вопроса' : 'Есть опыт')],
-                      ['advanced', t('Продвинутый'), t(singleDocument ? 'Тест и два развёрнутых вопроса' : 'Эксперт')],
+                      [
+                        'basic',
+                        t('Базовый'),
+                        t(
+                          singleDocument
+                            ? 'Тест с вариантами ответа: знание основных правил.'
+                            : 'Минимальный уровень',
+                        ),
+                      ],
+                      [
+                        'intermediate',
+                        t('Средний'),
+                        t(
+                          singleDocument
+                            ? 'Тест + 2 задачи: описать действия в обычных рабочих ситуациях.'
+                            : 'Есть опыт',
+                        ),
+                      ],
+                      [
+                        'advanced',
+                        t('Продвинутый'),
+                        t(
+                          singleDocument
+                            ? 'Тест + 2 задачи: разобрать сложные ситуации и обосновать решение.'
+                            : 'Эксперт',
+                        ),
+                      ],
                     ].map(([value, title, description]) => (
                       <label
                         key={value}
@@ -898,6 +926,13 @@ export default function CourseWizard() {
                       </label>
                     ))}
                   </div>
+                  {singleDocument && (
+                    <p className={styles.difficultyHelp}>
+                      {t(
+                        'В тесте сотрудник выбирает ответы. В задачах — пишет, как поступит в предложенной ситуации. На среднем уровне проверяем обычные действия, на продвинутом — выбор и объяснение решения. Задания опираются на ваш регламент.',
+                      )}
+                    </p>
+                  )}
                 </fieldset>
                 <div className={styles.split}>
                   <label>

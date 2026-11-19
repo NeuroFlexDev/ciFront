@@ -1,4 +1,17 @@
 export const generationEnglish: Record<string, string> = {
+  'Генерация приостановлена': 'Generation is paused',
+  'Материалы и завершённые этапы сохранены. Генерация сейчас не идёт. Нажмите «Продолжить генерацию», чтобы возобновить работу.':
+    'Your materials and completed stages are saved. Generation is not running. Select “Resume generation” to continue.',
+  'Войдите снова, затем подтвердите продолжение генерации. Материалы и завершённые этапы сохранены.':
+    'Sign in again, then confirm resuming generation. Your materials and completed stages are saved.',
+  'Войти снова': 'Sign in again',
+  'Тест с вариантами ответа: знание основных правил.': 'Multiple-choice test: essential rules.',
+  'Тест + 2 задачи: описать действия в обычных рабочих ситуациях.':
+    'Test + 2 tasks: describe actions in everyday workplace situations.',
+  'Тест + 2 задачи: разобрать сложные ситуации и обосновать решение.':
+    'Test + 2 tasks: analyse complex situations and justify your decision.',
+  'В тесте сотрудник выбирает ответы. В задачах — пишет, как поступит в предложенной ситуации. На среднем уровне проверяем обычные действия, на продвинутом — выбор и объяснение решения. Задания опираются на ваш регламент.':
+    'In the test, employees select answers. In tasks, they write how they would act. Intermediate tasks check everyday procedures; advanced tasks require choosing and justifying an action. Tasks are based on your regulation.',
   'Запрашиваем продолжение…': 'Requesting resume…',
   'Отправляем запрос остановки…': 'Sending stop request…',
   'Создание по вашим материалам': 'Created from your sources',

@@ -877,19 +877,31 @@ function CompanyWorkspace() {
                       </span>
                     </td>
                     <td>
-                      <button
-                        className={css.iconButton}
-                        aria-label={`${t('Настроить доступ')}: ${person.full_name || person.username || person.email || t('Сотрудник')}`}
-                        onClick={() => {
-                          setError('');
-                          setResetPassword('');
-                          setManaging(person.id);
-                          setPersonName(person.full_name || '');
-                        }}
-                      >
-                        <MoreHorizontal size={20} />
-                        <span className={css.mobileAction}>{t('Открыть карточку')}</span>
-                      </button>
+                      <div className={css.personActions}>
+                        {person.is_active &&
+                          !person.organization_removed_at &&
+                          ['member', 'candidate'].includes(person.organization_role) && (
+                            <Link
+                              className={css.assignButton}
+                              to={`/assignments?user=${person.id}`}
+                            >
+                              {t('Назначить обучение')}
+                            </Link>
+                          )}
+                        <button
+                          className={css.iconButton}
+                          aria-label={`${t('Настроить доступ')}: ${person.full_name || person.username || person.email || t('Сотрудник')}`}
+                          onClick={() => {
+                            setError('');
+                            setResetPassword('');
+                            setManaging(person.id);
+                            setPersonName(person.full_name || '');
+                          }}
+                        >
+                          <MoreHorizontal size={20} />
+                          <span className={css.mobileAction}>{t('Открыть карточку')}</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -944,6 +956,12 @@ function CompanyWorkspace() {
                 </div>
               ) : (
                 <div className={css.form}>
+                  {person.is_active &&
+                    ['member', 'candidate'].includes(person.organization_role) && (
+                      <Link className={styles.primary} to={`/assignments?user=${person.id}`}>
+                        {t('Назначить обучение')}
+                      </Link>
+                    )}
                   <form
                     className={css.form}
                     onSubmit={(event) => {
@@ -1164,11 +1182,6 @@ function CompanyWorkspace() {
                       )}
                     {['member', 'candidate'].includes(person.organization_role) && (
                       <div className={css.actions}>
-                        {person.is_active && (
-                          <Link className={styles.primary} to={`/assignments?user=${person.id}`}>
-                            {t('Назначить обучение')}
-                          </Link>
-                        )}
                         <Link
                           className={css.backLink}
                           to={`/learning-analytics?user_id=${person.id}`}
