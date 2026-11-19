@@ -597,7 +597,7 @@
 .difficulty label {
   background: #141414;
   border: 1px solid transparent;
-  padding: 30px 20px;
+  padding: 24px 16px;
   text-align: center;
   border-radius: 20px;
   cursor: pointer;
@@ -1111,7 +1111,6 @@
 }
 .difficulty label {
   border-radius: 24px;
-  padding: 24px 16px;
 }
 .difficulty strong {
   font:
