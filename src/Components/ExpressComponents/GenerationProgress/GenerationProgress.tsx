@@ -251,6 +251,20 @@ export default function GenerationProgress({
         <h2 id={headingId}>{t(heading)}</h2>
         <p>{t(description)}</p>
       </header>
+      {(paused || (failed && run?.status_error?.retryable)) && (
+        <div className={`${styles.actions} ${styles.recoveryActions}`}>
+          <button className={styles.primary} disabled={busy || disconnected} onClick={onResume}>
+            {paused ? <Sparkles size={18} /> : <RefreshCw size={18} />}
+            {t(
+              busy
+                ? 'Запрашиваем продолжение…'
+                : paused
+                  ? 'Продолжить генерацию'
+                  : 'Повторить генерацию',
+            )}
+          </button>
+        </div>
+      )}
       <div className={styles.meter}>
         <div className={styles.meterLabel}>
           <span>
@@ -353,20 +367,6 @@ export default function GenerationProgress({
         <p className={styles.notice} role='status'>
           {t(run.status_notice)}
         </p>
-      )}
-      {(paused || (failed && run?.status_error?.retryable)) && (
-        <div className={`${styles.actions} ${styles.recoveryActions}`}>
-          <button className={styles.primary} disabled={busy || disconnected} onClick={onResume}>
-            {paused ? <Sparkles size={18} /> : <RefreshCw size={18} />}
-            {t(
-              busy
-                ? 'Запрашиваем продолжение…'
-                : paused
-                  ? 'Продолжить генерацию'
-                  : 'Повторить генерацию',
-            )}
-          </button>
-        </div>
       )}
       <div className={styles.workspace}>
         <ol className={styles.stages} aria-label={t('Этапы генерации')}>
