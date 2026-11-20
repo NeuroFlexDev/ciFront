@@ -34,8 +34,7 @@ export function MyLearning({ back = false }: { back?: boolean }) {
       back={back}
       title={user?.organization_kind === 'business' ? 'Мои регламенты' : 'Моё обучение'}
       subtitle='Изучайте материалы, проходите тесты и отслеживайте результат.'
-      refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      onRefresh={() => query.refetch()}
     >
       <Chips
         items={[

@@ -56,8 +56,7 @@ export default function Team() {
           ? 'Руководители, сотрудники и кандидаты компании'
           : 'Ваши сотрудники и кандидаты'
       }
-      refreshing={q.isRefetching}
-      onRefresh={() => void q.refetch()}
+      onRefresh={() => q.refetch()}
     >
       <Chips
         value={role}

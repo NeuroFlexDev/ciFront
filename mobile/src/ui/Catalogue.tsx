@@ -64,8 +64,7 @@ export function Catalogue() {
     <Page
       title='Регламенты'
       subtitle='Материалы компании, по которым обучается команда'
-      refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      onRefresh={() => query.refetch()}
     >
       <Chips
         items={[

@@ -80,8 +80,7 @@ function TeamResults({ course }: { course?: string }) {
     <Page
       title={course ? 'Результаты регламента' : 'Результаты команды'}
       subtitle='Прогресс, проверки и сроки в вашей области доступа'
-      refreshing={report.isRefetching}
-      onRefresh={() => void report.refetch()}
+      onRefresh={() => report.refetch()}
     >
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         <Button title='Ответы на проверку' compact onPress={() => router.push('/reviews')} />
@@ -194,8 +193,7 @@ function PersonalResults() {
     <Page
       title='Мои результаты'
       subtitle='Ваш прогресс, оценки и обратная связь'
-      refreshing={q.isRefetching}
-      onRefresh={() => void q.refetch()}
+      onRefresh={() => q.refetch()}
     >
       {manages(user) && (
         <Button

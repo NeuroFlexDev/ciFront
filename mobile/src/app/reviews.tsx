@@ -5,7 +5,7 @@ import { Page, Card, Txt, Button, Loading, ErrorState, Empty } from '../ui/compo
 export default function Reviews() {
   const q = useResource<{ items: Review[] }>('/learning/reviews');
   return (
-    <Page title='Проверки' back refreshing={q.isRefetching} onRefresh={() => void q.refetch()}>
+    <Page title='Проверки' back onRefresh={() => q.refetch()}>
       {q.isPending && <Loading />}
       {q.error && <ErrorState error={q.error} retry={() => void q.refetch()} />}
       {q.data?.items.map((r) => (

@@ -43,6 +43,10 @@ The client defaults to `https://dev.platform.lernium.ru`. Production is explicit
 
 ## Verification status
 
+Version 1.0.5 separates the native pull-to-refresh indicator from background query activity. Returning to the app, receiving a push, and refreshing cached data no longer turn on the top spinner. `Page` owns gesture refresh state, awaits the request, prevents overlapping gestures, and stops the indicator on either success or failure. Cached content and answer drafts are retained. This change requires a new installed binary; the current app configuration does not enable over-the-air updates.
+
+Device acceptance for this fix is pending on both Android and iPhone: open employee home and Learning, background/foreground the app, receive a notification, then pull down manually. The circle should appear only for that manual refresh and stop when it settles, including without a connection. Check that existing content and an unsent answer remain visible after retry.
+
 Android acceptance on 2026-10-30 confirmed login, direct test push display and inbox navigation, and receipt of a real assignment notification through the outbox. That assignment's notification did not launch the app on the user's phone; manual opening of the regulation works. Phone model/OS and native launch diagnostics are still needed. Submission reached the server (two HTTP 200 responses, one idempotent answer in `pending_review`), but the user reported a persistent loading indicator.
 
 Version 1.0.1 shows the returned answer immediately, without awaiting local cleanup or a detail reload. Cleanup only deletes an unchanged submitted draft. Network and local persistence waits are bounded; an ambiguous submission checks the server using the same submission key before offering retry. Eight additional regression tests cover lost responses, stalled operations, persistence failures and authorization boundaries. Device verification of this correction and force-stop/offline draft preservation remain pending.
