@@ -30,7 +30,6 @@ export default function AssignmentScreen() {
     [tab, setTab] = useState(results ? 'tests' : 'materials'),
     [error, setError] = useState<unknown>(null),
     [busy, setBusy] = useState(false),
-    [refreshing, setRefreshing] = useState(false),
     ops = useRef(new Map<number, string>());
   const data = query.data,
     lessons = data?.content.modules.flatMap((m) => m.lessons) || [],
@@ -69,14 +68,6 @@ export default function AssignmentScreen() {
     }
     void query.refetch();
   }
-  async function refresh() {
-    setRefreshing(true);
-    try {
-      await query.refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }
   async function complete() {
     if (!data || !lesson) return;
     setBusy(true);
@@ -106,8 +97,7 @@ export default function AssignmentScreen() {
       title={data?.title || 'Обучение'}
       headerTitle={user?.organization_kind === 'business' ? 'Регламент' : 'Обучение'}
       back
-      refreshing={refreshing}
-      onRefresh={() => void refresh()}
+      onRefresh={() => query.refetch()}
     >
       {query.isPending && <Loading />}
       {!!(query.error || error) && (

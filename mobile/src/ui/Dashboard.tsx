@@ -202,7 +202,6 @@ export function Dashboard() {
     { width } = useWindowDimensions();
   const [days, setDays] = useState(30),
     [activityDays, setActivityDays] = useState(7),
-    [refreshing, setRefreshing] = useState(false),
     [linkError, setLinkError] = useState<unknown>(null);
   const overview = useResource<BusinessOverview>('/business/dashboard');
   const stats = useResource<DashboardData>(
@@ -212,17 +211,12 @@ export function Dashboard() {
     metrics = stats.data?.metrics,
     daily = stats.data?.daily || [];
   const max = Math.max(1, ...daily.map((d) => d.submitted_attempts));
-  async function refresh() {
-    setRefreshing(true);
-    try {
-      await Promise.all([overview.refetch(), stats.refetch()]);
-    } finally {
-      setRefreshing(false);
-    }
+  function refresh() {
+    return Promise.all([overview.refetch(), stats.refetch()]);
   }
   const cell = width >= 760 ? { width: '48.5%' as const } : {};
   return (
-    <Page refreshing={refreshing} onRefresh={() => void refresh()}>
+    <Page onRefresh={refresh}>
       {(overview.isPending || stats.isPending) && !metrics && <Loading />}
       {!!(overview.error || stats.error) && (
         <ErrorState error={overview.error || stats.error} retry={() => void refresh()} />

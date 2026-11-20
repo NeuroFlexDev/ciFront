@@ -51,8 +51,7 @@ export default function NotificationCenter() {
   return (
     <Page
       title='Уведомления'
-      refreshing={query.isRefetching}
-      onRefresh={() => void query.refetch()}
+      onRefresh={() => query.refetch()}
     >
       <Button
         title={first?.unread_count ? 'Прочитать все · ' + first.unread_count : 'Всё прочитано'}

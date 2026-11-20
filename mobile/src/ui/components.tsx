@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -143,7 +143,6 @@ export function Page({
   children,
   title,
   subtitle,
-  refreshing,
   onRefresh,
   back = false,
   headerTitle,
@@ -151,8 +150,7 @@ export function Page({
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
-  refreshing?: boolean;
-  onRefresh?: () => void;
+  onRefresh?: () => Promise<unknown>;
   back?: boolean;
   headerTitle?: string;
 }) {
@@ -161,6 +159,31 @@ export function Page({
   const { width, height } = useWindowDimensions();
   const rail = !back && width >= 760 && width > height;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+  const [refreshError, setRefreshError] = useState<unknown>(null);
+  const refreshInFlight = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  async function refreshFromGesture() {
+    if (!onRefresh || refreshInFlight.current) return;
+    refreshInFlight.current = true;
+    setRefreshError(null);
+    // Background query updates must not activate the native pull-to-refresh control.
+    setPullRefreshing(true);
+    try {
+      await onRefresh();
+    } catch (error) {
+      if (mounted.current) setRefreshError(error);
+    } finally {
+      refreshInFlight.current = false;
+      if (mounted.current) setPullRefreshing(false);
+    }
+  }
   const inbox = useResource<Inbox>(user ? '/notifications?limit=1' : null);
   const navigate = (path: Parameters<typeof router.push>[0]) => {
     setMenuOpen(false);
@@ -218,7 +241,12 @@ export function Page({
           ]}
           refreshControl={
             onRefresh ? (
-              <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={c.lime} />
+              <RefreshControl
+                refreshing={pullRefreshing}
+                onRefresh={() => void refreshFromGesture()}
+                tintColor={c.lime}
+                colors={[c.lime]}
+              />
             ) : undefined
           }
         >
@@ -235,6 +263,9 @@ export function Page({
                 </Txt>
               )}
             </View>
+          )}
+          {!!refreshError && (
+            <ErrorState error={refreshError} retry={() => void refreshFromGesture()} />
           )}
           {children}
         </ScrollView>
